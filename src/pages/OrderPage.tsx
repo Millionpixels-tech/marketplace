@@ -33,6 +33,22 @@ export default function OrderPage() {
         setSubmitting(false);
     };
 
+    // --- Update shop rating and rating count when a new review is added ---
+    async function updateShopRating(shopId: string, newRating: number) {
+        const shopRef = doc(db, "shops", shopId);
+        const snap = await getDoc(shopRef);
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const currentCount = typeof data.ratingCount === "number" ? data.ratingCount : 0;
+        const currentAvg = typeof data.rating === "number" ? data.rating : 0;
+        const newCount = currentCount + 1;
+        const newAvg = ((currentAvg * currentCount) + newRating) / newCount;
+        await updateDoc(shopRef, {
+            ratingCount: newCount,
+            rating: Math.round(newAvg * 100) / 100,
+        });
+    }
+
     const submitReview = async () => {
         if (!order || !review.trim() || !rating) return;
         setSubmitting(true);
@@ -40,6 +56,10 @@ export default function OrderPage() {
         setOrder({ ...order, review, rating });
         setReview("");
         setRating(0);
+        // Update shop rating
+        if (order.sellerShopId) {
+            await updateShopRating(order.sellerShopId, rating);
+        }
         setSubmitting(false);
     };
 
@@ -126,7 +146,11 @@ export default function OrderPage() {
                         </div>
                     </div>
 
-                    {order.status !== "RECEIVED" && (
+                    {order.status === "CANCELLED" ? (
+                        <div className="mt-4 w-full py-3 bg-red-100 text-red-700 rounded-xl font-bold text-lg text-center uppercase tracking-wide shadow">
+                            This order has been cancelled.
+                        </div>
+                    ) : order.status !== "RECEIVED" && (
                         <button
                             className="mt-2 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition"
                             onClick={markAsReceived}
@@ -137,7 +161,9 @@ export default function OrderPage() {
                     )}
                     <div className="mt-6">
                         <h2 className="font-bold mb-2">Your Review</h2>
-                        {order.review ? (
+                        {order.status === "CANCELLED" ? (
+                            <div className="bg-gray-100 rounded-xl p-4 text-gray-500 text-center font-semibold">You cannot leave a review for a cancelled order.</div>
+                        ) : order.review ? (
                             <div className="bg-gray-100 rounded-xl p-4 text-gray-700">
                                 <div className="flex items-center mb-1">
                                     {[1, 2, 3, 4, 5].map(i => (

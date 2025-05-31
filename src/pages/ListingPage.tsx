@@ -220,8 +220,8 @@ export default function ListingSingle() {
                     itemImage: item.images?.[0] || "",
                     buyerId: user?.uid || null,
                     buyerEmail: user?.email || null,
-                    sellerId: item.ownerId || item.sellerId || null,
-                    sellerShopId: item.shop || item.shopId || null,
+                    sellerId: item.owner, // FIXED: use correct field
+                    sellerShopId: item.shopId, // FIXED: use correct field
                     sellerShopName: shop.name,
                     price,
                     quantity: qty,

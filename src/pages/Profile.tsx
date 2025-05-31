@@ -5,9 +5,27 @@ import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc } from "firebase/firestore";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
 import Header from "../components/UI/Header";
 
-export default function Profile() {
+const TABS = [
+    { key: "profile", label: "Profile", icon: <FiUser /> },
+    { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
+    { key: "orders", label: "Orders", icon: <FiList /> },
+    { key: "reviews", label: "Reviews", icon: <FiStar /> },
+];
+
+const ORDER_SUBTABS = [
+    { key: "buyer", label: "As Buyer" },
+    { key: "seller", label: "As Seller" },
+];
+
+const REVIEW_SUBTABS = [
+    { key: "buyer", label: "As Buyer" },
+    { key: "seller", label: "As Seller" },
+];
+
+export default function ProfileDashboard() {
     const { user } = useAuth();
     const { id } = useParams();
     const [shops, setShops] = useState<any[]>([]);
@@ -21,15 +39,27 @@ export default function Profile() {
     const [profileEmail, setProfileEmail] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Dashboard state
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews">("profile");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Order sub-tabs
+    const [orderSubTab, setOrderSubTab] = useState<"buyer" | "seller">("buyer");
+    const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
+    const [sellerOrders, setSellerOrders] = useState<any[]>([]);
+    const [ordersLoading, setOrdersLoading] = useState(false);
+
+    // Review sub-tabs
+    const [reviewSubTab, setReviewSubTab] = useState<"buyer" | "seller">("buyer");
+    const [buyerReviews, setBuyerReviews] = useState<any[]>([]);
+    const [sellerReviews, setSellerReviews] = useState<any[]>([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+
     useEffect(() => {
-        // Determine which profile to show: current user or by id param
         const fetchProfile = async () => {
             setLoading(true);
             let uid = user?.uid;
-            if (id) {
-                // Find user by id param
-                uid = id;
-            }
+            if (id) uid = id;
             if (!uid) {
                 setLoading(false);
                 return;
@@ -44,7 +74,6 @@ export default function Profile() {
                 setDesc(data.description || "");
                 setProfileEmail(data.email || null);
             } else if (user && uid === user.uid) {
-                // Fallback to auth user info if viewing own profile and no db record
                 setDisplayName(user.displayName || "");
                 setPhotoURL(user.photoURL || "");
                 setDesc("");
@@ -59,10 +88,48 @@ export default function Profile() {
         fetchProfile();
     }, [user, id]);
 
+    // Orders fetching
+    useEffect(() => {
+        if (selectedTab !== "orders" || !profileUid) return;
+        setOrdersLoading(true);
+        const fetchOrders = async () => {
+            const buyerSnap = await getDocs(query(collection(db, "orders"), where("buyerId", "==", profileUid)));
+            setBuyerOrders(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const sellerSnap = await getDocs(query(collection(db, "orders"), where("sellerId", "==", profileUid)));
+            setSellerOrders(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setOrdersLoading(false);
+        };
+        fetchOrders();
+    }, [selectedTab, profileUid]);
+
+    // Reviews fetching
+    useEffect(() => {
+        if (selectedTab !== "reviews" || !profileUid) return;
+        setReviewsLoading(true);
+        const fetchReviews = async () => {
+            // As Buyer: reviews given to this user in the role of buyer
+            const buyerSnap = await getDocs(
+                query(collection(db, "reviews"),
+                    where("reviewedUserId", "==", profileUid),
+                    where("role", "==", "buyer"))
+            );
+            setBuyerReviews(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+            // As Seller: reviews given to this user in the role of seller
+            const sellerSnap = await getDocs(
+                query(collection(db, "reviews"),
+                    where("reviewedUserId", "==", profileUid),
+                    where("role", "==", "seller"))
+            );
+            setSellerReviews(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setReviewsLoading(false);
+        };
+        fetchReviews();
+    }, [selectedTab, profileUid]);
+
     const handleSave = async () => {
         if (!user) return;
         setSaving(true);
-        // Update user displayName and photoURL in Firebase Auth
         const auth = getAuth();
         if (auth.currentUser) {
             await updateProfile(auth.currentUser, {
@@ -70,12 +137,10 @@ export default function Profile() {
                 photoURL: photoURL,
             });
         }
-        // Ensure user record exists and update description in users collection
         const userDocSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
         if (!userDocSnap.empty) {
             await updateDoc(doc(db, "users", userDocSnap.docs[0].id), { description: desc, displayName, photoURL });
         } else {
-            // Create user record if not exists
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 email: user.email,
@@ -88,7 +153,6 @@ export default function Profile() {
         setSaving(false);
     };
 
-    // Handle profile picture upload
     const handlePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!user || !e.target.files || e.target.files.length === 0) return;
         setUploadingPic(true);
@@ -101,122 +165,306 @@ export default function Profile() {
         setUploadingPic(false);
     };
 
-    // Only allow editing if viewing own profile
     const isOwner = user && profileUid === user.uid;
 
     if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
     if (!profileUid) return <div className="min-h-screen flex items-center justify-center text-gray-400">User not found.</div>;
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-gray-50 min-h-screen w-full">
             <Header />
-            <div className="max-w-2xl mx-auto mt-10 bg-white rounded-3xl shadow-lg p-6 md:p-12 flex flex-col items-center">
-                {/* Profile Picture */}
-                <div className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow flex items-center justify-center overflow-hidden mb-4 relative group">
-                    {photoURL ? (
-                        <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
-                    ) : (
-                        <span className="text-4xl text-gray-500 font-bold">
-                            {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
-                        </span>
-                    )}
-                    {isOwner && editing && (
-                        <>
-                            <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                <span className="text-white font-semibold">Change</span>
-                                <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
-                            </label>
-                            {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">Uploading...</div>}
-                        </>
-                    )}
-                </div>
-                {/* Name */}
-                <div className="text-2xl font-black mb-2 text-center">
-                    {isOwner && editing ? (
-                        <input
-                            className="text-2xl font-black text-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-1 w-full max-w-xs mb-2"
-                            value={displayName}
-                            onChange={e => setDisplayName(e.target.value)}
-                            maxLength={40}
-                        />
-                    ) : (
-                        displayName || profileEmail
-                    )}
-                </div>
-                {/* Description */}
-                <div className="w-full mb-6 flex flex-col items-center">
-                    {isOwner && editing ? (
-                        <textarea
-                            className="w-full max-w-md bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg text-center"
-                            rows={3}
-                            value={desc}
-                            onChange={e => setDesc(e.target.value)}
-                            placeholder="Write something about yourself..."
-                            maxLength={300}
-                        />
-                    ) : (
-                        <div className="text-gray-700 text-lg min-h-[48px] whitespace-pre-line text-center">{desc || <span className="text-gray-400">No description yet.</span>}</div>
-                    )}
-                </div>
-                {/* Edit/Save Buttons */}
-                {isOwner && (
-                    <div className="mb-8">
-                        {editing ? (
+            {/* Full width, no max-w */}
+            <div className="flex flex-col md:flex-row gap-0 py-8 px-0 md:px-8 w-full">
+                {/* Sidebar */}
+                <aside className={`w-full md:w-64 bg-white border-r border-black/10 rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-md p-4 flex flex-row md:flex-col md:gap-2 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`}>
+                    {/* Burger for mobile */}
+                    <button
+                        className="md:hidden absolute top-4 right-4 z-10"
+                        onClick={() => setSidebarOpen(s => !s)}
+                    >
+                        {sidebarOpen ? <FiX size={26} /> : <FiMenu size={26} />}
+                    </button>
+                    {/* Sidebar Nav */}
+                    <nav className={`flex-1 w-full flex ${sidebarOpen ? "flex" : "hidden"} md:flex flex-col gap-2 mt-8 md:mt-0`}>
+                        {TABS.map(tab => (
                             <button
-                                className="px-6 py-2 bg-black text-white rounded-full font-semibold mr-2 disabled:opacity-50"
-                                onClick={handleSave}
-                                disabled={saving}
+                                key={tab.key}
+                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-lg transition-all
+                  ${selectedTab === tab.key ? "bg-black text-white shadow" : "bg-gray-100 hover:bg-black hover:text-white text-black"}
+                `}
+                                onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
                             >
-                                {saving ? "Saving..." : "Save"}
+                                {tab.icon}
+                                {tab.label}
                             </button>
-                        ) : (
-                            <button
-                                className="px-6 py-2 bg-gray-200 text-black rounded-full font-semibold"
-                                onClick={() => setEditing(true)}
-                            >
-                                Edit Info
-                            </button>
-                        )}
-                    </div>
-                )}
-                {/* User's Shops */}
-                <div className="w-full">
-                    <h2 className="text-xl font-bold mb-4">{isOwner ? "Your Shops" : "Shops"}</h2>
-                    {shops.length === 0 ? (
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="text-gray-400">You have not created any shops yet.</div>
+                        ))}
+                    </nav>
+                </aside>
+
+                {/* Main Content */}
+                <main className="flex-1 min-w-0 w-full bg-white shadow-lg p-4 md:p-10 mx-auto">
+                    {/* PROFILE TAB */}
+                    {selectedTab === "profile" && (
+                        <div className="flex flex-col items-center w-full">
+                            {/* Profile Picture */}
+                            <div className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow flex items-center justify-center overflow-hidden mb-4 relative group">
+                                {photoURL ? (
+                                    <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
+                                ) : (
+                                    <span className="text-4xl text-gray-500 font-bold">
+                                        {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                    </span>
+                                )}
+                                {isOwner && editing && (
+                                    <>
+                                        <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                            <span className="text-white font-semibold">Change</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
+                                        </label>
+                                        {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">Uploading...</div>}
+                                    </>
+                                )}
+                            </div>
+                            {/* Name */}
+                            <div className="text-2xl font-black mb-2 text-center">
+                                {isOwner && editing ? (
+                                    <input
+                                        className="text-2xl font-black text-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-1 w-full max-w-xs mb-2"
+                                        value={displayName}
+                                        onChange={e => setDisplayName(e.target.value)}
+                                        maxLength={40}
+                                    />
+                                ) : (
+                                    displayName || profileEmail
+                                )}
+                            </div>
+                            {/* Description */}
+                            <div className="w-full mb-6 flex flex-col items-center">
+                                {isOwner && editing ? (
+                                    <textarea
+                                        className="w-full max-w-md bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg text-center"
+                                        rows={3}
+                                        value={desc}
+                                        onChange={e => setDesc(e.target.value)}
+                                        placeholder="Write something about yourself..."
+                                        maxLength={300}
+                                    />
+                                ) : (
+                                    <div className="text-gray-700 text-lg min-h-[48px] whitespace-pre-line text-center">{desc || <span className="text-gray-400">No description yet.</span>}</div>
+                                )}
+                            </div>
+                            {/* Edit/Save Buttons */}
                             {isOwner && (
-                                <Link
-                                    to="/create-shop"
-                                    className="px-6 py-3 bg-black text-white rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/90 transition"
-                                >
-                                    Create Your Shop
-                                </Link>
+                                <div className="mb-8">
+                                    {editing ? (
+                                        <button
+                                            className="px-6 py-2 bg-black text-white rounded-full font-semibold mr-2 disabled:opacity-50"
+                                            onClick={handleSave}
+                                            disabled={saving}
+                                        >
+                                            {saving ? "Saving..." : "Save"}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="px-6 py-2 bg-gray-200 text-black rounded-full font-semibold"
+                                            onClick={() => setEditing(true)}
+                                        >
+                                            Edit Info
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {shops.map(shop => (
-                                <Link
-                                    to={`/shop/${shop.username}`}
-                                    key={shop.id}
-                                    className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
-                                    style={{ textDecoration: 'none', color: 'inherit' }}
-                                >
-                                    {shop.logo ? (
-                                        <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border border-gray-200" />
-                                    ) : (
-                                        <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 font-bold">{shop.name[0]}</div>
+                    )}
+
+                    {/* SHOPS TAB */}
+                    {selectedTab === "shops" && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">{isOwner ? "Your Shops" : "Shops"}</h2>
+                            {shops.length === 0 ? (
+                                <div className="flex flex-col items-center gap-4">
+                                    <div className="text-gray-400">You have not created any shops yet.</div>
+                                    {isOwner && (
+                                        <Link
+                                            to="/create-shop"
+                                            className="px-6 py-3 bg-black text-white rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/90 transition"
+                                        >
+                                            Create Your Shop
+                                        </Link>
                                     )}
-                                    <div>
-                                        <div className="font-bold text-lg">{shop.name}</div>
-                                        <div className="text-xs text-gray-500">@{shop.username}</div>
-                                    </div>
-                                </Link>
-                            ))}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {shops.map(shop => (
+                                        <Link
+                                            to={`/shop/${shop.username}`}
+                                            key={shop.id}
+                                            className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+                                            style={{ textDecoration: 'none', color: 'inherit' }}
+                                        >
+                                            {shop.logo ? (
+                                                <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border border-gray-200" />
+                                            ) : (
+                                                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 font-bold">{shop.name[0]}</div>
+                                            )}
+                                            <div>
+                                                <div className="font-bold text-lg">{shop.name}</div>
+                                                <div className="text-xs text-gray-500">@{shop.username}</div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
-                </div>
+
+                    {/* ORDERS TAB */}
+                    {selectedTab === "orders" && (
+                        <div>
+                            <div className="flex gap-6 mb-6 border-b border-gray-200">
+                                {ORDER_SUBTABS.map(subTab => (
+                                    <button
+                                        key={subTab.key}
+                                        className={`py-3 px-6 font-bold text-base border-b-2 transition-all ${orderSubTab === subTab.key ? "border-black text-black" : "border-transparent text-gray-400 hover:text-black"}`}
+                                        onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
+                                    >
+                                        {subTab.label}
+                                    </button>
+                                ))}
+                            </div>
+                            {ordersLoading ? (
+                                <div className="py-10 text-center text-gray-400">Loading orders...</div>
+                            ) : (
+                                <div>
+                                    {/* As Buyer */}
+                                    {orderSubTab === "buyer" && (
+                                        <div>
+                                            {buyerOrders.length === 0 ? (
+                                                <div className="py-10 text-center text-gray-400">No orders as buyer yet.</div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    {buyerOrders.map(order => (
+                                                        <Link
+                                                            to={`/order/${order.id}`}
+                                                            key={order.id}
+                                                            className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow hover:shadow-lg transition cursor-pointer"
+                                                            style={{ textDecoration: 'none', color: 'inherit' }}
+                                                        >
+                                                            <img
+                                                                src={order.itemImage || '/placeholder.png'}
+                                                                alt={order.itemName}
+                                                                className="w-16 h-16 object-cover rounded-lg border"
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-bold text-lg mb-1 truncate">{order.itemName}</div>
+                                                                <div className="text-gray-700 text-sm mb-1">Status: <span className="font-semibold">{order.status}</span></div>
+                                                                <div className="text-gray-600 text-xs truncate">Seller: {order.sellerName || order.sellerId}</div>
+                                                            </div>
+                                                            <div className="text-lg font-bold text-black self-end whitespace-nowrap">LKR {order.total?.toLocaleString()}</div>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {/* As Seller */}
+                                    {orderSubTab === "seller" && (
+                                        <div>
+                                            {sellerOrders.length === 0 ? (
+                                                <div className="py-10 text-center text-gray-400">No orders as seller yet.</div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    {sellerOrders.map(order => (
+                                                        <div
+                                                            key={order.id}
+                                                            className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow hover:shadow-lg transition cursor-pointer"
+                                                        >
+                                                            <img
+                                                                src={order.itemImage || '/placeholder.png'}
+                                                                alt={order.itemName}
+                                                                className="w-16 h-16 object-cover rounded-lg border"
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-bold text-lg mb-1 truncate">{order.itemName}</div>
+                                                                <div className="text-gray-700 text-sm mb-1">Status: <span className="font-semibold">{order.status}</span></div>
+                                                                <div className="text-gray-600 text-xs truncate">Buyer: {order.buyerName || order.buyerId}</div>
+                                                                <div className="flex gap-2 mt-2">
+                                                                    <select
+                                                                        className="border rounded px-2 py-1 text-xs"
+                                                                        value={order.status}
+                                                                        onChange={async (e) => {
+                                                                            const newStatus = e.target.value;
+                                                                            if (newStatus === "IN_PROGRESS" || newStatus === "SHIPPED") {
+                                                                                await updateDoc(doc(db, "orders", order.id), { status: newStatus });
+                                                                                setSellerOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
+                                                                            }
+                                                                        }}
+                                                                        disabled={order.status === "CANCELLED" || order.status === "RECEIVED"}
+                                                                    >
+                                                                        <option value="PENDING" disabled>Pending</option>
+                                                                        <option value="IN_PROGRESS">In Progress</option>
+                                                                        <option value="SHIPPED">Shipped</option>
+                                                                    </select>
+                                                                    <button
+                                                                        className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
+                                                                        onClick={async (e) => {
+                                                                            e.stopPropagation();
+                                                                            await updateDoc(doc(db, "orders", order.id), { status: "CANCELLED" });
+                                                                            setSellerOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "CANCELLED" } : o));
+                                                                        }}
+                                                                        disabled={order.status === "CANCELLED" || order.status === "RECEIVED"}
+                                                                    >
+                                                                        Cancel Order
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <Link
+                                                                to={`/order/${order.id}`}
+                                                                className="text-lg font-bold text-black self-end whitespace-nowrap hover:underline ml-2"
+                                                                style={{ textDecoration: 'none', color: 'inherit' }}
+                                                            >
+                                                                LKR {order.total?.toLocaleString()}
+                                                            </Link>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* REVIEWS TAB */}
+                    {selectedTab === "reviews" && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">Your Seller Reviews</h2>
+                            {reviewsLoading ? (
+                                <div className="py-10 text-center text-gray-400">Loading reviews...</div>
+                            ) : sellerReviews.length === 0 ? (
+                                <div className="py-10 text-center text-gray-400">No reviews as seller yet.</div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {sellerReviews.map(r => (
+                                        <div key={r.id} className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow hover:shadow-lg transition">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-bold text-base">{r.rating}★</span>
+                                                <span className="text-gray-600 text-xs">{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="text-gray-800">{r.text}</div>
+                                            {r.writtenByUserName && (
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    — {r.writtenByUserName}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </main>
             </div>
         </div>
     );

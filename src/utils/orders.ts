@@ -20,6 +20,7 @@ export interface Order {
 export async function createOrder(order: Omit<Order, "createdAt">) {
     const docRef = await addDoc(collection(db, "orders"), {
         ...order,
+        status: "PENDING", // Set default status
         createdAt: Timestamp.now(),
     });
     return docRef.id;
