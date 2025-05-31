@@ -99,6 +99,7 @@ export default function AddListing() {
       deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
       deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
       images: imageUrls,
+      createdAt: (await import("firebase/firestore")).Timestamp.now(),
     });
     alert("Listing added!");
     navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);

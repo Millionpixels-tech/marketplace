@@ -280,7 +280,17 @@ export default function ProfileDashboard() {
                     {/* SHOPS TAB */}
                     {selectedTab === "shops" && (
                         <div>
-                            <h2 className="text-xl font-bold mb-4">{isOwner ? "Your Shops" : "Shops"}</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold">{isOwner ? "Your Shops" : "Shops"}</h2>
+                                {isOwner && (
+                                    <Link
+                                        to="/create-shop"
+                                        className="px-5 py-2 bg-black text-white rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/90 transition text-sm"
+                                    >
+                                        Create New Shop
+                                    </Link>
+                                )}
+                            </div>
                             {shops.length === 0 ? (
                                 <div className="flex flex-col items-center gap-4">
                                     <div className="text-gray-400">You have not created any shops yet.</div>
