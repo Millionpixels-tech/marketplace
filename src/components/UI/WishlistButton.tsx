@@ -1,56 +1,50 @@
 // src/components/WishlistButton.tsx
 import { useState, useEffect } from "react";
 import { FiHeart } from "react-icons/fi";
-import {
-    addToWishlist,
-    removeFromWishlist,
-    isItemWishlisted,
-} from "../../utils/wishlist";
-import { useAuth } from "../../context/AuthContext"; // Your context
+import { addToWishlist, removeFromWishlist, isWishlisted } from "../../utils/wishlist";
+import { useAuth } from "../../context/AuthContext";
+import { getUserIP } from "../../utils/ipUtils";
 
 type WishlistButtonProps = {
-    productId: string;
+    listing: any;
+    refresh: () => Promise<void>; // Callback to refresh parent data after wish/unwish
 };
 
-export default function WishlistButton({ productId }: WishlistButtonProps) {
-    const { user } = useAuth(); // returns { user: { uid } } or null
-    const [wishlisted, setWishlisted] = useState(false);
-    const [loading, setLoading] = useState(true);
+export default function WishlistButton({ listing, refresh }: WishlistButtonProps) {
+    const { user } = useAuth();
+    const [loading, setLoading] = useState(false);
 
+    // Compute wishlisted state based on listing.wishlist
+
+    const [wishlisted, setWishlisted] = useState<boolean>(() =>
+        isWishlisted(listing, user?.uid, listing.__client_ip)
+    );
+
+    // Sync wishlisted state when listing/user/ip changes
     useEffect(() => {
-        let mounted = true;
-        (async () => {
-            setLoading(true);
-            const res = await isItemWishlisted(productId, user?.uid);
-            if (mounted) setWishlisted(res);
-            setLoading(false);
-        })();
-        return () => {
-            mounted = false;
-        };
-    }, [productId, user?.uid]);
+        setWishlisted(isWishlisted(listing, user?.uid, listing.__client_ip));
+    }, [listing, user?.uid, listing.__client_ip]);
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
         setLoading(true);
         if (wishlisted) {
-            await removeFromWishlist(productId, user?.uid);
-            setWishlisted(false);
+            await removeFromWishlist(listing.id, user?.uid);
         } else {
-            await addToWishlist(productId, user?.uid);
-            setWishlisted(true);
+            await addToWishlist(listing.id, user?.uid);
         }
+        await refresh();
         setLoading(false);
-        // Dispatch custom event so header can update count live
+        // No need to manually update wishlisted - parent refresh will do it
         window.dispatchEvent(new Event("wishlist-updated"));
     };
 
     return (
         <button
-            aria-label="Add to Wishlist"
+            aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
             disabled={loading}
             onClick={handleClick}
-            className={`rounded-full p-1.5 transition-colors flex items-center justify-center bg-gray-100 text-black hover:bg-gray-200`}
+            className={`rounded-full p-2 transition-colors flex items-center justify-center bg-gray-100 text-black hover:bg-gray-200`}
         >
             {loading ? (
                 <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -58,7 +52,7 @@ export default function WishlistButton({ productId }: WishlistButtonProps) {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                 </svg>
             ) : (
-                <FiHeart size={16} color="#111" fill={wishlisted ? "#111" : "none"} />
+                <FiHeart size={18} fill={wishlisted ? "#111" : "none"} color="#111" />
             )}
         </button>
     );

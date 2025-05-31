@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
+import { getUserIP } from "../utils/ipUtils";
 import { db } from "../utils/firebase";
 import Header from "../components/UI/Header";
+import WishlistButton from "../components/UI/WishlistButton";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 
 type Shop = {
@@ -27,9 +29,14 @@ export default function ListingSingle() {
       if (!id) return;
       const docRef = doc(db, "listings", id);
       const docSnap = await getDoc(docRef);
+      let ip = null;
+      try {
+        ip = await getUserIP();
+      } catch { }
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setItem(data);
+        // Attach client IP for wishlist logic
+        setItem({ ...data, __client_ip: ip });
 
         // Fetch shop info
         if (data.shop || data.shopId) {
@@ -67,6 +74,18 @@ export default function ListingSingle() {
     shipping = deliveryPerItem + (qty > 1 ? deliveryAdditional * (qty - 1) : 0);
   }
   const total = price * qty + shipping;
+
+  // Refresh function to reload item after wishlist change
+  const refreshItem = async () => {
+    if (!id) return;
+    const docRef = doc(db, "listings", id);
+    const docSnap = await getDoc(docRef);
+    let ip = null;
+    try {
+      ip = await getUserIP();
+    } catch { }
+    if (docSnap.exists()) setItem({ ...docSnap.data(), __client_ip: ip });
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen w-full">
@@ -149,6 +168,17 @@ export default function ListingSingle() {
               )}
             </div>
             <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2 mb-1">
+                {/* Wishlist icon */}
+                <WishlistButton listing={{ ...item, id }} refresh={refreshItem} />
+                <span>Add to wishlist</span>
+              </div>
+              {/* Wishlist count display under the button */}
+              {Array.isArray(item.wishlist) && item.wishlist.length > 0 && (
+                <p className="text-sm text-gray-500 font-medium mt-1">
+                  {item.wishlist.length} {item.wishlist.length === 1 ? "person has" : "people have"} added this item to their wishlist
+                </p>
+              )}
               <div className="flex items-center gap-4">
                 <span className="text-xl font-bold text-black">LKR {price.toLocaleString()}</span>
                 {deliveryType === "paid" && (

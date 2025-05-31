@@ -1,169 +1,98 @@
 // src/utils/wishlist.ts
 import { db } from "./firebase";
-import {
-    collection,
-    addDoc,
-    deleteDoc,
-    getDocs,
-    query,
-    where,
-    doc,
-    Query,
-} from "firebase/firestore";
-import { getUserIP } from "./ipUtils"; // You need to implement this function (returns IP as string)
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { getUserIP } from "./ipUtils";
 
-// --- Wishlist Entry Type ---
-export interface WishlistEntry {
-    itemId: string;
+// Wishlist record type
+export interface WishlistUser {
     ownerId?: string | null;
     ip?: string | null;
     createdAt: number;
 }
 
-// --- Add to Wishlist ---
+// Get wishlist array from a listing document
+export function getWishlistArray(listing: any): WishlistUser[] {
+    return Array.isArray(listing.wishlist) ? listing.wishlist : [];
+}
+
+// Add to wishlist (updates listing doc)
 export async function addToWishlist(itemId: string, ownerId?: string | null): Promise<void> {
     const ip = await getUserIP();
     if (!itemId || (!ownerId && !ip)) return;
+    const docRef = doc(db, "listings", itemId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
+    let prevWishlist: WishlistUser[] = getWishlistArray(docSnap.data());
 
-    // Check if already exists for either ownerId or IP
-    let q: Query;
-    if (ownerId) {
-        q = query(
-            collection(db, "wishlists"),
-            where("itemId", "==", itemId),
-            where("ownerId", "==", ownerId)
-        );
-    } else {
-        q = query(
-            collection(db, "wishlists"),
-            where("itemId", "==", itemId),
-            where("ip", "==", ip)
-        );
+    // If user is logged in, update any existing IP-only record for this item to have ownerId
+    if (ownerId && ip) {
+        let updated = false;
+        prevWishlist = prevWishlist.map(w => {
+            if (!w.ownerId && w.ip === ip) {
+                updated = true;
+                return { ...w, ownerId };
+            }
+            return w;
+        });
+        if (updated) {
+            await updateDoc(docRef, { wishlist: prevWishlist });
+            return;
+        }
     }
-    const snap = await getDocs(q);
-    if (!snap.empty) return;
 
-    await addDoc(collection(db, "wishlists"), {
-        itemId,
-        ownerId: ownerId ?? null,
-        ip: ip ?? null,
-        createdAt: Date.now(),
-    } as WishlistEntry);
+    // Prevent duplicate by IP or ownerId
+    const exists = prevWishlist.some(
+        w =>
+            (ownerId && w.ownerId === ownerId) ||
+            (!ownerId && ip && w.ip === ip)
+    );
+    if (exists) return;
+    // Add
+    await updateDoc(docRef, {
+        wishlist: arrayUnion({
+            ownerId: ownerId ?? null,
+            ip: ip ?? null,
+            createdAt: Date.now(),
+        }),
+    });
 }
 
-// --- Remove from Wishlist ---
+// Remove from wishlist (updates listing doc)
 export async function removeFromWishlist(itemId: string, ownerId?: string | null): Promise<void> {
     const ip = await getUserIP();
     if (!itemId || (!ownerId && !ip)) return;
-
-    // Remove all wishlist entries for this item, for either ownerId or IP (if both, remove both)
-    const queries: Query[] = [];
-    if (ownerId) {
-        queries.push(
-            query(
-                collection(db, "wishlists"),
-                where("itemId", "==", itemId),
-                where("ownerId", "==", ownerId)
-            )
-        );
-    }
-    if (ip) {
-        queries.push(
-            query(
-                collection(db, "wishlists"),
-                where("itemId", "==", itemId),
-                where("ip", "==", ip)
-            )
-        );
-    }
-    const allDocs = await Promise.all(queries.map(q => getDocs(q)));
-    for (const snap of allDocs) {
-        for (const docSnap of snap.docs) {
-            await deleteDoc(doc(db, "wishlists", docSnap.id));
+    const docRef = doc(db, "listings", itemId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return;
+    const prevWishlist: WishlistUser[] = getWishlistArray(docSnap.data());
+    // Remove matching by ownerId or IP (if user is logged in, remove both their ownerId and any IP-only record for this IP)
+    const filtered = prevWishlist.filter(w => {
+        if (ownerId) {
+            // Remove if matches ownerId or (no ownerId but matches IP)
+            return !(w.ownerId === ownerId || (!w.ownerId && ip && w.ip === ip));
+        } else {
+            // Remove if matches IP
+            return !(ip && w.ip === ip);
         }
-    }
-}
-
-// --- Get All Wishlisted Item IDs ---
-export async function getWishlistedItemIds(ownerId?: string | null): Promise<string[]> {
-    const ip = await getUserIP();
-    if (!ownerId && !ip) return [];
-
-    const queries: Query[] = [];
-    if (ownerId) {
-        queries.push(query(collection(db, "wishlists"), where("ownerId", "==", ownerId)));
-    }
-    if (ip) {
-        queries.push(query(collection(db, "wishlists"), where("ip", "==", ip)));
-    }
-
-    const allDocs = await Promise.all(queries.map(q => getDocs(q)));
-    const idsSet = new Set<string>();
-    allDocs.forEach(snap => {
-        snap.docs.forEach(docSnap => {
-            idsSet.add((docSnap.data() as WishlistEntry).itemId);
-        });
     });
-    return Array.from(idsSet);
+    await updateDoc(docRef, { wishlist: filtered });
 }
 
-// --- Is Item Wishlisted ---
-export async function isItemWishlisted(itemId: string, ownerId?: string | null): Promise<boolean> {
-    const ip = await getUserIP();
-    if (!itemId || (!ownerId && !ip)) return false;
-
-    const queries: Query[] = [];
-    if (ownerId) {
-        queries.push(
-            query(
-                collection(db, "wishlists"),
-                where("itemId", "==", itemId),
-                where("ownerId", "==", ownerId)
-            )
-        );
-    }
-    if (ip) {
-        queries.push(
-            query(
-                collection(db, "wishlists"),
-                where("itemId", "==", itemId),
-                where("ip", "==", ip)
-            )
-        );
-    }
-    const allDocs = await Promise.all(queries.map(q => getDocs(q)));
-    return allDocs.some(snap => !snap.empty);
+// Returns true if this listing is wishlisted by this user/ip
+export function isWishlisted(listing: any, ownerId?: string | null, ip?: string | null): boolean {
+    const arr = getWishlistArray(listing);
+    if (ownerId && arr.some(w => w.ownerId === ownerId)) return true;
+    if (ip && arr.some(w => w.ip === ip)) return true;
+    return false;
 }
 
-// --- Merge Guest Wishlist to User On Login (Optional) ---
-export async function migrateGuestWishlistToUser(ownerId: string) {
-    const ip = await getUserIP();
-    if (!ownerId || !ip) return;
-
-    // Get all guest wishlists by IP
-    const q = query(collection(db, "wishlists"), where("ip", "==", ip));
-    const snap = await getDocs(q);
-    for (const docSnap of snap.docs) {
-        const data = docSnap.data();
-        // If not already associated with this user, add as user and delete guest
-        if (!data.ownerId) {
-            // Check if user already has this item wishlisted
-            const already = await getDocs(
-                query(
-                    collection(db, "wishlists"),
-                    where("itemId", "==", data.itemId),
-                    where("ownerId", "==", ownerId)
-                )
-            );
-            if (already.empty) {
-                await addDoc(collection(db, "wishlists"), {
-                    ...data,
-                    ownerId,
-                    ip: null,
-                });
-            }
-            // Remove guest/IP wishlist entry
-            await deleteDoc(doc(db, "wishlists", docSnap.id));
-        }
-    }
+// For fetching all wishlisted item IDs for current user or IP (for a page with all listings, you just filter client-side)
+export function getWishlistedIdsFromListings(
+    listings: any[],
+    ownerId?: string | null,
+    ip?: string | null
+): string[] {
+    return listings
+        .filter(l => isWishlisted(l, ownerId, ip))
+        .map(l => l.id);
 }

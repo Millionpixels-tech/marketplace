@@ -2,7 +2,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
-import { getWishlistedItemIds } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
 
@@ -19,8 +18,8 @@ const Header = () => {
     useEffect(() => {
         let mounted = true;
         async function fetchWishlist() {
-            const ids = await getWishlistedItemIds(user?.uid);
-            if (mounted) setWishlistCount(ids.length);
+            //const ids = await getWishlistedItemIds(user?.uid);
+            //if (mounted) setWishlistCount(ids.length);
         }
         fetchWishlist();
 
