@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { createOrder } from "../utils/orders";
 import { useParams, Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { getUserIP } from "../utils/ipUtils";
@@ -15,6 +17,7 @@ type Shop = {
 };
 
 export default function ListingSingle() {
+  const { user } = useAuth();
   const { id } = useParams();
   const [item, setItem] = useState<any>(null);
   const [shop, setShop] = useState<Shop | null>(null);
@@ -170,8 +173,7 @@ export default function ListingSingle() {
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2 mb-1">
                 {/* Wishlist icon */}
-                <WishlistButton listing={{ ...item, id }} refresh={refreshItem} />
-                <span>Add to wishlist</span>
+                <WishlistButton listing={{ ...item, id }} refresh={refreshItem} displayText={true} />
               </div>
               {/* Wishlist count display under the button */}
               {Array.isArray(item.wishlist) && item.wishlist.length > 0 && (
@@ -210,6 +212,24 @@ export default function ListingSingle() {
               )}
               <button
                 className="mt-4 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition"
+                onClick={async () => {
+                  if (!item || !shop) return;
+                  await createOrder({
+                    itemId: id,
+                    itemName: item.name,
+                    itemImage: item.images?.[0] || "",
+                    buyerId: user?.uid || null,
+                    buyerEmail: user?.email || null,
+                    sellerId: item.ownerId || item.sellerId || null,
+                    sellerShopId: item.shop || item.shopId || null,
+                    sellerShopName: shop.name,
+                    price,
+                    quantity: qty,
+                    shipping,
+                    total,
+                  });
+                  alert("Order placed! (No payment gateway yet)");
+                }}
               >
                 Buy Now
               </button>

@@ -6,11 +6,12 @@ import { useAuth } from "../../context/AuthContext";
 import { getUserIP } from "../../utils/ipUtils";
 
 type WishlistButtonProps = {
+    displayText?: boolean; // Optional prop to control text display
     listing: any;
     refresh: () => Promise<void>; // Callback to refresh parent data after wish/unwish
 };
 
-export default function WishlistButton({ listing, refresh }: WishlistButtonProps) {
+export default function WishlistButton({ listing, refresh, displayText = false }: WishlistButtonProps) {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
 
@@ -40,20 +41,25 @@ export default function WishlistButton({ listing, refresh }: WishlistButtonProps
     };
 
     return (
-        <button
-            aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-            disabled={loading}
-            onClick={handleClick}
-            className={`rounded-full p-2 transition-colors flex items-center justify-center bg-gray-100 text-black hover:bg-gray-200`}
-        >
-            {loading ? (
-                <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-            ) : (
-                <FiHeart size={18} fill={wishlisted ? "#111" : "none"} color="#111" />
+        <span className="flex items-center gap-2">
+            <button
+                aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                disabled={loading}
+                onClick={handleClick}
+                className={`rounded-full p-2 transition-colors flex items-center justify-center bg-gray-100 text-black hover:bg-gray-200`}
+            >
+                {loading ? (
+                    <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                ) : (
+                    <FiHeart size={18} fill={wishlisted ? "#111" : "none"} color="#111" />
+                )}
+            </button>
+            {displayText && (
+                <span>{wishlisted ? 'Added to wishlist' : 'Add to wishlist'}</span>
             )}
-        </button>
+        </span>
     );
 }

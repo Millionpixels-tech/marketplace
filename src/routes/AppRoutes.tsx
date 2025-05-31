@@ -9,6 +9,7 @@ import Cart from "../pages/Cart";
 import ShopPage from "../pages/ShopPage";
 import Profile from "../pages/Profile";
 import ProtectedRoute from "./ProtectedRoute";
+import OrderPage from "../pages/OrderPage";
 
 const AppRoutes = () => (
   <Routes>
@@ -18,6 +19,7 @@ const AppRoutes = () => (
     <Route path="/add-listing" element={<ProtectedRoute><AddListing /></ProtectedRoute>} />
     <Route path="/listing/:id" element={<ListingPage />} />
     <Route path="/search" element={<Search />} />
+    <Route path="/order/:id" element={<OrderPage />} />
     <Route path="/cart" element={<Cart />} />
     <Route path="/shop/:username" element={<ShopPage />} />
     <Route path="/profile/:id" element={<Profile />} />

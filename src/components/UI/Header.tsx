@@ -5,7 +5,6 @@ import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "re
 import { getDocs, collection } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { getUserIP } from "../../utils/ipUtils";
-import { useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { isWishlisted } from "../../utils/wishlist";
 import { auth } from "../../utils/firebase";
@@ -154,10 +153,10 @@ const Header = () => {
                 {/* Menu (Right) */}
                 <div className="hidden md:flex items-center gap-4">
                     <Link
-                        to="/shops"
+                        to="/search"
                         className="hover:underline text-lg uppercase font-light"
                     >
-                        Shops
+                        Browse Items
                     </Link>
                     <Link
                         to="/wishlist"
@@ -285,11 +284,11 @@ const Header = () => {
                                 </ul>
                             )}
                             <Link
-                                to="/shops"
+                                to="/search"
                                 className="py-3 px-2 rounded hover:bg-black hover:text-white transition uppercase font-medium"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Shops
+                                Browse Items
                             </Link>
                             <Link
                                 to="/wishlist"

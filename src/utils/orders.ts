@@ -1,0 +1,26 @@
+import { db } from "./firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+
+export interface Order {
+    itemId?: string;
+    itemName: string;
+    itemImage: string;
+    buyerId: string | null;
+    buyerEmail: string | null;
+    sellerId: string;
+    sellerShopId: string;
+    sellerShopName: string;
+    price: number;
+    quantity: number;
+    shipping: number;
+    total: number;
+    createdAt: any;
+}
+
+export async function createOrder(order: Omit<Order, "createdAt">) {
+    const docRef = await addDoc(collection(db, "orders"), {
+        ...order,
+        createdAt: Timestamp.now(),
+    });
+    return docRef.id;
+}
