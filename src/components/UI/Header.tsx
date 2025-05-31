@@ -2,7 +2,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
+import { getDocs, collection } from "firebase/firestore";
+import { db } from "../../utils/firebase";
+import { getUserIP } from "../../utils/ipUtils";
+import { useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { isWishlisted } from "../../utils/wishlist";
 import { auth } from "../../utils/firebase";
 
 const Header = () => {
@@ -18,8 +23,19 @@ const Header = () => {
     useEffect(() => {
         let mounted = true;
         async function fetchWishlist() {
-            //const ids = await getWishlistedItemIds(user?.uid);
-            //if (mounted) setWishlistCount(ids.length);
+            let ip = null;
+            try {
+                ip = await getUserIP();
+            } catch { }
+            const snap = await getDocs(collection(db, "listings"));
+            let count = 0;
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                if (isWishlisted({ ...data, id: docSnap.id, __client_ip: ip }, user?.uid, ip)) {
+                    count++;
+                }
+            });
+            if (mounted) setWishlistCount(count);
         }
         fetchWishlist();
 
