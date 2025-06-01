@@ -8,6 +8,7 @@ import { db } from "../utils/firebase";
 import Header from "../components/UI/Header";
 import WishlistButton from "../components/UI/WishlistButton";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 type Shop = {
   name: string;
@@ -25,6 +26,7 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
+  const navigate = useNavigate();
 
   // Fetch listing and shop info
   useEffect(() => {
@@ -196,10 +198,16 @@ export default function ListingSingle() {
                   id="qty"
                   type="number"
                   min={1}
+                  max={item.quantity || 1}
                   value={qty}
-                  onChange={e => setQty(Math.max(1, Number(e.target.value)))}
+                  onChange={e => {
+                    let val = Math.max(1, Number(e.target.value));
+                    if (item.quantity && val > item.quantity) val = item.quantity;
+                    setQty(val);
+                  }}
                   className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-black"
                 />
+                <span className="text-xs text-gray-500 ml-1">Available: {item.quantity ?? 1}</span>
                 <span className="ml-3 text-base font-semibold">Total: LKR {total.toLocaleString()}</span>
               </div>
               {deliveryType === "paid" && (
@@ -211,24 +219,20 @@ export default function ListingSingle() {
                 </div>
               )}
               <button
-                className="mt-4 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition"
+                className="mt-4 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition disabled:opacity-50"
+                disabled={qty > (item.quantity || 1)}
                 onClick={async () => {
-                  if (!item || !shop) return;
-                  await createOrder({
-                    itemId: id,
+                  if (!item || !shop || qty > (item.quantity || 1)) return;
+                  const query = new URLSearchParams({
+                    itemId: id!,
                     itemName: item.name,
-                    itemImage: item.images?.[0] || "",
-                    buyerId: user?.uid || null,
-                    buyerEmail: user?.email || null,
-                    sellerId: item.owner, // FIXED: use correct field
-                    sellerShopId: item.shopId, // FIXED: use correct field
-                    sellerShopName: shop.name,
-                    price,
-                    quantity: qty,
-                    shipping,
-                    total,
+                    price: price.toString(),
+                    quantity: qty.toString(),
+                    total: total.toString(),
+                    shopName: shop.name,
+                    image: item.images?.[0] || "",
                   });
-                  alert("Order placed! (No payment gateway yet)");
+                  navigate(`/checkout?${query.toString()}`);
                 }}
               >
                 Buy Now

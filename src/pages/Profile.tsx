@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../utils/firebase";
-import { collection, query, where, getDocs, doc, updateDoc, setDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
 import Header from "../components/UI/Header";
 
@@ -13,7 +13,9 @@ const TABS = [
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
     { key: "orders", label: "Orders", icon: <FiList /> },
     { key: "reviews", label: "Reviews", icon: <FiStar /> },
+    { key: "listings", label: "Listings", icon: <FiList /> }, // NEW
 ];
+
 
 const ORDER_SUBTABS = [
     { key: "buyer", label: "As Buyer" },
@@ -40,8 +42,12 @@ export default function ProfileDashboard() {
     const [loading, setLoading] = useState(true);
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings">("profile");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const [listings, setListings] = useState<any[]>([]);
+    const [listingsLoading, setListingsLoading] = useState(false);
+    const navigate = useNavigate();
 
     // Order sub-tabs
     const [orderSubTab, setOrderSubTab] = useState<"buyer" | "seller">("buyer");
@@ -88,6 +94,32 @@ export default function ProfileDashboard() {
         fetchProfile();
     }, [user, id]);
 
+    useEffect(() => {
+        const fetchListings = async () => {
+            if (selectedTab !== "listings" || !profileUid) return;
+            setListingsLoading(true);
+            try {
+                const shopsQuery = query(collection(db, "shops"), where("owner", "==", profileUid));
+                const shopsSnapshot = await getDocs(shopsQuery);
+                const shopIds = shopsSnapshot.docs.map(doc => doc.id);
+                if (shopIds.length === 0) {
+                    setListings([]);
+                    setListingsLoading(false);
+                    return;
+                }
+                const listingsQuery = query(collection(db, "listings"), where("shopId", "in", shopIds));
+                const listingsSnapshot = await getDocs(listingsQuery);
+                setListings(listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (err) {
+                console.error("Error loading listings:", err);
+            } finally {
+                setListingsLoading(false);
+            }
+        };
+        fetchListings();
+    }, [selectedTab, profileUid]);
+
+
     // Orders fetching
     useEffect(() => {
         if (selectedTab !== "orders" || !profileUid) return;
@@ -126,6 +158,22 @@ export default function ProfileDashboard() {
         };
         fetchReviews();
     }, [selectedTab, profileUid]);
+
+    const handleEditListing = (listingId: string) => {
+        navigate(`/listing/${listingId}/edit`);
+    };
+
+    const handleDeleteListing = async (listingId: string) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this listing?");
+        if (!confirmDelete) return;
+        try {
+            await deleteDoc(doc(db, "listings", listingId));
+            setListings(prev => prev.filter(l => l.id !== listingId));
+        } catch (error) {
+            console.error("Failed to delete listing:", error);
+        }
+    };
+
 
     const handleSave = async () => {
         if (!user) return;
@@ -474,6 +522,57 @@ export default function ProfileDashboard() {
                             )}
                         </div>
                     )}
+                    {selectedTab === "listings" && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">Your Listings</h2>
+                            {listingsLoading ? (
+                                <div className="py-10 text-center text-gray-400">Loading listings...</div>
+                            ) : listings.length === 0 ? (
+                                <div className="py-10 text-center text-gray-400">No listings found.</div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {listings.map(listing => {
+                                        const shop = shops.find(s => s.id === listing.shopId);
+                                        return (
+                                            <div
+                                                key={listing.id}
+                                                className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <img
+                                                        src={listing.images?.[0] || "/placeholder.png"}
+                                                        alt={listing.name}
+                                                        className="w-16 h-16 object-cover rounded border"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-bold text-lg truncate">{listing.name}</h3>
+                                                        <p className="text-xs text-gray-500 truncate mb-1">{shop ? shop.name : ''}</p>
+                                                        <p className="text-sm text-gray-600 truncate">{listing.description}</p>
+                                                        <p className="text-black font-bold mt-1">LKR {listing.price?.toLocaleString()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleEditListing(listing.id)}
+                                                        className="px-4 bg-black text-white rounded hover:bg-yellow-600"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteListing(listing.id)}
+                                                        className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </main>
             </div>
         </div>

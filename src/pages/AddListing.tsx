@@ -26,6 +26,7 @@ export default function AddListing() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [deliveryType, setDeliveryType] = useState<"free" | "paid" | "">("");
@@ -95,6 +96,7 @@ export default function AddListing() {
       name,
       description: desc,
       price: parseFloat(price),
+      quantity: parseInt(quantity, 10),
       deliveryType,
       deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
       deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
@@ -297,24 +299,34 @@ export default function AddListing() {
           {step === 4 && (
             <div className="animate-fade-in">
               <h2 className="text-2xl font-black mb-8">Item details</h2>
-              <div className="flex flex-col gap-7">
-                <input
-                  className="bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold"
-                  maxLength={120}
-                  placeholder="Item Title"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                />
-                <textarea
-                  className="bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold min-h-[120px]"
-                  maxLength={1200}
-                  placeholder="Description (up to 1200 characters)"
-                  value={desc}
-                  onChange={e => setDesc(e.target.value)}
-                  required
-                />
-                <div className="flex flex-col gap-2">
+
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1 mb-6">
+                  <label className="font-semibold">Item Title</label>
+                  <input
+                    className="bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold"
+                    maxLength={120}
+                    placeholder="Item Title"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 mb-6">
+                  <label className="font-semibold">Description</label>
+                  <textarea
+                    className="bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold min-h-[120px]"
+                    maxLength={1200}
+                    placeholder="Description (up to 1200 characters)"
+                    value={desc}
+                    onChange={e => setDesc(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1 mb-6">
+                  <label className="font-semibold">Item Price</label>
                   <div className="relative w-full">
                     <input
                       type="number"
@@ -333,7 +345,21 @@ export default function AddListing() {
                     </div>
                   )}
                 </div>
+
+                <div className="flex flex-col gap-1 mb-6">
+                  <label className="font-semibold">Available Quantity</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold border border-gray-300"
+                    placeholder="Available Quantity"
+                    value={quantity}
+                    onChange={e => setQuantity(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
+
               <div className="flex justify-between mt-10">
                 <button
                   type="button"
@@ -345,7 +371,7 @@ export default function AddListing() {
                 <button
                   type="button"
                   className="px-7 py-3 bg-black text-white rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/80 disabled:opacity-30"
-                  disabled={!name || !desc || !price}
+                  disabled={!name || !desc || !price || !quantity}
                   onClick={() => setStep(5)}
                 >
                   Next
@@ -353,6 +379,7 @@ export default function AddListing() {
               </div>
             </div>
           )}
+
 
           {/* Step 5: Images */}
           {step === 5 && (
