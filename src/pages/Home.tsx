@@ -68,6 +68,7 @@ const Home = () => {
   }, []);
 
   return (
+
     <>
       <Header />
       <div className="min-h-screen bg-white text-black flex flex-col">
@@ -97,6 +98,18 @@ const Home = () => {
             </Link>
           </div>
         </header>
+
+        {/* 14 Days Money Back Guarantee Section */}
+        <section className="w-full bg-green-50 border-t border-b border-green-200 py-10 flex flex-col items-center justify-center text-center">
+          <div className="max-w-2xl mx-auto flex flex-col items-center">
+            <div className="flex items-center gap-3 mb-3">
+              <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e" /><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              <span className="text-2xl font-bold text-green-700">14 Days Money Back Guarantee</span>
+            </div>
+            <p className="text-md md:text-lg text-green-900 font-medium mb-2">If your item does not arrive within 14 days of the expected delivery date, you can request a full refund.</p>
+            <p className="text-sm text-green-800">We guarantee your money back if you do not receive your order. Shop with peace of mind.</p>
+          </div>
+        </section>
 
         {/* Categories */}
         <section className="py-16 border-t border-black w-full">

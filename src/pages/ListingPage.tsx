@@ -1,3 +1,4 @@
+import { categories } from "../utils/categories";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { createOrder } from "../utils/orders";
@@ -101,6 +102,38 @@ export default function ListingSingle() {
   return (
     <div className="bg-gray-50 min-h-screen w-full">
       <Header />
+
+      {/* Breadcrumb */}
+      <nav className="w-full max-w-4xl mx-auto mt-4 px-2 md:px-0 text-sm" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 text-gray-600">
+          {item?.category && (
+            <li>
+              <Link
+                to={`/search?cat=${encodeURIComponent(item.category)}`}
+                className="hover:underline hover:text-black font-semibold"
+              >
+                {item.category}
+              </Link>
+            </li>
+          )}
+          {item?.subcategory && (
+            <>
+              <span className="mx-1">/</span>
+              <li>
+                <Link
+                  to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
+                  className="hover:underline hover:text-black font-semibold"
+                >
+                  {item.subcategory}
+                </Link>
+              </li>
+            </>
+          )}
+          <span className="mx-1">/</span>
+          <li className="text-black font-bold truncate max-w-[180px] md:max-w-xs" title={item.name}>{item.name}</li>
+        </ol>
+      </nav>
+
       <main className="w-full max-w-4xl mx-auto mt-8 px-2 md:px-0">
         <div className="flex flex-col md:flex-row gap-8 bg-white rounded-3xl shadow-xl p-4 md:p-10">
           {/* Image Gallery */}
@@ -262,8 +295,26 @@ export default function ListingSingle() {
           </div>
         </div>
 
+        {/* Money Back Guarantee & Buyer Protection */}
+        <section className="w-full max-w-4xl mx-auto mt-8 mb-8 px-2 md:px-0">
+          <div className="bg-green-50 border border-green-200 rounded-2xl shadow p-6 flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
+            <div className="flex-shrink-0 flex items-center justify-center mb-2 md:mb-0">
+              <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e" /><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </div>
+            <div>
+              <div className="text-lg md:text-xl font-bold text-green-700 mb-1">14 Days Money Back Guarantee</div>
+              <div className="text-green-900 font-medium mb-1">If your item does not arrive within 14 days of the expected delivery date, you can request a full refund.</div>
+              <div className="text-green-800 text-sm">We guarantee your money back if you do not receive your order. Shop with peace of mind.</div>
+              <div className="mt-2 text-green-900 font-semibold flex items-center gap-2 justify-center md:justify-start">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#22c55e" /><path d="M7 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Buyer Protection: Your payment is held securely until you confirm delivery.
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Description at the bottom */}
-        <section className="w-full max-w-4xl mx-auto mt-8 mb-12 px-2 md:px-0">
+        <section className="w-full max-w-4xl mx-auto mb-12 px-2 md:px-0">
           <h2 className="text-xl font-bold mb-3 text-gray-900">Description</h2>
           <div className="bg-white rounded-2xl shadow p-6 text-gray-700 text-base md:text-lg whitespace-pre-line">
             {item.description}

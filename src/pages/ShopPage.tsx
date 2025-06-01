@@ -63,8 +63,8 @@ export default function ShopPage() {
     useEffect(() => {
         if (!shop) return;
         async function getTotalCount() {
-            // NOTE: For large collections, a Firestore aggregate query is better. Here we fetch all IDs for simplicity.
-            const allListingsSnap = await getDocs(query(collection(db, "listings"), where("owner", "==", shop?.owner)));
+            // Count listings by shopId (shopId)
+            const allListingsSnap = await getDocs(query(collection(db, "listings"), where("shopId", "==", shop?.id)));
             setTotalCount(allListingsSnap.size);
         }
         getTotalCount();
@@ -80,7 +80,7 @@ export default function ShopPage() {
             if (currentPage === 1) {
                 q = query(
                     collection(db, "listings"),
-                    where("owner", "==", shop.owner),
+                    where("shopId", "==", shop.id),
                     limit(PAGE_SIZE)
                 );
             } else {
@@ -88,13 +88,12 @@ export default function ShopPage() {
                 if (!cursor) return;
                 q = query(
                     collection(db, "listings"),
-                    where("owner", "==", shop.owner),
+                    where("shopId", "==", shop.id),
                     startAfter(cursor),
                     limit(PAGE_SIZE)
                 );
             }
             const snap = await getDocs(q);
-            console.log('ddd', snap.docs);
             const docs = snap.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),

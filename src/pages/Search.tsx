@@ -36,6 +36,10 @@ const Search: React.FC = () => {
   const [appliedSort, setAppliedSort] = useState("");
   const [appliedFreeShipping, setAppliedFreeShipping] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // Adjust as needed
+
   // On mount or search param change: sync state
   useEffect(() => {
     setCat(searchParams.get("cat") || "");
@@ -50,6 +54,9 @@ const Search: React.FC = () => {
     setAppliedMaxPrice(searchParams.get("max") || "");
     setAppliedSort(searchParams.get("sort") || "");
     setAppliedFreeShipping(searchParams.get("free") === "1");
+    setCurrentPage(parseInt(searchParams.get("page") || "1"));
+    // Scroll to top when search params change (i.e., when user comes to search page or changes filters/page)
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
 
   // Get user's IP and fetch all listings with wishlist arrays
@@ -101,27 +108,52 @@ const Search: React.FC = () => {
   else if (appliedSort === "price-desc") filtered = [...filtered].sort((a, b) => Number(b.price) - Number(a.price));
   else if (appliedSort === "newest") filtered = [...filtered].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
+  // Pagination calculations
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filtered.slice(startIndex, endIndex);
+
   // Category/subcategory sidebar navigation handlers
   const handleCategoryClick = (c: string) => {
     const newCat = c === cat ? "" : c;
     setCat(newCat);
     setSub("");
+    setCurrentPage(1); // Reset to first page
     const params = new URLSearchParams(searchParams);
     if (newCat) params.set("cat", newCat);
     else {
       params.delete("cat");
       params.delete("sub");
     }
+    params.delete("page"); // Remove page param when changing category
     navigate({ pathname: "/search", search: params.toString() });
   };
 
   const handleSubcategoryClick = (c: string, sc: string) => {
     setCat(c);
     setSub(sc);
+    setCurrentPage(1); // Reset to first page
     const params = new URLSearchParams(searchParams);
     params.set("cat", c);
     params.set("sub", sc);
+    params.delete("page"); // Remove page param when changing subcategory
     navigate({ pathname: "/search", search: params.toString() });
+  };
+
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams);
+    if (page > 1) {
+      params.set("page", page.toString());
+    } else {
+      params.delete("page");
+    }
+    navigate({ pathname: "/search", search: params.toString() });
+    // Scroll to top when changing pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Main JSX
@@ -184,10 +216,11 @@ const Search: React.FC = () => {
                   <button
                     className="w-full px-3 py-2 rounded-lg text-left text-gray-500 hover:bg-gray-100 text-sm border border-gray-200 font-semibold transition disabled:opacity-50"
                     onClick={() => {
-                      setCat(""); setSub(""); setExpanded(null);
+                      setCat(""); setSub(""); setExpanded(null); setCurrentPage(1);
                       const params = new URLSearchParams(searchParams);
                       params.delete("cat");
                       params.delete("sub");
+                      params.delete("page");
                       navigate({ pathname: "/search", search: params.toString() });
                     }}
                     disabled={!cat && !sub}
@@ -263,11 +296,13 @@ const Search: React.FC = () => {
                       setAppliedMaxPrice(filterMaxPrice);
                       setAppliedSort(filterSort);
                       setAppliedFreeShipping(filterFreeShipping);
+                      setCurrentPage(1); // Reset to first page when applying filters
                       const params = new URLSearchParams(searchParams);
                       if (filterMinPrice) params.set("min", filterMinPrice); else params.delete("min");
                       if (filterMaxPrice) params.set("max", filterMaxPrice); else params.delete("max");
                       if (filterSort) params.set("sort", filterSort); else params.delete("sort");
                       if (filterFreeShipping) params.set("free", "1"); else params.delete("free");
+                      params.delete("page"); // Reset page when applying filters
                       navigate({ pathname: "/search", search: params.toString() });
                     }}
                   >
@@ -284,11 +319,13 @@ const Search: React.FC = () => {
                       setAppliedMaxPrice("");
                       setAppliedSort("");
                       setAppliedFreeShipping(false);
+                      setCurrentPage(1); // Reset to first page when resetting filters
                       const params = new URLSearchParams(searchParams);
                       params.delete("min");
                       params.delete("max");
                       params.delete("sort");
                       params.delete("free");
+                      params.delete("page"); // Reset page when resetting filters
                       navigate({ pathname: "/search", search: params.toString() });
                     }}
                   >
@@ -306,9 +343,11 @@ const Search: React.FC = () => {
                 className="flex w-full gap-0"
                 onSubmit={e => {
                   e.preventDefault();
+                  setCurrentPage(1); // Reset to first page when searching
                   const params = new URLSearchParams(searchParams);
                   if (searchInput) params.set("q", searchInput);
                   else params.delete("q");
+                  params.delete("page"); // Reset page when searching
                   navigate({ pathname: "/search", search: params.toString() });
                 }}
               >
@@ -328,9 +367,16 @@ const Search: React.FC = () => {
                 </button>
               </form>
             </div>
+            {/* Results header with count */}
+            <div className="mb-6">
+              <p className="text-gray-600 text-sm">
+                Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
+                {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
+              </p>
+            </div>
             {/* Results grid */}
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
-              {filtered.map((item) => (
+              {paginatedItems.map((item) => (
                 <Link
                   key={item.id}
                   to={`/listing/${item.id}`}
@@ -413,12 +459,101 @@ const Search: React.FC = () => {
                   </div>
                 </Link>
               ))}
-              {filtered.length === 0 && (
+              {paginatedItems.length === 0 && (
                 <div className="col-span-full text-center text-gray-400 text-lg py-20">
                   No products found.
                 </div>
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2">
+                {/* Previous button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  aria-label="Previous page"
+                >
+                  ← Previous
+                </button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {/* First page */}
+                  {currentPage > 3 && (
+                    <>
+                      <button
+                        onClick={() => handlePageChange(1)}
+                        className="w-10 h-10 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+                      >
+                        1
+                      </button>
+                      {currentPage > 4 && (
+                        <span className="px-2 text-gray-400">...</span>
+                      )}
+                    </>
+                  )}
+
+                  {/* Pages around current */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    if (pageNum < 1 || pageNum > totalPages) return null;
+                    if (currentPage > 3 && pageNum === 1) return null;
+                    if (currentPage < totalPages - 2 && pageNum === totalPages) return null;
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-10 h-10 rounded-lg border font-medium transition ${currentPage === pageNum
+                          ? "border-black bg-black text-white"
+                          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  {/* Last page */}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && (
+                        <span className="px-2 text-gray-400">...</span>
+                      )}
+                      <button
+                        onClick={() => handlePageChange(totalPages)}
+                        className="w-10 h-10 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Next button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  aria-label="Next page"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </main>
         </div>
       </div>
