@@ -32,6 +32,7 @@ export default function AddListing() {
   const [deliveryType, setDeliveryType] = useState<"free" | "paid" | "">("");
   const [deliveryPerItem, setDeliveryPerItem] = useState("");
   const [deliveryAdditional, setDeliveryAdditional] = useState("");
+  const [cashOnDelivery, setCashOnDelivery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
@@ -102,6 +103,7 @@ export default function AddListing() {
       deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
       images: imageUrls,
       createdAt: (await import("firebase/firestore")).Timestamp.now(),
+      cashOnDelivery,
     });
     alert("Listing added!");
     navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
@@ -495,6 +497,18 @@ export default function AddListing() {
                     />
                   </div>
                 )}
+              </div>
+              <div className="flex items-center gap-3 mt-6">
+                <input
+                  id="cod"
+                  type="checkbox"
+                  checked={cashOnDelivery}
+                  onChange={e => setCashOnDelivery(e.target.checked)}
+                  className="w-5 h-5 accent-black rounded"
+                />
+                <label htmlFor="cod" className="text-lg font-semibold text-gray-700 select-none cursor-pointer">
+                  Allow Cash on Delivery (COD)
+                </label>
               </div>
               <div className="flex justify-between mt-10">
                 <button

@@ -433,8 +433,7 @@ const Search: React.FC = () => {
                       </div>
                     );
                   })()}
-                  {/* Delivery badge */}
-                  {/* Delivery badge */}
+                  {/* Delivery & Payment badges */}
                   <div className="flex items-center gap-2 mb-2">
                     {item.deliveryType === "free" ? (
                       <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
@@ -445,6 +444,24 @@ const Search: React.FC = () => {
                       <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-gray-500 text-xs font-medium">
                         <span className="text-base">📦</span>
                         Delivery Fee will apply
+                      </span>
+                    )}
+                    {item.cashOnDelivery && (
+                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold ml-2 px-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        COD
                       </span>
                     )}
                   </div>

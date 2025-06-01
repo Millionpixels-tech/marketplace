@@ -18,6 +18,8 @@ type Shop = {
 };
 
 export default function ListingSingle() {
+  // Payment method state for COD
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'paynow'>('paynow');
   const { user } = useAuth();
   const { id } = useParams();
   const [item, setItem] = useState<any>(null);
@@ -26,6 +28,15 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    // If item allows COD, default to 'cod', else 'paynow'
+    if (item?.cashOnDelivery) {
+      setPaymentMethod('cod');
+    } else {
+      setPaymentMethod('paynow');
+    }
+  }, [item?.cashOnDelivery]);
 
   // Fetch listing and shop info
   useEffect(() => {
@@ -267,30 +278,89 @@ export default function ListingSingle() {
                   )}
                 </div>
               )}
-              <button
-                className="mt-4 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition disabled:opacity-50"
-                disabled={qty > (item.quantity || 1)}
-                onClick={async () => {
-                  if (!item || !shop || qty > (item.quantity || 1)) return;
-                  await createOrder({
-                    itemId: id,
-                    itemName: item.name,
-                    itemImage: item.images?.[0] || "",
-                    buyerId: user?.uid || null,
-                    buyerEmail: user?.email || null,
-                    sellerId: item.owner, // FIXED: use correct field
-                    sellerShopId: item.shopId, // FIXED: use correct field
-                    sellerShopName: shop.name,
-                    price,
-                    quantity: qty,
-                    shipping,
-                    total,
-                  });
-                  alert("Order placed! (No payment gateway yet)");
-                }}
-              >
-                Buy Now
-              </button>
+              {/* Payment method selection if COD is available */}
+              {item.cashOnDelivery ? (
+                <div className="flex flex-col gap-3 mt-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="pay-cod"
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="w-5 h-5 accent-black"
+                    />
+                    <label htmlFor="pay-cod" className="text-base font-semibold text-gray-700 select-none cursor-pointer">
+                      Cash on Delivery
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="pay-now"
+                      type="radio"
+                      name="paymentMethod"
+                      value="paynow"
+                      checked={paymentMethod === 'paynow'}
+                      onChange={() => setPaymentMethod('paynow')}
+                      className="w-5 h-5 accent-black"
+                    />
+                    <label htmlFor="pay-now" className="text-base font-semibold text-gray-700 select-none cursor-pointer">
+                      Pay Now
+                    </label>
+                  </div>
+                  <button
+                    className="mt-2 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition disabled:opacity-50"
+                    disabled={qty > (item.quantity || 1)}
+                    onClick={async () => {
+                      if (!item || !shop || qty > (item.quantity || 1)) return;
+                      await createOrder({
+                        itemId: id,
+                        itemName: item.name,
+                        itemImage: item.images?.[0] || "",
+                        buyerId: user?.uid || null,
+                        buyerEmail: user?.email || null,
+                        sellerId: item.owner,
+                        sellerShopId: item.shopId,
+                        sellerShopName: shop.name,
+                        price,
+                        quantity: qty,
+                        shipping,
+                        total,
+                        paymentMethod,
+                      });
+                      alert(paymentMethod === 'cod' ? "Order placed with Cash on Delivery!" : "Order placed! (No payment gateway yet)");
+                    }}
+                  >
+                    {paymentMethod === 'cod' ? 'Order with Cash on Delivery' : 'Pay Now'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="mt-4 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition disabled:opacity-50"
+                  disabled={qty > (item.quantity || 1)}
+                  onClick={async () => {
+                    if (!item || !shop || qty > (item.quantity || 1)) return;
+                    await createOrder({
+                      itemId: id,
+                      itemName: item.name,
+                      itemImage: item.images?.[0] || "",
+                      buyerId: user?.uid || null,
+                      buyerEmail: user?.email || null,
+                      sellerId: item.owner,
+                      sellerShopId: item.shopId,
+                      sellerShopName: shop.name,
+                      price,
+                      quantity: qty,
+                      shipping,
+                      total,
+                    });
+                    alert("Order placed! (No payment gateway yet)");
+                  }}
+                >
+                  Buy Now
+                </button>
+              )}
             </div>
           </div>
         </div>

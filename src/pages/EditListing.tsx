@@ -35,6 +35,10 @@ export default function EditListing() {
     const [deliveryType, setDeliveryType] = useState<"free" | "paid" | "">("");
     const [deliveryPerItem, setDeliveryPerItem] = useState("");
     const [deliveryAdditional, setDeliveryAdditional] = useState("");
+    const [cashOnDelivery, setCashOnDelivery] = useState(false);
+    const [initialDeliveryPerItem, setInitialDeliveryPerItem] = useState("");
+    const [initialDeliveryAdditional, setInitialDeliveryAdditional] = useState("");
+    const [initialCashOnDelivery, setInitialCashOnDelivery] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
 
@@ -68,9 +72,13 @@ export default function EditListing() {
             setDeliveryType(data.deliveryType || "");
             setDeliveryPerItem(data.deliveryPerItem ? String(data.deliveryPerItem) : "");
             setDeliveryAdditional(data.deliveryAdditional ? String(data.deliveryAdditional) : "");
+            setInitialDeliveryPerItem(data.deliveryPerItem ? String(data.deliveryPerItem) : "");
+            setInitialDeliveryAdditional(data.deliveryAdditional ? String(data.deliveryAdditional) : "");
             setExistingImageUrls(data.images || []);
             setImagePreviews(data.images || []);
             setQuantity(data.quantity ? String(data.quantity) : "");
+            setCashOnDelivery(!!data.cashOnDelivery);
+            setInitialCashOnDelivery(!!data.cashOnDelivery);
         }
         fetchListing();
     }, [listingId]);
@@ -134,6 +142,7 @@ export default function EditListing() {
             deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
             deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
             images: imageUrls,
+            cashOnDelivery,
             updatedAt: (await import("firebase/firestore")).Timestamp.now(),
         });
         alert("Listing updated!");
@@ -523,6 +532,18 @@ export default function EditListing() {
                                     </div>
                                 )}
                             </div>
+                            <div className="flex items-center mb-7">
+                                <input
+                                    id="cod-checkbox"
+                                    type="checkbox"
+                                    checked={cashOnDelivery}
+                                    onChange={e => setCashOnDelivery(e.target.checked)}
+                                    className="mr-2 w-5 h-5 accent-black"
+                                />
+                                <label htmlFor="cod-checkbox" className="font-semibold text-base select-none">
+                                    Allow buyers to pay with <span className="font-bold">Cash on Delivery</span>
+                                </label>
+                            </div>
                             <div className="flex justify-between mt-10">
                                 <button
                                     type="button"
@@ -537,7 +558,17 @@ export default function EditListing() {
                                     disabled={
                                         !deliveryType ||
                                         (deliveryType === "paid" &&
-                                            (!deliveryPerItem || !deliveryAdditional))
+                                            (!deliveryPerItem || !deliveryAdditional)) ||
+                                        (
+                                            deliveryType === "paid" &&
+                                            deliveryPerItem === initialDeliveryPerItem &&
+                                            deliveryAdditional === initialDeliveryAdditional &&
+                                            cashOnDelivery === initialCashOnDelivery
+                                        ) ||
+                                        (
+                                            deliveryType === "free" &&
+                                            cashOnDelivery === initialCashOnDelivery
+                                        )
                                     }
                                 >
                                     Update Listing

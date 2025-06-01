@@ -69,7 +69,7 @@ const Header = () => {
                     {/* Logo/Title */}
                     <Link to="/" className="text-2xl font-black tracking-tight uppercase">
                         <span className="hover:underline">
-                            SriLanka<span className="font-light">Market</span>
+                            Sina<span className="font-light">Marketplace</span>
                         </span>
                     </Link>
                     {/* Categories Dropdown */}

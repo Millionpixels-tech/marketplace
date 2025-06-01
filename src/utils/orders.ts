@@ -14,6 +14,7 @@ export interface Order {
     quantity: number;
     shipping: number;
     total: number;
+    paymentMethod?: 'cod' | 'paynow';
     createdAt: any;
 }
 
