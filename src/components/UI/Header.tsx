@@ -195,16 +195,7 @@ const Header = () => {
                                             {getInitials(user.displayName || user.email)}
                                         </span>
                                     )}
-                                    <span
-                                        className="hidden sm:block font-semibold text-black max-w-[120px] truncate cursor-pointer hover:underline"
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            setUserMenuOpen(false);
-                                            if (user?.uid) {
-                                                navigate(`/profile/${user.uid}`);
-                                            }
-                                        }}
-                                    >
+                                    <span className="hidden sm:block font-semibold text-black max-w-[120px] truncate">
                                         {user.displayName || user.email}
                                     </span>
                                     <FiChevronDown className="ml-1" />
@@ -215,7 +206,17 @@ const Header = () => {
                                             className="fixed inset-0 z-40"
                                             onClick={() => setUserMenuOpen(false)}
                                         />
-                                        <div className="absolute right-0 top-12 w-48 bg-white border border-black rounded-lg shadow-lg z-50 flex flex-col">
+                                        <div className="absolute right-0 top-12 w-52 bg-white border border-black rounded-lg shadow-lg z-50 flex flex-col">
+                                            <button
+                                                onClick={() => {
+                                                    setUserMenuOpen(false);
+                                                    navigate(`/dashboard/${user.uid}`);
+                                                }}
+                                                className="flex items-center gap-2 px-4 py-3 text-left font-semibold hover:bg-black hover:text-white transition border-b border-gray-200"
+                                            >
+                                                <FiUser className="inline mr-2" />
+                                                Dashboard
+                                            </button>
                                             <button
                                                 onClick={handleLogout}
                                                 className="flex items-center gap-2 px-4 py-3 text-left font-semibold hover:bg-black hover:text-white transition"
@@ -324,6 +325,15 @@ const Header = () => {
                                         )}
                                         <span className="font-semibold">{user.displayName || user.email}</span>
                                     </div>
+                                    <button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            navigate(`/dashboard/${user.uid}`);
+                                        }}
+                                        className="flex items-center gap-2 mt-4 py-3 px-2 rounded border border-black hover:bg-black hover:text-white transition uppercase font-medium"
+                                    >
+                                        <FiUser className="inline mr-2" /> Dashboard
+                                    </button>
                                     <button
                                         onClick={handleLogout}
                                         className="flex items-center gap-2 mt-4 py-3 px-2 rounded border border-black hover:bg-black hover:text-white transition uppercase font-medium"

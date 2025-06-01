@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../utils/firebase";
 import { collection, query, where, getDocs, orderBy, limit, startAfter, QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
@@ -31,6 +32,7 @@ type Listing = {
 const PAGE_SIZE = 8;
 
 export default function ShopPage() {
+    const { user } = useAuth();
     const { username } = useParams<{ username: string }>();
     const [shop, setShop] = useState<Shop | null>(null);
     const [listings, setListings] = useState<Listing[]>([]);
@@ -255,12 +257,14 @@ export default function ShopPage() {
                             <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wide">
                                 Shop Listings
                             </h2>
-                            <a
-                                href="/add-listing"
-                                className="inline-block px-6 py-2 bg-black text-white rounded-full font-semibold uppercase tracking-wide hover:bg-gray-900 transition"
-                            >
-                                + Create New Listing
-                            </a>
+                            {user && shop && user.uid === shop.owner && (
+                                <a
+                                    href="/add-listing"
+                                    className="inline-block px-6 py-2 bg-black text-white rounded-full font-semibold uppercase tracking-wide hover:bg-gray-900 transition"
+                                >
+                                    + Create New Listing
+                                </a>
+                            )}
                         </div>
                         {listings.length === 0 ? (
                             <div className="text-gray-400 py-8 text-center">No products yet.</div>

@@ -80,6 +80,13 @@ const Search: React.FC = () => {
     );
   };
 
+  function getReviewStats(listing: any) {
+    const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
+    if (!reviews.length) return { avg: null, count: 0 };
+    const avg = reviews.reduce((sum: any, r: any) => sum + (r.rating || 0), 0) / reviews.length;
+    return { avg, count: reviews.length };
+  }
+
   // FILTERING logic (in memory)
   let filtered = items.filter(
     (item) =>
@@ -347,6 +354,40 @@ const Search: React.FC = () => {
                   <h3 className="font-extrabold text-lg mb-1 truncate group-hover:text-black">
                     {item.name}
                   </h3>
+                  {/* Show product average rating and count */}
+                  {(() => {
+                    const stats = getReviewStats(item);
+                    return (
+                      <div className="flex items-center gap-2 mb-1 min-h-[22px]">
+                        {stats.avg ? (
+                          <>
+                            <span className="flex items-center text-yellow-500">
+                              {[1, 2, 3, 4, 5].map(i => (
+                                <svg
+                                  key={i}
+                                  width="16"
+                                  height="16"
+                                  className="inline-block"
+                                  fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                              ))}
+                              <span className="ml-1 text-xs font-bold text-yellow-700">
+                                {stats.avg.toFixed(1)}
+                              </span>
+                            </span>
+                            <span className="text-xs text-gray-500">({stats.count})</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">No reviews yet</span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {/* Delivery badge */}
                   {/* Delivery badge */}
                   <div className="flex items-center gap-2 mb-2">
                     {item.deliveryType === "free" ? (

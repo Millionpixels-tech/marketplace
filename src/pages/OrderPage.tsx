@@ -56,10 +56,33 @@ export default function OrderPage() {
         setOrder({ ...order, review, rating });
         setReview("");
         setRating(0);
+
         // Update shop rating
         if (order.sellerShopId) {
             await updateShopRating(order.sellerShopId, rating);
         }
+
+        // --- Add review to the listing's reviews array ---
+        if (order.itemId) {
+            const listingRef = doc(db, "listings", order.itemId);
+            // Compose review object
+            const reviewObj = {
+                review,
+                rating,
+                buyerEmail: order.buyerEmail || null,
+                reviewedAt: new Date(),
+                itemName: order.itemName || null,
+                itemImage: order.itemImage || null,
+                price: order.price || null,
+                quantity: order.quantity || null,
+            };
+            // Use arrayUnion to add to reviews array
+            const { arrayUnion } = await import("firebase/firestore");
+            await updateDoc(listingRef, {
+                reviews: arrayUnion(reviewObj),
+            });
+        }
+
         setSubmitting(false);
     };
 

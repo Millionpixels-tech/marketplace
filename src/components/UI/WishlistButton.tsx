@@ -8,7 +8,7 @@ import { getUserIP } from "../../utils/ipUtils";
 type WishlistButtonProps = {
     displayText?: boolean; // Optional prop to control text display
     listing: any;
-    refresh: () => Promise<void>; // Callback to refresh parent data after wish/unwish
+    refresh: () => void; // Callback to refresh parent data after wish/unwish
 };
 
 export default function WishlistButton({ listing, refresh, displayText = false }: WishlistButtonProps) {

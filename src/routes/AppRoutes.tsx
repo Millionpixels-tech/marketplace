@@ -8,12 +8,13 @@ import EditListing from "../pages/EditListing";
 import Search from "../pages/Search";
 import Cart from "../pages/Cart";
 import ShopPage from "../pages/ShopPage";
-import Profile from "../pages/Profile";
+import Profile from "../pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import OrderPage from "../pages/OrderPage";
 import WishlistPage from "../pages/WishlistPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import EditShop from "../pages/EditShop";
+import PublicProfile from "../pages/PublicProfile";
 
 const AppRoutes = () => (
   <Routes>
@@ -28,8 +29,9 @@ const AppRoutes = () => (
     <Route path="/order/:id" element={<OrderPage />} />
     <Route path="/cart" element={<Cart />} />
     <Route path="/shop/:username" element={<ShopPage />} />
-    <Route path="/profile/:id" element={<Profile />} />
+    <Route path="/dashboard/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="/edit-shop/:shopId" element={<EditShop />} />
+    <Route path="/profile/:id" element={<PublicProfile />} />
   </Routes>
 );
 
