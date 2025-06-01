@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import OrderSellerRow from "./OrderSellerRow";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
@@ -476,57 +477,7 @@ export default function ProfileDashboard() {
                                             ) : (
                                                 <div className="space-y-4">
                                                     {sellerOrders.map(order => (
-                                                        <div
-                                                            key={order.id}
-                                                            className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow hover:shadow-lg transition cursor-pointer"
-                                                        >
-                                                            <img
-                                                                src={order.itemImage || '/placeholder.png'}
-                                                                alt={order.itemName}
-                                                                className="w-16 h-16 object-cover rounded-lg border"
-                                                            />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="font-bold text-lg mb-1 truncate">{order.itemName}</div>
-                                                                <div className="text-gray-700 text-sm mb-1">Status: <span className="font-semibold">{order.status}</span></div>
-                                                                <div className="text-gray-600 text-xs truncate">Buyer: {order.buyerName || order.buyerId}</div>
-                                                                <div className="flex gap-2 mt-2">
-                                                                    <select
-                                                                        className="border rounded px-2 py-1 text-xs"
-                                                                        value={order.status}
-                                                                        onChange={async (e) => {
-                                                                            const newStatus = e.target.value;
-                                                                            if (newStatus === "IN_PROGRESS" || newStatus === "SHIPPED") {
-                                                                                await updateDoc(doc(db, "orders", order.id), { status: newStatus });
-                                                                                setSellerOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
-                                                                            }
-                                                                        }}
-                                                                        disabled={order.status === "CANCELLED" || order.status === "RECEIVED"}
-                                                                    >
-                                                                        <option value="PENDING" disabled>Pending</option>
-                                                                        <option value="IN_PROGRESS">In Progress</option>
-                                                                        <option value="SHIPPED">Shipped</option>
-                                                                    </select>
-                                                                    <button
-                                                                        className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 border border-red-200 hover:bg-red-200"
-                                                                        onClick={async (e) => {
-                                                                            e.stopPropagation();
-                                                                            await updateDoc(doc(db, "orders", order.id), { status: "CANCELLED" });
-                                                                            setSellerOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: "CANCELLED" } : o));
-                                                                        }}
-                                                                        disabled={order.status === "CANCELLED" || order.status === "RECEIVED"}
-                                                                    >
-                                                                        Cancel Order
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <Link
-                                                                to={`/order/${order.id}`}
-                                                                className="text-lg font-bold text-black self-end whitespace-nowrap hover:underline ml-2"
-                                                                style={{ textDecoration: 'none', color: 'inherit' }}
-                                                            >
-                                                                LKR {order.total?.toLocaleString()}
-                                                            </Link>
-                                                        </div>
+                                                        <OrderSellerRow key={order.id} order={order} setSellerOrders={setSellerOrders} />
                                                     ))}
                                                 </div>
                                             )}

@@ -1,29 +1,63 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import Header from "../components/UI/Header";
+import { useAuth } from "../context/AuthContext";
 
 export default function OrderPage() {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const { user } = useAuth(); // Assumes user?.email
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [review, setReview] = useState("");
     const [rating, setRating] = useState<number>(0);
+    const [refundSubmitting, setRefundSubmitting] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
+    // Role determination
+    const [isBuyer, setIsBuyer] = useState(false);
+    const [isSeller, setIsSeller] = useState(false);
+
+    // Fetch order and determine role
     useEffect(() => {
         const fetchOrder = async () => {
             if (!id) return;
             const docRef = doc(db, "orders", id);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                setOrder({ ...docSnap.data(), id: docSnap.id });
+                const orderData: any = { ...docSnap.data(), id: docSnap.id };
+                setOrder(orderData);
+
+                // Only after setting order and user, check roles
+                if (user && user.email) {
+                    setIsBuyer(orderData.buyerEmail === user.email);
+                    setIsSeller(orderData.sellerEmail === user.email); // Adjust field name as per your db
+                }
             }
             setLoading(false);
         };
         fetchOrder();
-    }, [id]);
+    }, [id, user]);
+
+    // Redirect logic
+    useEffect(() => {
+        if (!loading) {
+            // Not logged in or not buyer/seller? Redirect!
+            if (!user || !user.email || (!isBuyer && !isSeller)) {
+                navigate("/search", { replace: true });
+            }
+        }
+    }, [loading, user, isBuyer, isSeller, navigate]);
+
+    const requestRefund = async () => {
+        if (!order) return;
+        setRefundSubmitting(true);
+        await updateDoc(doc(db, "orders", order.id), { status: "REFUND_REQUESTED" });
+        setOrder({ ...order, status: "REFUND_REQUESTED" });
+        setRefundSubmitting(false);
+    };
 
     const markAsReceived = async () => {
         if (!order) return;
@@ -33,7 +67,6 @@ export default function OrderPage() {
         setSubmitting(false);
     };
 
-    // --- Update shop rating and rating count when a new review is added ---
     async function updateShopRating(shopId: string, newRating: number) {
         const shopRef = doc(db, "shops", shopId);
         const snap = await getDoc(shopRef);
@@ -62,10 +95,9 @@ export default function OrderPage() {
             await updateShopRating(order.sellerShopId, rating);
         }
 
-        // --- Add review to the listing's reviews array ---
+        // Add review to listing
         if (order.itemId) {
             const listingRef = doc(db, "listings", order.itemId);
-            // Compose review object
             const reviewObj = {
                 review,
                 rating,
@@ -76,19 +108,18 @@ export default function OrderPage() {
                 price: order.price || null,
                 quantity: order.quantity || null,
             };
-            // Use arrayUnion to add to reviews array
             const { arrayUnion } = await import("firebase/firestore");
             await updateDoc(listingRef, {
                 reviews: arrayUnion(reviewObj),
             });
         }
-
         setSubmitting(false);
     };
 
     if (loading) return <div className="flex items-center justify-center min-h-screen text-gray-400">Loading...</div>;
     if (!order) return <div className="flex items-center justify-center min-h-screen text-gray-400">Order not found.</div>;
 
+    // --- PAGE RENDER ---
     return (
         <div className="bg-gray-50 min-h-screen w-full">
             <Header />
@@ -120,67 +151,82 @@ export default function OrderPage() {
                             <span>LKR {order.total.toLocaleString()}</span>
                         </div>
                     </div>
-                    {/* Order Status Steps */}
+                    {/* Order Status Steps or Refund Requested */}
                     <div className="flex flex-col gap-2 mt-4 w-full">
                         <span className="text-sm font-semibold mb-2">Order Status:</span>
-                        <div className="relative flex items-center w-full justify-between px-1 md:px-4">
-                            {['PENDING', 'SHIPPED', 'RECEIVED'].map((step, idx, arr) => {
-                                const statusOrder = ['PENDING', 'SHIPPED', 'RECEIVED'];
-                                const currentIdx = statusOrder.indexOf(order.status || 'PENDING');
-                                const isActive = idx <= currentIdx;
-                                const isCompleted = idx < currentIdx;
+                        {order.status === "REFUND_REQUESTED" ? (
+                            <div className="w-full text-center py-3 bg-yellow-100 text-yellow-700 rounded-xl font-bold text-base uppercase tracking-wide shadow">
+                                Refund Requested
+                            </div>
+                        ) : (
+                            <div className="relative flex items-center w-full justify-between px-1 md:px-4">
+                                {['PENDING', 'SHIPPED', 'RECEIVED'].map((step, idx, arr) => {
+                                    const statusOrder = ['PENDING', 'SHIPPED', 'RECEIVED'];
+                                    let normalizedStatus = (order.status || 'PENDING').toUpperCase();
+                                    const currentIdx = statusOrder.indexOf(normalizedStatus);
+                                    const isActive = idx <= currentIdx;
+                                    const isCompleted = idx < currentIdx;
 
-                                return (
-                                    <div key={step} className="flex-1 flex flex-col items-center relative min-w-0">
-                                        {/* Step Circle */}
-                                        <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-200 z-10
-              ${isActive
-                                                    ? "bg-black text-white border-black shadow-md"
-                                                    : "bg-gray-100 text-gray-400 border-gray-300"}`}
-                                        >
-                                            {idx + 1}
-                                        </div>
-                                        {/* Step Label */}
-                                        <span
-                                            className={`mt-2 text-xs md:text-sm font-semibold text-center break-words transition-colors
-              ${isActive ? "text-black" : "text-gray-400"}`}
-                                            style={{ minWidth: 72 }}
-                                        >
-                                            {step.charAt(0) + step.slice(1).toLowerCase()}
-                                        </span>
-                                        {/* Connector Line */}
-                                        {idx < arr.length - 1 && (
+                                    return (
+                                        <div key={step} className="flex-1 flex flex-col items-center relative min-w-0">
+                                            {/* Step Circle */}
                                             <div
-                                                className={`absolute top-1/2 left-1/2 h-1 transition-all duration-200 z-0
-                ${isCompleted ? "bg-black" : "bg-gray-200"}`}
-                                                style={{
-                                                    width: "100%",
-                                                    transform: "translateY(-50%)",
-                                                    left: "50%",
-                                                    right: "-50%",
-                                                    zIndex: 0,
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-200 z-10
+                                                ${isActive
+                                                        ? "bg-black text-white border-black shadow-md"
+                                                        : "bg-gray-100 text-gray-400 border-gray-300"}`}
+                                            >
+                                                {idx + 1}
+                                            </div>
+                                            {/* Step Label */}
+                                            <span
+                                                className={`mt-2 text-xs md:text-sm font-semibold text-center break-words transition-colors
+                                                ${isActive ? "text-black" : "text-gray-400"}`}
+                                                style={{ minWidth: 72 }}
+                                            >
+                                                {step.charAt(0) + step.slice(1).toLowerCase()}
+                                            </span>
+                                            {/* Connector Line */}
+                                            {idx < arr.length - 1 && (
+                                                <div
+                                                    className={`absolute top-1/2 left-1/2 h-1 transition-all duration-200 z-0
+                                                    ${isCompleted ? "bg-black" : "bg-gray-200"}`}
+                                                    style={{
+                                                        width: "100%",
+                                                        transform: "translateY(-50%)",
+                                                        left: "50%",
+                                                        right: "-50%",
+                                                        zIndex: 0,
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
-
-                    {order.status === "CANCELLED" ? (
-                        <div className="mt-4 w-full py-3 bg-red-100 text-red-700 rounded-xl font-bold text-lg text-center uppercase tracking-wide shadow">
-                            This order has been cancelled.
-                        </div>
-                    ) : order.status !== "RECEIVED" && (
-                        <button
-                            className="mt-2 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition"
-                            onClick={markAsReceived}
-                            disabled={submitting}
-                        >
-                            Mark as Received
-                        </button>
+                    {/* Only buyer can interact (refund, review) */}
+                    {isBuyer && order.status !== "CANCELLED" && order.status !== "RECEIVED" && order.status !== "REFUND_REQUESTED" && (
+                        <>
+                            <button
+                                className="mt-2 w-full py-3 bg-black text-white rounded-xl font-bold text-lg uppercase tracking-wide shadow hover:bg-black/90 transition"
+                                onClick={markAsReceived}
+                                disabled={submitting}
+                            >
+                                Mark as Received
+                            </button>
+                            <div className="flex justify-center mt-1 w-full">
+                                <button
+                                    className="text-xs text-gray-500 underline hover:text-black transition disabled:opacity-50"
+                                    style={{ padding: 0, background: 'none', border: 'none' }}
+                                    onClick={requestRefund}
+                                    disabled={refundSubmitting}
+                                >
+                                    Request Refund
+                                </button>
+                            </div>
+                        </>
                     )}
                     <div className="mt-6">
                         <h2 className="font-bold mb-2">Your Review</h2>
@@ -196,36 +242,39 @@ export default function OrderPage() {
                                 <div>{order.review}</div>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-1 mb-1">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <button
-                                            key={i}
-                                            type="button"
-                                            className="focus:outline-none"
-                                            onClick={() => setRating(i)}
-                                            disabled={submitting}
-                                        >
-                                            <svg className={`h-7 w-7 ${rating >= i ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-                                        </button>
-                                    ))}
+                            // Only buyer can submit review
+                            isBuyer && (
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-1 mb-1">
+                                        {[1, 2, 3, 4, 5].map(i => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                className="focus:outline-none"
+                                                onClick={() => setRating(i)}
+                                                disabled={submitting}
+                                            >
+                                                <svg className={`h-7 w-7 ${rating >= i ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        className="w-full border border-gray-300 rounded-xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-black"
+                                        rows={3}
+                                        placeholder="Write a review..."
+                                        value={review}
+                                        onChange={e => setReview(e.target.value)}
+                                        disabled={submitting}
+                                    />
+                                    <button
+                                        className="w-max px-6 py-2 bg-black text-white rounded-xl font-bold text-base shadow hover:bg-black/90 transition"
+                                        onClick={submitReview}
+                                        disabled={submitting || !review.trim() || !rating}
+                                    >
+                                        Submit Review
+                                    </button>
                                 </div>
-                                <textarea
-                                    className="w-full border border-gray-300 rounded-xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-black"
-                                    rows={3}
-                                    placeholder="Write a review..."
-                                    value={review}
-                                    onChange={e => setReview(e.target.value)}
-                                    disabled={submitting}
-                                />
-                                <button
-                                    className="w-max px-6 py-2 bg-black text-white rounded-xl font-bold text-base shadow hover:bg-black/90 transition"
-                                    onClick={submitReview}
-                                    disabled={submitting || !review.trim() || !rating}
-                                >
-                                    Submit Review
-                                </button>
-                            </div>
+                            )
                         )}
                     </div>
                 </div>
