@@ -354,23 +354,54 @@ export default function ProfileDashboard() {
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {shops.map(shop => (
-                                        <Link
-                                            to={`/shop/${shop.username}`}
+                                        <div
                                             key={shop.id}
-                                            className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
-                                            style={{ textDecoration: 'none', color: 'inherit' }}
+                                            className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-gray-50 hover:bg-gray-100 transition"
                                         >
-                                            {shop.logo ? (
-                                                <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border border-gray-200" />
-                                            ) : (
-                                                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 font-bold">{shop.name[0]}</div>
+                                            {/* Shop link and image */}
+                                            <Link
+                                                to={`/shop/${shop.username}`}
+                                                className="flex items-center gap-4 flex-1"
+                                                style={{ textDecoration: 'none', color: 'inherit' }}
+                                            >
+                                                {shop.logo ? (
+                                                    <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border border-gray-200" />
+                                                ) : (
+                                                    <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 font-bold">{shop.name[0]}</div>
+                                                )}
+                                                <div>
+                                                    <div className="font-bold text-lg">{shop.name}</div>
+                                                    <div className="text-xs text-gray-500">@{shop.username}</div>
+                                                </div>
+                                            </Link>
+                                            {isOwner && (
+                                                <div className="flex flex-col gap-2 ml-2">
+                                                    <button
+                                                        onClick={() => navigate(`/edit-shop/${shop.id}`)}
+                                                        className="px-3 py-1 bg-black text-white rounded hover:bg-yellow-600 text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            const confirmDelete = window.confirm("Are you sure you want to delete this shop? This action cannot be undone.");
+                                                            if (!confirmDelete) return;
+                                                            try {
+                                                                await deleteDoc(doc(db, "shops", shop.id));
+                                                                setShops(prev => prev.filter(s => s.id !== shop.id));
+                                                            } catch (err) {
+                                                                alert("Failed to delete shop. Try again.");
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1 bg-black text-white rounded hover:bg-red-600 text-xs"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             )}
-                                            <div>
-                                                <div className="font-bold text-lg">{shop.name}</div>
-                                                <div className="text-xs text-gray-500">@{shop.username}</div>
-                                            </div>
-                                        </Link>
+                                        </div>
                                     ))}
+
                                 </div>
                             )}
                         </div>

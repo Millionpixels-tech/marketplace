@@ -8,7 +8,6 @@ import { db } from "../utils/firebase";
 import Header from "../components/UI/Header";
 import WishlistButton from "../components/UI/WishlistButton";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
 
 type Shop = {
   name: string;
@@ -26,7 +25,6 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
-  const navigate = useNavigate();
 
   // Fetch listing and shop info
   useEffect(() => {
@@ -223,16 +221,21 @@ export default function ListingSingle() {
                 disabled={qty > (item.quantity || 1)}
                 onClick={async () => {
                   if (!item || !shop || qty > (item.quantity || 1)) return;
-                  const query = new URLSearchParams({
-                    itemId: id!,
+                  await createOrder({
+                    itemId: id,
                     itemName: item.name,
-                    price: price.toString(),
-                    quantity: qty.toString(),
-                    total: total.toString(),
-                    shopName: shop.name,
-                    image: item.images?.[0] || "",
+                    itemImage: item.images?.[0] || "",
+                    buyerId: user?.uid || null,
+                    buyerEmail: user?.email || null,
+                    sellerId: item.owner, // FIXED: use correct field
+                    sellerShopId: item.shopId, // FIXED: use correct field
+                    sellerShopName: shop.name,
+                    price,
+                    quantity: qty,
+                    shipping,
+                    total,
                   });
-                  navigate(`/checkout?${query.toString()}`);
+                  alert("Order placed! (No payment gateway yet)");
                 }}
               >
                 Buy Now

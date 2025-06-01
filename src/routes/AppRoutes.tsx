@@ -13,6 +13,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import OrderPage from "../pages/OrderPage";
 import WishlistPage from "../pages/WishlistPage";
 import CheckoutPage from "../pages/CheckoutPage";
+import EditShop from "../pages/EditShop";
 
 const AppRoutes = () => (
   <Routes>
@@ -28,7 +29,7 @@ const AppRoutes = () => (
     <Route path="/cart" element={<Cart />} />
     <Route path="/shop/:username" element={<ShopPage />} />
     <Route path="/profile/:id" element={<Profile />} />
-    <Route path="/checkout" element={<CheckoutPage />} />
+    <Route path="/edit-shop/:shopId" element={<EditShop />} />
   </Routes>
 );
 
