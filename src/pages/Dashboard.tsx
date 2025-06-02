@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import OrderSellerRow from "./OrderSellerRow";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +15,9 @@ const TABS = [
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
     { key: "orders", label: "Orders", icon: <FiList /> },
     { key: "reviews", label: "Reviews", icon: <FiStar /> },
-    { key: "listings", label: "Listings", icon: <FiList /> }, // NEW
+    { key: "listings", label: "Listings", icon: <FiList /> },
+    { key: "payments", label: "Payments", icon: <FiStar /> },
+    { key: "settings", label: "Settings", icon: <FiUser /> },
 ];
 
 const ORDER_SUBTABS = [
@@ -40,9 +43,115 @@ export default function ProfileDashboard() {
     const [profileUid, setProfileUid] = useState<string | null>(null);
     const [profileEmail, setProfileEmail] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    // Settings form state
+    const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+    const [businessForm, setBusinessForm] = useState({ about: '', startDate: '', employees: '', brImage: null as File | null, brImageUrl: '' });
+    const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+    const [verifyForm, setVerifyForm] = useState({ fullName: '', idFront: null as File | null, idBack: null as File | null, selfie: null as File | null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '' });
+    const [settingsLoading, setSettingsLoading] = useState(false);
+    const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+    const [settingsError, setSettingsError] = useState<string | null>(null);
+
+    // Handlers for saving (implement Firestore logic as needed)
+    // Helper: upload file to Firebase Storage and return URL
+    const uploadFile = async (file: File, path: string) => {
+        const storage = getStorage();
+        const fileRef = storageRef(storage, path);
+        await uploadBytes(fileRef, file);
+        return await getDownloadURL(fileRef);
+    };
+
+    // Save all settings at once
+    const handleSaveAllSettings = async () => {
+        setSettingsLoading(true); setSettingsSuccess(null); setSettingsError(null);
+        try {
+
+
+            // Bank Details
+            if (!user?.uid) throw new Error('No user');
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankDetails: { ...bankForm }
+            });
+
+            // Verification Info
+            let idFrontUrl = verifyForm.idFrontUrl;
+            let idBackUrl = verifyForm.idBackUrl;
+            let selfieUrl = verifyForm.selfieUrl;
+            if (verifyForm.idFront) {
+                idFrontUrl = await uploadFile(verifyForm.idFront, `users/${user.uid}/idFront.jpg`);
+            }
+            if (verifyForm.idBack) {
+                idBackUrl = await uploadFile(verifyForm.idBack, `users/${user.uid}/idBack.jpg`);
+            }
+            if (verifyForm.selfie) {
+                selfieUrl = await uploadFile(verifyForm.selfie, `users/${user.uid}/selfie.jpg`);
+            }
+            await updateDoc(doc(db, 'users', user.uid), {
+                verification: {
+                    fullName: verifyForm.fullName,
+                    idFrontUrl: idFrontUrl || '',
+                    idBackUrl: idBackUrl || '',
+                    selfieUrl: selfieUrl || '',
+                    address: verifyForm.address,
+                }
+            });
+            setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl }));
+
+            setSettingsSuccess('All settings saved!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to save settings');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings" | "payments" | "settings">("profile");
+
+    // Payments state
+    const [payments, setPayments] = useState<any[]>([]);
+    const [paymentsLoading, setPaymentsLoading] = useState(false);
+    // Bank details state
+    const [bankDetails, setBankDetails] = useState<any | null>(null);
+    const [savingBank, setSavingBank] = useState(false);
+    // Payments fetching
+    useEffect(() => {
+        if (selectedTab !== "payments" || !profileUid) return;
+        setPaymentsLoading(true);
+        // Fetch only last 14 days orders for payments calculation
+        const fetchPayments = async () => {
+            try {
+                const now = new Date();
+                const cutoff = new Date(now.getTime());
+                //const cutoffTimestamp = Math.floor(cutoff.getTime() / 1000);
+                const q = query(
+                    collection(db, "orders"),
+                    where("sellerId", "==", profileUid),
+                    where("createdAt", "<=", cutoff)
+                );
+                const snap = await getDocs(q);
+                const validStatuses = ["RECEIVED"];
+                const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log("Fetched payments:", orders);
+                setPayments(orders.filter((o: any) => validStatuses.includes(o.status)));
+            } catch (err) {
+                console.error("Error loading payments:", err);
+                setPayments([]);
+            } finally {
+                setPaymentsLoading(false);
+            }
+        };
+        // Fetch bank details (placeholder, replace with Firestore logic)
+        const fetchBankDetails = async () => {
+            // Example: fetch from users collection
+            // const userSnap = await getDocs(query(collection(db, "users"), where("uid", "==", profileUid)));
+            // if (!userSnap.empty) setBankDetails(userSnap.docs[0].data().bankDetails || null);
+            setBankDetails(null); // Placeholder: no bank details
+        };
+        fetchPayments();
+        fetchBankDetails();
+    }, [selectedTab, profileUid]);
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [listings, setListings] = useState<any[]>([]);
@@ -91,6 +200,19 @@ export default function ProfileDashboard() {
                 setPhotoURL(data.photoURL || "");
                 setDesc(data.description || "");
                 setProfileEmail(data.email || null);
+                // Load bank details
+                if (data.bankDetails) setBankForm(data.bankDetails);
+                // Load verification info
+                if (data.verification) setVerifyForm(f => ({
+                    ...f,
+                    ...data.verification,
+                    idFront: null,
+                    idBack: null,
+                    selfie: null,
+                    idFrontUrl: data.verification.idFrontUrl || '',
+                    idBackUrl: data.verification.idBackUrl || '',
+                    selfieUrl: data.verification.selfieUrl || '',
+                }));
             } else if (user && uid === user.uid) {
                 setDisplayName(user.displayName || "");
                 setPhotoURL(user.photoURL || "");
@@ -100,11 +222,28 @@ export default function ProfileDashboard() {
             // Fetch shops for this user
             const q = query(collection(db, "shops"), where("owner", "==", uid));
             const docsSnap = await getDocs(q);
-            setShops(docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const shopList = docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setShops(shopList);
+            // Load business details for first shop (or selected)
+            let shopId = selectedShopId || shopList[0]?.id;
+            if (shopId) {
+                const shopDoc = docsSnap.docs.find(d => d.id === shopId);
+                if (shopDoc) {
+                    const shopData = shopDoc.data();
+                    setBusinessForm(f => ({
+                        ...f,
+                        about: shopData.about || '',
+                        startDate: shopData.startDate || '',
+                        employees: shopData.employees || '',
+                        brImage: null,
+                        brImageUrl: shopData.brImageUrl || '',
+                    }));
+                }
+            }
             setLoading(false);
         };
         fetchProfile();
-    }, [user, id]);
+    }, [user, id, selectedShopId]);
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -245,7 +384,7 @@ export default function ProfileDashboard() {
             {/* Full width, no max-w */}
             <div className="flex flex-col md:flex-row gap-0 py-8 px-0 md:px-8 w-full">
                 {/* Sidebar */}
-                <aside className={`w-full md:w-64 bg-white border-r border-black/10 rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-md p-4 flex flex-row md:flex-col md:gap-2 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`}>
+                <aside className={`w-full md:w-64 min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 border-r border-gray-200 rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`}>
                     {/* Burger for mobile */}
                     <button
                         className="md:hidden absolute top-4 right-4 z-10"
@@ -258,13 +397,16 @@ export default function ProfileDashboard() {
                         {TABS.map(tab => (
                             <button
                                 key={tab.key}
-                                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-lg transition-all
-                  ${selectedTab === tab.key ? "bg-black text-white shadow" : "bg-gray-100 hover:bg-black hover:text-white text-black"}
+                                className={`group flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-base transition-all relative overflow-hidden
+                  ${selectedTab === tab.key
+                                        ? "bg-gray-300 text-black shadow"
+                                        : "bg-gray-100 hover:bg-gray-200 hover:text-black text-gray-600"}
                 `}
+                                style={{ boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(0,0,0,0.06)' : undefined }}
                                 onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
                             >
-                                {tab.icon}
-                                {tab.label}
+                                <span className={`transition-all ${selectedTab === tab.key ? 'scale-110 text-black' : 'opacity-70 group-hover:opacity-100 text-gray-700'}`}>{tab.icon}</span>
+                                <span className="truncate">{tab.label}</span>
                             </button>
                         ))}
                     </nav>
@@ -604,6 +746,172 @@ export default function ProfileDashboard() {
                                     )}
                                 </>
                             )}
+                        </div>
+                    )}
+                    {/* PAYMENTS TAB */}
+                    {selectedTab === "payments" && (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-bold">Your Payments</h2>
+                            </div>
+                            {/* Earnings and next payout */}
+                            <div className="flex flex-col md:flex-row gap-4 mb-6">
+                                <div className="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col items-center justify-center">
+                                    <div className="text-gray-500 text-xs mb-1">Total Earnings (last 14 days)</div>
+                                    <div className="text-2xl font-bold text-green-700">
+                                        {(() => {
+                                            const now = Date.now();
+                                            const cutoff = now - 14 * 24 * 60 * 60 * 1000;
+                                            const total = payments
+                                                .filter(p => p.createdAt && new Date(p.createdAt.seconds ? p.createdAt.seconds * 1000 : p.createdAt).getTime() >= cutoff)
+                                                .reduce((sum, p) => sum + (p.total || 0), 0);
+                                            return `LKR ${total.toLocaleString()}`;
+                                        })()}
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col items-center justify-center">
+                                    <div className="text-gray-500 text-xs mb-1">Next Payment Due</div>
+                                    <div className="text-2xl font-bold text-blue-700">
+                                        {(() => {
+                                            const next = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                                            return next.toLocaleDateString();
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Payment summary for last 14 days */}
+                            <div className="mb-6">
+                                <h3 className="text-lg font-bold mb-2">Payment Summary (Last 14 Days)</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white border border-gray-200 rounded-xl">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Order ID</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Date</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Item Name</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Quantity</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Item Total</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Shipping</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Order Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {payments
+                                                .filter(p => p.status === "RECEIVED" && p.createdAt)
+                                                .sort((a, b) => (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0))
+                                                .map(p => (
+                                                    <tr key={p.id} className="hover:bg-gray-50 transition">
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-mono text-gray-700">{p.id}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left">{p.createdAt && new Date(p.createdAt.seconds * 1000).toLocaleDateString()}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-semibold">{p.itemName || '-'}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left">{p.quantity || 1}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left">LKR {(p.price && p.quantity ? (p.price * p.quantity).toLocaleString() : '-')}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left">LKR {p.shipping?.toLocaleString() || '-'}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-bold text-green-700">LKR {p.total?.toLocaleString()}</td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                    {payments.filter(p => p.status === "RECEIVED").length === 0 && (
+                                        <div className="text-gray-400 text-center py-6">No received orders in the last 14 days.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SETTINGS TAB */}
+                    {selectedTab === "settings" && (
+                        <div>
+                            <h2 className="text-xl font-bold mb-4">Settings</h2>
+                            <form className="w-full space-y-8" onSubmit={e => { e.preventDefault(); }}>
+                                {settingsLoading && <div className="text-blue-600">Saving...</div>}
+                                {settingsSuccess && <div className="text-green-600">{settingsSuccess}</div>}
+                                {settingsError && <div className="text-red-600">{settingsError}</div>}
+
+                                {/* Bank Account Details */}
+                                <div className="bg-white rounded-xl border border-gray-200 p-6 w-full">
+                                    <h3 className="font-bold text-lg mb-2">Bank Account Details for Payouts</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">Bank Account Number</label>
+                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.accountNumber} onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">Branch Name</label>
+                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.branch} onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">Bank Name</label>
+                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.bankName} onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">Full Name as in Bank</label>
+                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.fullName} onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Seller Verification */}
+                                <div className="bg-white rounded-xl border border-gray-200 p-6 w-full">
+                                    <h3 className="font-bold text-lg mb-2">More Info for Verified Seller Badge</h3>
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-semibold mb-1">Full Name as in ID</label>
+                                        <input className="border rounded px-3 py-2 w-full" value={verifyForm.fullName} onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))} />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 w-full">
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">ID Front Side</label>
+                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} />
+                                            {(verifyForm.idFront || verifyForm.idFrontUrl) && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl}
+                                                        alt="ID Front Preview"
+                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">ID Back Side</label>
+                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} />
+                                            {(verifyForm.idBack || verifyForm.idBackUrl) && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl}
+                                                        alt="ID Back Preview"
+                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold mb-1">Selfie with ID</label>
+                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} />
+                                            {(verifyForm.selfie || verifyForm.selfieUrl) && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl}
+                                                        alt="Selfie Preview"
+                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-semibold mb-1">Address</label>
+                                        <input className="border rounded px-3 py-2 w-full" value={verifyForm.address} onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))} />
+                                    </div>
+                                    {/* Single Save button for all settings */}
+                                    <div className="flex justify-end w-full mt-8">
+                                        <button type="button" className="px-6 py-3 bg-black text-white rounded-full font-bold text-lg" onClick={handleSaveAllSettings} disabled={settingsLoading}>
+                                            {settingsLoading ? 'Saving...' : 'Save All Settings'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     )}
 
