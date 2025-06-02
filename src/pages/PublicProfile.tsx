@@ -10,6 +10,7 @@ export default function PublicProfile() {
     const [userProfile, setUserProfile] = useState<any>(null);
     const [shops, setShops] = useState<any[]>([]);
 
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);

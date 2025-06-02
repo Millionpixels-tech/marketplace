@@ -82,6 +82,20 @@ const Auth = () => {
               onChange={e => setPw(e.target.value)}
               required
             />
+            {isLogin && (
+              <div className="text-right -mt-4 mb-2">
+                <button
+                  type="button"
+                  className="text-sm underline text-black-700 hover:text-black-900 font-semibold"
+                  onClick={() => {
+                    // You can show a modal or redirect to a dedicated reset page
+                    window.location.href = '/reset-password';
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
             <button
               type="submit"
               disabled={loading}

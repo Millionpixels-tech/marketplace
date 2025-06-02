@@ -15,6 +15,7 @@ import WishlistPage from "../pages/WishlistPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import EditShop from "../pages/EditShop";
 import PublicProfile from "../pages/PublicProfile";
+import ResetPassword from "../pages/ResetPassword";
 
 const AppRoutes = () => (
   <Routes>
@@ -32,6 +33,7 @@ const AppRoutes = () => (
     <Route path="/dashboard/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="/edit-shop/:shopId" element={<EditShop />} />
     <Route path="/profile/:id" element={<PublicProfile />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
   </Routes>
 );
 
