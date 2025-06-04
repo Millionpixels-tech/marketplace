@@ -175,6 +175,30 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Seller Benefits Section */}
+        <section className="py-16 w-full border-t border-black bg-gradient-to-b from-white to-gray-50">
+          <h2 className="text-2xl font-bold text-center mb-12 uppercase tracking-wide">
+            For Sellers: Simple, Unlimited, Free
+          </h2>
+          <div className="max-w-3xl mx-auto grid md:grid-cols-3 gap-8 text-center">
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center">
+              <div className="text-5xl font-black text-green-600 mb-2">0</div>
+              <h3 className="font-bold text-lg mb-1 uppercase tracking-wide">Zero Cost Listing Fee</h3>
+              <p className="text-gray-600 text-sm">No cost to list your products. Start selling with zero risk.</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center">
+              <svg className="w-10 h-10 text-blue-500 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7" /><path d="M16 3v4M8 3v4M4 11h16" /></svg>
+              <h3 className="font-bold text-lg mb-1 uppercase tracking-wide">Unlimited Shops</h3>
+              <p className="text-gray-600 text-sm">Create as many shops as you want. Grow your brand, your way.</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col items-center justify-center">
+              <svg className="w-10 h-10 text-purple-500 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 3v4M16 3v4M4 11h16" /></svg>
+              <h3 className="font-bold text-lg mb-1 uppercase tracking-wide">Unlimited Listings</h3>
+              <p className="text-gray-600 text-sm">List unlimited products in every shop. No limits, ever.</p>
+            </div>
+          </div>
+        </section>
+
         {/* How it Works */}
         <section className="py-16 w-full border-t border-black bg-white">
           <h2 className="text-2xl font-bold text-center mb-12 uppercase tracking-wide">

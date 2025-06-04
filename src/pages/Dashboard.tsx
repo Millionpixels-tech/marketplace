@@ -47,7 +47,7 @@ export default function ProfileDashboard() {
     const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
     const [businessForm, setBusinessForm] = useState({ about: '', startDate: '', employees: '', brImage: null as File | null, brImageUrl: '' });
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
-    const [verifyForm, setVerifyForm] = useState({ fullName: '', idFront: null as File | null, idBack: null as File | null, selfie: null as File | null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '' });
+    const [verifyForm, setVerifyForm] = useState({ fullName: '', idFront: null as File | null, idBack: null as File | null, selfie: null as File | null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: 'PENDING' });
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -88,6 +88,7 @@ export default function ProfileDashboard() {
             }
             await updateDoc(doc(db, 'users', user.uid), {
                 verification: {
+                    isVerified: verifyForm.isVerified,
                     fullName: verifyForm.fullName,
                     idFrontUrl: idFrontUrl || '',
                     idBackUrl: idBackUrl || '',
@@ -95,7 +96,7 @@ export default function ProfileDashboard() {
                     address: verifyForm.address,
                 }
             });
-            setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl }));
+            setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl, isVerified: verifyForm.isVerified }));
 
             setSettingsSuccess('All settings saved!');
         } catch (e: any) {
@@ -853,63 +854,65 @@ export default function ProfileDashboard() {
                                 </div>
 
                                 {/* Seller Verification */}
-                                <div className="bg-white rounded-xl border border-gray-200 p-6 w-full">
-                                    <h3 className="font-bold text-lg mb-2">More Info for Verified Seller Badge</h3>
-                                    <div className="mb-3">
-                                        <label className="block text-sm font-semibold mb-1">Full Name as in ID</label>
-                                        <input className="border rounded px-3 py-2 w-full" value={verifyForm.fullName} onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))} />
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3 w-full">
-                                        <div>
-                                            <label className="block text-sm font-semibold mb-1">ID Front Side</label>
-                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} />
-                                            {(verifyForm.idFront || verifyForm.idFrontUrl) && (
-                                                <div className="mt-2">
-                                                    <img
-                                                        src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl}
-                                                        alt="ID Front Preview"
-                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
-                                                    />
-                                                </div>
-                                            )}
+                                <div className="bg-white rounded-2xl border border-gray-100 p-6 w-full shadow-sm flex flex-col">
+                                    <h3 className="font-bold text-xl mb-6">Verified Seller Badge</h3>
+                                    {verifyForm.isVerified === 'COMPLETED' && (
+                                        <div className="w-full flex flex-col items-center gap-2 py-8">
+                                            <div className="rounded-full bg-green-50 p-4 mb-2">
+                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#22c55e" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                            </div>
+                                            <div className="font-semibold text-green-600 text-lg text-center">You are a verified seller!</div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold mb-1">ID Back Side</label>
-                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} />
-                                            {(verifyForm.idBack || verifyForm.idBackUrl) && (
-                                                <div className="mt-2">
-                                                    <img
-                                                        src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl}
-                                                        alt="ID Back Preview"
-                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
-                                                    />
-                                                </div>
-                                            )}
+                                    )}
+                                    {verifyForm.isVerified === 'PENDING' && (
+                                        <div className="w-full flex flex-col items-center gap-2 py-8">
+                                            <div className="rounded-full bg-yellow-50 p-4 mb-2">
+                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#facc15" fillOpacity="0.12" /><path d="M12 7v4m0 4h.01" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                            </div>
+                                            <div className="font-semibold text-yellow-600 text-lg text-center">Your documents are under review.</div>
+                                            <div className="text-gray-500 text-sm text-center">We will notify you when verification is complete.</div>
                                         </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold mb-1">Selfie with ID</label>
-                                            <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} />
-                                            {(verifyForm.selfie || verifyForm.selfieUrl) && (
-                                                <div className="mt-2">
-                                                    <img
-                                                        src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl}
-                                                        alt="Selfie Preview"
-                                                        className="w-full max-w-[120px] h-auto rounded shadow border"
-                                                    />
+                                    )}
+                                    {verifyForm.isVerified === 'NO_DATA' && (
+                                        <>
+                                            <div className="mb-4 w-full max-w-xl">
+                                                <label className="block text-sm font-semibold mb-2">Full Name as in ID</label>
+                                                <input className="border border-gray-200 rounded-lg px-4 py-2 w-full text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black" value={verifyForm.fullName} onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))} />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold mb-2">ID Front Side</label>
+                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    {(verifyForm.idFront || verifyForm.idFrontUrl) && (
+                                                        <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="mb-3">
-                                        <label className="block text-sm font-semibold mb-1">Address</label>
-                                        <input className="border rounded px-3 py-2 w-full" value={verifyForm.address} onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))} />
-                                    </div>
-                                    {/* Single Save button for all settings */}
-                                    <div className="flex justify-end w-full mt-8">
-                                        <button type="button" className="px-6 py-3 bg-black text-white rounded-full font-bold text-lg" onClick={handleSaveAllSettings} disabled={settingsLoading}>
-                                            {settingsLoading ? 'Saving...' : 'Save All Settings'}
-                                        </button>
-                                    </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold mb-2">ID Back Side</label>
+                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    {(verifyForm.idBack || verifyForm.idBackUrl) && (
+                                                        <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold mb-2">Selfie with ID</label>
+                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    {(verifyForm.selfie || verifyForm.selfieUrl) && (
+                                                        <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="mb-6 w-full max-w-xl">
+                                                <label className="block text-sm font-semibold mb-2">Address</label>
+                                                <input className="border border-gray-200 rounded-lg px-4 py-2 w-full text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black" value={verifyForm.address} onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))} />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="flex justify-end w-full">
+                                    <button type="button" className="px-6 py-3 bg-black text-white rounded-full font-bold text-base hover:bg-gray-900 transition" onClick={handleSaveAllSettings} disabled={settingsLoading}>
+                                        {settingsLoading ? 'Saving...' : 'Submit for Review'}
+                                    </button>
                                 </div>
                             </form>
                         </div>
