@@ -423,9 +423,9 @@ export default function ProfileDashboard() {
                                 {photoURL ? (
                                     <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
                                 ) : (
-                                    <span className="text-4xl text-gray-500 font-bold">
+                                    <><span className="text-4xl text-gray-500 font-bold">
                                         {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
-                                    </span>
+                                    </span></>
                                 )}
                                 {isOwner && editing && (
                                     <>
@@ -438,7 +438,7 @@ export default function ProfileDashboard() {
                                 )}
                             </div>
                             {/* Name */}
-                            <div className="text-2xl font-black mb-2 text-center">
+                            <div className="text-2xl font-black mb-2 text-center flex items-center justify-center gap-2">
                                 {isOwner && editing ? (
                                     <input
                                         className="text-2xl font-black text-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-1 w-full max-w-xs mb-2"
@@ -447,9 +447,19 @@ export default function ProfileDashboard() {
                                         maxLength={40}
                                     />
                                 ) : (
-                                    displayName || profileEmail
+                                    <>
+                                        <span>{displayName || profileEmail}</span>
+                                        {verifyForm.isVerified === 'COMPLETED' && (
+                                            <span className="inline-flex items-center justify-center ml-2 rounded-full bg-blue-500 w-6 h-6">
+                                                <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
+                                                    <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        )}
+                                    </>
                                 )}
                             </div>
+
                             {/* Description */}
                             <div className="w-full mb-6 flex flex-col items-center">
                                 {isOwner && editing ? (
