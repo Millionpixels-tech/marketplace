@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { db, auth, storage } from "../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { FiCamera, FiUpload, FiCheck, FiEdit3 } from "react-icons/fi";
+import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
 import Header from "../components/UI/Header";
 
 function wordCount(text: string) {
@@ -87,17 +87,17 @@ export default function CreateShop() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-white flex flex-col items-center py-10 px-2">
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl p-0 md:p-12 flex flex-col items-center">
+      <div className="min-h-screen bg-[#f3eff5] flex flex-col items-center py-10 px-2">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-sm p-0 md:p-12 flex flex-col items-center">
           <div className="w-full flex flex-col items-start mb-8">
-            <h1 className="text-3xl md:text-4xl font-black mb-2">Create Your Shop</h1>
-            <p className="text-gray-600 text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
+            <h1 className="text-3xl md:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
+            <p className="text-[#454955] text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
           </div>
           {/* --- Cover + Logo Section --- */}
           <div className="w-full relative flex flex-col items-center mb-12">
             {/* Cover image */}
             <div
-              className="w-full h-40 md:h-64 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition border border-gray-200"
+              className="w-full h-40 md:h-64 rounded-2xl bg-[#f3eff5] flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
               onClick={() => coverInputRef.current?.click()}
               tabIndex={0}
               title="Click to upload cover image"
@@ -105,7 +105,7 @@ export default function CreateShop() {
               {coverPreview ? (
                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="flex flex-col items-center text-gray-400">
+                <div className="flex flex-col items-center text-[#454955]">
                   <FiUpload className="text-3xl mb-2" />
                   <span className="font-medium text-sm">Click to add cover image</span>
                 </div>
@@ -120,7 +120,7 @@ export default function CreateShop() {
             </div>
             {/* Logo */}
             <div
-              className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center shadow-lg cursor-pointer group transition"
+              className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white bg-[#f3eff5] flex items-center justify-center shadow-sm cursor-pointer group transition"
               onClick={() => logoInputRef.current?.click()}
               title="Click to upload logo"
               tabIndex={0}
@@ -128,7 +128,7 @@ export default function CreateShop() {
               {logoPreview ? (
                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
               ) : (
-                <span className="flex flex-col items-center text-gray-400">
+                <span className="flex flex-col items-center text-[#454955]">
                   <FiCamera className="text-4xl mb-1" />
                   <span className="font-medium text-xs">Add Logo</span>
                 </span>
@@ -148,9 +148,9 @@ export default function CreateShop() {
             <div className="flex-1 flex flex-col gap-6">
               {/* Shop Name */}
               <div>
-                <label className="block font-semibold mb-1">Shop Name</label>
+                <label className="block font-semibold mb-1 text-[#0d0a0b]">Shop Name</label>
                 <input
-                  className="w-full bg-gray-100 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold text-lg"
+                  className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] transition px-5 py-3 rounded-2xl font-semibold text-lg text-[#0d0a0b] shadow-sm"
                   maxLength={80}
                   placeholder="e.g. Crafty Kavi"
                   value={shopName}
@@ -160,9 +160,9 @@ export default function CreateShop() {
               </div>
               {/* Shop Username */}
               <div>
-                <label className="block font-semibold mb-1">Shop Username <span className="font-normal text-gray-400">(unique URL)</span></label>
+                <label className="block font-semibold mb-1 text-[#0d0a0b]">Shop Username <span className="font-normal text-[#45495599]">(unique URL)</span></label>
                 <input
-                  className="w-full bg-gray-100 focus:bg-white focus:ring-2 focus:ring-black transition px-5 py-3 rounded-xl font-semibold text-lg"
+                  className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] transition px-5 py-3 rounded-2xl font-semibold text-lg text-[#0d0a0b] shadow-sm"
                   maxLength={24}
                   placeholder="e.g. crafty_kavi"
                   value={shopUser}
@@ -175,7 +175,7 @@ export default function CreateShop() {
                 />
                 {shopUser && (
                   <div className="mt-1 text-xs">
-                    <span className={userExists ? "text-red-600 font-bold" : "text-green-600"}>
+                    <span className={userExists ? "text-red-600 font-bold" : "text-[#3f7d20] font-medium"}>
                       {userExists
                         ? "This username is already taken."
                         : `Your shop URL: https://mydomain.com/shop/${shopUser}`}
@@ -185,11 +185,11 @@ export default function CreateShop() {
               </div>
               {/* Shop Mobile */}
               <div>
-                <label className="block font-semibold mb-1">Mobile Number</label>
-                <div className="flex items-center gap-2 bg-gray-100 px-5 py-3 rounded-xl">
-                  <span className="text-lg text-gray-400">+94</span>
+                <label className="block font-semibold mb-1 text-[#0d0a0b]">Mobile Number</label>
+                <div className="flex items-center gap-2 bg-[#f3eff5] border border-[#45495522] px-5 py-3 rounded-2xl shadow-sm">
+                  <span className="text-lg text-[#454955]">+94</span>
                   <input
-                    className="flex-1 bg-transparent outline-none font-semibold text-lg"
+                    className="flex-1 bg-transparent outline-none focus:ring-0 font-semibold text-lg text-[#0d0a0b]"
                     maxLength={9}
                     pattern="[0-9]{9}"
                     placeholder="7xxxxxxxx"
@@ -198,14 +198,14 @@ export default function CreateShop() {
                     required
                   />
                 </div>
-                <span className="text-xs text-gray-400 mt-1 block">Your Sri Lankan contact number</span>
+                <span className="text-xs text-[#454955] mt-1 block">Your Sri Lankan contact number</span>
               </div>
             </div>
             {/* Description */}
             <div className="flex-1 flex flex-col gap-3">
-              <label className="font-semibold mb-1">Shop Description</label>
+              <label className="font-semibold mb-1 text-[#0d0a0b]">Shop Description</label>
               <textarea
-                className="w-full bg-gray-100 focus:bg-white focus:ring-2 focus:ring-black rounded-xl px-4 py-3 text-black font-medium transition min-h-[160px] text-base"
+                className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] rounded-2xl px-4 py-3 text-[#0d0a0b] font-medium transition min-h-[160px] text-base shadow-sm"
                 maxLength={1500}
                 rows={8}
                 placeholder="Describe your shop (max 300 words, e.g. what you sell, what makes your shop unique, etc.)"
@@ -213,7 +213,7 @@ export default function CreateShop() {
                 onChange={e => setDesc(e.target.value)}
                 required
               />
-              <div className="text-right text-xs mt-1 text-gray-500">
+              <div className="text-right text-xs mt-1 text-[#454955]">
                 {wordCount(desc)} / 300 words
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function CreateShop() {
           {/* --- Save Button --- */}
           <div className="w-full flex justify-end mt-14">
             <button
-              className="bg-black text-white px-10 py-3 rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/80 transition disabled:opacity-40"
+              className="bg-[#72b01d] text-white px-10 py-3 rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition disabled:opacity-40"
               disabled={
                 !shopName || !shopUser || userExists || !mobile || !desc || !logo || !cover || loading || wordCount(desc) > 300
               }
@@ -238,7 +238,7 @@ export default function CreateShop() {
           </div>
           {done && (
             <div className="w-full flex justify-center mt-8">
-              <div className="text-green-700 font-bold text-lg flex items-center gap-2">
+              <div className="text-[#3f7d20] font-bold text-lg flex items-center gap-2">
                 <FiCheck /> Shop profile created!
               </div>
             </div>

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { FiHeart } from "react-icons/fi";
 import { addToWishlist, removeFromWishlist, isWishlisted } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
-import { getUserIP } from "../../utils/ipUtils";
 
 type WishlistButtonProps = {
     displayText?: boolean; // Optional prop to control text display
@@ -46,19 +45,19 @@ export default function WishlistButton({ listing, refresh, displayText = false }
                 aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                 disabled={loading}
                 onClick={handleClick}
-                className={`rounded-full p-2 transition-colors flex items-center justify-center bg-gray-100 text-black hover:bg-gray-200`}
+                className={`rounded-full p-2 transition-colors flex items-center justify-center ${wishlisted ? 'bg-[#72b01d15] hover:bg-[#72b01d30]' : 'bg-[#f3eff5] hover:bg-[#f3eff5]'}`}
             >
                 {loading ? (
-                    <svg className="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4 text-[#454955]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                     </svg>
                 ) : (
-                    <FiHeart size={18} fill={wishlisted ? "#111" : "none"} color="#111" />
+                    <FiHeart size={18} fill={wishlisted ? "#72b01d" : "none"} color={wishlisted ? "#72b01d" : "#454955"} />
                 )}
             </button>
             {displayText && (
-                <span>{wishlisted ? 'Added to wishlist' : 'Add to wishlist'}</span>
+                <span className={wishlisted ? "text-[#72b01d] font-medium" : "text-[#454955]"}>{wishlisted ? 'Added to wishlist' : 'Add to wishlist'}</span>
             )}
         </span>
     );

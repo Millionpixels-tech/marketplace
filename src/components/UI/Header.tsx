@@ -62,12 +62,12 @@ const Header = () => {
     };
 
     return (
-        <header className="sticky top-0 z-30 w-full bg-white border-b border-black">
+        <header className="sticky top-0 z-30 w-full border-b" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
             <div className="flex items-center justify-between px-4 md:px-10 py-4 w-full">
                 {/* Logo & Categories (Left) */}
                 <div className="flex items-center gap-2 md:gap-6">
                     {/* Logo/Title */}
-                    <Link to="/" className="text-2xl font-black tracking-tight uppercase">
+                    <Link to="/" className="text-2xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
                         <span className="hover:underline">
                             Sina<span className="font-light">Marketplace</span>
                         </span>
@@ -76,7 +76,20 @@ const Header = () => {
                     <div className="relative hidden md:block">
                         <button
                             onClick={() => setCatOpen((open) => !open)}
-                            className="flex items-center px-4 py-2 rounded font-semibold border border-black hover:bg-black hover:text-white transition uppercase"
+                            className="flex items-center px-4 py-2 rounded-lg font-semibold border transition uppercase"
+                            style={{
+                                borderColor: 'rgba(114, 176, 29, 0.6)',
+                                color: '#0d0a0b',
+                                backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                e.currentTarget.style.color = '#f3eff5';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                e.currentTarget.style.color = '#0d0a0b';
+                            }}
                             aria-haspopup="menu"
                             aria-expanded={catOpen}
                         >
@@ -93,7 +106,8 @@ const Header = () => {
                                     }}
                                 />
                                 <div
-                                    className="absolute left-0 top-12 w-[340px] bg-white border border-black rounded-lg shadow-lg z-50"
+                                    className="absolute left-0 top-12 w-[340px] rounded-lg shadow-lg z-50 border"
+                                    style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.4)' }}
                                     onClick={e => e.stopPropagation()}
                                 >
                                     <div className="flex flex-col py-2">
@@ -111,7 +125,19 @@ const Header = () => {
                                             {categories.map((cat, idx) => (
                                                 <li key={cat.name}>
                                                     <button
-                                                        className={`w-full flex items-center justify-between px-6 py-3 text-left font-semibold hover:bg-black hover:text-white transition ${subCatOpen === idx ? "bg-gray-100" : ""}`}
+                                                        className={`w-full flex items-center justify-between px-6 py-3 text-left font-semibold transition rounded-lg ${subCatOpen === idx ? "" : ""}`}
+                                                        style={{
+                                                            color: '#0d0a0b',
+                                                            backgroundColor: subCatOpen === idx ? 'rgba(114, 176, 29, 0.2)' : 'transparent'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                            e.currentTarget.style.color = '#f3eff5';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = subCatOpen === idx ? 'rgba(114, 176, 29, 0.2)' : 'transparent';
+                                                            e.currentTarget.style.color = '#0d0a0b';
+                                                        }}
                                                         onClick={() =>
                                                             subCatOpen === idx ? setSubCatOpen(null) : setSubCatOpen(idx)
                                                         }
@@ -122,11 +148,20 @@ const Header = () => {
                                                         />
                                                     </button>
                                                     {subCatOpen === idx && (
-                                                        <ul className="pl-8 border-l border-black">
+                                                        <ul className="pl-8 border-l" style={{ borderColor: 'rgba(114, 176, 29, 0.5)' }}>
                                                             {cat.subcategories.map((sub) => (
                                                                 <li key={sub}>
                                                                     <button
-                                                                        className="w-full px-4 py-2 text-left font-light hover:bg-black hover:text-white transition"
+                                                                        className="w-full px-4 py-2 text-left font-light transition rounded"
+                                                                        style={{ color: '#454955' }}
+                                                                        onMouseEnter={(e) => {
+                                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                                            e.currentTarget.style.color = '#f3eff5';
+                                                                        }}
+                                                                        onMouseLeave={(e) => {
+                                                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                                                            e.currentTarget.style.color = '#454955';
+                                                                        }}
                                                                         onClick={() => {
                                                                             setCatOpen(false);
                                                                             setSubCatOpen(null);
@@ -154,17 +189,31 @@ const Header = () => {
                 <div className="hidden md:flex items-center gap-4">
                     <Link
                         to="/search"
-                        className="hover:underline text-lg uppercase font-light"
+                        className="hover:underline text-lg uppercase font-light transition-colors duration-300"
+                        style={{ color: '#454955' }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#454955';
+                        }}
                     >
                         Browse Items
                     </Link>
                     <Link
                         to="/wishlist"
-                        className="hover:underline text-lg uppercase font-light relative flex items-center"
+                        className="hover:underline text-lg uppercase font-light relative flex items-center transition-colors duration-300"
+                        style={{ color: '#454955' }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#454955';
+                        }}
                     >
                         Wishlist
                         {wishlistCount > 0 && (
-                            <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-black rounded-full absolute -top-2 -right-3">{wishlistCount}</span>
+                            <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3" style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}>{wishlistCount}</span>
                         )}
                     </Link>
                     {/* Auth/User */}
@@ -172,7 +221,20 @@ const Header = () => {
                         {loading ? null : !user ? (
                             <Link
                                 to="/auth"
-                                className="border border-black rounded-full px-5 py-2 font-semibold hover:bg-black hover:text-white uppercase transition"
+                                className="border rounded-full px-5 py-2 font-semibold uppercase transition"
+                                style={{
+                                    borderColor: 'rgba(114, 176, 29, 0.6)',
+                                    color: '#0d0a0b',
+                                    backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#f3eff5';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                    e.currentTarget.style.color = '#0d0a0b';
+                                }}
                             >
                                 Login / Register
                             </Link>
@@ -180,7 +242,14 @@ const Header = () => {
                             <div className="relative">
                                 <button
                                     onClick={() => setUserMenuOpen((open) => !open)}
-                                    className="flex items-center gap-2 rounded-full hover:bg-gray-100 px-2 py-1 transition"
+                                    className="flex items-center gap-2 rounded-full px-2 py-1 transition"
+                                    style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)' }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                    }}
                                     aria-haspopup="menu"
                                     aria-expanded={userMenuOpen}
                                 >
@@ -188,14 +257,15 @@ const Header = () => {
                                         <img
                                             src={user.photoURL}
                                             alt="Profile"
-                                            className="w-9 h-9 rounded-full object-cover border border-black"
+                                            className="w-9 h-9 rounded-full object-cover border"
+                                            style={{ borderColor: 'rgba(114, 176, 29, 0.6)' }}
                                         />
                                     ) : (
-                                        <span className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-black font-bold border border-black text-lg">
+                                        <span className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg" style={{ backgroundColor: 'rgba(243, 239, 245, 0.9)', color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
                                             {getInitials(user.displayName || user.email)}
                                         </span>
                                     )}
-                                    <span className="hidden sm:block font-semibold text-black max-w-[120px] truncate">
+                                    <span className="hidden sm:block font-semibold max-w-[120px] truncate" style={{ color: '#0d0a0b' }}>
                                         {user.displayName || user.email}
                                     </span>
                                     <FiChevronDown className="ml-1" />
@@ -206,20 +276,41 @@ const Header = () => {
                                             className="fixed inset-0 z-40"
                                             onClick={() => setUserMenuOpen(false)}
                                         />
-                                        <div className="absolute right-0 top-12 w-52 bg-white border border-black rounded-lg shadow-lg z-50 flex flex-col">
+                                        <div className="absolute right-0 top-12 w-52 rounded-lg shadow-lg z-50 flex flex-col border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.4)' }}>
                                             <button
                                                 onClick={() => {
                                                     setUserMenuOpen(false);
                                                     navigate(`/dashboard/${user.uid}`);
                                                 }}
-                                                className="flex items-center gap-2 px-4 py-3 text-left font-semibold hover:bg-black hover:text-white transition border-b border-gray-200"
+                                                className="flex items-center gap-2 px-4 py-3 text-left font-semibold transition border-b"
+                                                style={{
+                                                    color: '#0d0a0b',
+                                                    borderColor: 'rgba(114, 176, 29, 0.3)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    e.currentTarget.style.color = '#f3eff5';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                    e.currentTarget.style.color = '#0d0a0b';
+                                                }}
                                             >
                                                 <FiUser className="inline mr-2" />
                                                 Dashboard
                                             </button>
                                             <button
                                                 onClick={handleLogout}
-                                                className="flex items-center gap-2 px-4 py-3 text-left font-semibold hover:bg-black hover:text-white transition"
+                                                className="flex items-center gap-2 px-4 py-3 text-left font-semibold transition"
+                                                style={{ color: '#0d0a0b' }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    e.currentTarget.style.color = '#f3eff5';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                    e.currentTarget.style.color = '#0d0a0b';
+                                                }}
                                             >
                                                 <FiLogOut className="inline mr-2" />
                                                 Logout
@@ -233,7 +324,20 @@ const Header = () => {
                 </div>
                 {/* Burger Menu for Mobile */}
                 <button
-                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-full border border-black hover:bg-black hover:text-white transition"
+                    className="md:hidden flex items-center justify-center w-10 h-10 rounded-full border transition"
+                    style={{
+                        borderColor: 'rgba(114, 176, 29, 0.6)',
+                        color: '#0d0a0b',
+                        backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#72b01d';
+                        e.currentTarget.style.color = '#f3eff5';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                        e.currentTarget.style.color = '#0d0a0b';
+                    }}
                     onClick={() => setMobileMenuOpen((open) => !open)}
                     aria-label="Open menu"
                 >
@@ -245,13 +349,27 @@ const Header = () => {
             {mobileMenuOpen && (
                 <>
                     <div
-                        className="fixed inset-0 z-40 bg-black/20"
+                        className="fixed inset-0 z-40"
+                        style={{ backgroundColor: 'rgba(13, 10, 11, 0.2)' }}
                         onClick={() => setMobileMenuOpen(false)}
                     />
-                    <div className="fixed top-0 right-0 w-4/5 max-w-xs h-full bg-white border-l border-black z-50 flex flex-col pt-6 px-6 pb-8 shadow-xl animate-slide-in">
+                    <div
+                        className="fixed top-0 right-0 w-4/5 max-w-xs h-full border-l z-50 flex flex-col pt-6 px-6 pb-8 shadow-xl animate-slide-in"
+                        style={{
+                            backgroundColor: '#f3eff5',
+                            borderColor: 'rgba(114, 176, 29, 0.4)'
+                        }}
+                    >
                         {/* Close */}
                         <button
-                            className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-200"
+                            className="absolute top-3 right-3 p-2 rounded-full transition"
+                            style={{ color: '#0d0a0b' }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
                             onClick={() => setMobileMenuOpen(false)}
                             aria-label="Close menu"
                         >
@@ -260,18 +378,42 @@ const Header = () => {
                         {/* Links */}
                         <nav className="flex flex-col gap-4 mt-10">
                             <button
-                                className="flex items-center w-full justify-between font-semibold py-3 px-2 rounded hover:bg-black hover:text-white transition uppercase"
+                                className="flex items-center w-full justify-between font-semibold py-3 px-2 rounded transition uppercase"
+                                style={{ color: '#0d0a0b' }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#f3eff5';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#0d0a0b';
+                                }}
                                 onClick={() => setCatOpen((open) => !open)}
                             >
                                 Categories <FiChevronDown className="ml-2" />
                             </button>
                             {/* Categories Drawer in Mobile */}
                             {catOpen && (
-                                <ul className="mb-2 bg-gray-50 rounded-lg border border-black/20 p-2">
-                                    {categories.map((cat, idx) => (
+                                <ul
+                                    className="mb-2 rounded-lg border p-2"
+                                    style={{
+                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                        borderColor: 'rgba(114, 176, 29, 0.3)'
+                                    }}
+                                >
+                                    {categories.map((cat) => (
                                         <li key={cat.name} className="mb-1">
                                             <button
-                                                className="w-full text-left px-3 py-2 rounded hover:bg-black hover:text-white transition font-medium"
+                                                className="w-full text-left px-3 py-2 rounded transition font-medium"
+                                                style={{ color: '#454955' }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    e.currentTarget.style.color = '#f3eff5';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                    e.currentTarget.style.color = '#454955';
+                                                }}
                                                 onClick={() => {
                                                     setCatOpen(false);
                                                     setMobileMenuOpen(false);
@@ -286,57 +428,135 @@ const Header = () => {
                             )}
                             <Link
                                 to="/search"
-                                className="py-3 px-2 rounded hover:bg-black hover:text-white transition uppercase font-medium"
+                                className="py-3 px-2 rounded transition uppercase font-medium"
+                                style={{ color: '#454955' }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#f3eff5';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#454955';
+                                }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Browse Items
                             </Link>
                             <Link
                                 to="/wishlist"
-                                className="py-3 px-2 rounded hover:bg-black hover:text-white transition uppercase font-medium relative flex items-center"
+                                className="py-3 px-2 rounded transition uppercase font-medium relative flex items-center"
+                                style={{ color: '#454955' }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#f3eff5';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#454955';
+                                }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Wishlist
                                 {wishlistCount > 0 && (
-                                    <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-black rounded-full absolute -top-2 -right-3">{wishlistCount}</span>
+                                    <span
+                                        className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3"
+                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                    >
+                                        {wishlistCount}
+                                    </span>
                                 )}
                             </Link>
                             {!user ? (
                                 <Link
                                     to="/auth"
-                                    className="py-3 px-2 rounded border border-black hover:bg-black hover:text-white transition uppercase font-medium text-center"
+                                    className="py-3 px-2 rounded border transition uppercase font-medium text-center"
+                                    style={{
+                                        borderColor: 'rgba(114, 176, 29, 0.6)',
+                                        color: '#0d0a0b',
+                                        backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                        e.currentTarget.style.color = '#f3eff5';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                        e.currentTarget.style.color = '#0d0a0b';
+                                    }}
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     <FiUser className="inline mr-2" /> Login / Register
                                 </Link>
                             ) : (
                                 <>
-                                    <div className="flex items-center gap-3 py-3 px-2 rounded bg-gray-50 border border-black/20">
+                                    <div
+                                        className="flex items-center gap-3 py-3 px-2 rounded border"
+                                        style={{
+                                            backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                            borderColor: 'rgba(114, 176, 29, 0.3)'
+                                        }}
+                                    >
                                         {user.photoURL ? (
                                             <img
                                                 src={user.photoURL}
                                                 alt="Profile"
-                                                className="w-9 h-9 rounded-full object-cover border border-black"
+                                                className="w-9 h-9 rounded-full object-cover border"
+                                                style={{ borderColor: 'rgba(114, 176, 29, 0.6)' }}
                                             />
                                         ) : (
-                                            <span className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 text-black font-bold border border-black text-lg">
+                                            <span
+                                                className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg"
+                                                style={{
+                                                    backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                                                    color: '#0d0a0b',
+                                                    borderColor: 'rgba(114, 176, 29, 0.6)'
+                                                }}
+                                            >
                                                 {getInitials(user.displayName || user.email)}
                                             </span>
                                         )}
-                                        <span className="font-semibold">{user.displayName || user.email}</span>
+                                        <span className="font-semibold" style={{ color: '#0d0a0b' }}>
+                                            {user.displayName || user.email}
+                                        </span>
                                     </div>
                                     <button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
                                             navigate(`/dashboard/${user.uid}`);
                                         }}
-                                        className="flex items-center gap-2 mt-4 py-3 px-2 rounded border border-black hover:bg-black hover:text-white transition uppercase font-medium"
+                                        className="flex items-center gap-2 mt-4 py-3 px-2 rounded border transition uppercase font-medium"
+                                        style={{
+                                            borderColor: 'rgba(114, 176, 29, 0.6)',
+                                            color: '#0d0a0b',
+                                            backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                            e.currentTarget.style.color = '#f3eff5';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                            e.currentTarget.style.color = '#0d0a0b';
+                                        }}
                                     >
                                         <FiUser className="inline mr-2" /> Dashboard
                                     </button>
                                     <button
                                         onClick={handleLogout}
-                                        className="flex items-center gap-2 mt-4 py-3 px-2 rounded border border-black hover:bg-black hover:text-white transition uppercase font-medium"
+                                        className="flex items-center gap-2 mt-4 py-3 px-2 rounded border transition uppercase font-medium"
+                                        style={{
+                                            borderColor: 'rgba(114, 176, 29, 0.6)',
+                                            color: '#0d0a0b',
+                                            backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                            e.currentTarget.style.color = '#f3eff5';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                            e.currentTarget.style.color = '#0d0a0b';
+                                        }}
                                     >
                                         <FiLogOut className="inline mr-2" /> Logout
                                     </button>

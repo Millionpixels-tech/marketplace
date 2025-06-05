@@ -160,28 +160,36 @@ const Search: React.FC = () => {
   return (
     <>
       <Header />
-      <div className="w-full min-h-screen bg-white py-10 px-2 md:px-8">
+      <div className="w-full min-h-screen py-10 px-2 md:px-8" style={{ backgroundColor: '#f3eff5' }}>
         <div className="flex flex-col md:flex-row gap-10 w-full">
           {/* -------- Sidebar -------- */}
           <aside className="w-full md:w-80 mb-8 md:mb-0 flex flex-col gap-6">
             {/* Category Filter Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#222" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
-                <h2 className="text-base font-semibold tracking-tight">Categories</h2>
+            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
+                <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
               <ul className="flex flex-col gap-1 px-4 py-4">
                 {categories.map((c) => (
                   <li key={c.name} className="flex flex-col">
                     <div className="flex items-center w-full group">
                       <button
-                        className={`flex-1 text-left px-3 py-2 rounded-lg font-medium transition-all duration-150 group-hover:bg-gray-100 group-hover:text-black border border-transparent ${cat === c.name ? "bg-black text-white border-black shadow-sm" : "text-gray-800"}`}
+                        className={`flex-1 text-left px-3 py-2 rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
+                        style={{
+                          backgroundColor: cat === c.name ? '#72b01d' : 'transparent',
+                          color: cat === c.name ? '#f3eff5' : '#0d0a0b'
+                        }}
                         onClick={() => handleCategoryClick(c.name)}
                       >
                         {c.name}
                       </button>
                       <button
-                        className="ml-1 p-1 rounded hover:bg-gray-200"
+                        className="ml-1 p-1 rounded transition-all duration-300"
+                        style={{
+                          backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                          color: '#72b01d'
+                        }}
                         aria-label={expanded === c.name ? `Collapse ${c.name}` : `Expand ${c.name}`}
                         onClick={e => {
                           e.stopPropagation();
@@ -189,9 +197,9 @@ const Search: React.FC = () => {
                         }}
                       >
                         {expanded === c.name ? (
-                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#111" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
+                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
                         ) : (
-                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#111" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
+                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
                         )}
                       </button>
                     </div>
@@ -200,7 +208,11 @@ const Search: React.FC = () => {
                         {c.subcategories.map(sc => (
                           <li key={sc}>
                             <button
-                              className={`w-full text-left px-3 py-1.5 rounded-lg transition-all duration-150 text-sm border border-transparent ${sub === sc ? "bg-black text-white border-black shadow-sm" : "text-gray-700 hover:bg-gray-100 hover:text-black"}`}
+                              className={`w-full text-left px-3 py-1.5 rounded-lg transition-all duration-300 text-sm ${sub === sc ? "text-white shadow-lg" : ""}`}
+                              style={{
+                                backgroundColor: sub === sc ? '#3f7d20' : 'transparent',
+                                color: sub === sc ? '#f3eff5' : '#454955'
+                              }}
                               onClick={() => handleSubcategoryClick(c.name, sc)}
                             >
                               {sc}
@@ -214,7 +226,11 @@ const Search: React.FC = () => {
                 {/* Reset filter */}
                 <li className="pt-2">
                   <button
-                    className="w-full px-3 py-2 rounded-lg text-left text-gray-500 hover:bg-gray-100 text-sm border border-gray-200 font-semibold transition disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-lg text-left text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+                    style={{
+                      backgroundColor: (!cat && !sub) ? 'rgba(114, 176, 29, 0.1)' : 'rgba(114, 176, 29, 0.05)',
+                      color: '#72b01d'
+                    }}
                     onClick={() => {
                       setCat(""); setSub(""); setExpanded(null); setCurrentPage(1);
                       const params = new URLSearchParams(searchParams);
@@ -232,41 +248,56 @@ const Search: React.FC = () => {
             </div>
 
             {/* Additional Filters Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#222" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
-                <h2 className="text-base font-semibold tracking-tight">More Filters</h2>
+            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
+                <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>More Filters</h2>
               </div>
               <div className="flex flex-col gap-5 px-4 py-4">
                 {/* Price Range */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-2">Price Range (LKR)</label>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: '#454955' }}>Price Range (LKR)</label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="number"
                       min="0"
-                      className="w-1/2 px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-sm bg-gray-50 focus:bg-white"
+                      className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                      style={{
+                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                        color: '#0d0a0b'
+                      }}
                       placeholder="Min"
                       value={filterMinPrice}
                       onChange={e => setFilterMinPrice(e.target.value)}
                     />
-                    <span className="text-gray-400 text-xs">—</span>
+                    <span className="text-xs" style={{ color: '#454955' }}>—</span>
                     <input
                       type="number"
                       min="0"
-                      className="w-1/2 px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-sm bg-gray-50 focus:bg-white"
+                      className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                      style={{
+                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                        color: '#0d0a0b'
+                      }}
                       placeholder="Max"
                       value={filterMaxPrice}
                       onChange={e => setFilterMaxPrice(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="border-t border-gray-100" />
+                <div className="border-t" style={{ borderTopColor: 'rgba(114, 176, 29, 0.2)' }} />
                 {/* Sort By */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-2">Sort By</label>
+                  <label className="block text-xs font-semibold mb-2" style={{ color: '#454955' }}>Sort By</label>
                   <select
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black outline-none transition-all text-sm bg-gray-50 focus:bg-white"
+                    className="w-full px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                    style={{
+                      backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                      borderColor: 'rgba(114, 176, 29, 0.3)',
+                      color: '#0d0a0b'
+                    }}
                     value={filterSort}
                     onChange={e => setFilterSort(e.target.value)}
                   >
@@ -276,7 +307,7 @@ const Search: React.FC = () => {
                     <option value="newest">Newest</option>
                   </select>
                 </div>
-                <div className="border-t border-gray-100" />
+                <div className="border-t" style={{ borderTopColor: 'rgba(114, 176, 29, 0.2)' }} />
                 {/* Free Shipping */}
                 <div className="flex items-center gap-2">
                   <input
@@ -284,13 +315,17 @@ const Search: React.FC = () => {
                     type="checkbox"
                     checked={filterFreeShipping}
                     onChange={e => setFilterFreeShipping(e.target.checked)}
-                    className="accent-black w-4 h-4 rounded"
+                    className="w-4 h-4 rounded"
+                    style={{ accentColor: '#72b01d' }}
                   />
-                  <label htmlFor="free-shipping" className="text-sm text-gray-700 select-none cursor-pointer">Free Shipping Only</label>
+                  <label htmlFor="free-shipping" className="text-sm select-none cursor-pointer" style={{ color: '#454955' }}>Free Shipping Only</label>
                 </div>
                 <div className="flex gap-2 mt-2">
                   <button
-                    className="flex-1 px-4 py-2 rounded-lg bg-black text-white font-semibold hover:bg-gray-800 transition text-sm shadow"
+                    className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    style={{
+                      background: 'linear-gradient(to right, #72b01d, #3f7d20)'
+                    }}
                     onClick={() => {
                       setAppliedMinPrice(filterMinPrice);
                       setAppliedMaxPrice(filterMaxPrice);
@@ -309,7 +344,12 @@ const Search: React.FC = () => {
                     Apply Filters
                   </button>
                   <button
-                    className="flex-1 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition text-sm border border-gray-200"
+                    className="flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm border"
+                    style={{
+                      backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                      color: '#72b01d',
+                      borderColor: 'rgba(114, 176, 29, 0.3)'
+                    }}
                     onClick={() => {
                       setFilterMinPrice("");
                       setFilterMaxPrice("");
@@ -352,7 +392,12 @@ const Search: React.FC = () => {
                 }}
               >
                 <input
-                  className="flex-1 bg-gray-100 bg-white outline-none px-5 py-3 rounded-l-xl font-medium text-lg transition border border-gray-200 border-r-0"
+                  className="flex-1 outline-none px-5 py-3 rounded-l-xl font-medium text-lg transition border border-r-0"
+                  style={{
+                    backgroundColor: '#f3eff5',
+                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                    color: '#0d0a0b'
+                  }}
                   placeholder="Search products..."
                   value={searchInput}
                   onChange={e => setSearchInput(e.target.value)}
@@ -360,7 +405,11 @@ const Search: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 rounded-r-xl bg-black text-white font-semibold text-lg hover:bg-gray-800 transition shadow border border-gray-200"
+                  className="px-6 py-3 rounded-r-xl text-white font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border"
+                  style={{
+                    background: 'linear-gradient(to right, #72b01d, #3f7d20)',
+                    borderColor: 'rgba(114, 176, 29, 0.3)'
+                  }}
                   aria-label="Search"
                 >
                   Search
@@ -369,7 +418,7 @@ const Search: React.FC = () => {
             </div>
             {/* Results header with count */}
             <div className="mb-6">
-              <p className="text-gray-600 text-sm">
+              <p className="text-sm" style={{ color: '#454955' }}>
                 Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
                 {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
               </p>
@@ -380,24 +429,33 @@ const Search: React.FC = () => {
                 <Link
                   key={item.id}
                   to={`/listing/${item.id}`}
-                  className="group flex flex-col bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-xl hover:border-black transition-all p-4 relative cursor-pointer"
-                  style={{ textDecoration: 'none' }}
+                  className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-4 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
+                  style={{
+                    textDecoration: 'none',
+                    backgroundColor: '#f3eff5',
+                    borderColor: 'rgba(114, 176, 29, 0.3)'
+                  }}
                 >
                   {/* Wishlist Button (top right) */}
 
                   {/* Image */}
-                  <div className="w-full aspect-square bg-gray-100 rounded-xl mb-4 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:border-black transition">
+                  <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
+                    style={{
+                      backgroundColor: 'rgba(243, 239, 245, 0.5)',
+                      borderColor: 'rgba(114, 176, 29, 0.2)'
+                    }}>
                     {item.images && item.images.length > 0 ? (
                       <img
                         src={item.images[0]}
                         alt={item.name}
-                        className="object-cover w-full h-full group-hover:scale-105 group-hover:brightness-90 transition-transform"
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <span className="text-4xl text-gray-300">🖼️</span>
+                      <span className="text-4xl" style={{ color: '#454955' }}>🖼️</span>
                     )}
                   </div>
-                  <h3 className="font-extrabold text-lg mb-1 truncate group-hover:text-black">
+                  <h3 className="font-extrabold text-lg mb-1 truncate transition-colors duration-300"
+                    style={{ color: '#0d0a0b' }}>
                     {item.name}
                   </h3>
                   {/* Show product average rating and count */}
@@ -490,7 +548,24 @@ const Search: React.FC = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: '#f3eff5',
+                    color: '#454955',
+                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== 1) {
+                      e.currentTarget.style.backgroundColor = '#72b01d';
+                      e.currentTarget.style.color = '#f3eff5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== 1) {
+                      e.currentTarget.style.backgroundColor = '#f3eff5';
+                      e.currentTarget.style.color = '#454955';
+                    }
+                  }}
                   aria-label="Previous page"
                 >
                   ← Previous
@@ -503,12 +578,25 @@ const Search: React.FC = () => {
                     <>
                       <button
                         onClick={() => handlePageChange(1)}
-                        className="w-10 h-10 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+                        className="w-10 h-10 rounded-lg font-medium transition"
+                        style={{
+                          backgroundColor: '#f3eff5',
+                          color: '#454955',
+                          border: '1px solid rgba(114, 176, 29, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#72b01d';
+                          e.currentTarget.style.color = '#f3eff5';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3eff5';
+                          e.currentTarget.style.color = '#454955';
+                        }}
                       >
                         1
                       </button>
                       {currentPage > 4 && (
-                        <span className="px-2 text-gray-400">...</span>
+                        <span className="px-2" style={{ color: '#454955' }}>...</span>
                       )}
                     </>
                   )}
@@ -530,14 +618,30 @@ const Search: React.FC = () => {
                     if (currentPage > 3 && pageNum === 1) return null;
                     if (currentPage < totalPages - 2 && pageNum === totalPages) return null;
 
+                    const isCurrentPage = currentPage === pageNum;
+
                     return (
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`w-10 h-10 rounded-lg border font-medium transition ${currentPage === pageNum
-                          ? "border-black bg-black text-white"
-                          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                          }`}
+                        className="w-10 h-10 rounded-lg font-medium transition"
+                        style={{
+                          backgroundColor: isCurrentPage ? '#72b01d' : '#f3eff5',
+                          color: isCurrentPage ? '#f3eff5' : '#454955',
+                          border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isCurrentPage) {
+                            e.currentTarget.style.backgroundColor = '#72b01d';
+                            e.currentTarget.style.color = '#f3eff5';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isCurrentPage) {
+                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                            e.currentTarget.style.color = '#454955';
+                          }
+                        }}
                       >
                         {pageNum}
                       </button>
@@ -548,11 +652,24 @@ const Search: React.FC = () => {
                   {currentPage < totalPages - 2 && (
                     <>
                       {currentPage < totalPages - 3 && (
-                        <span className="px-2 text-gray-400">...</span>
+                        <span className="px-2" style={{ color: '#454955' }}>...</span>
                       )}
                       <button
                         onClick={() => handlePageChange(totalPages)}
-                        className="w-10 h-10 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+                        className="w-10 h-10 rounded-lg font-medium transition"
+                        style={{
+                          backgroundColor: '#f3eff5',
+                          color: '#454955',
+                          border: '1px solid rgba(114, 176, 29, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#72b01d';
+                          e.currentTarget.style.color = '#f3eff5';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3eff5';
+                          e.currentTarget.style.color = '#454955';
+                        }}
                       >
                         {totalPages}
                       </button>
@@ -564,7 +681,24 @@ const Search: React.FC = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: '#f3eff5',
+                    color: '#454955',
+                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.currentTarget.style.backgroundColor = '#72b01d';
+                      e.currentTarget.style.color = '#f3eff5';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentPage !== totalPages) {
+                      e.currentTarget.style.backgroundColor = '#f3eff5';
+                      e.currentTarget.style.color = '#454955';
+                    }
+                  }}
                   aria-label="Next page"
                 >
                   Next →
