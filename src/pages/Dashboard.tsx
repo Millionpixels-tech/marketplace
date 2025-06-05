@@ -376,16 +376,16 @@ export default function ProfileDashboard() {
         listingsPage * LISTINGS_PER_PAGE
     );
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
-    if (!profileUid) return <div className="min-h-screen flex items-center justify-center text-gray-400">User not found.</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>Loading...</div>;
+    if (!profileUid) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>User not found.</div>;
 
     return (
-        <div className="bg-gray-50 min-h-screen w-full">
+        <div className="min-h-screen w-full" style={{ backgroundColor: '#f3eff5' }}>
             <Header />
             {/* Full width, no max-w */}
             <div className="flex flex-col md:flex-row gap-0 py-8 px-0 md:px-8 w-full">
                 {/* Sidebar */}
-                <aside className={`w-full md:w-64 min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 border-r border-gray-200 rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`}>
+                <aside className={`w-full md:w-64 min-h-screen border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`} style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* Burger for mobile */}
                     <button
                         className="md:hidden absolute top-4 right-4 z-10"
@@ -398,15 +398,32 @@ export default function ProfileDashboard() {
                         {TABS.map(tab => (
                             <button
                                 key={tab.key}
-                                className={`group flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-base transition-all relative overflow-hidden
-                  ${selectedTab === tab.key
-                                        ? "bg-gray-300 text-black shadow"
-                                        : "bg-gray-100 hover:bg-gray-200 hover:text-black text-gray-600"}
-                `}
-                                style={{ boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(0,0,0,0.06)' : undefined }}
+                                className={`group flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-base transition-all relative overflow-hidden border`}
+                                style={{
+                                    backgroundColor: selectedTab === tab.key ? '#72b01d' : '#f3eff5',
+                                    color: selectedTab === tab.key ? '#f3eff5' : '#454955',
+                                    borderColor: selectedTab === tab.key ? '#72b01d' : 'rgba(114, 176, 29, 0.3)',
+                                    boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(114, 176, 29, 0.3)' : undefined
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (selectedTab !== tab.key) {
+                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                        e.currentTarget.style.borderColor = '#72b01d';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (selectedTab !== tab.key) {
+                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                    }
+                                }}
                                 onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
                             >
-                                <span className={`transition-all ${selectedTab === tab.key ? 'scale-110 text-black' : 'opacity-70 group-hover:opacity-100 text-gray-700'}`}>{tab.icon}</span>
+                                <span className={`transition-all`} style={{
+                                    color: selectedTab === tab.key ? '#f3eff5' : '#454955',
+                                    transform: selectedTab === tab.key ? 'scale(1.1)' : 'scale(1)',
+                                    opacity: selectedTab === tab.key ? 1 : 0.7
+                                }}>{tab.icon}</span>
                                 <span className="truncate">{tab.label}</span>
                             </button>
                         ))}
@@ -414,16 +431,16 @@ export default function ProfileDashboard() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 min-w-0 w-full bg-white shadow-lg p-4 md:p-10 mx-auto">
+                <main className="flex-1 min-w-0 w-full shadow-lg p-4 md:p-10 mx-auto border rounded-2xl" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* PROFILE TAB */}
                     {selectedTab === "profile" && (
                         <div className="flex flex-col items-center w-full">
                             {/* Profile Picture */}
-                            <div className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow flex items-center justify-center overflow-hidden mb-4 relative group">
+                            <div className="w-28 h-28 rounded-full border-4 shadow flex items-center justify-center overflow-hidden mb-4 relative group" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: '#72b01d' }}>
                                 {photoURL ? (
                                     <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
                                 ) : (
-                                    <><span className="text-4xl text-gray-500 font-bold">
+                                    <><span className="text-4xl font-bold" style={{ color: '#454955' }}>
                                         {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
                                     </span></>
                                 )}
@@ -438,10 +455,11 @@ export default function ProfileDashboard() {
                                 )}
                             </div>
                             {/* Name */}
-                            <div className="text-2xl font-black mb-2 text-center flex items-center justify-center gap-2">
+                            <div className="text-2xl font-black mb-2 text-center flex items-center justify-center gap-2" style={{ color: '#0d0a0b' }}>
                                 {isOwner && editing ? (
                                     <input
-                                        className="text-2xl font-black text-center bg-gray-50 border border-gray-300 rounded-xl px-3 py-1 w-full max-w-xs mb-2"
+                                        className="text-2xl font-black text-center border rounded-xl px-3 py-1 w-full max-w-xs mb-2"
+                                        style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
                                         value={displayName}
                                         onChange={e => setDisplayName(e.target.value)}
                                         maxLength={40}
@@ -450,7 +468,7 @@ export default function ProfileDashboard() {
                                     <>
                                         <span>{displayName || profileEmail}</span>
                                         {verifyForm.isVerified === 'COMPLETED' && (
-                                            <span className="inline-flex items-center justify-center ml-2 rounded-full bg-blue-500 w-6 h-6">
+                                            <span className="inline-flex items-center justify-center ml-2 rounded-full w-6 h-6" style={{ backgroundColor: '#72b01d' }}>
                                                 <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
                                                     <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
                                                 </svg>
@@ -464,7 +482,8 @@ export default function ProfileDashboard() {
                             <div className="w-full mb-6 flex flex-col items-center">
                                 {isOwner && editing ? (
                                     <textarea
-                                        className="w-full max-w-md bg-gray-50 border border-gray-300 rounded-xl p-3 text-lg text-center"
+                                        className="w-full max-w-md border rounded-xl p-3 text-lg text-center"
+                                        style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
                                         rows={3}
                                         value={desc}
                                         onChange={e => setDesc(e.target.value)}
@@ -472,7 +491,7 @@ export default function ProfileDashboard() {
                                         maxLength={300}
                                     />
                                 ) : (
-                                    <div className="text-gray-700 text-lg min-h-[48px] whitespace-pre-line text-center">{desc || <span className="text-gray-400">No description yet.</span>}</div>
+                                    <div className="text-lg min-h-[48px] whitespace-pre-line text-center" style={{ color: '#454955' }}>{desc || <span style={{ color: '#454955', opacity: 0.6 }}>No description yet.</span>}</div>
                                 )}
                             </div>
                             {/* Edit/Save Buttons */}
@@ -480,7 +499,18 @@ export default function ProfileDashboard() {
                                 <div className="mb-8">
                                     {editing ? (
                                         <button
-                                            className="px-6 py-2 bg-black text-white rounded-full font-semibold mr-2 disabled:opacity-50"
+                                            className="px-6 py-2 rounded-full font-semibold mr-2 disabled:opacity-50 transition"
+                                            style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                            onMouseEnter={(e) => {
+                                                if (!saving) {
+                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!saving) {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                }
+                                            }}
                                             onClick={handleSave}
                                             disabled={saving}
                                         >
@@ -488,7 +518,16 @@ export default function ProfileDashboard() {
                                         </button>
                                     ) : (
                                         <button
-                                            className="px-6 py-2 bg-gray-200 text-black rounded-full font-semibold"
+                                            className="px-6 py-2 rounded-full font-semibold transition border"
+                                            style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                            }}
                                             onClick={() => setEditing(true)}
                                         >
                                             Edit Info
@@ -503,11 +542,18 @@ export default function ProfileDashboard() {
                     {selectedTab === "shops" && (
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold">{isOwner ? "Your Shops" : "Shops"}</h2>
+                                <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>{isOwner ? "Your Shops" : "Shops"}</h2>
                                 {isOwner && (
                                     <Link
                                         to="/create-shop"
-                                        className="px-5 py-2 bg-black text-white rounded-full font-bold uppercase tracking-wide shadow hover:bg-black/90 transition text-sm"
+                                        className="px-5 py-2 rounded-full font-bold uppercase tracking-wide shadow transition text-sm"
+                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                        }}
                                     >
                                         Create New Shop
                                     </Link>
@@ -515,14 +561,26 @@ export default function ProfileDashboard() {
                             </div>
                             {shops.length === 0 ? (
                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="text-gray-400">You have not created any shops yet.</div>
+                                    <div className="text-center" style={{ color: '#454955', opacity: 0.7 }}>You have not created any shops yet.</div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {shops.map(shop => (
                                         <div
                                             key={shop.id}
-                                            className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-gray-50 hover:bg-gray-100 transition"
+                                            className="border rounded-xl p-4 flex items-center gap-4 transition"
+                                            style={{
+                                                backgroundColor: '#f3eff5',
+                                                borderColor: 'rgba(114, 176, 29, 0.3)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                            }}
                                         >
                                             {/* Shop link and image */}
                                             <Link
@@ -531,20 +589,27 @@ export default function ProfileDashboard() {
                                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                             >
                                                 {shop.logo ? (
-                                                    <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border border-gray-200" />
+                                                    <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                 ) : (
-                                                    <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 font-bold">{shop.name[0]}</div>
+                                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}>{shop.name[0]}</div>
                                                 )}
                                                 <div>
-                                                    <div className="font-bold text-lg">{shop.name}</div>
-                                                    <div className="text-xs text-gray-500">@{shop.username}</div>
+                                                    <div className="font-bold text-lg" style={{ color: '#0d0a0b' }}>{shop.name}</div>
+                                                    <div className="text-xs" style={{ color: '#454955' }}>@{shop.username}</div>
                                                 </div>
                                             </Link>
                                             {isOwner && (
                                                 <div className="flex flex-col gap-2 ml-2">
                                                     <button
                                                         onClick={() => navigate(`/edit-shop/${shop.id}`)}
-                                                        className="px-3 py-1 bg-black text-white rounded hover:bg-yellow-600 text-xs"
+                                                        className="px-3 py-1 rounded text-xs font-semibold transition border"
+                                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5', borderColor: '#72b01d' }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }}
                                                     >
                                                         Edit
                                                     </button>
@@ -559,7 +624,18 @@ export default function ProfileDashboard() {
                                                                 alert("Failed to delete shop. Try again.");
                                                             }
                                                         }}
-                                                        className="px-3 py-1 bg-black text-white rounded hover:bg-red-600 text-xs"
+                                                        className="px-3 py-1 rounded text-xs font-semibold transition border"
+                                                        style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#ffebee';
+                                                            e.currentTarget.style.color = '#c62828';
+                                                            e.currentTarget.style.borderColor = '#c62828';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                            e.currentTarget.style.color = '#454955';
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                        }}
                                                     >
                                                         Delete
                                                     </button>
@@ -576,11 +652,25 @@ export default function ProfileDashboard() {
                     {/* ORDERS TAB */}
                     {selectedTab === "orders" && (
                         <div>
-                            <div className="flex gap-6 mb-6 border-b border-gray-200">
+                            <div className="flex gap-6 mb-6 border-b" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                 {ORDER_SUBTABS.map(subTab => (
                                     <button
                                         key={subTab.key}
-                                        className={`py-3 px-6 font-bold text-base border-b-2 transition-all ${orderSubTab === subTab.key ? "border-black text-black" : "border-transparent text-gray-400 hover:text-black"}`}
+                                        className={`py-3 px-6 font-bold text-base border-b-2 transition-all`}
+                                        style={{
+                                            borderBottomColor: orderSubTab === subTab.key ? '#72b01d' : 'transparent',
+                                            color: orderSubTab === subTab.key ? '#0d0a0b' : '#454955'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (orderSubTab !== subTab.key) {
+                                                e.currentTarget.style.color = '#0d0a0b';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (orderSubTab !== subTab.key) {
+                                                e.currentTarget.style.color = '#454955';
+                                            }
+                                        }}
                                         onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
                                     >
                                         {subTab.label}
@@ -588,34 +678,50 @@ export default function ProfileDashboard() {
                                 ))}
                             </div>
                             {ordersLoading ? (
-                                <div className="py-10 text-center text-gray-400">Loading orders...</div>
+                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading orders...</div>
                             ) : (
                                 <div>
                                     {/* As Buyer */}
                                     {orderSubTab === "buyer" && (
                                         <div>
                                             {buyerOrders.length === 0 ? (
-                                                <div className="py-10 text-center text-gray-400">No orders as buyer yet.</div>
+                                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
                                             ) : (
                                                 <div className="space-y-4">
                                                     {buyerOrders.map(order => (
                                                         <Link
                                                             to={`/order/${order.id}`}
                                                             key={order.id}
-                                                            className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow hover:shadow-lg transition cursor-pointer"
-                                                            style={{ textDecoration: 'none', color: 'inherit' }}
+                                                            className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
+                                                            style={{
+                                                                backgroundColor: '#f3eff5',
+                                                                borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                                textDecoration: 'none',
+                                                                color: 'inherit'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                                e.currentTarget.style.borderColor = '#72b01d';
+                                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                                e.currentTarget.style.boxShadow = '';
+                                                            }}
                                                         >
                                                             <img
                                                                 src={order.itemImage || '/placeholder.png'}
                                                                 alt={order.itemName}
                                                                 className="w-16 h-16 object-cover rounded-lg border"
+                                                                style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                             />
                                                             <div className="flex-1 min-w-0">
-                                                                <div className="font-bold text-lg mb-1 truncate">{order.itemName}</div>
-                                                                <div className="text-gray-700 text-sm mb-1">Status: <span className="font-semibold">{order.status}</span></div>
-                                                                <div className="text-gray-600 text-xs truncate">Seller: {order.sellerName || order.sellerId}</div>
+                                                                <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
+                                                                <div className="text-sm mb-1" style={{ color: '#454955' }}>Status: <span className="font-semibold">{order.status}</span></div>
+                                                                <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
                                                             </div>
-                                                            <div className="text-lg font-bold text-black self-end whitespace-nowrap">LKR {order.total?.toLocaleString()}</div>
+                                                            <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
                                                         </Link>
                                                     ))}
                                                 </div>
@@ -626,7 +732,7 @@ export default function ProfileDashboard() {
                                     {orderSubTab === "seller" && (
                                         <div>
                                             {sellerOrders.length === 0 ? (
-                                                <div className="py-10 text-center text-gray-400">No orders as seller yet.</div>
+                                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as seller yet.</div>
                                             ) : (
                                                 <div className="space-y-4">
                                                     {sellerOrders.map(order => (
@@ -644,22 +750,31 @@ export default function ProfileDashboard() {
                     {/* REVIEWS TAB */}
                     {selectedTab === "reviews" && (
                         <div>
-                            <h2 className="text-xl font-bold mb-4">Your Seller Reviews</h2>
+                            <h2 className="text-xl font-bold mb-4" style={{ color: '#0d0a0b' }}>Your Seller Reviews</h2>
                             {reviewsLoading ? (
-                                <div className="py-10 text-center text-gray-400">Loading reviews...</div>
+                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading reviews...</div>
                             ) : sellerReviews.length === 0 ? (
-                                <div className="py-10 text-center text-gray-400">No reviews as seller yet.</div>
+                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No reviews as seller yet.</div>
                             ) : (
                                 <div className="space-y-4">
                                     {sellerReviews.map(r => (
-                                        <div key={r.id} className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow hover:shadow-lg transition">
+                                        <div key={r.id} className="border rounded-xl p-5 shadow transition" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                            e.currentTarget.style.borderColor = '#72b01d';
+                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
+                                        }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                e.currentTarget.style.boxShadow = '';
+                                            }}>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-base">{r.rating}★</span>
-                                                <span className="text-gray-600 text-xs">{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
+                                                <span className="font-bold text-base" style={{ color: '#72b01d' }}>{r.rating}★</span>
+                                                <span className="text-xs" style={{ color: '#454955', opacity: 0.8 }}>{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
                                             </div>
-                                            <div className="text-gray-800">{r.text}</div>
+                                            <div style={{ color: '#0d0a0b' }}>{r.text}</div>
                                             {r.writtenByUserName && (
-                                                <div className="mt-2 text-xs text-gray-500">
+                                                <div className="mt-2 text-xs" style={{ color: '#454955', opacity: 0.7 }}>
                                                     — {r.writtenByUserName}
                                                 </div>
                                             )}
@@ -674,18 +789,25 @@ export default function ProfileDashboard() {
                     {selectedTab === "listings" && (
                         <div>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold">Your Listings</h2>
+                                <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>Your Listings</h2>
                                 <a
                                     href="/add-listing"
-                                    className="inline-block px-5 py-2 bg-black text-white rounded-full font-semibold uppercase tracking-wide hover:bg-gray-900 transition text-sm"
+                                    className="inline-block px-5 py-2 rounded-full font-semibold uppercase tracking-wide transition text-sm"
+                                    style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#3f7d20';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                    }}
                                 >
                                     + Create New Listing
                                 </a>
                             </div>
                             {listingsLoading ? (
-                                <div className="py-10 text-center text-gray-400">Loading listings...</div>
+                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading listings...</div>
                             ) : totalListings === 0 ? (
-                                <div className="py-10 text-center text-gray-400">No listings found.</div>
+                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No listings found.</div>
                             ) : (
                                 <>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -694,31 +816,59 @@ export default function ProfileDashboard() {
                                             return (
                                                 <div
                                                     key={listing.id}
-                                                    className="border border-gray-200 rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition"
+                                                    className="border rounded-xl p-4 transition"
+                                                    style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                        e.currentTarget.style.borderColor = '#72b01d';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    }}
                                                 >
                                                     <div className="flex items-center gap-4">
                                                         <img
                                                             src={listing.images?.[0] || "/placeholder.png"}
                                                             alt={listing.name}
                                                             className="w-16 h-16 object-cover rounded border"
+                                                            style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                         />
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="font-bold text-lg truncate">{listing.name}</h3>
-                                                            <p className="text-xs text-gray-500 truncate mb-1">{shop ? shop.name : ''}</p>
-                                                            <p className="text-sm text-gray-600 truncate">{listing.description}</p>
-                                                            <p className="text-black font-bold mt-1">LKR {listing.price?.toLocaleString()}</p>
+                                                            <h3 className="font-bold text-lg truncate" style={{ color: '#0d0a0b' }}>{listing.name}</h3>
+                                                            <p className="text-xs truncate mb-1" style={{ color: '#454955', opacity: 0.8 }}>{shop ? shop.name : ''}</p>
+                                                            <p className="text-sm truncate" style={{ color: '#454955' }}>{listing.description}</p>
+                                                            <p className="font-bold mt-1" style={{ color: '#3f7d20' }}>LKR {listing.price?.toLocaleString()}</p>
                                                         </div>
                                                     </div>
                                                     <div className="mt-4 flex justify-end gap-2">
                                                         <button
                                                             onClick={() => handleEditListing(listing.id)}
-                                                            className="px-4 bg-black text-white rounded hover:bg-yellow-600"
+                                                            className="px-4 py-2 rounded font-semibold transition border"
+                                                            style={{ backgroundColor: '#72b01d', color: '#f3eff5', borderColor: '#72b01d' }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                                            }}
                                                         >
                                                             Edit
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteListing(listing.id)}
-                                                            className="px-4 py-2 bg-black text-white rounded hover:bg-red-600"
+                                                            className="px-4 py-2 rounded font-semibold transition border"
+                                                            style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#ffebee';
+                                                                e.currentTarget.style.color = '#c62828';
+                                                                e.currentTarget.style.borderColor = '#c62828';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                                e.currentTarget.style.color = '#454955';
+                                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            }}
                                                         >
                                                             Delete
                                                         </button>
@@ -731,7 +881,25 @@ export default function ProfileDashboard() {
                                     {totalPages > 1 && (
                                         <div className="flex justify-center items-center mt-6 gap-2">
                                             <button
-                                                className={`px-3 py-1 rounded ${listingsPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-300'}`}
+                                                className={`px-3 py-1 rounded font-semibold transition border`}
+                                                style={{
+                                                    backgroundColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.1)' : '#f3eff5',
+                                                    color: listingsPage === 1 ? 'rgba(69, 73, 85, 0.4)' : '#454955',
+                                                    borderColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.2)' : 'rgba(114, 176, 29, 0.3)',
+                                                    cursor: listingsPage === 1 ? 'not-allowed' : 'pointer'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (listingsPage !== 1) {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                                        e.currentTarget.style.borderColor = '#72b01d';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (listingsPage !== 1) {
+                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    }
+                                                }}
                                                 onClick={() => setListingsPage(p => Math.max(p - 1, 1))}
                                                 disabled={listingsPage === 1}
                                             >
@@ -740,14 +908,49 @@ export default function ProfileDashboard() {
                                             {[...Array(totalPages)].map((_, i) => (
                                                 <button
                                                     key={i}
-                                                    className={`px-3 py-1 rounded font-semibold ${listingsPage === i + 1 ? 'bg-black text-white' : 'bg-gray-100 hover:bg-gray-300'}`}
+                                                    className={`px-3 py-1 rounded font-semibold transition border`}
+                                                    style={{
+                                                        backgroundColor: listingsPage === i + 1 ? '#72b01d' : '#f3eff5',
+                                                        color: listingsPage === i + 1 ? '#f3eff5' : '#454955',
+                                                        borderColor: listingsPage === i + 1 ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (listingsPage !== i + 1) {
+                                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (listingsPage !== i + 1) {
+                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                        }
+                                                    }}
                                                     onClick={() => setListingsPage(i + 1)}
                                                 >
                                                     {i + 1}
                                                 </button>
                                             ))}
                                             <button
-                                                className={`px-3 py-1 rounded ${listingsPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-300'}`}
+                                                className={`px-3 py-1 rounded font-semibold transition border`}
+                                                style={{
+                                                    backgroundColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.1)' : '#f3eff5',
+                                                    color: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.4)' : '#454955',
+                                                    borderColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.2)' : 'rgba(114, 176, 29, 0.3)',
+                                                    cursor: listingsPage === totalPages ? 'not-allowed' : 'pointer'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (listingsPage !== totalPages) {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                                        e.currentTarget.style.borderColor = '#72b01d';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (listingsPage !== totalPages) {
+                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    }
+                                                }}
                                                 onClick={() => setListingsPage(p => Math.min(p + 1, totalPages))}
                                                 disabled={listingsPage === totalPages}
                                             >
@@ -767,9 +970,9 @@ export default function ProfileDashboard() {
                             </div>
                             {/* Earnings and next payout */}
                             <div className="flex flex-col md:flex-row gap-4 mb-6">
-                                <div className="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col items-center justify-center">
-                                    <div className="text-gray-500 text-xs mb-1">Total Earnings (last 14 days)</div>
-                                    <div className="text-2xl font-bold text-green-700">
+                                <div className="flex-1 rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                    <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Total Earnings (last 14 days)</div>
+                                    <div className="text-2xl font-bold" style={{ color: '#3f7d20' }}>
                                         {(() => {
                                             const now = Date.now();
                                             const cutoff = now - 14 * 24 * 60 * 60 * 1000;
@@ -780,9 +983,9 @@ export default function ProfileDashboard() {
                                         })()}
                                     </div>
                                 </div>
-                                <div className="flex-1 bg-gray-100 rounded-xl p-4 flex flex-col items-center justify-center">
-                                    <div className="text-gray-500 text-xs mb-1">Next Payment Due</div>
-                                    <div className="text-2xl font-bold text-blue-700">
+                                <div className="flex-1 rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                    <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Due</div>
+                                    <div className="text-2xl font-bold" style={{ color: '#72b01d' }}>
                                         {(() => {
                                             const next = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
                                             return next.toLocaleDateString();
@@ -792,18 +995,18 @@ export default function ProfileDashboard() {
                             </div>
                             {/* Payment summary for last 14 days */}
                             <div className="mb-6">
-                                <h3 className="text-lg font-bold mb-2">Payment Summary (Last 14 Days)</h3>
+                                <h3 className="text-lg font-bold mb-2" style={{ color: '#0d0a0b' }}>Payment Summary (Last 14 Days)</h3>
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full bg-white border border-gray-200 rounded-xl">
-                                        <thead className="bg-gray-50">
+                                    <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                        <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                             <tr>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Order ID</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Date</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Item Name</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Quantity</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Item Total</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Shipping</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm text-gray-700">Order Total</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Total</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Shipping</th>
+                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -811,20 +1014,25 @@ export default function ProfileDashboard() {
                                                 .filter(p => p.status === "RECEIVED" && p.createdAt)
                                                 .sort((a, b) => (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0))
                                                 .map(p => (
-                                                    <tr key={p.id} className="hover:bg-gray-50 transition">
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-mono text-gray-700">{p.id}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left">{p.createdAt && new Date(p.createdAt.seconds * 1000).toLocaleDateString()}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-semibold">{p.itemName || '-'}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left">{p.quantity || 1}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left">LKR {(p.price && p.quantity ? (p.price * p.quantity).toLocaleString() : '-')}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left">LKR {p.shipping?.toLocaleString() || '-'}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-bold text-green-700">LKR {p.total?.toLocaleString()}</td>
+                                                    <tr key={p.id} className="transition" style={{ backgroundColor: '#f3eff5' }} onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                    }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        }}>
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-mono" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.id}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.createdAt && new Date(p.createdAt.seconds * 1000).toLocaleDateString()}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-semibold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.itemName || '-'}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.quantity || 1}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {(p.price && p.quantity ? (p.price * p.quantity).toLocaleString() : '-')}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {p.shipping?.toLocaleString() || '-'}</td>
+                                                        <td className="px-4 py-2 border-b text-xs text-left font-bold" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {p.total?.toLocaleString()}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>
                                     </table>
                                     {payments.filter(p => p.status === "RECEIVED").length === 0 && (
-                                        <div className="text-gray-400 text-center py-6">No received orders in the last 14 days.</div>
+                                        <div className="text-center py-6" style={{ color: '#454955', opacity: 0.7 }}>No received orders in the last 14 days.</div>
                                     )}
                                 </div>
                             </div>
@@ -834,93 +1042,211 @@ export default function ProfileDashboard() {
                     {/* SETTINGS TAB */}
                     {selectedTab === "settings" && (
                         <div>
-                            <h2 className="text-xl font-bold mb-4">Settings</h2>
+                            <h2 className="text-xl font-bold mb-4" style={{ color: '#0d0a0b' }}>Settings</h2>
                             <form className="w-full space-y-8" onSubmit={e => { e.preventDefault(); }}>
-                                {settingsLoading && <div className="text-blue-600">Saving...</div>}
-                                {settingsSuccess && <div className="text-green-600">{settingsSuccess}</div>}
-                                {settingsError && <div className="text-red-600">{settingsError}</div>}
+                                {settingsLoading && <div style={{ color: '#72b01d' }}>Saving...</div>}
+                                {settingsSuccess && <div style={{ color: '#3f7d20' }}>{settingsSuccess}</div>}
+                                {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
 
                                 {/* Bank Account Details */}
-                                <div className="bg-white rounded-xl border border-gray-200 p-6 w-full">
-                                    <h3 className="font-bold text-lg mb-2">Bank Account Details for Payouts</h3>
+                                <div className="rounded-xl border p-6 w-full" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className="font-bold text-lg mb-2" style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1">Bank Account Number</label>
-                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.accountNumber} onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))} />
+                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Bank Account Number</label>
+                                            <input
+                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                style={{
+                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                    color: '#0d0a0b'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = '#72b01d';
+                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
+                                                value={bankForm.accountNumber}
+                                                onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))}
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1">Branch Name</label>
-                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.branch} onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))} />
+                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Branch Name</label>
+                                            <input
+                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                style={{
+                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                    color: '#0d0a0b'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = '#72b01d';
+                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
+                                                value={bankForm.branch}
+                                                onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1">Bank Name</label>
-                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.bankName} onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))} />
+                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Bank Name</label>
+                                            <input
+                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                style={{
+                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                    color: '#0d0a0b'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = '#72b01d';
+                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
+                                                value={bankForm.bankName}
+                                                onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))}
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1">Full Name as in Bank</label>
-                                            <input className="border rounded px-3 py-2 w-full" value={bankForm.fullName} onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))} />
+                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Full Name as in Bank</label>
+                                            <input
+                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                style={{
+                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                    color: '#0d0a0b'
+                                                }}
+                                                onFocus={(e) => {
+                                                    e.currentTarget.style.borderColor = '#72b01d';
+                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
+                                                value={bankForm.fullName}
+                                                onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))}
+                                            />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Seller Verification */}
-                                <div className="bg-white rounded-2xl border border-gray-100 p-6 w-full shadow-sm flex flex-col">
-                                    <h3 className="font-bold text-xl mb-6">Verified Seller Badge</h3>
+                                <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className="font-bold text-xl mb-6" style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
                                     {verifyForm.isVerified === 'COMPLETED' && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
-                                            <div className="rounded-full bg-green-50 p-4 mb-2">
-                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#22c55e" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                            <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
+                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className="font-semibold text-green-600 text-lg text-center">You are a verified seller!</div>
+                                            <div className="font-semibold text-lg text-center" style={{ color: '#3f7d20' }}>You are a verified seller!</div>
                                         </div>
                                     )}
                                     {verifyForm.isVerified === 'PENDING' && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
-                                            <div className="rounded-full bg-yellow-50 p-4 mb-2">
+                                            <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.15)' }}>
                                                 <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#facc15" fillOpacity="0.12" /><path d="M12 7v4m0 4h.01" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className="font-semibold text-yellow-600 text-lg text-center">Your documents are under review.</div>
-                                            <div className="text-gray-500 text-sm text-center">We will notify you when verification is complete.</div>
+                                            <div className="font-semibold text-lg text-center" style={{ color: '#ff8f00' }}>Your documents are under review.</div>
+                                            <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>We will notify you when verification is complete.</div>
                                         </div>
                                     )}
                                     {verifyForm.isVerified === 'NO_DATA' && (
                                         <>
                                             <div className="mb-4 w-full max-w-xl">
-                                                <label className="block text-sm font-semibold mb-2">Full Name as in ID</label>
-                                                <input className="border border-gray-200 rounded-lg px-4 py-2 w-full text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black" value={verifyForm.fullName} onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))} />
+                                                <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Full Name as in ID</label>
+                                                <input
+                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2"
+                                                    style={{
+                                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                        color: '#0d0a0b'
+                                                    }}
+                                                    onFocus={(e) => {
+                                                        e.currentTarget.style.borderColor = '#72b01d';
+                                                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                        e.currentTarget.style.boxShadow = 'none';
+                                                    }}
+                                                    value={verifyForm.fullName}
+                                                    onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))}
+                                                />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2">ID Front Side</label>
+                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Front Side</label>
                                                     <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} className="block w-full" />
                                                     {(verifyForm.idFront || verifyForm.idFrontUrl) && (
-                                                        <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                        <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2">ID Back Side</label>
+                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Back Side</label>
                                                     <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} className="block w-full" />
                                                     {(verifyForm.idBack || verifyForm.idBackUrl) && (
-                                                        <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                        <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2">Selfie with ID</label>
+                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Selfie with ID</label>
                                                     <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} className="block w-full" />
                                                     {(verifyForm.selfie || verifyForm.selfieUrl) && (
-                                                        <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" />
+                                                        <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                             </div>
                                             <div className="mb-6 w-full max-w-xl">
-                                                <label className="block text-sm font-semibold mb-2">Address</label>
-                                                <input className="border border-gray-200 rounded-lg px-4 py-2 w-full text-base bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black" value={verifyForm.address} onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))} />
+                                                <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Address</label>
+                                                <input
+                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2"
+                                                    style={{
+                                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                        color: '#0d0a0b'
+                                                    }}
+                                                    onFocus={(e) => {
+                                                        e.currentTarget.style.borderColor = '#72b01d';
+                                                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                    }}
+                                                    onBlur={(e) => {
+                                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                        e.currentTarget.style.boxShadow = 'none';
+                                                    }}
+                                                    value={verifyForm.address}
+                                                    onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))}
+                                                />
                                             </div>
                                         </>
                                     )}
                                 </div>
                                 <div className="flex justify-end w-full">
-                                    <button type="button" className="px-6 py-3 bg-black text-white rounded-full font-bold text-base hover:bg-gray-900 transition" onClick={handleSaveAllSettings} disabled={settingsLoading}>
+                                    <button
+                                        type="button"
+                                        className="px-6 py-3 rounded-full font-bold text-base transition"
+                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                        onMouseEnter={(e) => {
+                                            if (!settingsLoading) {
+                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!settingsLoading) {
+                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                            }
+                                        }}
+                                        onClick={handleSaveAllSettings}
+                                        disabled={settingsLoading}
+                                    >
                                         {settingsLoading ? 'Saving...' : 'Submit for Review'}
                                     </button>
                                 </div>
