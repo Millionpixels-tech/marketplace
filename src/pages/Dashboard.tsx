@@ -25,11 +25,6 @@ const ORDER_SUBTABS = [
     { key: "seller", label: "As Seller" },
 ];
 
-const REVIEW_SUBTABS = [
-    { key: "buyer", label: "As Buyer" },
-    { key: "seller", label: "As Seller" },
-];
-
 export default function ProfileDashboard() {
     const { user } = useAuth();
     const { id } = useParams();
@@ -44,8 +39,6 @@ export default function ProfileDashboard() {
     const [profileEmail, setProfileEmail] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     // Settings form state
-    const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
-    const [businessForm, setBusinessForm] = useState({ about: '', startDate: '', employees: '', brImage: null as File | null, brImageUrl: '' });
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
     const [verifyForm, setVerifyForm] = useState({ fullName: '', idFront: null as File | null, idBack: null as File | null, selfie: null as File | null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: 'PENDING' });
     const [settingsLoading, setSettingsLoading] = useState(false);
@@ -111,14 +104,10 @@ export default function ProfileDashboard() {
 
     // Payments state
     const [payments, setPayments] = useState<any[]>([]);
-    const [paymentsLoading, setPaymentsLoading] = useState(false);
     // Bank details state
-    const [bankDetails, setBankDetails] = useState<any | null>(null);
-    const [savingBank, setSavingBank] = useState(false);
     // Payments fetching
     useEffect(() => {
         if (selectedTab !== "payments" || !profileUid) return;
-        setPaymentsLoading(true);
         // Fetch only last 14 days orders for payments calculation
         const fetchPayments = async () => {
             try {
@@ -139,7 +128,6 @@ export default function ProfileDashboard() {
                 console.error("Error loading payments:", err);
                 setPayments([]);
             } finally {
-                setPaymentsLoading(false);
             }
         };
         // Fetch bank details (placeholder, replace with Firestore logic)
@@ -147,7 +135,6 @@ export default function ProfileDashboard() {
             // Example: fetch from users collection
             // const userSnap = await getDocs(query(collection(db, "users"), where("uid", "==", profileUid)));
             // if (!userSnap.empty) setBankDetails(userSnap.docs[0].data().bankDetails || null);
-            setBankDetails(null); // Placeholder: no bank details
         };
         fetchPayments();
         fetchBankDetails();
@@ -169,8 +156,6 @@ export default function ProfileDashboard() {
     const [ordersLoading, setOrdersLoading] = useState(false);
 
     // Review sub-tabs
-    const [reviewSubTab, setReviewSubTab] = useState<"buyer" | "seller">("buyer");
-    const [buyerReviews, setBuyerReviews] = useState<any[]>([]);
     const [sellerReviews, setSellerReviews] = useState<any[]>([]);
     const [reviewsLoading, setReviewsLoading] = useState(false);
 
@@ -225,26 +210,10 @@ export default function ProfileDashboard() {
             const docsSnap = await getDocs(q);
             const shopList = docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setShops(shopList);
-            // Load business details for first shop (or selected)
-            let shopId = selectedShopId || shopList[0]?.id;
-            if (shopId) {
-                const shopDoc = docsSnap.docs.find(d => d.id === shopId);
-                if (shopDoc) {
-                    const shopData = shopDoc.data();
-                    setBusinessForm(f => ({
-                        ...f,
-                        about: shopData.about || '',
-                        startDate: shopData.startDate || '',
-                        employees: shopData.employees || '',
-                        brImage: null,
-                        brImageUrl: shopData.brImageUrl || '',
-                    }));
-                }
-            }
             setLoading(false);
         };
         fetchProfile();
-    }, [user, id, selectedShopId]);
+    }, [user, id]);
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -296,12 +265,6 @@ export default function ProfileDashboard() {
         setReviewsLoading(true);
         const fetchReviews = async () => {
             // As Buyer: reviews given to this user in the role of buyer
-            const buyerSnap = await getDocs(
-                query(collection(db, "reviews"),
-                    where("reviewedUserId", "==", profileUid),
-                    where("role", "==", "buyer"))
-            );
-            setBuyerReviews(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
             // As Seller: reviews given to this user in the role of seller
             const sellerSnap = await getDocs(
