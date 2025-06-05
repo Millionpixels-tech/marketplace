@@ -5,12 +5,10 @@ import { categories } from "../utils/categories";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../components/UI/Header";
 import WishlistButton from "../components/UI/WishlistButton";
-import { useAuth } from "../context/AuthContext";
 import { getUserIP } from "../utils/ipUtils";
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
   // For sidebar filter

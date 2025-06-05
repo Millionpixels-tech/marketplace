@@ -12,7 +12,6 @@ import Profile from "../pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import OrderPage from "../pages/OrderPage";
 import WishlistPage from "../pages/WishlistPage";
-import CheckoutPage from "../pages/CheckoutPage";
 import EditShop from "../pages/EditShop";
 import PublicProfile from "../pages/PublicProfile";
 import ResetPassword from "../pages/ResetPassword";

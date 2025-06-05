@@ -13,7 +13,6 @@ export default function CheckoutPage() {
 
     const itemName = searchParams.get("itemName") || "Unknown Item";
     const itemId = searchParams.get("itemId");
-    const price = parseFloat(searchParams.get("price") || "0");
     const quantity = parseInt(searchParams.get("quantity") || "1");
     const total = parseFloat(searchParams.get("total") || "0");
     const image = searchParams.get("image");

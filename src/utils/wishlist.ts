@@ -1,6 +1,6 @@
 // src/utils/wishlist.ts
 import { db } from "./firebase";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { getUserIP } from "./ipUtils";
 
 // Wishlist record type
