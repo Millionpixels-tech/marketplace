@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { createOrder } from "../utils/orders";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { getUserIP } from "../utils/ipUtils";
 import { db } from "../utils/firebase";
@@ -24,6 +23,7 @@ export default function ListingSingle() {
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'paynow'>('paynow');
   const { user } = useAuth();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [item, setItem] = useState<any>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -409,24 +409,20 @@ export default function ListingSingle() {
                       e.currentTarget.style.backgroundColor = '#72b01d';
                     }}
                     disabled={qty > (item.quantity || 1)}
-                    onClick={async () => {
+                    onClick={() => {
                       if (!item || !shop || qty > (item.quantity || 1)) return;
-                      await createOrder({
-                        itemId: id,
-                        itemName: item.name,
-                        itemImage: item.images?.[0] || "",
-                        buyerId: user?.uid || null,
-                        buyerEmail: user?.email || null,
-                        sellerId: item.owner,
-                        sellerShopId: item.shopId,
-                        sellerShopName: shop.name,
-                        price,
-                        quantity: qty,
-                        shipping,
-                        total,
-                        paymentMethod,
+                      if (!user) {
+                        alert("Please log in to place an order");
+                        return;
+                      }
+                      
+                      // Navigate to checkout page with parameters
+                      const params = new URLSearchParams({
+                        itemId: id || '',
+                        quantity: qty.toString(),
+                        paymentMethod: paymentMethod
                       });
-                      alert(paymentMethod === 'cod' ? "Order placed with Cash on Delivery!" : "Order placed! (No payment gateway yet)");
+                      navigate(`/checkout?${params.toString()}`);
                     }}
                   >
                     {paymentMethod === 'cod' ? 'Order with Cash on Delivery' : 'Pay Now'}
@@ -446,23 +442,19 @@ export default function ListingSingle() {
                     e.currentTarget.style.backgroundColor = '#72b01d';
                   }}
                   disabled={qty > (item.quantity || 1)}
-                  onClick={async () => {
+                  onClick={() => {
                     if (!item || !shop || qty > (item.quantity || 1)) return;
-                    await createOrder({
-                      itemId: id,
-                      itemName: item.name,
-                      itemImage: item.images?.[0] || "",
-                      buyerId: user?.uid || null,
-                      buyerEmail: user?.email || null,
-                      sellerId: item.owner,
-                      sellerShopId: item.shopId,
-                      sellerShopName: shop.name,
-                      price,
-                      quantity: qty,
-                      shipping,
-                      total,
+                    if (!user) {
+                      alert("Please log in to place an order");
+                      return;
+                    }
+                    
+                    // Navigate to checkout page with parameters
+                    const params = new URLSearchParams({
+                      itemId: id || '',
+                      quantity: qty.toString()
                     });
-                    alert("Order placed! (No payment gateway yet)");
+                    navigate(`/checkout?${params.toString()}`);
                   }}
                 >
                   Buy Now

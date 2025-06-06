@@ -1,12 +1,23 @@
 import { db } from "./firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 
+export interface BuyerInfo {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    postalCode: string;
+}
+
 export interface Order {
     itemId?: string;
     itemName: string;
     itemImage: string;
     buyerId: string | null;
     buyerEmail: string | null;
+    buyerInfo?: BuyerInfo;
     sellerId: string;
     sellerShopId: string;
     sellerShopName: string;
