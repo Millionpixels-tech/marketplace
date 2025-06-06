@@ -121,10 +121,10 @@ export default function OrderPage() {
 
     // --- PAGE RENDER ---
     return (
-        <div className="bg-[#f3eff5] min-h-screen w-full">
+        <div className="bg-white min-h-screen w-full">
             <Header />
             <main className="w-full max-w-xl mx-auto mt-8 px-2 md:px-0">
-                <div className="bg-[#f3eff5] rounded-3xl shadow-lg p-6 md:p-10 flex flex-col gap-6">
+                <div className="bg-white rounded-3xl shadow-lg p-6 md:p-10 flex flex-col gap-6">
                     <h1 className="text-2xl font-black mb-2 text-[#0d0a0b]">Order Summary</h1>
                     <div className="flex flex-col gap-2 text-[#454955]">
                         <div className="flex items-center gap-3">

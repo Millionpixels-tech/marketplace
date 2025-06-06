@@ -113,7 +113,7 @@ export default function WishlistPage() {
 
     if (!user && items.length === 0) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f3eff5]">
+            <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="text-center p-8 max-w-lg bg-white rounded-2xl shadow-lg border border-[#45495522]">
                     <div className="text-[#72b01d] text-5xl mb-4">❤️</div>
                     <h2 className="text-2xl font-bold text-[#0d0a0b] mb-2">Your Wishlist is Empty</h2>
@@ -132,7 +132,7 @@ export default function WishlistPage() {
     return (
         <>
             <Header />
-            <div className="min-h-screen bg-[#f3eff5] w-full">
+            <div className="min-h-screen bg-white w-full">
                 <div className="w-full py-12 px-4">
                     <h1 className="text-3xl font-black mb-2 text-center text-[#0d0a0b]">Your Wishlist</h1>
                     <p className="text-center text-[#454955] mb-8 max-w-2xl mx-auto">
@@ -159,15 +159,10 @@ export default function WishlistPage() {
                                     className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-4 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
                                     style={{
                                         textDecoration: 'none',
-                                        backgroundColor: '#f3eff5',
+                                        backgroundColor: '#ffffff',
                                         borderColor: 'rgba(114, 176, 29, 0.3)'
                                     }}
                                 >
-                                    {/* WishlistButton positioned in top-right corner */}
-                                    <div className="absolute top-2 right-2 z-10">
-                                        <WishlistButton listing={item} refresh={refreshListings} />
-                                    </div>
-
                                     {/* Image */}
                                     <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
                                         style={{
@@ -197,26 +192,25 @@ export default function WishlistPage() {
                                         return (
                                             <div className="flex items-center gap-2 mb-1 min-h-[22px]">
                                                 {stats.avg ? (
-                                                    <>
-                                                        <span className="flex items-center text-yellow-500">
-                                                            {[1, 2, 3, 4, 5].map(i => (
-                                                                <svg
-                                                                    key={i}
-                                                                    width="16"
-                                                                    height="16"
-                                                                    className="inline-block"
-                                                                    fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                                                </svg>
-                                                            ))}
-                                                            <span className="ml-1 text-xs font-bold text-yellow-700">
-                                                                {stats.avg.toFixed(1)}
-                                                            </span>
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">({stats.count})</span>
+                                                    <>                                        <span className="flex items-center" style={{ color: '#72b01d' }}>
+                                            {[1, 2, 3, 4, 5].map(i => (
+                                                <svg
+                                                    key={i}
+                                                    width="16"
+                                                    height="16"
+                                                    className="inline-block"
+                                                    fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                </svg>
+                                            ))}
+                                            <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
+                                                {stats.avg.toFixed(1)}
+                                            </span>
+                                        </span>
+                                        <span className="text-xs" style={{ color: '#72b01d' }}>({stats.count})</span>
                                                     </>
                                                 ) : (
                                                     <span className="text-xs text-gray-400">No reviews yet</span>
@@ -239,7 +233,7 @@ export default function WishlistPage() {
                                             </span>
                                         )}
                                         {item.cashOnDelivery && (
-                                            <span className="inline-flex items-center gap-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold ml-2 px-2">
+                                            <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-xs font-semibold ml-2 px-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
                                                 <svg
                                                     className="w-4 h-4"
                                                     fill="none"
@@ -258,10 +252,13 @@ export default function WishlistPage() {
                                         )}
                                     </div>
 
-                                    {/* Price at bottom */}
-                                    <div className="mt-auto">
+                                    {/* Price & Wishlist bottom row */}
+                                    <div className="flex items-end justify-between mt-auto">
                                         <div className="font-bold text-lg text-black group-hover:text-black tracking-tight">
                                             LKR {item.price?.toLocaleString()}
+                                        </div>
+                                        <div className="ml-2 flex-shrink-0 flex items-end">
+                                            <WishlistButton listing={item} refresh={refreshListings} />
                                         </div>
                                     </div>
                                 </Link>

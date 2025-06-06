@@ -62,7 +62,7 @@ const Header = () => {
     };
 
     return (
-        <header className="sticky top-0 z-30 w-full border-b" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+        <header className="sticky top-0 z-30 w-full border-b" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
             <div className="flex items-center justify-between px-4 md:px-10 py-4 w-full">
                 {/* Logo & Categories (Left) */}
                 <div className="flex items-center gap-2 md:gap-6">
@@ -80,14 +80,14 @@ const Header = () => {
                             style={{
                                 borderColor: 'rgba(114, 176, 29, 0.6)',
                                 color: '#0d0a0b',
-                                backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                backgroundColor: '#ffffff'
                             }}
                             onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = '#72b01d';
-                                e.currentTarget.style.color = '#f3eff5';
+                                e.currentTarget.style.color = '#ffffff';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                e.currentTarget.style.backgroundColor = '#ffffff';
                                 e.currentTarget.style.color = '#0d0a0b';
                             }}
                             aria-haspopup="menu"
@@ -107,7 +107,7 @@ const Header = () => {
                                 />
                                 <div
                                     className="absolute left-0 top-12 w-[340px] rounded-lg shadow-lg z-50 border"
-                                    style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.4)' }}
+                                    style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.4)' }}
                                     onClick={e => e.stopPropagation()}
                                 >
                                     <div className="flex flex-col py-2">
@@ -132,7 +132,7 @@ const Header = () => {
                                                         }}
                                                         onMouseEnter={(e) => {
                                                             e.currentTarget.style.backgroundColor = '#72b01d';
-                                                            e.currentTarget.style.color = '#f3eff5';
+                                                            e.currentTarget.style.color = '#ffffff';
                                                         }}
                                                         onMouseLeave={(e) => {
                                                             e.currentTarget.style.backgroundColor = subCatOpen === idx ? 'rgba(114, 176, 29, 0.2)' : 'transparent';
@@ -156,7 +156,7 @@ const Header = () => {
                                                                         style={{ color: '#454955' }}
                                                                         onMouseEnter={(e) => {
                                                                             e.currentTarget.style.backgroundColor = '#72b01d';
-                                                                            e.currentTarget.style.color = '#f3eff5';
+                                                                            e.currentTarget.style.color = '#ffffff';
                                                                         }}
                                                                         onMouseLeave={(e) => {
                                                                             e.currentTarget.style.backgroundColor = 'transparent';
@@ -213,7 +213,7 @@ const Header = () => {
                     >
                         Wishlist
                         {wishlistCount > 0 && (
-                            <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3" style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}>{wishlistCount}</span>
+                            <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3" style={{ backgroundColor: '#72b01d', color: '#ffffff' }}>{wishlistCount}</span>
                         )}
                     </Link>
                     {/* Auth/User */}
@@ -225,14 +225,14 @@ const Header = () => {
                                 style={{
                                     borderColor: 'rgba(114, 176, 29, 0.6)',
                                     color: '#0d0a0b',
-                                    backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                    backgroundColor: '#ffffff'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
                                     e.currentTarget.style.color = '#0d0a0b';
                                 }}
                             >
@@ -243,12 +243,12 @@ const Header = () => {
                                 <button
                                     onClick={() => setUserMenuOpen((open) => !open)}
                                     className="flex items-center gap-2 rounded-full px-2 py-1 transition"
-                                    style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)' }}
+                                    style={{ backgroundColor: '#ffffff' }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                     }}
                                     aria-haspopup="menu"
                                     aria-expanded={userMenuOpen}
@@ -261,7 +261,7 @@ const Header = () => {
                                             style={{ borderColor: 'rgba(114, 176, 29, 0.6)' }}
                                         />
                                     ) : (
-                                        <span className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg" style={{ backgroundColor: 'rgba(243, 239, 245, 0.9)', color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
+                                        <span className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg" style={{ backgroundColor: '#ffffff', color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
                                             {getInitials(user.displayName || user.email)}
                                         </span>
                                     )}
@@ -276,7 +276,7 @@ const Header = () => {
                                             className="fixed inset-0 z-40"
                                             onClick={() => setUserMenuOpen(false)}
                                         />
-                                        <div className="absolute right-0 top-12 w-52 rounded-lg shadow-lg z-50 flex flex-col border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.4)' }}>
+                                        <div className="absolute right-0 top-12 w-52 rounded-lg shadow-lg z-50 flex flex-col border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.4)' }}>
                                             <button
                                                 onClick={() => {
                                                     setUserMenuOpen(false);
@@ -289,7 +289,7 @@ const Header = () => {
                                                 }}
                                                 onMouseEnter={(e) => {
                                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                                    e.currentTarget.style.color = '#f3eff5';
+                                                    e.currentTarget.style.color = '#ffffff';
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -305,7 +305,7 @@ const Header = () => {
                                                 style={{ color: '#0d0a0b' }}
                                                 onMouseEnter={(e) => {
                                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                                    e.currentTarget.style.color = '#f3eff5';
+                                                    e.currentTarget.style.color = '#ffffff';
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -328,14 +328,14 @@ const Header = () => {
                     style={{
                         borderColor: 'rgba(114, 176, 29, 0.6)',
                         color: '#0d0a0b',
-                        backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                        backgroundColor: '#ffffff'
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#72b01d';
-                        e.currentTarget.style.color = '#f3eff5';
+                        e.currentTarget.style.color = '#ffffff';
                     }}
                     onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                        e.currentTarget.style.backgroundColor = '#ffffff';
                         e.currentTarget.style.color = '#0d0a0b';
                     }}
                     onClick={() => setMobileMenuOpen((open) => !open)}
@@ -356,7 +356,7 @@ const Header = () => {
                     <div
                         className="fixed top-0 right-0 w-4/5 max-w-xs h-full border-l z-50 flex flex-col pt-6 px-6 pb-8 shadow-xl animate-slide-in"
                         style={{
-                            backgroundColor: '#f3eff5',
+                            backgroundColor: '#ffffff',
                             borderColor: 'rgba(114, 176, 29, 0.4)'
                         }}
                     >
@@ -382,7 +382,7 @@ const Header = () => {
                                 style={{ color: '#0d0a0b' }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -397,7 +397,7 @@ const Header = () => {
                                 <ul
                                     className="mb-2 rounded-lg border p-2"
                                     style={{
-                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                        backgroundColor: '#ffffff',
                                         borderColor: 'rgba(114, 176, 29, 0.3)'
                                     }}
                                 >
@@ -408,7 +408,7 @@ const Header = () => {
                                                 style={{ color: '#454955' }}
                                                 onMouseEnter={(e) => {
                                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                                    e.currentTarget.style.color = '#f3eff5';
+                                                    e.currentTarget.style.color = '#ffffff';
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -432,7 +432,7 @@ const Header = () => {
                                 style={{ color: '#454955' }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -448,7 +448,7 @@ const Header = () => {
                                 style={{ color: '#454955' }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -460,7 +460,7 @@ const Header = () => {
                                 {wishlistCount > 0 && (
                                     <span
                                         className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3"
-                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                     >
                                         {wishlistCount}
                                     </span>
@@ -473,14 +473,14 @@ const Header = () => {
                                     style={{
                                         borderColor: 'rgba(114, 176, 29, 0.6)',
                                         color: '#0d0a0b',
-                                        backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                        backgroundColor: '#ffffff'
                                     }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = '#72b01d';
-                                        e.currentTarget.style.color = '#f3eff5';
+                                        e.currentTarget.style.color = '#ffffff';
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                         e.currentTarget.style.color = '#0d0a0b';
                                     }}
                                     onClick={() => setMobileMenuOpen(false)}
@@ -492,7 +492,7 @@ const Header = () => {
                                     <div
                                         className="flex items-center gap-3 py-3 px-2 rounded border"
                                         style={{
-                                            backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                            backgroundColor: '#ffffff',
                                             borderColor: 'rgba(114, 176, 29, 0.3)'
                                         }}
                                     >
@@ -507,7 +507,7 @@ const Header = () => {
                                             <span
                                                 className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg"
                                                 style={{
-                                                    backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                                                    backgroundColor: '#ffffff',
                                                     color: '#0d0a0b',
                                                     borderColor: 'rgba(114, 176, 29, 0.6)'
                                                 }}
@@ -528,14 +528,14 @@ const Header = () => {
                                         style={{
                                             borderColor: 'rgba(114, 176, 29, 0.6)',
                                             color: '#0d0a0b',
-                                            backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                            backgroundColor: '#ffffff'
                                         }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = '#72b01d';
-                                            e.currentTarget.style.color = '#f3eff5';
+                                            e.currentTarget.style.color = '#ffffff';
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                             e.currentTarget.style.color = '#0d0a0b';
                                         }}
                                     >
@@ -547,14 +547,14 @@ const Header = () => {
                                         style={{
                                             borderColor: 'rgba(114, 176, 29, 0.6)',
                                             color: '#0d0a0b',
-                                            backgroundColor: 'rgba(243, 239, 245, 0.8)'
+                                            backgroundColor: '#ffffff'
                                         }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = '#72b01d';
-                                            e.currentTarget.style.color = '#f3eff5';
+                                            e.currentTarget.style.color = '#ffffff';
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                             e.currentTarget.style.color = '#0d0a0b';
                                         }}
                                     >

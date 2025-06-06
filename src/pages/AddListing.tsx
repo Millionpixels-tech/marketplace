@@ -112,7 +112,7 @@ export default function AddListing() {
   return (
     <>
       <Header />
-      <div className="bg-[#f3eff5] min-h-screen flex flex-col items-center py-8 px-2">
+      <div className="bg-white min-h-screen flex flex-col items-center py-8 px-2">
         {/* Stepper */}
         <div className="w-full max-w-3xl flex items-center justify-center mb-12">
           <ol className="flex w-full justify-center gap-0 md:gap-6">
@@ -145,7 +145,7 @@ export default function AddListing() {
         </div>
 
         <form
-          className="w-full max-w-2xl mx-auto bg-[#f3eff5] rounded-3xl shadow-lg px-0 md:px-12 py-10 transition-all"
+          className="w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-lg px-0 md:px-12 py-10 transition-all"
           onSubmit={e => { e.preventDefault(); handleSubmit(); }}
           autoComplete="off"
         >
@@ -183,7 +183,7 @@ export default function AddListing() {
                         className={`flex items-center gap-3 px-4 py-4 rounded-2xl border transition text-left
                           ${shopId === shop.id
                             ? "border-[#72b01d] bg-[#72b01d] text-white scale-105 shadow-sm"
-                            : "border-[#45495522] bg-white hover:bg-[#f3eff5]"}
+                            : "border-[#45495522] bg-white hover:bg-gray-50"}
                         `}
                       >
                         {shop.logo && (
@@ -228,7 +228,7 @@ export default function AddListing() {
                     className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition
                       ${cat === c.name
                         ? "bg-[#72b01d] text-white shadow-sm scale-105"
-                        : "bg-white border border-[#45495522] hover:bg-[#f3eff5] text-[#0d0a0b]"}
+                        : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
                     `}
                   >
                     <span className="text-xl">{categoryIcons[c.name] || "📦"}</span>
@@ -239,7 +239,7 @@ export default function AddListing() {
               <div className="flex justify-between mt-8">
                 <button
                   type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#f3eff5]"
+                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                   onClick={() => setStep(1)}
                 >
                   Back
@@ -269,7 +269,7 @@ export default function AddListing() {
                     className={`flex flex-col items-center gap-1 p-3 rounded-2xl transition
                       ${sub === sc
                         ? "bg-[#72b01d] text-white shadow-sm scale-105"
-                        : "bg-white border border-[#45495522] hover:bg-[#f3eff5] text-[#0d0a0b]"}
+                        : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
                     `}
                   >
                     <span className="text-xl">{subCategoryIcons[sc] || "📦"}</span>
@@ -280,7 +280,7 @@ export default function AddListing() {
               <div className="flex justify-between mt-8">
                 <button
                   type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#f3eff5]"
+                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                   onClick={() => setStep(2)}
                 >
                   Back
@@ -302,81 +302,94 @@ export default function AddListing() {
             <div className="animate-fade-in">
               <h2 className="text-2xl font-black mb-8 text-[#0d0a0b]">Item details</h2>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1 mb-6">
-                  <label className="font-semibold text-[#0d0a0b]">Item Title</label>
+              <div className="space-y-6">
+                {/* Item Title */}
+                <div>
+                  <label className="block font-semibold text-[#0d0a0b] mb-2">Item Title</label>
                   <input
-                    className="bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] shadow-sm"
+                    className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
                     maxLength={120}
-                    placeholder="Item Title"
+                    placeholder="Enter a clear, descriptive title for your item"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     required
                   />
+                  <div className="text-xs text-[#454955] mt-1">{name.length}/120 characters</div>
                 </div>
 
-                <div className="flex flex-col gap-1 mb-6">
-                  <label className="font-semibold text-[#0d0a0b]">Description</label>
+                {/* Description */}
+                <div>
+                  <label className="block font-semibold text-[#0d0a0b] mb-2">Description</label>
                   <textarea
-                    className="bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] min-h-[120px] shadow-sm"
+                    className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] min-h-[120px] shadow-sm placeholder:text-[#454955]/60 resize-vertical"
                     maxLength={1200}
-                    placeholder="Description (up to 1200 characters)"
+                    placeholder="Describe your item in detail - materials, dimensions, care instructions, etc."
                     value={desc}
                     onChange={e => setDesc(e.target.value)}
                     required
                   />
+                  <div className="text-xs text-[#454955] mt-1">{desc.length}/1200 characters</div>
                 </div>
 
-                <div className="flex flex-col gap-1 mb-6">
-                  <label className="font-semibold text-[#0d0a0b]">Item Price</label>
-                  <div className="relative w-full">
+                {/* Price and Quantity Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Item Price */}
+                  <div>
+                    <label className="block font-semibold text-[#0d0a0b] mb-2">Item Price</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 pr-16 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
+                        placeholder="0.00"
+                        value={price}
+                        onChange={e => setPrice(e.target.value)}
+                        required
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#454955] font-medium select-none pointer-events-none bg-[#f8f9fa] px-2 py-1 rounded text-sm">
+                        LKR
+                      </div>
+                    </div>
+                    {price && !isNaN(Number(price)) && Number(price) > 0 && (
+                      <div className="text-sm text-[#454955] mt-1 p-2 bg-green-50 rounded-lg border border-green-200">
+                        💰 You will receive: <span className="font-semibold text-[#3f7d20]">LKR {(Number(price) * 0.8).toLocaleString()}</span> (after 20% platform fee)
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Available Quantity */}
+                  <div>
+                    <label className="block font-semibold text-[#0d0a0b] mb-2">Available Quantity</label>
                     <input
                       type="number"
-                      min="0"
-                      className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] pr-16 shadow-sm"
-                      placeholder="Item Price"
-                      value={price}
-                      onChange={e => setPrice(e.target.value)}
+                      min="1"
+                      className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
+                      placeholder="Enter quantity"
+                      value={quantity}
+                      onChange={e => setQuantity(e.target.value)}
                       required
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#454955] font-semibold select-none pointer-events-none">LKR</span>
+                    <div className="text-xs text-[#454955] mt-1">Number of items available for sale</div>
                   </div>
-                  {price && !isNaN(Number(price)) && Number(price) > 0 && (
-                    <div className="text-sm text-[#454955] mt-1">
-                      You will receive: <span className="font-semibold text-[#3f7d20]">LKR {(Number(price) * 0.8).toLocaleString()}</span> (after 20% platform fee)
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1 mb-6">
-                  <label className="font-semibold text-[#0d0a0b]">Available Quantity</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] shadow-sm"
-                    placeholder="Available Quantity"
-                    value={quantity}
-                    onChange={e => setQuantity(e.target.value)}
-                    required
-                  />
                 </div>
               </div>
 
               <div className="flex justify-between mt-10">
                 <button
                   type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#f3eff5]"
+                  className="px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
                   onClick={() => setStep(3)}
                 >
-                  Back
+                  ← Back
                 </button>
                 <button
                   type="button"
-                  className="px-7 py-3 bg-[#72b01d] text-white rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
+                  className="px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={!name || !desc || !price || !quantity}
                   onClick={() => setStep(5)}
                 >
-                  Next
+                  Next →
                 </button>
               </div>
             </div>
@@ -411,7 +424,7 @@ export default function AddListing() {
                 {images.length < 5 && (
                   <button
                     type="button"
-                    className="w-28 h-28 rounded-2xl flex items-center justify-center bg-white border border-[#45495544] border-dashed shadow-sm text-3xl text-[#45495577] hover:bg-[#f3eff5] hover:text-[#72b01d] transition"
+                    className="w-28 h-28 rounded-2xl flex items-center justify-center bg-white border border-[#45495544] border-dashed shadow-sm text-3xl text-[#45495577] hover:bg-gray-50 hover:text-[#72b01d] transition"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     +
@@ -431,7 +444,7 @@ export default function AddListing() {
               <div className="flex justify-between mt-10">
                 <button
                   type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#f3eff5]"
+                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                   onClick={() => setStep(4)}
                 >
                   Back
@@ -452,82 +465,110 @@ export default function AddListing() {
           {step === 6 && (
             <div className="animate-fade-in">
               <h2 className="text-2xl font-black mb-8 text-[#0d0a0b]">Delivery options</h2>
-              <div className="flex flex-col md:flex-row gap-7 mb-7">
-                <div className="flex-1 flex gap-4">
-                  <button
-                    type="button"
-                    className={`flex-1 px-0 py-4 rounded-2xl font-semibold text-lg transition shadow-sm
-                      ${deliveryType === "free"
-                        ? "bg-[#72b01d] text-white"
-                        : "bg-white border border-[#45495522] text-[#454955] hover:bg-[#f3eff5]"}`}
-                    onClick={() => setDeliveryType("free")}
-                  >
-                    Free Delivery
-                  </button>
-                  <button
-                    type="button"
-                    className={`flex-1 px-0 py-4 rounded-2xl font-semibold text-lg transition shadow-sm
-                      ${deliveryType === "paid"
-                        ? "bg-[#72b01d] text-white"
-                        : "bg-white border border-[#45495522] text-[#454955] hover:bg-[#f3eff5]"}`}
-                    onClick={() => setDeliveryType("paid")}
-                  >
-                    Buyer Pays Delivery
-                  </button>
+              
+              <div className="space-y-6">
+                {/* Delivery Type Selection */}
+                <div>
+                  <label className="block font-semibold text-[#0d0a0b] mb-3">Delivery Method</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      className={`px-6 py-4 rounded-xl font-semibold transition-all duration-200 border-2
+                        ${deliveryType === "free"
+                          ? "bg-[#72b01d] text-white border-[#72b01d] shadow-md"
+                          : "bg-white border-[#45495522] text-[#454955] hover:bg-gray-50 hover:border-[#454955]/30"}`}
+                      onClick={() => setDeliveryType("free")}
+                    >
+                      🚚 Free Delivery
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-6 py-4 rounded-xl font-semibold transition-all duration-200 border-2
+                        ${deliveryType === "paid"
+                          ? "bg-[#72b01d] text-white border-[#72b01d] shadow-md"
+                          : "bg-white border-[#45495522] text-[#454955] hover:bg-gray-50 hover:border-[#454955]/30"}`}
+                      onClick={() => setDeliveryType("paid")}
+                    >
+                      📦 Buyer Pays Delivery
+                    </button>
+                  </div>
                 </div>
+
+                {/* Delivery Pricing (only show when paid delivery is selected) */}
                 {deliveryType === "paid" && (
-                  <div className="flex-1 flex flex-col gap-4">
-                    <input
-                      type="number"
-                      min="0"
-                      className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] shadow-sm"
-                      placeholder="Per item (LKR)"
-                      value={deliveryPerItem}
-                      onChange={e => setDeliveryPerItem(e.target.value)}
-                      required
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] transition px-5 py-3 rounded-2xl font-semibold text-[#0d0a0b] shadow-sm"
-                      placeholder="Each additional item (LKR)"
-                      value={deliveryAdditional}
-                      onChange={e => setDeliveryAdditional(e.target.value)}
-                      required
-                    />
+                  <div className="bg-gray-50 p-6 rounded-xl border border-[#45495522]">
+                    <h3 className="font-semibold text-[#0d0a0b] mb-4">Delivery Pricing</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block font-medium text-[#0d0a0b] mb-2">Per Item (LKR)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
+                          placeholder="0.00"
+                          value={deliveryPerItem}
+                          onChange={e => setDeliveryPerItem(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-medium text-[#0d0a0b] mb-2">Each Additional Item (LKR)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
+                          placeholder="0.00"
+                          value={deliveryAdditional}
+                          onChange={e => setDeliveryAdditional(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* Cash on Delivery Option */}
+                <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="cod"
+                      type="checkbox"
+                      checked={cashOnDelivery}
+                      onChange={e => setCashOnDelivery(e.target.checked)}
+                      className="w-5 h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
+                    />
+                    <div className="flex-1">
+                      <label htmlFor="cod" className="font-semibold text-[#0d0a0b] cursor-pointer">
+                        💰 Allow Cash on Delivery (COD)
+                      </label>
+                      <p className="text-sm text-[#454955] mt-1">
+                        Let customers pay when they receive their order
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 mt-6">
-                <input
-                  id="cod"
-                  type="checkbox"
-                  checked={cashOnDelivery}
-                  onChange={e => setCashOnDelivery(e.target.checked)}
-                  className="w-5 h-5 accent-[#72b01d] rounded-md shadow-sm"
-                />
-                <label htmlFor="cod" className="text-lg font-semibold text-[#0d0a0b] select-none cursor-pointer">
-                  Allow Cash on Delivery (COD)
-                </label>
-              </div>
+
               <div className="flex justify-between mt-10">
                 <button
                   type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#f3eff5]"
+                  className="px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
                   onClick={() => setStep(5)}
                 >
-                  Back
+                  ← Back
                 </button>
                 <button
                   type="submit"
-                  className="px-7 py-3 bg-[#72b01d] text-white rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
+                  className="px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={
                     !deliveryType ||
                     (deliveryType === "paid" &&
                       (!deliveryPerItem || !deliveryAdditional))
                   }
                 >
-                  Submit
+                  Submit →
                 </button>
               </div>
             </div>

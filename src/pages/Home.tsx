@@ -5,6 +5,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import Header from "../components/UI/Header";
+import WishlistButton from "../components/UI/WishlistButton";
+
+// Get review statistics for a listing
+function getReviewStats(listing: any) {
+  const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
+  if (!reviews.length) return { avg: null, count: 0 };
+  const avg = reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length;
+  return { avg, count: reviews.length };
+}
 
 function ProductHeroSearch() {
   const [q, setQ] = useState("");
@@ -21,11 +30,12 @@ function ProductHeroSearch() {
     <form
       onSubmit={handleSearch}
       className="w-full max-w-3xl mx-auto relative group"
-    >      <div className="relative backdrop-blur-md rounded-2xl shadow-2xl border overflow-hidden group-focus-within:shadow-xl transition-all duration-500"
-      style={{
-        backgroundColor: '#f3eff5',
-        borderColor: 'rgba(114, 176, 29, 0.3)'
-      }}>
+    >
+      <div className="relative backdrop-blur-md rounded-2xl shadow-2xl border overflow-hidden group-focus-within:shadow-xl transition-all duration-500"
+        style={{
+          backgroundColor: '#ffffff',
+          borderColor: 'rgba(114, 176, 29, 0.3)'
+        }}>
         <div className="flex items-center px-8 py-6">
           <FiSearch className="text-3xl mr-4 group-focus-within:opacity-80 transition-colors"
             style={{ color: '#72b01d' }} />
@@ -52,20 +62,19 @@ function ProductHeroSearch() {
         </div>
       </div>
 
-      {/* Search suggestions */}
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <span className="text-sm font-medium" style={{ color: '#454955' }}>Try searching:</span>
-        {['Jewelry', 'Traditional Food', 'Handmade Crafts', 'Art & Paintings'].map((term) => (
+      {/* Popular searches */}
+      <div className="flex flex-wrap gap-3 mt-6 justify-center">
+        {["Woodcraft", "Jewelry", "Textiles", "Pottery", "Tea"].map(term => (
           <button
             key={term}
             type="button"
             onClick={() => {
               setQ(term);
-              navigate(`/search?q=${encodeURIComponent(term)}`);
+              handleSearch({ preventDefault: () => {} });
             }}
-            className="text-sm px-4 py-2 rounded-full transition-all duration-300 border"
+            className="px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300 hover:shadow-md hover:scale-105"
             style={{
-              backgroundColor: '#f3eff5',
+              backgroundColor: '#ffffff',
               color: '#72b01d',
               borderColor: 'rgba(114, 176, 29, 0.3)'
             }}
@@ -85,6 +94,10 @@ type Listing = {
   images?: string[];
   description?: string;
   createdAt?: any;
+  reviews?: any[];
+  deliveryType?: 'free' | 'paid';
+  cashOnDelivery?: boolean;
+  wishlist?: Array<{ ip?: string; ownerId?: string; }>;
 };
 
 const Home = () => {
@@ -99,7 +112,7 @@ const Home = () => {
   useEffect(() => {
     async function fetchLatest() {
       setLoading(true);
-      const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(10));
+      const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8));
       const snap = await getDocs(q);
       const results: Listing[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setLatestListings(results);
@@ -108,13 +121,22 @@ const Home = () => {
     fetchLatest();
   }, []);
 
+  // Function to refresh listings (after wishlist update)
+  const refreshListings = async () => {
+    const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8));
+    const snap = await getDocs(q);
+    const results: Listing[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setLatestListings(results);
+  };
+
   return (
 
     <>
       <Header />
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f3eff5' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
+          style={{ backgroundColor: '#ffffff' }}>
           {/* Background Pattern - removed for consistent background */}
 
           {/* Organic shapes */}
@@ -173,7 +195,7 @@ const Home = () => {
             {/* Subtitle */}
             <p className="text-lg sm:text-xl md:text-2xl mx-auto mb-4 leading-relaxed font-light px-4 max-w-4xl"
               style={{ color: '#454955' }}>
-              Discover <span className="font-semibold" style={{ color: '#72b01d' }}>authentic handmade treasures</span> from passionate Sri Lankan creators
+              Discover Quality & Unique Products From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Small Businesses</span>
             </p>
             <p className="text-base sm:text-lg max-w-2xl mx-auto mb-12 font-medium px-4"
               style={{ color: '#3f7d20' }}>
@@ -206,7 +228,7 @@ const Home = () => {
                 to="/create-shop"
                 className="group px-8 lg:px-10 py-4 lg:py-5 backdrop-blur-sm rounded-full font-bold text-lg lg:text-xl border transition-all duration-500 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 w-full sm:w-auto sm:min-w-[220px]"
                 style={{
-                  backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                  backgroundColor: '#ffffff',
                   color: '#3f7d20',
                   borderColor: '#3f7d20'
                 }}
@@ -234,7 +256,7 @@ const Home = () => {
         <section className="w-full py-10 border-t border-b"
           style={{
             borderColor: 'rgba(114, 176, 29, 0.15)',
-            backgroundColor: 'rgba(243, 239, 245, 0.5)'
+            backgroundColor: '#ffffff'
           }}>
           <div className="max-w-6xl mx-auto px-4">
             <div className="text-center mb-6">
@@ -257,13 +279,13 @@ const Home = () => {
                       boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                     }}>
                     <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
-                      <path d="M8 12.5l2.5 2.5L16 9" stroke="#f3eff5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8 12.5l2.5 2.5L16 9" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                     style={{
                       backgroundColor: '#3f7d20',
-                      color: '#f3eff5',
+                      color: '#ffffff',
                       boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
                     }}>
                     14
@@ -292,7 +314,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <svg width="32" height="32" fill="none" stroke="#f3eff5" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="32" height="32" fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
@@ -319,7 +341,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <svg width="32" height="32" fill="none" stroke="#f3eff5" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="32" height="32" fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 12l2 2 4-4" />
                     <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.27 0 4.33.84 5.91 2.24" />
                   </svg>
@@ -382,7 +404,7 @@ const Home = () => {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
                 style={{
                   background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
-                  color: '#f3eff5'
+                  color: '#ffffff'
                 }}
               >
                 <span>Explore All Products</span>
@@ -405,51 +427,110 @@ const Home = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 w-full">
                   {latestListings.map(item => (
                     <Link
-                      to={`/listing/${item.id}`}
                       key={item.id}
-                      className="group flex flex-col items-start border rounded-2xl shadow-md p-5 min-h-[300px] justify-between transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-3 backdrop-blur-sm"
+                      to={`/listing/${item.id}`}
+                      className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-4 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
                       style={{
-                        textDecoration: "none",
-                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
-                        borderColor: 'rgba(114, 176, 29, 0.2)',
-                        color: '#0d0a0b'
+                        textDecoration: 'none',
+                        backgroundColor: '#ffffff',
+                        borderColor: 'rgba(114, 176, 29, 0.3)'
                       }}
                     >
-                      <div className="w-full h-40 mb-4 rounded-xl flex items-center justify-center overflow-hidden relative"
-                        style={{ backgroundColor: 'rgba(69, 73, 85, 0.05)' }}>
+                      {/* Image */}
+                      <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
+                        style={{
+                          backgroundColor: '#ffffff',
+                          borderColor: 'rgba(114, 176, 29, 0.2)'
+                        }}>
                         {item.images && item.images.length > 0 ? (
                           <img
                             src={item.images[0]}
                             alt={item.name}
-                            className="object-cover w-full h-full rounded-xl transition-transform duration-500 group-hover:scale-110"
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="text-4xl transition-transform duration-300 group-hover:scale-110" style={{ color: '#454955' }}>📦</div>
+                          <span className="text-4xl" style={{ color: '#454955' }}>🖼️</span>
                         )}
-                        {/* Overlay gradient on hover */}
-                        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                          style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}></div>
                       </div>
-                      <div className="flex-1 w-full">
-                        <h3 className="font-bold text-lg mb-2 truncate w-full" style={{ color: '#0d0a0b' }}>
-                          {item.name}
-                        </h3>
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#454955' }}>
-                          {item.description}
-                        </p>
+                      <h3 className="font-extrabold text-lg mb-1 truncate transition-colors duration-300"
+                        style={{ color: '#0d0a0b' }}>
+                        {item.name}
+                      </h3>
+                      {/* Show product average rating and count */}
+                      {(() => {
+                        const stats = getReviewStats(item);
+                        return (
+                          <div className="flex items-center gap-2 mb-1 min-h-[22px]">
+                            {stats.avg ? (
+                              <>
+                                <span className="flex items-center" style={{ color: '#72b01d' }}>
+                                  {[1, 2, 3, 4, 5].map(i => (
+                                    <svg
+                                      key={i}
+                                      width="16"
+                                      height="16"
+                                      className="inline-block"
+                                      fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                    </svg>
+                                  ))}
+                                  <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
+                                    {stats.avg.toFixed(1)}
+                                  </span>
+                                </span>
+                                <span className="text-xs" style={{ color: '#72b01d' }}>({stats.count})</span>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-400">No reviews yet</span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      {/* Delivery & Payment badges */}
+                      <div className="flex items-center gap-2 mb-2">
+                        {item.deliveryType === "free" ? (
+                          <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
+                            <span className="text-base">🚚</span>
+                            Free Delivery
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-gray-500 text-xs font-medium">
+                            <span className="text-base">📦</span>
+                            Delivery Fee will apply
+                          </span>
+                        )}
+                        {item.cashOnDelivery && (
+                          <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-xs font-semibold ml-2 px-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            COD
+                          </span>
+                        )}
                       </div>
-                      <div className="w-full flex items-center justify-between">
-                        <span className="font-bold text-xl" style={{ color: '#72b01d' }}>
-                          Rs. {item.price?.toLocaleString("en-LK") || "0.00"}
-                        </span>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0"
-                          style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                          <svg width="14" height="14" fill="none" stroke="#72b01d" strokeWidth="2" viewBox="0 0 24 24">
-                            <path d="m9 18 6-6-6-6" />
-                          </svg>
+                      {/* Price & Wishlist bottom row */}
+                      <div className="flex items-end justify-between mt-auto">
+                        <div className="font-bold text-lg text-black group-hover:text-black tracking-tight">
+                          LKR {item.price?.toLocaleString()}
+                        </div>
+                        <div className="ml-2 flex-shrink-0 flex items-end">
+                          <WishlistButton listing={item} refresh={refreshListings} />
                         </div>
                       </div>
                     </Link>
@@ -500,11 +581,11 @@ const Home = () => {
               {/* Gradient fade edges */}
               <div className="absolute left-0 top-6 w-20 h-full z-10 pointer-events-none"
                 style={{
-                  background: `linear-gradient(to right, #f3eff5, transparent)`
+                  background: `linear-gradient(to right, #ffffff, transparent)`
                 }}></div>
               <div className="absolute right-0 top-6 w-20 h-full z-10 pointer-events-none"
                 style={{
-                  background: `linear-gradient(to left, #f3eff5, transparent)`
+                  background: `linear-gradient(to left, #ffffff, transparent)`
                 }}></div>
 
               {/* Scrollable container */}
@@ -532,7 +613,7 @@ const Home = () => {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = `linear-gradient(135deg, #72b01d, #3f7d20)`;
-                        e.currentTarget.style.color = '#f3eff5';
+                        e.currentTarget.style.color = '#ffffff';
                         e.currentTarget.style.borderColor = '#72b01d';
                         e.currentTarget.style.transform = 'translateY(-8px) scale(1.05)';
                         e.currentTarget.style.boxShadow = '0 20px 40px rgba(114, 176, 29, 0.3)';
@@ -549,7 +630,7 @@ const Home = () => {
                       {/* Background gradient overlay for hover */}
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
                         style={{
-                          background: `radial-gradient(circle at center, #f3eff5, transparent)`
+                          background: `radial-gradient(circle at center, #ffffff, transparent)`
                         }}></div>
 
                       {/* Icon */}
@@ -571,7 +652,7 @@ const Home = () => {
 
                       {/* Animated dot indicator */}
                       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-                        style={{ backgroundColor: '#f3eff5' }}></div>
+                        style={{ backgroundColor: '#ffffff' }}></div>
 
                       {/* Shine effect on hover */}
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-700"
@@ -612,7 +693,7 @@ const Home = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = `linear-gradient(135deg, #72b01d, #3f7d20)`;
-                  e.currentTarget.style.color = '#f3eff5';
+                  e.currentTarget.style.color = '#ffffff';
                   e.currentTarget.style.borderColor = '#72b01d';
                 }}
                 onMouseLeave={(e) => {
@@ -687,7 +768,7 @@ const Home = () => {
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}></div>
                 <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
                   style={{
-                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}>
                   <div className="text-center">
@@ -722,7 +803,7 @@ const Home = () => {
                   style={{ background: `linear-gradient(to right, #3f7d20, #72b01d)` }}></div>
                 <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
                   style={{
-                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(63, 125, 32, 0.3)'
                   }}>
                   <div className="text-center">
@@ -759,7 +840,7 @@ const Home = () => {
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}></div>
                 <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
                   style={{
-                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}>
                   <div className="text-center">
@@ -796,7 +877,7 @@ const Home = () => {
               <Link
                 to="/create-shop"
                 className="group inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg shadow-2xl transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 overflow-hidden"
-                style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#f3eff5' }}
+                style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #3f7d20, #72b01d)` }}></div>
@@ -829,7 +910,7 @@ const Home = () => {
               {/* Testimonial 1 */}
               <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
                 style={{
-                  backgroundColor: '#f3eff5',
+                  backgroundColor: '#ffffff',
                   borderColor: 'rgba(114, 176, 29, 0.3)'
                 }}>
                 <div className="flex items-center mb-6">
@@ -862,7 +943,7 @@ const Home = () => {
 
               {/* Testimonial 2 */}              <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
                 style={{
-                  backgroundColor: '#f3eff5',
+                  backgroundColor: '#ffffff',
                   borderColor: 'rgba(63, 125, 32, 0.3)'
                 }}>
                 <div className="flex items-center mb-6">
@@ -895,7 +976,7 @@ const Home = () => {
 
               {/* Testimonial 3 */}              <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
                 style={{
-                  backgroundColor: '#f3eff5',
+                  backgroundColor: '#ffffff',
                   borderColor: 'rgba(69, 73, 85, 0.3)'
                 }}>
                 <div className="flex items-center mb-6">
@@ -1046,7 +1127,7 @@ const Home = () => {
                       <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
                         style={{
                           background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
-                          borderColor: '#f3eff5'
+                          borderColor: '#ffffff'
                         }}>
                         <span className="text-2xl font-black text-white">1</span>
                       </div>
@@ -1099,7 +1180,7 @@ const Home = () => {
                       <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
                         style={{
                           background: `linear-gradient(135deg, #3f7d20, #72b01d)`,
-                          borderColor: '#f3eff5'
+                          borderColor: '#ffffff'
                         }}>
                         <span className="text-2xl font-black text-white">2</span>
                       </div>
@@ -1153,7 +1234,7 @@ const Home = () => {
                       <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
                         style={{
                           background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
-                          borderColor: '#f3eff5'
+                          borderColor: '#ffffff'
                         }}>
                         <span className="text-2xl font-black text-white">3</span>
                       </div>
@@ -1200,7 +1281,7 @@ const Home = () => {
                   to="/search"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-full font-semibold border transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
                   style={{
-                    backgroundColor: '#f3eff5',
+                    backgroundColor: '#ffffff',
                     color: '#3f7d20',
                     borderColor: '#3f7d20'
                   }}
@@ -1210,7 +1291,7 @@ const Home = () => {
                 <Link
                   to="/create-shop"
                   className="group inline-flex items-center gap-3 px-6 py-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300"
-                  style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#f3eff5' }}
+                  style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
                   <span>🚀 Start Selling</span>
                 </Link>
@@ -1224,7 +1305,7 @@ const Home = () => {
         {/* Mission or Call to Action */}
         <footer className="w-full py-16 border-t text-center"
           style={{
-            backgroundColor: '#f3eff5',
+            backgroundColor: '#ffffff',
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
           <div className="max-w-4xl mx-auto px-4">
@@ -1243,7 +1324,7 @@ const Home = () => {
                 className="border px-8 py-4 rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto min-w-[200px]"
                 style={{
                   backgroundColor: '#72b01d',
-                  color: '#f3eff5',
+                  color: '#ffffff',
                   borderColor: '#72b01d'
                 }}
                 onMouseEnter={(e) => {
@@ -1261,17 +1342,17 @@ const Home = () => {
                 to="/create-shop"
                 className="border px-8 py-4 rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto min-w-[200px]"
                 style={{
-                  backgroundColor: '#f3eff5',
+                  backgroundColor: '#ffffff',
                   color: '#3f7d20',
                   borderColor: '#3f7d20'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#3f7d20';
-                  e.currentTarget.style.color = '#f3eff5';
+                  e.currentTarget.style.color = '#ffffff';
                   e.currentTarget.style.borderColor = '#3f7d20';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f3eff5';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
                   e.currentTarget.style.color = '#3f7d20';
                   e.currentTarget.style.borderColor = '#3f7d20';
                 }}

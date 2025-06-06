@@ -5,7 +5,7 @@ import { db } from "../utils/firebase";
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);
     return (
-        <div className="bg-[#f3eff5] border border-[#45495522] rounded-2xl p-5 flex flex-col gap-2 shadow-sm hover:shadow transition cursor-pointer">
+        <div className="bg-white border border-[#45495522] rounded-2xl p-5 flex flex-col gap-2 shadow-sm hover:shadow transition cursor-pointer">
             <div className="flex items-center gap-4" onClick={() => setExpanded(e => !e)} style={{ cursor: 'pointer' }}>
                 <img
                     src={order.itemImage || '/placeholder.png'}
@@ -28,7 +28,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                 </div>
             </div>
             {expanded && (
-                <div className="mt-3 bg-[#f3eff5] border border-[#45495522] rounded-2xl p-4 text-sm shadow-sm">
+                <div className="mt-3 bg-white border border-[#45495522] rounded-2xl p-4 text-sm shadow-sm">
                     <div className="mb-2 font-bold text-[#0d0a0b]">Order Summary</div>
                     <div className="flex flex-col gap-1 text-[#454955]">
                         <div><span className="font-semibold text-[#3f7d20]">Order ID:</span> {order.id}</div>

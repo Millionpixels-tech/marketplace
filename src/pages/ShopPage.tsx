@@ -157,7 +157,7 @@ export default function ShopPage() {
     // 7. Loading and not found states
     if (loading && !shop) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f3eff5' }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
                 <span className="text-xl" style={{ color: '#454955' }}>Loading...</span>
             </div>
         );
@@ -165,7 +165,7 @@ export default function ShopPage() {
 
     if (!shop) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f3eff5' }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
                 <div className="text-center" style={{ color: '#454955' }}>
                     <div className="text-2xl font-bold mb-2">Shop Not Found</div>
                     <div>This shop does not exist.</div>
@@ -186,19 +186,19 @@ export default function ShopPage() {
                     disabled={page === 1}
                     className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                        backgroundColor: '#f3eff5',
+                        backgroundColor: '#ffffff',
                         color: '#454955',
                         border: '1px solid rgba(114, 176, 29, 0.3)'
                     }}
                     onMouseEnter={(e) => {
                         if (page !== 1) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
-                            e.currentTarget.style.color = '#f3eff5';
+                            e.currentTarget.style.color = '#ffffff';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (page !== 1) {
-                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                            e.currentTarget.style.backgroundColor = '#ffffff';
                             e.currentTarget.style.color = '#454955';
                         }
                     }}
@@ -216,16 +216,16 @@ export default function ShopPage() {
                                 onClick={() => handlePageChange(1)}
                                 className="w-10 h-10 rounded-lg font-medium transition"
                                 style={{
-                                    backgroundColor: '#f3eff5',
+                                    backgroundColor: '#ffffff',
                                     color: '#454955',
                                     border: '1px solid rgba(114, 176, 29, 0.3)'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#f3eff5';
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
                                     e.currentTarget.style.color = '#454955';
                                 }}
                             >
@@ -262,19 +262,19 @@ export default function ShopPage() {
                                 onClick={() => handlePageChange(pageNum)}
                                 className="w-10 h-10 rounded-lg font-medium transition"
                                 style={{
-                                    backgroundColor: isCurrentPage ? '#72b01d' : '#f3eff5',
-                                    color: isCurrentPage ? '#f3eff5' : '#454955',
+                                    backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
+                                    color: isCurrentPage ? '#ffffff' : '#454955',
                                     border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!isCurrentPage) {
                                         e.currentTarget.style.backgroundColor = '#72b01d';
-                                        e.currentTarget.style.color = '#f3eff5';
+                                        e.currentTarget.style.color = '#ffffff';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!isCurrentPage) {
-                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                         e.currentTarget.style.color = '#454955';
                                     }
                                 }}
@@ -294,16 +294,16 @@ export default function ShopPage() {
                                 onClick={() => handlePageChange(totalPages)}
                                 className="w-10 h-10 rounded-lg font-medium transition"
                                 style={{
-                                    backgroundColor: '#f3eff5',
+                                    backgroundColor: '#ffffff',
                                     color: '#454955',
                                     border: '1px solid rgba(114, 176, 29, 0.3)'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#f3eff5';
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
                                     e.currentTarget.style.color = '#454955';
                                 }}
                             >
@@ -319,19 +319,19 @@ export default function ShopPage() {
                     disabled={page === totalPages}
                     className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                        backgroundColor: '#f3eff5',
+                        backgroundColor: '#ffffff',
                         color: '#454955',
                         border: '1px solid rgba(114, 176, 29, 0.3)'
                     }}
                     onMouseEnter={(e) => {
                         if (page !== totalPages) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
-                            e.currentTarget.style.color = '#f3eff5';
+                            e.currentTarget.style.color = '#ffffff';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (page !== totalPages) {
-                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                            e.currentTarget.style.backgroundColor = '#ffffff';
                             e.currentTarget.style.color = '#454955';
                         }
                     }}
@@ -347,7 +347,7 @@ export default function ShopPage() {
     return (
         <>
             <Header />
-            <div className="min-h-screen" style={{ backgroundColor: '#f3eff5' }}>
+            <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
                 {/* Cover + Logo */}
                 <div className="relative w-full h-44 md:h-60 flex items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                     {shop.cover ? (
@@ -357,7 +357,7 @@ export default function ShopPage() {
                             <FiBox className="text-5xl" style={{ color: '#72b01d' }} />
                         </div>
                     )}
-                    <div className="absolute left-1/2 bottom-[-48px] -translate-x-1/2 w-24 h-24 rounded-full border-4 shadow-md flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.6)', backgroundColor: '#f3eff5' }}>
+                    <div className="absolute left-1/2 bottom-[-48px] -translate-x-1/2 w-24 h-24 rounded-full border-4 shadow-md flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.6)', backgroundColor: '#ffffff' }}>
                         {shop.logo ? (
                             <img src={shop.logo} alt="Shop Logo" className="object-cover w-full h-full rounded-full" />
                         ) : (
@@ -416,27 +416,26 @@ export default function ShopPage() {
                 </div>
 
                 {/* Listings */}
-                <section className="w-full py-8 border-t" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                <section className="w-full py-8 border-t" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     <div className="w-full px-2 sm:px-6">
                         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
                             <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wide" style={{ color: '#0d0a0b' }}>
                                 Shop Listings
                             </h2>
-                            {user && shop && user.uid === shop.owner && (
-                                <a
-                                    href="/add-listing"
-                                    className="inline-block px-6 py-2 rounded-full font-semibold uppercase tracking-wide transition"
-                                    style={{
-                                        backgroundColor: '#72b01d',
-                                        color: '#f3eff5'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#3f7d20';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#72b01d';
-                                    }}
-                                >
+                            {user && shop && user.uid === shop.owner && (                                    <a
+                                        href="/add-listing"
+                                        className="inline-block px-6 py-2 rounded-full font-semibold uppercase tracking-wide transition"
+                                        style={{
+                                            backgroundColor: '#72b01d',
+                                            color: '#ffffff'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                        }}
+                                    >
                                     + Create New Listing
                                 </a>
                             )}
@@ -453,7 +452,7 @@ export default function ShopPage() {
                                             className="group flex flex-col rounded-2xl shadow-md transition-all p-4 relative cursor-pointer border"
                                             style={{
                                                 textDecoration: 'none',
-                                                backgroundColor: '#f3eff5',
+                                                backgroundColor: '#ffffff',
                                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                                             }}
                                             onMouseEnter={(e) => {
@@ -468,7 +467,7 @@ export default function ShopPage() {
                                             }}
                                         >
                                             {/* Image */}
-                                            <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition" style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                            <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                                                 {item.images && item.images.length > 0 ? (
                                                     <img
                                                         src={item.images[0]}
@@ -488,29 +487,28 @@ export default function ShopPage() {
                                                 return (
                                                     <div className="flex items-center gap-2 mb-1 min-h-[22px]">
                                                         {stats.avg ? (
-                                                            <>
-                                                                <span className="flex items-center text-yellow-500">
-                                                                    {[1, 2, 3, 4, 5].map(i => (
-                                                                        <svg
-                                                                            key={i}
-                                                                            width="16"
-                                                                            height="16"
-                                                                            className="inline-block"
-                                                                            fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
-                                                                            stroke="currentColor"
-                                                                            viewBox="0 0 24 24"
-                                                                        >
-                                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                                                        </svg>
-                                                                    ))}
-                                                                    <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
-                                                                        {stats.avg.toFixed(1)}
-                                                                    </span>
-                                                                </span>
-                                                                <span className="text-xs" style={{ color: '#454955' }}>({stats.count})</span>
+                                                            <>                                                <span className="flex items-center" style={{ color: '#72b01d' }}>
+                                                    {[1, 2, 3, 4, 5].map(i => (
+                                                        <svg
+                                                            key={i}
+                                                            width="16"
+                                                            height="16"
+                                                            className="inline-block"
+                                                            fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                        </svg>
+                                                    ))}
+                                                    <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
+                                                        {stats.avg.toFixed(1)}
+                                                    </span>
+                                                </span>
+                                                <span className="text-xs" style={{ color: '#72b01d' }}>({stats.count})</span>
                                                             </>
                                                         ) : (
-                                                            <span className="text-xs" style={{ color: '#454955', opacity: 0.7 }}>No reviews yet</span>
+                                                            <span className="text-xs text-gray-400">No reviews yet</span>
                                                         )}
                                                     </div>
                                                 );
@@ -549,7 +547,7 @@ export default function ShopPage() {
                                             </div>
                                             {/* Price & Wishlist bottom row */}
                                             <div className="flex items-end justify-between mt-auto">
-                                                <div className="font-bold text-lg tracking-tight" style={{ color: '#0d0a0b' }}>
+                                                <div className="font-bold text-lg tracking-tight text-black">
                                                     LKR {item.price?.toLocaleString()}
                                                 </div>
                                                 <div className="ml-2 flex-shrink-0 flex items-end">
@@ -567,7 +565,7 @@ export default function ShopPage() {
             </div>
 
             {/* Shop Reviews Section */}
-            <div className="w-full" id="shop-reviews-section" style={{ backgroundColor: '#f3eff5' }}>
+            <div className="w-full" id="shop-reviews-section" style={{ backgroundColor: '#ffffff' }}>
                 {shop.id && (
                     <div className="mt-12 pt-10 px-0 border-t" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                         <ShopReviews shopId={shop.id} />

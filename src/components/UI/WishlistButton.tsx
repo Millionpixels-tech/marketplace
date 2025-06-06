@@ -45,7 +45,7 @@ export default function WishlistButton({ listing, refresh, displayText = false }
                 aria-label={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                 disabled={loading}
                 onClick={handleClick}
-                className={`rounded-full p-2 transition-colors flex items-center justify-center ${wishlisted ? 'bg-[#72b01d15] hover:bg-[#72b01d30]' : 'bg-[#f3eff5] hover:bg-[#f3eff5]'}`}
+                className={`rounded-full p-2 transition-colors flex items-center justify-center ${wishlisted ? 'bg-[#72b01d15] hover:bg-[#72b01d30]' : 'bg-white hover:bg-gray-50'}`}
             >
                 {loading ? (
                     <svg className="animate-spin h-4 w-4 text-[#454955]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

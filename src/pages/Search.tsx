@@ -158,13 +158,13 @@ const Search: React.FC = () => {
   return (
     <>
       <Header />
-      <div className="w-full min-h-screen py-10 px-2 md:px-8" style={{ backgroundColor: '#f3eff5' }}>
+      <div className="w-full min-h-screen py-10 px-1 md:px-4" style={{ backgroundColor: '#ffffff' }}>
         <div className="flex flex-col md:flex-row gap-10 w-full">
           {/* -------- Sidebar -------- */}
           <aside className="w-full md:w-80 mb-8 md:mb-0 flex flex-col gap-6">
             {/* Category Filter Card */}
-            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
@@ -176,7 +176,7 @@ const Search: React.FC = () => {
                         className={`flex-1 text-left px-3 py-2 rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
                         style={{
                           backgroundColor: cat === c.name ? '#72b01d' : 'transparent',
-                          color: cat === c.name ? '#f3eff5' : '#0d0a0b'
+                          color: cat === c.name ? '#ffffff' : '#0d0a0b'
                         }}
                         onClick={() => handleCategoryClick(c.name)}
                       >
@@ -185,7 +185,7 @@ const Search: React.FC = () => {
                       <button
                         className="ml-1 p-1 rounded transition-all duration-300"
                         style={{
-                          backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                          //backgroundColor: 'rgba(114, 176, 29, 0.1)',
                           color: '#72b01d'
                         }}
                         aria-label={expanded === c.name ? `Collapse ${c.name}` : `Expand ${c.name}`}
@@ -209,7 +209,7 @@ const Search: React.FC = () => {
                               className={`w-full text-left px-3 py-1.5 rounded-lg transition-all duration-300 text-sm ${sub === sc ? "text-white shadow-lg" : ""}`}
                               style={{
                                 backgroundColor: sub === sc ? '#3f7d20' : 'transparent',
-                                color: sub === sc ? '#f3eff5' : '#454955'
+                                color: sub === sc ? '#ffffff' : '#454955'
                               }}
                               onClick={() => handleSubcategoryClick(c.name, sc)}
                             >
@@ -246,8 +246,8 @@ const Search: React.FC = () => {
             </div>
 
             {/* Additional Filters Card */}
-            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
                 <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>More Filters</h2>
               </div>
@@ -261,7 +261,7 @@ const Search: React.FC = () => {
                       min="0"
                       className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
                       style={{
-                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                        backgroundColor: '#ffffff',
                         borderColor: 'rgba(114, 176, 29, 0.3)',
                         color: '#0d0a0b'
                       }}
@@ -275,7 +275,7 @@ const Search: React.FC = () => {
                       min="0"
                       className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
                       style={{
-                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                        backgroundColor: '#ffffff',
                         borderColor: 'rgba(114, 176, 29, 0.3)',
                         color: '#0d0a0b'
                       }}
@@ -292,7 +292,7 @@ const Search: React.FC = () => {
                   <select
                     className="w-full px-3 py-2 rounded-lg border outline-none transition-all text-sm"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)',
                       color: '#0d0a0b'
                     }}
@@ -392,7 +392,7 @@ const Search: React.FC = () => {
                 <input
                   className="flex-1 outline-none px-5 py-3 rounded-l-xl font-medium text-lg transition border border-r-0"
                   style={{
-                    backgroundColor: '#f3eff5',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)',
                     color: '#0d0a0b'
                   }}
@@ -422,24 +422,24 @@ const Search: React.FC = () => {
               </p>
             </div>
             {/* Results grid */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {paginatedItems.map((item) => (
                 <Link
                   key={item.id}
                   to={`/listing/${item.id}`}
-                  className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-4 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
+                  className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-3 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
                   style={{
                     textDecoration: 'none',
-                    backgroundColor: '#f3eff5',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}
                 >
                   {/* Wishlist Button (top right) */}
 
                   {/* Image */}
-                  <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
+                  <div className="w-full aspect-square rounded-xl mb-3 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.5)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.2)'
                     }}>
                     {item.images && item.images.length > 0 ? (
@@ -463,7 +463,7 @@ const Search: React.FC = () => {
                       <div className="flex items-center gap-2 mb-1 min-h-[22px]">
                         {stats.avg ? (
                           <>
-                            <span className="flex items-center text-yellow-500">
+                            <span className="flex items-center" style={{ color: '#72b01d' }}>
                               {[1, 2, 3, 4, 5].map(i => (
                                 <svg
                                   key={i}
@@ -477,11 +477,11 @@ const Search: React.FC = () => {
                                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                 </svg>
                               ))}
-                              <span className="ml-1 text-xs font-bold text-yellow-700">
+                              <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
                                 {stats.avg.toFixed(1)}
                               </span>
                             </span>
-                            <span className="text-xs text-gray-500">({stats.count})</span>
+                            <span className="text-xs" style={{ color: '#72b01d' }}>({stats.count})</span>
                           </>
                         ) : (
                           <span className="text-xs text-gray-400">No reviews yet</span>
@@ -503,7 +503,7 @@ const Search: React.FC = () => {
                       </span>
                     )}
                     {item.cashOnDelivery && (
-                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold ml-2 px-2">
+                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-xs font-semibold ml-2 px-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -523,7 +523,7 @@ const Search: React.FC = () => {
                   </div>
                   {/* Price & Wishlist bottom row */}
                   <div className="flex items-end justify-between mt-auto">
-                    <div className="font-bold text-lg text-black group-hover:text-black tracking-tight">
+                    <div className="font-bold text-lg tracking-tight text-black">
                       LKR {item.price?.toLocaleString()}
                     </div>
                     <div className="ml-2 flex-shrink-0 flex items-end">
@@ -548,19 +548,19 @@ const Search: React.FC = () => {
                   disabled={currentPage === 1}
                   className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: '#f3eff5',
+                    backgroundColor: '#ffffff',
                     color: '#454955',
                     border: '1px solid rgba(114, 176, 29, 0.3)'
                   }}
                   onMouseEnter={(e) => {
                     if (currentPage !== 1) {
                       e.currentTarget.style.backgroundColor = '#72b01d';
-                      e.currentTarget.style.color = '#f3eff5';
+                      e.currentTarget.style.color = '#ffffff';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (currentPage !== 1) {
-                      e.currentTarget.style.backgroundColor = '#f3eff5';
+                      e.currentTarget.style.backgroundColor = '#ffffff';
                       e.currentTarget.style.color = '#454955';
                     }
                   }}
@@ -578,16 +578,16 @@ const Search: React.FC = () => {
                         onClick={() => handlePageChange(1)}
                         className="w-10 h-10 rounded-lg font-medium transition"
                         style={{
-                          backgroundColor: '#f3eff5',
+                          backgroundColor: '#ffffff',
                           color: '#454955',
                           border: '1px solid rgba(114, 176, 29, 0.3)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = '#72b01d';
-                          e.currentTarget.style.color = '#f3eff5';
+                          e.currentTarget.style.color = '#ffffff';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f3eff5';
+                          e.currentTarget.style.backgroundColor = '#ffffff';
                           e.currentTarget.style.color = '#454955';
                         }}
                       >
@@ -624,19 +624,19 @@ const Search: React.FC = () => {
                         onClick={() => handlePageChange(pageNum)}
                         className="w-10 h-10 rounded-lg font-medium transition"
                         style={{
-                          backgroundColor: isCurrentPage ? '#72b01d' : '#f3eff5',
-                          color: isCurrentPage ? '#f3eff5' : '#454955',
+                          backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
+                          color: isCurrentPage ? '#ffffff' : '#454955',
                           border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
                         }}
                         onMouseEnter={(e) => {
                           if (!isCurrentPage) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
-                            e.currentTarget.style.color = '#f3eff5';
+                            e.currentTarget.style.color = '#ffffff';
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isCurrentPage) {
-                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                            e.currentTarget.style.backgroundColor = '#ffffff';
                             e.currentTarget.style.color = '#454955';
                           }
                         }}
@@ -656,16 +656,16 @@ const Search: React.FC = () => {
                         onClick={() => handlePageChange(totalPages)}
                         className="w-10 h-10 rounded-lg font-medium transition"
                         style={{
-                          backgroundColor: '#f3eff5',
+                          backgroundColor: '#ffffff',
                           color: '#454955',
                           border: '1px solid rgba(114, 176, 29, 0.3)'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.backgroundColor = '#72b01d';
-                          e.currentTarget.style.color = '#f3eff5';
+                          e.currentTarget.style.color = '#ffffff';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#f3eff5';
+                          e.currentTarget.style.backgroundColor = '#ffffff';
                           e.currentTarget.style.color = '#454955';
                         }}
                       >
@@ -681,19 +681,19 @@ const Search: React.FC = () => {
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: '#f3eff5',
+                    backgroundColor: '#ffffff',
                     color: '#454955',
                     border: '1px solid rgba(114, 176, 29, 0.3)'
                   }}
                   onMouseEnter={(e) => {
                     if (currentPage !== totalPages) {
                       e.currentTarget.style.backgroundColor = '#72b01d';
-                      e.currentTarget.style.color = '#f3eff5';
+                      e.currentTarget.style.color = '#ffffff';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (currentPage !== totalPages) {
-                      e.currentTarget.style.backgroundColor = '#f3eff5';
+                      e.currentTarget.style.backgroundColor = '#ffffff';
                       e.currentTarget.style.color = '#454955';
                     }
                   }}

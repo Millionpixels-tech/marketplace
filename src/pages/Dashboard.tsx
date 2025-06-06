@@ -343,12 +343,12 @@ export default function ProfileDashboard() {
     if (!profileUid) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>User not found.</div>;
 
     return (
-        <div className="min-h-screen w-full" style={{ backgroundColor: '#f3eff5' }}>
+        <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>
             <Header />
             {/* Full width, no max-w */}
             <div className="flex flex-col md:flex-row gap-0 py-8 px-0 md:px-8 w-full">
                 {/* Sidebar */}
-                <aside className={`w-full md:w-64 min-h-screen border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`} style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                <aside className={`w-full md:w-64 min-h-screen border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* Burger for mobile */}
                     <button
                         className="md:hidden absolute top-4 right-4 z-10"
@@ -363,8 +363,8 @@ export default function ProfileDashboard() {
                                 key={tab.key}
                                 className={`group flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-base transition-all relative overflow-hidden border`}
                                 style={{
-                                    backgroundColor: selectedTab === tab.key ? '#72b01d' : '#f3eff5',
-                                    color: selectedTab === tab.key ? '#f3eff5' : '#454955',
+                                    backgroundColor: selectedTab === tab.key ? '#72b01d' : '#ffffff',
+                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
                                     borderColor: selectedTab === tab.key ? '#72b01d' : 'rgba(114, 176, 29, 0.3)',
                                     boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(114, 176, 29, 0.3)' : undefined
                                 }}
@@ -376,14 +376,14 @@ export default function ProfileDashboard() {
                                 }}
                                 onMouseLeave={(e) => {
                                     if (selectedTab !== tab.key) {
-                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                     }
                                 }}
                                 onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
                             >
                                 <span className={`transition-all`} style={{
-                                    color: selectedTab === tab.key ? '#f3eff5' : '#454955',
+                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
                                     transform: selectedTab === tab.key ? 'scale(1.1)' : 'scale(1)',
                                     opacity: selectedTab === tab.key ? 1 : 0.7
                                 }}>{tab.icon}</span>
@@ -394,7 +394,7 @@ export default function ProfileDashboard() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 min-w-0 w-full shadow-lg p-4 md:p-10 mx-auto border rounded-2xl" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                <main className="flex-1 min-w-0 w-full shadow-lg p-4 md:p-10 mx-auto border rounded-2xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* PROFILE TAB */}
                     {selectedTab === "profile" && (
                         <div className="flex flex-col items-center w-full">
@@ -463,7 +463,7 @@ export default function ProfileDashboard() {
                                     {editing ? (
                                         <button
                                             className="px-6 py-2 rounded-full font-semibold mr-2 disabled:opacity-50 transition"
-                                            style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                             onMouseEnter={(e) => {
                                                 if (!saving) {
                                                     e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -482,13 +482,13 @@ export default function ProfileDashboard() {
                                     ) : (
                                         <button
                                             className="px-6 py-2 rounded-full font-semibold transition border"
-                                            style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                            style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                             onMouseEnter={(e) => {
                                                 e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
                                                 e.currentTarget.style.borderColor = '#72b01d';
                                             }}
                                             onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.backgroundColor = '#ffffff';
                                                 e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                             }}
                                             onClick={() => setEditing(true)}
@@ -510,7 +510,7 @@ export default function ProfileDashboard() {
                                     <Link
                                         to="/create-shop"
                                         className="px-5 py-2 rounded-full font-bold uppercase tracking-wide shadow transition text-sm"
-                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = '#3f7d20';
                                         }}
@@ -533,7 +533,7 @@ export default function ProfileDashboard() {
                                             key={shop.id}
                                             className="border rounded-xl p-4 flex items-center gap-4 transition"
                                             style={{
-                                                backgroundColor: '#f3eff5',
+                                                backgroundColor: '#ffffff',
                                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                                             }}
                                             onMouseEnter={(e) => {
@@ -541,7 +541,7 @@ export default function ProfileDashboard() {
                                                 e.currentTarget.style.borderColor = '#72b01d';
                                             }}
                                             onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.backgroundColor = '#ffffff';
                                                 e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                             }}
                                         >
@@ -566,7 +566,7 @@ export default function ProfileDashboard() {
                                                     <button
                                                         onClick={() => navigate(`/edit-shop/${shop.id}`)}
                                                         className="px-3 py-1 rounded text-xs font-semibold transition border"
-                                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5', borderColor: '#72b01d' }}
+                                                        style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
                                                         onMouseEnter={(e) => {
                                                             e.currentTarget.style.backgroundColor = '#3f7d20';
                                                         }}
@@ -588,14 +588,14 @@ export default function ProfileDashboard() {
                                                             }
                                                         }}
                                                         className="px-3 py-1 rounded text-xs font-semibold transition border"
-                                                        style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                        style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                         onMouseEnter={(e) => {
                                                             e.currentTarget.style.backgroundColor = '#ffebee';
                                                             e.currentTarget.style.color = '#c62828';
                                                             e.currentTarget.style.borderColor = '#c62828';
                                                         }}
                                                         onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                                             e.currentTarget.style.color = '#454955';
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         }}
@@ -657,7 +657,7 @@ export default function ProfileDashboard() {
                                                             key={order.id}
                                                             className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
                                                             style={{
-                                                                backgroundColor: '#f3eff5',
+                                                                backgroundColor: '#ffffff',
                                                                 borderColor: 'rgba(114, 176, 29, 0.3)',
                                                                 textDecoration: 'none',
                                                                 color: 'inherit'
@@ -668,7 +668,7 @@ export default function ProfileDashboard() {
                                                                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
                                                             }}
                                                             onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
                                                                 e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                                 e.currentTarget.style.boxShadow = '';
                                                             }}
@@ -721,13 +721,13 @@ export default function ProfileDashboard() {
                             ) : (
                                 <div className="space-y-4">
                                     {sellerReviews.map(r => (
-                                        <div key={r.id} className="border rounded-xl p-5 shadow transition" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
+                                        <div key={r.id} className="border rounded-xl p-5 shadow transition" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
                                             e.currentTarget.style.borderColor = '#72b01d';
                                             e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
                                         }}
                                             onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                e.currentTarget.style.backgroundColor = '#ffffff';
                                                 e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                 e.currentTarget.style.boxShadow = '';
                                             }}>
@@ -756,7 +756,7 @@ export default function ProfileDashboard() {
                                 <a
                                     href="/add-listing"
                                     className="inline-block px-5 py-2 rounded-full font-semibold uppercase tracking-wide transition text-sm"
-                                    style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = '#3f7d20';
                                     }}
@@ -780,13 +780,13 @@ export default function ProfileDashboard() {
                                                 <div
                                                     key={listing.id}
                                                     className="border rounded-xl p-4 transition"
-                                                    style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                    style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                     onMouseEnter={(e) => {
                                                         e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
                                                         e.currentTarget.style.borderColor = '#72b01d';
                                                     }}
                                                     onMouseLeave={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }}
                                                 >
@@ -808,7 +808,7 @@ export default function ProfileDashboard() {
                                                         <button
                                                             onClick={() => handleEditListing(listing.id)}
                                                             className="px-4 py-2 rounded font-semibold transition border"
-                                                            style={{ backgroundColor: '#72b01d', color: '#f3eff5', borderColor: '#72b01d' }}
+                                                            style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
                                                             onMouseEnter={(e) => {
                                                                 e.currentTarget.style.backgroundColor = '#3f7d20';
                                                             }}
@@ -821,14 +821,14 @@ export default function ProfileDashboard() {
                                                         <button
                                                             onClick={() => handleDeleteListing(listing.id)}
                                                             className="px-4 py-2 rounded font-semibold transition border"
-                                                            style={{ backgroundColor: '#f3eff5', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                            style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                             onMouseEnter={(e) => {
                                                                 e.currentTarget.style.backgroundColor = '#ffebee';
                                                                 e.currentTarget.style.color = '#c62828';
                                                                 e.currentTarget.style.borderColor = '#c62828';
                                                             }}
                                                             onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
                                                                 e.currentTarget.style.color = '#454955';
                                                                 e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                             }}
@@ -846,7 +846,7 @@ export default function ProfileDashboard() {
                                             <button
                                                 className={`px-3 py-1 rounded font-semibold transition border`}
                                                 style={{
-                                                    backgroundColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.1)' : '#f3eff5',
+                                                    backgroundColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.1)' : '#ffffff',
                                                     color: listingsPage === 1 ? 'rgba(69, 73, 85, 0.4)' : '#454955',
                                                     borderColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.2)' : 'rgba(114, 176, 29, 0.3)',
                                                     cursor: listingsPage === 1 ? 'not-allowed' : 'pointer'
@@ -859,7 +859,7 @@ export default function ProfileDashboard() {
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     if (listingsPage !== 1) {
-                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
@@ -873,8 +873,8 @@ export default function ProfileDashboard() {
                                                     key={i}
                                                     className={`px-3 py-1 rounded font-semibold transition border`}
                                                     style={{
-                                                        backgroundColor: listingsPage === i + 1 ? '#72b01d' : '#f3eff5',
-                                                        color: listingsPage === i + 1 ? '#f3eff5' : '#454955',
+                                                        backgroundColor: listingsPage === i + 1 ? '#72b01d' : '#ffffff',
+                                                        color: listingsPage === i + 1 ? '#ffffff' : '#454955',
                                                         borderColor: listingsPage === i + 1 ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
                                                     }}
                                                     onMouseEnter={(e) => {
@@ -885,7 +885,7 @@ export default function ProfileDashboard() {
                                                     }}
                                                     onMouseLeave={(e) => {
                                                         if (listingsPage !== i + 1) {
-                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         }
                                                     }}
@@ -897,7 +897,7 @@ export default function ProfileDashboard() {
                                             <button
                                                 className={`px-3 py-1 rounded font-semibold transition border`}
                                                 style={{
-                                                    backgroundColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.1)' : '#f3eff5',
+                                                    backgroundColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.1)' : '#ffffff',
                                                     color: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.4)' : '#454955',
                                                     borderColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.2)' : 'rgba(114, 176, 29, 0.3)',
                                                     cursor: listingsPage === totalPages ? 'not-allowed' : 'pointer'
@@ -910,7 +910,7 @@ export default function ProfileDashboard() {
                                                 }}
                                                 onMouseLeave={(e) => {
                                                     if (listingsPage !== totalPages) {
-                                                        e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                        e.currentTarget.style.backgroundColor = '#ffffff';
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
@@ -960,7 +960,7 @@ export default function ProfileDashboard() {
                             <div className="mb-6">
                                 <h3 className="text-lg font-bold mb-2" style={{ color: '#0d0a0b' }}>Payment Summary (Last 14 Days)</h3>
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                         <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                             <tr>
                                                 <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
@@ -977,11 +977,11 @@ export default function ProfileDashboard() {
                                                 .filter(p => p.status === "RECEIVED" && p.createdAt)
                                                 .sort((a, b) => (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0))
                                                 .map(p => (
-                                                    <tr key={p.id} className="transition" style={{ backgroundColor: '#f3eff5' }} onMouseEnter={(e) => {
+                                                    <tr key={p.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
                                                         e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
                                                     }}
                                                         onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                                         }}>
                                                         <td className="px-4 py-2 border-b text-xs text-left font-mono" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.id}</td>
                                                         <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.createdAt && new Date(p.createdAt.seconds * 1000).toLocaleDateString()}</td>
@@ -1012,7 +1012,7 @@ export default function ProfileDashboard() {
                                 {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
 
                                 {/* Bank Account Details */}
-                                <div className="rounded-xl border p-6 w-full" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                <div className="rounded-xl border p-6 w-full" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                     <h3 className="font-bold text-lg mb-2" style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                                         <div>
@@ -1103,7 +1103,7 @@ export default function ProfileDashboard() {
                                 </div>
 
                                 {/* Seller Verification */}
-                                <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                     <h3 className="font-bold text-xl mb-6" style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
                                     {verifyForm.isVerified === 'COMPLETED' && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
@@ -1196,7 +1196,7 @@ export default function ProfileDashboard() {
                                     <button
                                         type="button"
                                         className="px-6 py-3 rounded-full font-bold text-base transition"
-                                        style={{ backgroundColor: '#72b01d', color: '#f3eff5' }}
+                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                         onMouseEnter={(e) => {
                                             if (!settingsLoading) {
                                                 e.currentTarget.style.backgroundColor = '#3f7d20';

@@ -66,7 +66,7 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
         );
 
     return (
-        <section className="w-full py-2" style={{ backgroundColor: '#f3eff5' }}>
+        <section className="w-full py-2" style={{ backgroundColor: '#ffffff' }}>
             <div className="mx-auto px-2 md:px-6">
                 <h3 className="text-2xl md:text-3xl font-black mb-8 text-left" style={{ color: '#0d0a0b' }}>Shop Reviews ({reviews.length})</h3>
                 <div className="flex flex-col gap-6">
@@ -75,12 +75,12 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                             key={r.id}
                             className="rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start gap-6 border"
                             style={{
-                                backgroundColor: '#f3eff5',
+                                backgroundColor: '#ffffff',
                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                             }}
                         >
                             {/* Item details */}
-                            <div className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(243, 239, 245, 0.8)' }}>
+                            <div className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
                                 {r.itemImage ? (
                                     <img src={r.itemImage} alt={r.itemName} className="object-cover w-full h-full" />
                                 ) : (
@@ -118,19 +118,19 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                         <button
                             className="px-4 py-2 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{
-                                backgroundColor: page === 1 ? '#f3eff5' : '#f3eff5',
+                                backgroundColor: page === 1 ? '#ffffff' : '#ffffff',
                                 color: page === 1 ? '#454955' : '#454955',
                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                             }}
                             onMouseEnter={(e) => {
                                 if (page !== 1) {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }
                             }}
                             onMouseLeave={(e) => {
                                 if (page !== 1) {
-                                    e.currentTarget.style.backgroundColor = '#f3eff5';
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
                                     e.currentTarget.style.color = '#454955';
                                 }
                             }}
@@ -146,19 +146,19 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                                     key={i + 1}
                                     className="px-4 py-2 rounded-xl border text-sm font-bold transition-all"
                                     style={{
-                                        backgroundColor: isCurrentPage ? '#72b01d' : '#f3eff5',
-                                        color: isCurrentPage ? '#f3eff5' : '#454955',
+                                        backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
+                                        color: isCurrentPage ? '#ffffff' : '#454955',
                                         borderColor: isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
                                     }}
                                     onMouseEnter={(e) => {
                                         if (!isCurrentPage) {
                                             e.currentTarget.style.backgroundColor = '#72b01d';
-                                            e.currentTarget.style.color = '#f3eff5';
+                                            e.currentTarget.style.color = '#ffffff';
                                         }
                                     }}
                                     onMouseLeave={(e) => {
                                         if (!isCurrentPage) {
-                                            e.currentTarget.style.backgroundColor = '#f3eff5';
+                                            e.currentTarget.style.backgroundColor = '#ffffff';
                                             e.currentTarget.style.color = '#454955';
                                         }
                                     }}
@@ -171,19 +171,19 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                         <button
                             className="px-4 py-2 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{
-                                backgroundColor: page === totalPages ? '#f3eff5' : '#f3eff5',
+                                backgroundColor: page === totalPages ? '#ffffff' : '#ffffff',
                                 color: page === totalPages ? '#454955' : '#454955',
                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                             }}
                             onMouseEnter={(e) => {
                                 if (page !== totalPages) {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#f3eff5';
+                                    e.currentTarget.style.color = '#ffffff';
                                 }
                             }}
                             onMouseLeave={(e) => {
                                 if (page !== totalPages) {
-                                    e.currentTarget.style.backgroundColor = '#f3eff5';
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
                                     e.currentTarget.style.color = '#454955';
                                 }
                             }}

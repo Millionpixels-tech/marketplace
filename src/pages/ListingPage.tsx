@@ -31,13 +31,44 @@ export default function ListingSingle() {
   const [qty, setQty] = useState(1);
   const [latestItems, setLatestItems] = useState<any[]>([]);
 
+  // Function to get review statistics for an item
+  function getReviewStats(listing: any) {
+    const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
+    if (!reviews.length) return { avg: null, count: 0 };
+    const avg = reviews.reduce((sum: any, r: any) => sum + (r.rating || 0), 0) / reviews.length;
+    return { avg, count: reviews.length };
+  }
+
+  // Function to fetch latest items
+  const fetchLatestItems = async () => {
+    if (!id) return;
+    try {
+      const listingsRef = collection(db, "listings");
+      const q = query(listingsRef, orderBy("createdAt", "desc"), limit(6));
+      const querySnapshot = await getDocs(q);
+      const items = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(item => item.id !== id); // Exclude current item
+      setLatestItems(items.slice(0, 5)); // Show only 5 items
+    } catch (error) {
+      console.error("Error fetching latest items:", error);
+      setLatestItems([]);
+    }
+  };
+
+  // Function to refresh listings (for wishlist button)
+  const refreshListings = () => {
+    // Re-fetch latest items if needed
+    fetchLatestItems();
+  };
+
   // Set body background color for this page
   useEffect(() => {
     const originalBodyStyle = document.body.style.backgroundColor;
     const originalHtmlStyle = document.documentElement.style.backgroundColor;
 
-    document.body.style.backgroundColor = '#f3eff5';
-    document.documentElement.style.backgroundColor = '#f3eff5';
+    document.body.style.backgroundColor = '#ffffff';
+    document.documentElement.style.backgroundColor = '#ffffff';
 
     return () => {
       document.body.style.backgroundColor = originalBodyStyle;
@@ -83,21 +114,6 @@ export default function ListingSingle() {
 
   // Fetch latest items
   useEffect(() => {
-    const fetchLatestItems = async () => {
-      try {
-        const listingsRef = collection(db, "listings");
-        const q = query(listingsRef, orderBy("createdAt", "desc"), limit(4));
-        const querySnapshot = await getDocs(q);
-        const items = querySnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(item => item.id !== id); // Exclude current item
-        setLatestItems(items.slice(0, 4)); // Ensure we have max 4 items
-      } catch (error) {
-        console.error("Error fetching latest items:", error);
-        setLatestItems([]);
-      }
-    };
-
     if (id) {
       fetchLatestItems();
     }
@@ -149,7 +165,7 @@ export default function ListingSingle() {
   };
 
   return (
-    <div className="min-h-screen w-full pb-8" style={{ backgroundColor: '#f3eff5', minHeight: '100vh' }}>
+    <div className="min-h-screen w-full pb-8" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
       <Header />
 
       {/* Breadcrumb */}
@@ -186,10 +202,10 @@ export default function ListingSingle() {
       </nav>
 
       <main className="w-full max-w-4xl mx-auto mt-8 px-2 md:px-0">
-        <div className="flex flex-col md:flex-row gap-8 rounded-3xl shadow-xl p-4 md:p-10 border" style={{ backgroundColor: '#f3eff5', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+        <div className="flex flex-col md:flex-row gap-8 rounded-3xl shadow-xl p-4 md:p-10 border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
           {/* Image Gallery */}
           <div className="flex-1 flex flex-col items-center">
-            <div className="relative w-full max-w-xs sm:max-w-md aspect-square rounded-2xl flex items-center justify-center overflow-hidden border" style={{ backgroundColor: 'rgba(243, 239, 245, 0.5)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+            <div className="relative w-full max-w-xs sm:max-w-md aspect-square rounded-2xl flex items-center justify-center overflow-hidden border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
               {item.images && item.images.length > 0 && (
                 <img
                   src={item.images[imgIdx]}
@@ -202,7 +218,7 @@ export default function ListingSingle() {
                 <>
                   <button
                     className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-2 shadow z-10 transition-all duration-300"
-                    style={{ backgroundColor: 'rgba(243, 239, 245, 0.95)', color: '#72b01d' }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
                     onClick={() => setImgIdx((imgIdx - 1 + item.images.length) % item.images.length)}
                     aria-label="Previous image"
                   >
@@ -210,7 +226,7 @@ export default function ListingSingle() {
                   </button>
                   <button
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 shadow z-10 transition-all duration-300"
-                    style={{ backgroundColor: 'rgba(243, 239, 245, 0.95)', color: '#72b01d' }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
                     onClick={() => setImgIdx((imgIdx + 1) % item.images.length)}
                     aria-label="Next image"
                   >
@@ -221,7 +237,7 @@ export default function ListingSingle() {
               {item.images && item.images.length > 0 && (
                 <button
                   className="absolute bottom-2 right-2 rounded-full p-2 shadow z-10 transition-all duration-300"
-                  style={{ backgroundColor: 'rgba(243, 239, 245, 0.95)', color: '#72b01d' }}
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
                   onClick={() => setEnlarge(true)}
                   aria-label="Enlarge image"
                 >
@@ -268,17 +284,17 @@ export default function ListingSingle() {
                     to={`/shop/${shop.username}`}
                     className="flex items-center gap-2 rounded-xl transition group w-max px-3 py-2 -mx-3 border"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                      e.currentTarget.style.backgroundColor = '#f8f9fa';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.8)';
+                      e.currentTarget.style.backgroundColor = '#ffffff';
                     }}
                   >
-                    <div className="w-8 h-8 rounded-full border overflow-hidden flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.4)', backgroundColor: 'rgba(243, 239, 245, 0.5)' }}>
+                    <div className="w-8 h-8 rounded-full border overflow-hidden flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.4)', backgroundColor: '#ffffff' }}>
                       {shop.logo ? (
                         <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       ) : (
@@ -309,10 +325,10 @@ export default function ListingSingle() {
               <div className="flex items-center gap-4">
                 <span className="text-xl font-bold" style={{ color: '#0d0a0b' }}>LKR {price.toLocaleString()}</span>
                 {deliveryType === "paid" && (
-                  <span className="text-xs rounded-full px-2 py-1 font-semibold" style={{ backgroundColor: 'rgba(69, 73, 85, 0.1)', color: '#454955' }}>+ Shipping</span>
+                  <span className="text-xs rounded-full px-2 py-1 font-semibold border" style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(69, 73, 85, 0.2)' }}>+ Shipping</span>
                 )}
                 {deliveryType === "free" && (
-                  <span className="text-xs rounded-full px-2 py-1 font-semibold" style={{ backgroundColor: 'rgba(114, 176, 29, 0.2)', color: '#3f7d20' }}>Free Delivery</span>
+                  <span className="text-xs rounded-full px-2 py-1 font-semibold border" style={{ backgroundColor: '#ffffff', color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Free Delivery</span>
                 )}
               </div>
               <div className="flex items-center gap-3">
@@ -331,7 +347,7 @@ export default function ListingSingle() {
                   className="w-20 px-3 py-2 border rounded-lg text-lg focus:outline-none focus:ring-2 transition-all duration-300"
                   style={{
                     borderColor: 'rgba(114, 176, 29, 0.3)',
-                    backgroundColor: 'rgba(243, 239, 245, 0.5)',
+                    backgroundColor: '#ffffff',
                     color: '#0d0a0b'
                   }}
                   onFocus={(e) => {
@@ -391,7 +407,7 @@ export default function ListingSingle() {
                     className="mt-2 w-full py-3 rounded-xl font-bold text-lg uppercase tracking-wide shadow transition disabled:opacity-50"
                     style={{
                       backgroundColor: '#72b01d',
-                      color: '#f3eff5'
+                      color: '#ffffff'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -428,7 +444,7 @@ export default function ListingSingle() {
                   className="mt-4 w-full py-3 rounded-xl font-bold text-lg uppercase tracking-wide shadow transition disabled:opacity-50"
                   style={{
                     backgroundColor: '#72b01d',
-                    color: '#f3eff5'
+                    color: '#ffffff'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -465,7 +481,7 @@ export default function ListingSingle() {
 
         {/* Money Back Guarantee & Buyer Protection */}
         <section className="w-full max-w-4xl mx-auto mt-8 mb-8 px-2 md:px-0">
-          <div className="rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center gap-4 text-center md:text-left border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+          <div className="rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center gap-4 text-center md:text-left border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
             <div className="flex-shrink-0 flex items-center justify-center mb-2 md:mb-0">
               <svg width="40" height="40" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#72b01d" /><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
@@ -484,64 +500,129 @@ export default function ListingSingle() {
         {/* Description at the bottom */}
         <section className="w-full max-w-4xl mx-auto mb-8 px-2 md:px-0">
           <h2 className="text-xl font-bold mb-3" style={{ color: '#0d0a0b' }}>Description</h2>
-          <div className="rounded-2xl shadow-lg p-6 text-base md:text-lg whitespace-pre-line border" style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}>
+          <div className="rounded-2xl shadow-lg p-6 text-base md:text-lg whitespace-pre-line border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}>
             {item.description}
           </div>
         </section>
 
-        {/* Latest Items Section */}
+        
+      </main>
+
+      {/* Latest Items Section */}
         {latestItems.length > 0 && (
-          <section className="w-full max-w-4xl mx-auto mb-12 px-2 md:px-0">
+          <section className="w-full mb-12 px-6 md:px-12 lg:px-16 xl:px-20">
             <h2 className="text-xl font-bold mb-6" style={{ color: '#0d0a0b' }}>Latest Items You Might Like</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {latestItems.map((latestItem) => (
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+              {latestItems.map((item) => (
                 <Link
-                  key={latestItem.id}
-                  to={`/listing/${latestItem.id}`}
-                  className="group rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:scale-105 border"
+                  key={item.id}
+                  to={`/listing/${item.id}`}
+                  className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-4 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
                   style={{
-                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                    textDecoration: 'none',
+                    backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#72b01d';
-                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(114, 176, 29, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                    e.currentTarget.style.boxShadow = '';
-                  }}
                 >
-                  <div className="aspect-square overflow-hidden">
-                    {latestItem.images && latestItem.images.length > 0 ? (
+                  {/* Image */}
+                  <div className="w-full aspect-square rounded-xl mb-4 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderColor: 'rgba(114, 176, 29, 0.2)'
+                    }}>
+                    {item.images && item.images.length > 0 ? (
                       <img
-                        src={latestItem.images[0]}
-                        alt={latestItem.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        src={item.images[0]}
+                        alt={item.name}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#72b01d' }}>
-                        <span className="text-4xl">📦</span>
-                      </div>
+                      <span className="text-4xl" style={{ color: '#454955' }}>🖼️</span>
                     )}
                   </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-1" style={{ color: '#0d0a0b' }}>
-                      {latestItem.name}
-                    </h3>
-                    <p className="text-xs mb-2" style={{ color: '#454955' }}>
-                      {latestItem.category}
-                    </p>
-                    <p className="font-bold text-sm" style={{ color: '#72b01d' }}>
-                      LKR {Number(latestItem.price || 0).toLocaleString()}
-                    </p>
+                  <h3 className="font-extrabold text-lg mb-1 truncate transition-colors duration-300"
+                    style={{ color: '#0d0a0b' }}>
+                    {item.name}
+                  </h3>
+                  {/* Show product average rating and count */}
+                  {(() => {
+                    const stats = getReviewStats(item);
+                    return (
+                      <div className="flex items-center gap-2 mb-1 min-h-[22px]">
+                        {stats.avg ? (
+                          <>
+                            <span className="flex items-center text-yellow-500">
+                              {[1, 2, 3, 4, 5].map(i => (
+                                <svg
+                                  key={i}
+                                  width="16"
+                                  height="16"
+                                  className="inline-block"
+                                  fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                              ))}
+                              <span className="ml-1 text-xs font-bold text-yellow-700">
+                                {stats.avg.toFixed(1)}
+                              </span>
+                            </span>
+                            <span className="text-xs text-gray-500">({stats.count})</span>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-400">No reviews yet</span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {/* Delivery & Payment badges */}
+                  <div className="flex items-center gap-2 mb-2">
+                    {item.deliveryType === "free" ? (
+                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
+                        <span className="text-base">🚚</span>
+                        Free Delivery
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-gray-500 text-xs font-medium">
+                        <span className="text-base">📦</span>
+                        Delivery Fee will apply
+                      </span>
+                    )}
+                    {item.cashOnDelivery && (
+                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold ml-2 px-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        COD
+                      </span>
+                    )}
+                  </div>
+                  {/* Price & Wishlist bottom row */}
+                  <div className="flex items-end justify-between mt-auto">
+                    <div className="font-bold text-lg text-black group-hover:text-black tracking-tight">
+                      LKR {item.price?.toLocaleString()}
+                    </div>
+                    <div className="ml-2 flex-shrink-0 flex items-end">
+                      <WishlistButton listing={item} refresh={refreshListings} />
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
           </section>
         )}
-      </main>
 
       {/* Enlarge Modal */}
       {enlarge && item.images && (
@@ -550,7 +631,7 @@ export default function ListingSingle() {
             src={item.images[imgIdx]}
             alt="enlarged"
             className="max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl border-4 object-contain"
-            style={{ borderColor: '#f3eff5' }}
+            style={{ borderColor: '#ffffff' }}
             onClick={e => e.stopPropagation()}
           />
         </div>

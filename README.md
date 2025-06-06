@@ -75,7 +75,7 @@ public/                  # Static assets
 | Dark Green      | `#3f7d20`         | Hover states, accents                 |
 | Primary Text    | `#0d0a0b`         | Main headings, important text         |
 | Secondary Text  | `#454955`         | Body, less prominent text             |
-| Background      | `#f3eff5`         | Main background, cards                |
+| Background      | `#ffffff`         | Main background, cards                |
 | Accent Blue     | `#3b82f6`/`bg-blue-500` | Badges, icons                  |
 | Border Light    | `#45495522`       | Light border                          |
 | Border Green    | `rgba(114,176,29,0.3/0.6)` | Green border accents           |
@@ -102,7 +102,7 @@ public/                  # Static assets
 ```
 #### Card Example
 ```jsx
-<div className="bg-[#f3eff5] border border-[#45495522] rounded-2xl p-5 shadow-sm">
+<div className="bg-white border border-[#45495522] rounded-2xl p-5 shadow-sm">
   <h2 className="text-2xl font-bold text-[#0d0a0b] mb-2">Product Title</h2>
   <p className="text-[#454955]">Product description goes here.</p>
 </div>

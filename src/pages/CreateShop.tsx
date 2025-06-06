@@ -87,7 +87,7 @@ export default function CreateShop() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-[#f3eff5] flex flex-col items-center py-10 px-2">
+      <div className="min-h-screen bg-white flex flex-col items-center py-10 px-2">
         <div className="w-full max-w-5xl bg-white rounded-3xl shadow-sm p-0 md:p-12 flex flex-col items-center">
           <div className="w-full flex flex-col items-start mb-8">
             <h1 className="text-3xl md:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
@@ -97,7 +97,7 @@ export default function CreateShop() {
           <div className="w-full relative flex flex-col items-center mb-12">
             {/* Cover image */}
             <div
-              className="w-full h-40 md:h-64 rounded-2xl bg-[#f3eff5] flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
+              className="w-full h-40 md:h-64 rounded-2xl bg-white flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
               onClick={() => coverInputRef.current?.click()}
               tabIndex={0}
               title="Click to upload cover image"
@@ -105,7 +105,7 @@ export default function CreateShop() {
               {coverPreview ? (
                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="flex flex-col items-center text-[#454955]">
+                <div className="flex flex-col items-center justify-start pt-8 text-[#454955] h-full">
                   <FiUpload className="text-3xl mb-2" />
                   <span className="font-medium text-sm">Click to add cover image</span>
                 </div>
@@ -120,7 +120,7 @@ export default function CreateShop() {
             </div>
             {/* Logo */}
             <div
-              className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white bg-[#f3eff5] flex items-center justify-center shadow-sm cursor-pointer group transition"
+              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-sm cursor-pointer group transition"
               onClick={() => logoInputRef.current?.click()}
               title="Click to upload logo"
               tabIndex={0}
@@ -144,25 +144,36 @@ export default function CreateShop() {
           </div>
 
           {/* --- Shop Main Info --- */}
-          <div className="w-full flex flex-col md:flex-row gap-10 mt-14 md:mt-8">
-            <div className="flex-1 flex flex-col gap-6">
+          <div className="w-full flex flex-col md:flex-row gap-10 mt-20 md:mt-16">
+            <div className="flex-1 space-y-8">
               {/* Shop Name */}
-              <div>
-                <label className="block font-semibold mb-1 text-[#0d0a0b]">Shop Name</label>
+              <div className="group">
+                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                  Shop Name
+                </label>
                 <input
-                  className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] transition px-5 py-3 rounded-2xl font-semibold text-lg text-[#0d0a0b] shadow-sm"
+                  className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
                   maxLength={80}
-                  placeholder="e.g. Crafty Kavi"
+                  placeholder="Enter your shop name..."
                   value={shopName}
                   onChange={e => setShopName(e.target.value)}
                   required
                 />
+                <div className="text-xs text-[#6b7280] mt-2 ml-1">
+                  {shopName.length}/80 characters • This will be your shop's display name
+                </div>
               </div>
+
               {/* Shop Username */}
-              <div>
-                <label className="block font-semibold mb-1 text-[#0d0a0b]">Shop Username <span className="font-normal text-[#45495599]">(unique URL)</span></label>
+              <div className="group">
+                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                  Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
+                </label>
                 <input
-                  className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] transition px-5 py-3 rounded-2xl font-semibold text-lg text-[#0d0a0b] shadow-sm"
+                  className={`w-full border-2 transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 text-lg
+                    ${userExists 
+                      ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-500/10" 
+                      : "bg-white border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] focus:ring-[#72b01d]/10"}`}
                   maxLength={24}
                   placeholder="e.g. crafty_kavi"
                   value={shopUser}
@@ -174,55 +185,98 @@ export default function CreateShop() {
                   required
                 />
                 {shopUser && (
-                  <div className="mt-1 text-xs">
-                    <span className={userExists ? "text-red-600 font-bold" : "text-[#3f7d20] font-medium"}>
-                      {userExists
-                        ? "This username is already taken."
-                        : `Your shop URL: https://mydomain.com/shop/${shopUser}`}
-                    </span>
+                  <div className="mt-3">
+                    {userExists ? (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                        <div className="text-sm text-red-700 font-medium flex items-center">
+                          ❌ This username is already taken
+                        </div>
+                        <div className="text-xs text-red-600 mt-1">
+                          Please choose a different username
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                        <div className="text-sm text-green-700 font-medium flex items-center">
+                          ✅ Username available!
+                        </div>
+                        <div className="text-xs text-green-600 mt-1">
+                          Your shop URL: https://sina.lk/shop/{shopUser}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-              {/* Shop Mobile */}
-              <div>
-                <label className="block font-semibold mb-1 text-[#0d0a0b]">Mobile Number</label>
-                <div className="flex items-center gap-2 bg-[#f3eff5] border border-[#45495522] px-5 py-3 rounded-2xl shadow-sm">
-                  <span className="text-lg text-[#454955]">+94</span>
-                  <input
-                    className="flex-1 bg-transparent outline-none focus:ring-0 font-semibold text-lg text-[#0d0a0b]"
-                    maxLength={9}
-                    pattern="[0-9]{9}"
-                    placeholder="7xxxxxxxx"
-                    value={mobile}
-                    onChange={e => setMobile(e.target.value.replace(/\D/g, ""))}
-                    required
-                  />
+                <div className="text-xs text-[#6b7280] mt-2 ml-1">
+                  {shopUser.length}/24 characters • Only letters, numbers, underscores and dashes
                 </div>
-                <span className="text-xs text-[#454955] mt-1 block">Your Sri Lankan contact number</span>
+              </div>
+
+              {/* Shop Mobile */}
+              <div className="group">
+                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <div className="flex items-center bg-white border-2 border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
+                    <span className="text-lg text-[#6b7280] font-bold mr-3 select-none">+94</span>
+                    <input
+                      className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-lg"
+                      maxLength={9}
+                      pattern="[0-9]{9}"
+                      placeholder="7xxxxxxxx"
+                      value={mobile}
+                      onChange={e => setMobile(e.target.value.replace(/\D/g, ""))}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-[#6b7280] mt-2 ml-1">
+                  Your Sri Lankan contact number for customers to reach you
+                </div>
               </div>
             </div>
             {/* Description */}
-            <div className="flex-1 flex flex-col gap-3">
-              <label className="font-semibold mb-1 text-[#0d0a0b]">Shop Description</label>
-              <textarea
-                className="w-full bg-[#f3eff5] focus:bg-white focus:ring-1 focus:ring-[#72b01d] border border-[#45495522] rounded-2xl px-4 py-3 text-[#0d0a0b] font-medium transition min-h-[160px] text-base shadow-sm"
-                maxLength={1500}
-                rows={8}
-                placeholder="Describe your shop (max 300 words, e.g. what you sell, what makes your shop unique, etc.)"
-                value={desc}
-                onChange={e => setDesc(e.target.value)}
-                required
-              />
-              <div className="text-right text-xs mt-1 text-[#454955]">
-                {wordCount(desc)} / 300 words
+            <div className="flex-1">
+              <div className="group">
+                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                  Shop Description
+                </label>
+                <textarea
+                  className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
+                  maxLength={1500}
+                  rows={8}
+                  placeholder="Describe your shop - what you sell, what makes it unique, your story..."
+                  value={desc}
+                  onChange={e => setDesc(e.target.value)}
+                  required
+                />
+                <div className="flex justify-between items-center mt-3">
+                  <div className="text-xs text-[#6b7280] ml-1">
+                    Tell customers about your shop and what makes it special
+                  </div>
+                  <div className={`text-xs font-medium ml-1 ${wordCount(desc) > 300 ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                    {wordCount(desc)} / 300 words
+                  </div>
+                </div>
+                {wordCount(desc) > 300 && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
+                    <div className="text-sm text-red-700 font-medium">
+                      ⚠️ Description is too long
+                    </div>
+                    <div className="text-xs text-red-600 mt-1">
+                      Please keep your description under 300 words
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* --- Save Button --- */}
-          <div className="w-full flex justify-end mt-14">
+          <div className="w-full flex justify-end mt-16">
             <button
-              className="bg-[#72b01d] text-white px-10 py-3 rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition disabled:opacity-40"
+              className="bg-[#72b01d] text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
               disabled={
                 !shopName || !shopUser || userExists || !mobile || !desc || !logo || !cover || loading || wordCount(desc) > 300
               }
@@ -230,16 +284,20 @@ export default function CreateShop() {
               type="button"
             >
               {done
-                ? <span className="flex items-center gap-2"><FiCheck /> Created!</span>
+                ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>
                 : loading
-                  ? "Saving..."
-                  : "Save & Create Shop"}
+                  ? "Creating Shop..."
+                  : "Create Shop ✨"}
             </button>
           </div>
           {done && (
             <div className="w-full flex justify-center mt-8">
-              <div className="text-[#3f7d20] font-bold text-lg flex items-center gap-2">
-                <FiCheck /> Shop profile created!
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex items-center justify-center">
+                <div className="text-green-700 font-bold text-lg flex items-center gap-3">
+                  <span className="text-2xl">🎉</span>
+                  <span>Shop profile created successfully!</span>
+                  <FiCheck className="text-green-600" />
+                </div>
               </div>
             </div>
           )}
