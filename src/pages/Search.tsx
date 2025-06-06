@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../components/UI/Header";
-import WishlistButton from "../components/UI/WishlistButton";
+import ListingTile from "../components/UI/ListingTile";
 import { getUserIP } from "../utils/ipUtils";
 
 const Search: React.FC = () => {
@@ -84,13 +84,6 @@ const Search: React.FC = () => {
       }))
     );
   };
-
-  function getReviewStats(listing: any) {
-    const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
-    if (!reviews.length) return { avg: null, count: 0 };
-    const avg = reviews.reduce((sum: any, r: any) => sum + (r.rating || 0), 0) / reviews.length;
-    return { avg, count: reviews.length };
-  }
 
   // FILTERING logic (in memory)
   let filtered = items.filter(
@@ -424,113 +417,12 @@ const Search: React.FC = () => {
             {/* Results grid */}
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {paginatedItems.map((item) => (
-                <Link
+                <ListingTile 
                   key={item.id}
-                  to={`/listing/${item.id}`}
-                  className="group flex flex-col rounded-2xl shadow-lg transition-all duration-300 p-3 relative cursor-pointer border hover:shadow-xl hover:-translate-y-1"
-                  style={{
-                    textDecoration: 'none',
-                    backgroundColor: '#ffffff',
-                    borderColor: 'rgba(114, 176, 29, 0.3)'
-                  }}
-                >
-                  {/* Wishlist Button (top right) */}
-
-                  {/* Image */}
-                  <div className="w-full aspect-square rounded-xl mb-3 flex items-center justify-center overflow-hidden border transition-all duration-300 group-hover:shadow-md"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderColor: 'rgba(114, 176, 29, 0.2)'
-                    }}>
-                    {item.images && item.images.length > 0 ? (
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <span className="text-4xl" style={{ color: '#454955' }}>🖼️</span>
-                    )}
-                  </div>
-                  <h3 className="font-extrabold text-lg mb-1 truncate transition-colors duration-300"
-                    style={{ color: '#0d0a0b' }}>
-                    {item.name}
-                  </h3>
-                  {/* Show product average rating and count */}
-                  {(() => {
-                    const stats = getReviewStats(item);
-                    return (
-                      <div className="flex items-center gap-2 mb-1 min-h-[22px]">
-                        {stats.avg ? (
-                          <>
-                            <span className="flex items-center" style={{ color: '#72b01d' }}>
-                              {[1, 2, 3, 4, 5].map(i => (
-                                <svg
-                                  key={i}
-                                  width="16"
-                                  height="16"
-                                  className="inline-block"
-                                  fill={i <= Math.round(stats.avg) ? "currentColor" : "none"}
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                </svg>
-                              ))}
-                              <span className="ml-1 text-xs font-bold" style={{ color: '#3f7d20' }}>
-                                {stats.avg.toFixed(1)}
-                              </span>
-                            </span>
-                            <span className="text-xs" style={{ color: '#72b01d' }}>({stats.count})</span>
-                          </>
-                        ) : (
-                          <span className="text-xs text-gray-400">No reviews yet</span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                  {/* Delivery & Payment badges */}
-                  <div className="flex items-center gap-2 mb-2">
-                    {item.deliveryType === "free" ? (
-                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
-                        <span className="text-base">🚚</span>
-                        Free Delivery
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-gray-500 text-xs font-medium">
-                        <span className="text-base">📦</span>
-                        Delivery Fee will apply
-                      </span>
-                    )}
-                    {item.cashOnDelivery && (
-                      <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-xs font-semibold ml-2 px-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        COD
-                      </span>
-                    )}
-                  </div>
-                  {/* Price & Wishlist bottom row */}
-                  <div className="flex items-end justify-between mt-auto">
-                    <div className="font-bold text-lg tracking-tight text-black">
-                      LKR {item.price?.toLocaleString()}
-                    </div>
-                    <div className="ml-2 flex-shrink-0 flex items-end">
-                      <WishlistButton listing={item} refresh={refreshListings} />
-                    </div>
-                  </div>
-                </Link>
+                  listing={item}
+                  onRefresh={refreshListings}
+                  compact={true}
+                />
               ))}
               {paginatedItems.length === 0 && (
                 <div className="col-span-full text-center text-gray-400 text-lg py-20">
