@@ -13,18 +13,29 @@ export default function PublicProfile() {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!id) return;
             setLoading(true);
-            const userQuery = query(collection(db, "users"), where("uid", "==", id));
-            const userSnap = await getDocs(userQuery);
-            if (!userSnap.empty) {
-                setUserProfile(userSnap.docs[0].data());
-            } else {
+            try {
+                // Batch both queries for better performance
+                const [userSnap, shopsSnap] = await Promise.all([
+                    getDocs(query(collection(db, "users"), where("uid", "==", id))),
+                    getDocs(query(collection(db, "shops"), where("owner", "==", id)))
+                ]);
+
+                if (!userSnap.empty) {
+                    setUserProfile(userSnap.docs[0].data());
+                } else {
+                    setUserProfile(null);
+                }
+                
+                setShops(shopsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching profile data:", error);
                 setUserProfile(null);
+                setShops([]);
+            } finally {
+                setLoading(false);
             }
-            const shopsQuery = query(collection(db, "shops"), where("owner", "==", id));
-            const shopsSnap = await getDocs(shopsQuery);
-            setShops(shopsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            setLoading(false);
         };
         fetchData();
     }, [id]);

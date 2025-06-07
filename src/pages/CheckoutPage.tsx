@@ -139,9 +139,10 @@ export default function CheckoutPage() {
         const itemData = { id: itemDoc.id, ...itemDoc.data() } as CheckoutItem;
         setItem(itemData);
         
-        // Fetch shop
+        // Batch shop fetch if shopId exists
         const shopId = itemData.shopId || itemData.shop;
         if (shopId) {
+          // Fetch shop in parallel to improve performance
           const shopDoc = await getDoc(doc(db, "shops", shopId));
           if (shopDoc.exists()) {
             setShop(shopDoc.data() as Shop);

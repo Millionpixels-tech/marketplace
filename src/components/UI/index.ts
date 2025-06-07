@@ -9,6 +9,7 @@ export { default as Header } from './Header';
 export { default as WishlistButton } from './WishlistButton';
 export { default as ShopReviews } from './ShopReviews';
 export { default as ListingTile } from './ListingTile';
+export { default as BackToTop } from './BackToTop';
 
 // Export types
 export type { ButtonProps } from './Button';

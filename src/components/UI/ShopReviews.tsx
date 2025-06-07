@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
 
 type Review = {
     id: string;
@@ -24,23 +24,46 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
 
     useEffect(() => {
         async function fetchReviews() {
+            if (!shopId) {
+                return;
+            }
             setLoading(true);
-            let q = query(
-                collection(db, "orders"),
-                where("sellerShopId", "==", shopId),
-                where("review", ">", "")
-            );
+            try {
+                // Query for all orders for this shop
+                const q = query(
+                    collection(db, "orders"),
+                    where("sellerShopId", "==", shopId),
+                    limit(50) // Limit results for better performance
+                );
 
-            const snap = await getDocs(q);
-            setReviews(
-                snap.docs.map(doc => ({
+                const snap = await getDocs(q);
+                
+                const allOrders = snap.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                })) as Review[]
-            );
-            setLoading(false);
+                })) as Review[];
+
+                // Filter client-side for non-empty reviews
+                const filteredReviews = allOrders.filter(order => {
+                    return order.review && typeof order.review === 'string' && order.review.trim() !== "";
+                });
+
+                // Sort by reviewedAt on client side if the field exists, otherwise by createdAt
+                const sortedReviews = filteredReviews.sort((a, b) => {
+                    const aDate = a.reviewedAt?.seconds || a.createdAt?.seconds || 0;
+                    const bDate = b.reviewedAt?.seconds || b.createdAt?.seconds || 0;
+                    return bDate - aDate; // Most recent first
+                });
+
+                setReviews(sortedReviews);
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+                setReviews([]);
+            } finally {
+                setLoading(false);
+            }
         }
-        if (shopId) fetchReviews();
+        fetchReviews();
     }, [shopId]);
 
     // Pagination logic
@@ -60,7 +83,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
         return (
             <div className="w-full">
                 <div className="max-w-5xl mx-auto px-2">
-                    <div className="text-base text-left" style={{ color: '#454955', opacity: 0.7 }}>No reviews yet.</div>
+                    <div className="text-base text-left" style={{ color: '#454955', opacity: 0.7 }}>
+                        No reviews yet.
+                    </div>
                 </div>
             </div>
         );

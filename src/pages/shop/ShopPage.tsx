@@ -75,6 +75,7 @@ export default function ShopPage() {
     // 2. Fetch listings count for pagination
     useEffect(() => {
         if (!shop) return;
+        console.log("ShopPage: Shop loaded with ID:", shop.id);
         async function getTotalCount() {
             // Count listings by shopId (shopId)
             const allListingsSnap = await getDocs(query(collection(db, "listings"), where("shopId", "==", shop?.id)));

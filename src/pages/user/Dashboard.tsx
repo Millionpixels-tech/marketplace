@@ -168,6 +168,7 @@ export default function ProfileDashboard() {
         }
     }, [loading, profileUid, user, navigate]);
 
+    // Profile and shops fetching - Optimized with batching
     useEffect(() => {
         const fetchProfile = async () => {
             setLoading(true);
@@ -178,61 +179,86 @@ export default function ProfileDashboard() {
                 return;
             }
             setProfileUid(uid);
-            // Fetch user record
-            const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", uid)));
-            if (!userDoc.empty) {
-                const data = userDoc.docs[0].data();
-                setDisplayName(data.displayName || "");
-                setPhotoURL(data.photoURL || "");
-                setDesc(data.description || "");
-                setProfileEmail(data.email || null);
-                // Load bank details
-                if (data.bankDetails) setBankForm(data.bankDetails);
-                // Load verification info
-                if (data.verification) setVerifyForm(f => ({
-                    ...f,
-                    ...data.verification,
-                    idFront: null,
-                    idBack: null,
-                    selfie: null,
-                    idFrontUrl: data.verification.idFrontUrl || '',
-                    idBackUrl: data.verification.idBackUrl || '',
-                    selfieUrl: data.verification.selfieUrl || '',
-                }));
-            } else if (user && uid === user.uid) {
-                setDisplayName(user.displayName || "");
-                setPhotoURL(user.photoURL || "");
-                setDesc("");
-                setProfileEmail(user.email || null);
+            
+            try {
+                // Batch user profile and shops queries for better performance
+                const [userDoc, shopsSnap] = await Promise.all([
+                    getDocs(query(collection(db, "users"), where("uid", "==", uid))),
+                    getDocs(query(collection(db, "shops"), where("owner", "==", uid)))
+                ]);
+
+                // Process user data
+                if (!userDoc.empty) {
+                    const data = userDoc.docs[0].data();
+                    setDisplayName(data.displayName || "");
+                    setPhotoURL(data.photoURL || "");
+                    setDesc(data.description || "");
+                    setProfileEmail(data.email || null);
+                    // Load bank details
+                    if (data.bankDetails) setBankForm(data.bankDetails);
+                    // Load verification info
+                    if (data.verification) setVerifyForm(f => ({
+                        ...f,
+                        ...data.verification,
+                        idFront: null,
+                        idBack: null,
+                        selfie: null,
+                        idFrontUrl: data.verification.idFrontUrl || '',
+                        idBackUrl: data.verification.idBackUrl || '',
+                        selfieUrl: data.verification.selfieUrl || '',
+                    }));
+                } else if (user && uid === user.uid) {
+                    setDisplayName(user.displayName || "");
+                    setPhotoURL(user.photoURL || "");
+                    setDesc("");
+                    setProfileEmail(user.email || null);
+                }
+
+                // Process shops data
+                const shopList = shopsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setShops(shopList);
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            } finally {
+                setLoading(false);
             }
-            // Fetch shops for this user
-            const q = query(collection(db, "shops"), where("owner", "==", uid));
-            const docsSnap = await getDocs(q);
-            const shopList = docsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setShops(shopList);
-            setLoading(false);
         };
         fetchProfile();
     }, [user, id]);
 
+    // Listings fetching - Optimized
     useEffect(() => {
         const fetchListings = async () => {
             if (selectedTab !== "listings" || !profileUid) return;
             setListingsLoading(true);
             try {
-                const shopsQuery = query(collection(db, "shops"), where("owner", "==", profileUid));
+                // First get user's shops, then batch query for listings
+                const shopsQuery = query(
+                    collection(db, "shops"), 
+                    where("owner", "==", profileUid)
+                );
                 const shopsSnapshot = await getDocs(shopsQuery);
                 const shopIds = shopsSnapshot.docs.map(doc => doc.id);
+                
                 if (shopIds.length === 0) {
                     setListings([]);
                     setListingsLoading(false);
                     return;
                 }
-                const listingsQuery = query(collection(db, "listings"), where("shopId", "in", shopIds));
+
+                // Optimize listings query with limit and ordering
+                const listingsQuery = query(
+                    collection(db, "listings"), 
+                    where("shopId", "in", shopIds),
+                    // Add ordering for better UX
+                    // orderBy("createdAt", "desc"),
+                    // limit(100) // Limit to prevent large queries
+                );
                 const listingsSnapshot = await getDocs(listingsQuery);
                 setListings(listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             } catch (err) {
                 console.error("Error loading listings:", err);
+                setListings([]);
             } finally {
                 setListingsLoading(false);
             }
@@ -245,35 +271,66 @@ export default function ProfileDashboard() {
         setListingsPage(1);
     }, [listings]);
 
-    // Orders fetching
+    // Orders fetching - Optimized with batching
     useEffect(() => {
         if (selectedTab !== "orders" || !profileUid) return;
         setOrdersLoading(true);
         const fetchOrders = async () => {
-            const buyerSnap = await getDocs(query(collection(db, "orders"), where("buyerId", "==", profileUid)));
-            setBuyerOrders(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            const sellerSnap = await getDocs(query(collection(db, "orders"), where("sellerId", "==", profileUid)));
-            setSellerOrders(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            setOrdersLoading(false);
+            try {
+                // Batch both queries for better performance
+                const [buyerSnap, sellerSnap] = await Promise.all([
+                    getDocs(query(
+                        collection(db, "orders"), 
+                        where("buyerId", "==", profileUid),
+                        // Add ordering and limit to improve performance
+                        // orderBy("createdAt", "desc"),
+                        // limit(50)
+                    )),
+                    getDocs(query(
+                        collection(db, "orders"), 
+                        where("sellerId", "==", profileUid),
+                        // orderBy("createdAt", "desc"),
+                        // limit(50)
+                    ))
+                ]);
+                
+                setBuyerOrders(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                setSellerOrders(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                setBuyerOrders([]);
+                setSellerOrders([]);
+            } finally {
+                setOrdersLoading(false);
+            }
         };
         fetchOrders();
     }, [selectedTab, profileUid]);
 
-    // Reviews fetching
+    // Reviews fetching - Optimized
     useEffect(() => {
         if (selectedTab !== "reviews" || !profileUid) return;
         setReviewsLoading(true);
         const fetchReviews = async () => {
-            // As Buyer: reviews given to this user in the role of buyer
-
-            // As Seller: reviews given to this user in the role of seller
-            const sellerSnap = await getDocs(
-                query(collection(db, "reviews"),
-                    where("reviewedUserId", "==", profileUid),
-                    where("role", "==", "seller"))
-            );
-            setSellerReviews(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            setReviewsLoading(false);
+            try {
+                // For now, only fetch seller reviews as commented
+                // In the future, you could add buyer reviews query as well
+                const sellerSnap = await getDocs(
+                    query(collection(db, "reviews"),
+                        where("reviewedUserId", "==", profileUid),
+                        where("role", "==", "seller"),
+                        // Add ordering for better UX
+                        // orderBy("createdAt", "desc"),
+                        // limit(20)
+                    )
+                );
+                setSellerReviews(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            } catch (error) {
+                console.error("Error fetching reviews:", error);
+                setSellerReviews([]);
+            } finally {
+                setReviewsLoading(false);
+            }
         };
         fetchReviews();
     }, [selectedTab, profileUid]);

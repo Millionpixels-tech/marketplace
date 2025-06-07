@@ -1,23 +1,37 @@
-import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import Header from "../components/UI/Header";
-import ListingTile from "../components/UI/ListingTile";
-import { Button, Input, Pagination } from "../components/UI";
+import { Header, ListingTile, Button, Input, Pagination, BackToTop } from "../components/UI";
 import { getUserIP } from "../utils/ipUtils";
+
+interface Listing {
+  id: string;
+  name?: string;
+  price?: number;
+  description?: string;
+  category?: string;
+  subcategory?: string;
+  deliveryType?: "free" | "paid";
+  createdAt?: { seconds: number };
+  [key: string]: any;
+}
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const cacheRef = useRef<Map<string, Listing[]>>(new Map());
 
   // For sidebar filter
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // Listings & user IP
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Listing[]>([]);
   const [ip, setIp] = useState<string | null>(null);
+
+  // Loading states
+  const [searching, setSearching] = useState(false);
 
   // Filters/search state
   const [searchInput, setSearchInput] = useState("");
@@ -58,57 +72,147 @@ const Search: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
 
-  // Get user's IP and fetch all listings with wishlist arrays
+  // Get user's IP on mount
   useEffect(() => {
-    (async () => {
+    const fetchUserIP = async () => {
       const userIp = await getUserIP();
       setIp(userIp);
-      const snap = await getDocs(collection(db, "listings"));
-      setItems(
-        snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          __client_ip: userIp,
-        }))
-      );
-    })();
+    };
+    fetchUserIP();
   }, []);
 
-  // Refresh listings (after wishlist update)
-  const refreshListings = async () => {
-    const snap = await getDocs(collection(db, "listings"));
-    setItems(
-      snap.docs.map((doc) => ({
+  // Optimized query builder
+  const buildOptimizedQuery = useCallback(() => {
+    const conditions: any[] = [];
+
+    // Add server-side filters where possible
+    if (cat) {
+      conditions.push(where("category", "==", cat));
+    }
+    if (sub) {
+      conditions.push(where("subcategory", "==", sub));
+    }
+    if (appliedFreeShipping) {
+      conditions.push(where("deliveryType", "==", "free"));
+    }
+
+    // Add ordering (must be after where clauses)
+    let queryConstraints = [...conditions];
+    if (appliedSort === "newest") {
+      queryConstraints.push(orderBy("createdAt", "desc"));
+    } else if (appliedSort === "price-asc") {
+      queryConstraints.push(orderBy("price", "asc"));
+    } else if (appliedSort === "price-desc") {
+      queryConstraints.push(orderBy("price", "desc"));
+    }
+
+    // Add limit for better performance
+    queryConstraints.push(limit(100));
+
+    return query(collection(db, "listings"), ...queryConstraints);
+  }, [cat, sub, appliedFreeShipping, appliedSort]);
+
+  // Optimized fetch function with caching
+  const fetchOptimizedListings = useCallback(async () => {
+    if (!ip) return;
+    
+    // Create cache key from current filters
+    const cacheKey = JSON.stringify({
+      cat,
+      sub,
+      appliedFreeShipping,
+      appliedSort,
+      appliedSearch,
+      appliedMinPrice,
+      appliedMaxPrice,
+    });
+
+    // Check cache first
+    if (cacheRef.current.has(cacheKey)) {
+      const cachedResults = cacheRef.current.get(cacheKey)!;
+      setItems(cachedResults);
+      setSearching(false);
+      return;
+    }
+    
+    try {
+      setSearching(true);
+      const optimizedQuery = buildOptimizedQuery();
+      const snapshot = await getDocs(optimizedQuery);
+      
+      let results: Listing[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         __client_ip: ip,
-      }))
-    );
-  };
+      } as Listing));
 
-  // FILTERING logic (in memory)
-  let filtered = items.filter(
-    (item) =>
-      (appliedSearch === "" || item.name?.toLowerCase().includes(appliedSearch.toLowerCase())) &&
-      (cat === "" || item.category === cat) &&
-      (sub === "" || item.subcategory === sub)
-  );
-  if (appliedMinPrice !== "") filtered = filtered.filter(item => Number(item.price) >= Number(appliedMinPrice));
-  if (appliedMaxPrice !== "") filtered = filtered.filter(item => Number(item.price) <= Number(appliedMaxPrice));
-  if (appliedFreeShipping) filtered = filtered.filter(item => item.deliveryType === "free");
-  if (appliedSort === "price-asc") filtered = [...filtered].sort((a, b) => Number(a.price) - Number(b.price));
-  else if (appliedSort === "price-desc") filtered = [...filtered].sort((a, b) => Number(b.price) - Number(a.price));
-  else if (appliedSort === "newest") filtered = [...filtered].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      // Apply client-side filters that can't be done server-side
+      if (appliedSearch) {
+        results = results.filter(item => 
+          item.name?.toLowerCase().includes(appliedSearch.toLowerCase()) ||
+          item.description?.toLowerCase().includes(appliedSearch.toLowerCase())
+        );
+      }
 
-  // Pagination calculations
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = filtered.slice(startIndex, endIndex);
+      if (appliedMinPrice) {
+        results = results.filter(item => Number(item.price) >= Number(appliedMinPrice));
+      }
 
-  // Category/subcategory sidebar navigation handlers
-  const handleCategoryClick = (c: string) => {
+      if (appliedMaxPrice) {
+        results = results.filter(item => Number(item.price) <= Number(appliedMaxPrice));
+      }
+
+      // Cache the results (limit cache size to prevent memory issues)
+      if (cacheRef.current.size >= 10) {
+        const firstKey = cacheRef.current.keys().next().value;
+        if (firstKey) {
+          cacheRef.current.delete(firstKey);
+        }
+      }
+      cacheRef.current.set(cacheKey, results);
+
+      setItems(results);
+    } catch (error) {
+      console.error("Error fetching listings:", error);
+      setItems([]);
+    } finally {
+      setSearching(false);
+    }
+  }, [ip, buildOptimizedQuery, appliedSearch, appliedMinPrice, appliedMaxPrice, cat, sub, appliedFreeShipping, appliedSort]);
+
+  // Fetch listings when dependencies change
+  useEffect(() => {
+    if (ip !== null) {
+      fetchOptimizedListings();
+    }
+  }, [fetchOptimizedListings]);
+
+  // Refresh listings (after wishlist update)
+  const refreshListings = useCallback(async () => {
+    // Clear cache when refreshing to ensure fresh data
+    cacheRef.current.clear();
+    await fetchOptimizedListings();
+  }, [fetchOptimizedListings]);
+
+  // Memoized filtered and paginated results for better performance
+  const { paginatedItems, totalItems, totalPages, startIndex, endIndex } = useMemo(() => {
+    const total = items.length;
+    const pages = Math.ceil(total / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginated = items.slice(start, end);
+    
+    return {
+      paginatedItems: paginated,
+      totalItems: total,
+      totalPages: pages,
+      startIndex: start,
+      endIndex: end
+    };
+  }, [items, currentPage, itemsPerPage]);
+
+  // Optimized category/subcategory handlers with better performance
+  const handleCategoryClick = useCallback((c: string) => {
     const newCat = c === cat ? "" : c;
     setCat(newCat);
     setSub("");
@@ -121,9 +225,9 @@ const Search: React.FC = () => {
     }
     params.delete("page"); // Remove page param when changing category
     navigate({ pathname: "/search", search: params.toString() });
-  };
+  }, [cat, searchParams, navigate]);
 
-  const handleSubcategoryClick = (c: string, sc: string) => {
+  const handleSubcategoryClick = useCallback((c: string, sc: string) => {
     setCat(c);
     setSub(sc);
     setCurrentPage(1); // Reset to first page
@@ -132,10 +236,10 @@ const Search: React.FC = () => {
     params.set("sub", sc);
     params.delete("page"); // Remove page param when changing subcategory
     navigate({ pathname: "/search", search: params.toString() });
-  };
+  }, [searchParams, navigate]);
 
-  // Handle page changes
-  const handlePageChange = (page: number) => {
+  // Optimized page change handler
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     const params = new URLSearchParams(searchParams);
     if (page > 1) {
@@ -146,7 +250,7 @@ const Search: React.FC = () => {
     navigate({ pathname: "/search", search: params.toString() });
     // Scroll to top when changing pages
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [searchParams, navigate]);
 
   // Main JSX
   return (
@@ -224,6 +328,8 @@ const Search: React.FC = () => {
                       color: '#72b01d'
                     }}
                     onClick={() => {
+                      // Clear cache when clearing category filters
+                      cacheRef.current.clear();
                       setCat(""); setSub(""); setExpanded(null); setCurrentPage(1);
                       const params = new URLSearchParams(searchParams);
                       params.delete("cat");
@@ -319,6 +425,8 @@ const Search: React.FC = () => {
                       background: 'linear-gradient(to right, #72b01d, #3f7d20)'
                     }}
                     onClick={() => {
+                      // Clear cache when applying new filters
+                      cacheRef.current.clear();
                       setAppliedMinPrice(filterMinPrice);
                       setAppliedMaxPrice(filterMaxPrice);
                       setAppliedSort(filterSort);
@@ -344,6 +452,8 @@ const Search: React.FC = () => {
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}
                     onClick={() => {
+                      // Clear cache when resetting filters
+                      cacheRef.current.clear();
                       setFilterMinPrice("");
                       setFilterMaxPrice("");
                       setFilterSort("");
@@ -376,6 +486,9 @@ const Search: React.FC = () => {
                 className="flex w-full gap-0"
                 onSubmit={e => {
                   e.preventDefault();
+                  // Clear cache when performing new search
+                  cacheRef.current.clear();
+                  setAppliedSearch(searchInput);
                   setCurrentPage(1); // Reset to first page when searching
                   const params = new URLSearchParams(searchParams);
                   if (searchInput) params.set("q", searchInput);
@@ -409,29 +522,126 @@ const Search: React.FC = () => {
                 </Button>
               </form>
             </div>
-            {/* Results header with count */}
+            {/* Results header with count and active filters */}
             <div className="mb-6">
-              <p className="text-sm" style={{ color: '#454955' }}>
-                Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems} results
-                {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                {/* Results count */}
+                <div className="flex flex-col">
+                  <p className="text-lg font-semibold" style={{ color: '#0d0a0b' }}>
+                    {totalItems} {totalItems === 1 ? 'Product' : 'Products'} Found
+                  </p>
+                  <p className="text-sm" style={{ color: '#454955' }}>
+                    Showing {Math.min(startIndex + 1, totalItems)}-{Math.min(endIndex, totalItems)}
+                    {currentPage > 1 && ` • Page ${currentPage} of ${totalPages}`}
+                  </p>
+                </div>
+                
+                {/* Active filters summary */}
+                {(appliedSearch || cat || sub || appliedMinPrice || appliedMaxPrice || appliedSort || appliedFreeShipping) && (
+                  <div className="flex flex-wrap gap-2">
+                    {appliedSearch && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Search: "{appliedSearch}"
+                        <button 
+                          onClick={() => {
+                            setSearchInput('');
+                            setAppliedSearch('');
+                            const params = new URLSearchParams(searchParams);
+                            params.delete('q');
+                            navigate({ pathname: "/search", search: params.toString() });
+                          }}
+                          className="ml-1 hover:bg-red-100 rounded-full p-0.5"
+                        >
+                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" strokeWidth="2" d="M18 6L6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </span>
+                    )}
+                    
+                    {cat && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Category: {cat}
+                        <button 
+                          onClick={() => handleCategoryClick(cat)}
+                          className="ml-1 hover:bg-red-100 rounded-full p-0.5"
+                        >
+                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" strokeWidth="2" d="M18 6L6 18M6 6l12 12"/>
+                          </svg>
+                        </button>
+                      </span>
+                    )}
+                    
+                    {sub && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        {sub}
+                      </span>
+                    )}
+                    
+                    {appliedMinPrice && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Min: ${appliedMinPrice}
+                      </span>
+                    )}
+                    
+                    {appliedMaxPrice && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Max: ${appliedMaxPrice}
+                      </span>
+                    )}
+                    
+                    {appliedSort && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Sort: {appliedSort === 'price-asc' ? 'Price ↑' : appliedSort === 'price-desc' ? 'Price ↓' : appliedSort === 'newest' ? 'Newest' : appliedSort}
+                      </span>
+                    )}
+                    
+                    {appliedFreeShipping && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                            style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
+                        Free Shipping
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             {/* Results grid */}
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {paginatedItems.map((item) => (
-                <ListingTile 
-                  key={item.id}
-                  listing={item}
-                  onRefresh={refreshListings}
-                  compact={true}
-                />
-              ))}
-              {paginatedItems.length === 0 && (
-                <div className="col-span-full text-center text-gray-400 text-lg py-20">
-                  No products found.
-                </div>
-              )}
-            </div>
+            {searching ? (
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* Loading skeleton */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 rounded-2xl h-64 mb-3"></div>
+                    <div className="bg-gray-200 rounded h-4 mb-2"></div>
+                    <div className="bg-gray-200 rounded h-4 w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {paginatedItems.map((item: Listing) => (
+                  <ListingTile 
+                    key={item.id}
+                    listing={item}
+                    onRefresh={refreshListings}
+                    compact={true}
+                  />
+                ))}
+                {paginatedItems.length === 0 && !searching && (
+                  <div className="col-span-full text-center text-gray-400 text-lg py-20">
+                    No products found.
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
@@ -440,12 +650,20 @@ const Search: React.FC = () => {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={handlePageChange}
+                  totalItems={totalItems}
+                  startIndex={startIndex}
+                  endIndex={Math.min(endIndex, totalItems)}
+                  showInfo={true}
+                  showJumpTo={totalPages > 10}
                 />
               </div>
             )}
           </main>
         </div>
       </div>
+      
+      {/* Back to Top Button */}
+      <BackToTop />
     </>
   );
 };

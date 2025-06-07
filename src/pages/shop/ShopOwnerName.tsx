@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { fetchUserData } from "../../utils/optimizedQueries";
 
 type ShopOwnerNameProps = {
     ownerId: string;
@@ -17,11 +16,10 @@ export default function ShopOwnerName({ ownerId, username, showUsername = true, 
     useEffect(() => {
         const fetchOwner = async () => {
             if (!ownerId) return;
-            const userDoc = await getDocs(query(collection(db, "users"), where("uid", "==", ownerId)));
-            if (!userDoc.empty) {
-                const userData = userDoc.docs[0].data();
+            const userData = await fetchUserData(ownerId);
+            if (userData) {
                 setOwnerName(userData.displayName || null);
-                setIsVerified(userData.verification?.isVerified || null);
+                setIsVerified(userData.isVerified || null);
             }
         };
         fetchOwner();

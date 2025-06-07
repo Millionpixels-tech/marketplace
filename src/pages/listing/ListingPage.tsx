@@ -33,17 +33,18 @@ export default function ListingSingle() {
   const [qty, setQty] = useState(1);
   const [latestItems, setLatestItems] = useState<any[]>([]);
 
-  // Function to fetch latest items
+  // Function to fetch latest items with improved performance
   const fetchLatestItems = async () => {
     if (!id) return;
     try {
       const listingsRef = collection(db, "listings");
-      const q = query(listingsRef, orderBy("createdAt", "desc"), limit(6));
+      const q = query(listingsRef, orderBy("createdAt", "desc"), limit(8)); // Fetch a few extra to exclude current
       const querySnapshot = await getDocs(q);
       const items = querySnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(item => item.id !== id); // Exclude current item
-      setLatestItems(items.slice(0, 5)); // Show only 5 items
+        .filter(item => item.id !== id) // Exclude current item
+        .slice(0, 5); // Show only 5 items
+      setLatestItems(items);
     } catch (error) {
       console.error("Error fetching latest items:", error);
       setLatestItems([]);
@@ -79,34 +80,40 @@ export default function ListingSingle() {
     }
   }, [item?.cashOnDelivery]);
 
-  // Fetch listing and shop info
+  // Fetch listing and shop info with batched IP and data loading
   useEffect(() => {
     const fetchItem = async () => {
       if (!id) return;
-      const docRef = doc(db, "listings", id);
-      const docSnap = await getDoc(docRef);
-      let ip = null;
+      setLoading(true);
+      
       try {
-        ip = await getUserIP();
-      } catch { }
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Attach client IP for wishlist logic
-        setItem({ ...data, __client_ip: ip });
+        // Batch IP fetch and listing fetch
+        const [docSnap, ip] = await Promise.all([
+          getDoc(doc(db, "listings", id)),
+          getUserIP().catch(() => null) // Handle IP fetch failure gracefully
+        ]);
 
-        // Fetch shop info
-        if (data.shop || data.shopId) {
-          const shopRef = doc(db, "shops", data.shop || data.shopId);
-          const shopSnap = await getDoc(shopRef);
-          if (shopSnap.exists()) setShop(shopSnap.data() as Shop);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // Attach client IP for wishlist logic
+          setItem({ ...data, __client_ip: ip });
+
+          // Fetch shop info if available
+          if (data.shop || data.shopId) {
+            const shopSnap = await getDoc(doc(db, "shops", data.shop || data.shopId));
+            if (shopSnap.exists()) setShop(shopSnap.data() as Shop);
+          }
         }
+      } catch (error) {
+        console.error("Error fetching listing:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchItem();
   }, [id]);
 
-  // Fetch latest items
+  // Fetch latest items when id changes
   useEffect(() => {
     if (id) {
       fetchLatestItems();

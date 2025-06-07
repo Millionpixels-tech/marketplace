@@ -6,6 +6,7 @@ import { FiSearch } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import Header from "../components/UI/Header";
 import ListingTile from "../components/UI/ListingTile";
+import { getUserIP } from "../utils/ipUtils";
 
 function ProductHeroSearch() {
   const [q, setQ] = useState("");
@@ -95,30 +96,54 @@ type Listing = {
 const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ip, setIp] = useState<string | null>(null);
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Fetch user IP and latest listings in parallel for better performance
   useEffect(() => {
-    async function fetchLatest() {
+    async function fetchData() {
       setLoading(true);
-      const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8));
-      const snap = await getDocs(q);
-      const results: Listing[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setLatestListings(results);
-      setLoading(false);
+      try {
+        const [snap, userIp] = await Promise.all([
+          getDocs(query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8))),
+          getUserIP().catch(() => null) // Handle IP fetch failure gracefully
+        ]);
+        
+        const results: Listing[] = snap.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data(),
+          __client_ip: userIp 
+        }));
+        
+        setLatestListings(results);
+        setIp(userIp);
+      } catch (error) {
+        console.error("Error fetching home data:", error);
+        setLatestListings([]);
+      } finally {
+        setLoading(false);
+      }
     }
-    fetchLatest();
+    fetchData();
   }, []);
 
   // Function to refresh listings (after wishlist update)
   const refreshListings = async () => {
-    const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8));
-    const snap = await getDocs(q);
-    const results: Listing[] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setLatestListings(results);
+    try {
+      const snap = await getDocs(query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8)));
+      const results: Listing[] = snap.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(),
+        __client_ip: ip 
+      }));
+      setLatestListings(results);
+    } catch (error) {
+      console.error("Error refreshing listings:", error);
+    }
   };
 
   return (
