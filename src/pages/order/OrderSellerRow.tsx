@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import { db } from "../../utils/firebase";
 
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);

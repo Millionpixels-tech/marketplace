@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../utils/firebase";
-import Header from "../components/UI/Header";
+import { auth } from "../../utils/firebase";
+import Header from "../../components/UI/Header";
+import { Button, Input, Card } from "../../components/UI";
 
 export default function ResetPassword() {
     const [email, setEmail] = useState("");
@@ -27,7 +28,7 @@ export default function ResetPassword() {
         <>
             <Header />
             <div className="min-h-screen flex items-center justify-center bg-white px-4">
-                <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+                <Card className="p-8 w-full max-w-md">
                     <h2 className="text-2xl font-bold mb-6 text-center text-[#0d0a0b]">Reset Password</h2>
                     {sent ? (
                         <div className="text-[#3f7d20] text-center mb-4">
@@ -35,9 +36,8 @@ export default function ResetPassword() {
                         </div>
                     ) : (
                         <form className="flex flex-col gap-5" onSubmit={handleReset}>
-                            <input
+                            <Input
                                 type="email"
-                                className="bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d] px-5 py-3 rounded-2xl font-medium transition text-[#0d0a0b] placeholder:text-[#45495588] shadow-sm"
                                 placeholder="Enter your email address"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
@@ -45,19 +45,20 @@ export default function ResetPassword() {
                                 autoFocus
                             />
                             {error && <div className="text-red-500 text-center text-sm font-medium">{error}</div>}
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={loading}
-                                className="bg-[#72b01d] text-white rounded-2xl py-3 text-lg font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition disabled:opacity-50"
+                                loading={loading}
+                                className="rounded-2xl py-3 text-lg font-bold uppercase tracking-wide"
                             >
-                                {loading ? "Sending..." : "Send Reset Link"}
-                            </button>
+                                Send Reset Link
+                            </Button>
                         </form>
                     )}
                     <div className="text-center mt-6">
                         <a href="/auth" className="text-sm text-[#454955] hover:text-[#3f7d20] font-medium transition">Back to Login</a>
                     </div>
-                </div>
+                </Card>
             </div>
         </>
     );

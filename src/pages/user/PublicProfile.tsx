@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { db } from "../utils/firebase";
+import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import Header from "../components/UI/Header";
+import Header from "../../components/UI/Header";
 
 export default function PublicProfile() {
     const { id } = useParams();

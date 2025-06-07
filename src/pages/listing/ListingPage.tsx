@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { getUserIP } from "../utils/ipUtils";
-import { db } from "../utils/firebase";
-import Header from "../components/UI/Header";
-import WishlistButton from "../components/UI/WishlistButton";
-import ListingTile from "../components/UI/ListingTile";
-import ShopOwnerName from "./ShopOwnerName";
+import { getUserIP } from "../../utils/ipUtils";
+import { db } from "../../utils/firebase";
+import Header from "../../components/UI/Header";
+import WishlistButton from "../../components/UI/WishlistButton";
+import ListingTile from "../../components/UI/ListingTile";
+import { LoadingSpinner } from "../../components/UI";
+import ShopOwnerName from "../shop/ShopOwnerName";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 
 type Shop = {
@@ -114,8 +115,8 @@ export default function ListingSingle() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-400">
-        Loading...
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

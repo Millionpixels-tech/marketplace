@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { db, storage } from "../utils/firebase";
-import { useAuth } from "../context/AuthContext";
+import { db, storage } from "../../utils/firebase";
+import { useAuth } from "../../context/AuthContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiX } from "react-icons/fi";
-import { categories, categoryIcons, subCategoryIcons } from "../utils/categories";
-import Header from "../components/UI/Header";
+import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
+import Header from "../../components/UI/Header";
 
 const steps = [
     { label: "Shop" },

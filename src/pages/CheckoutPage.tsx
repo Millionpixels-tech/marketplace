@@ -8,6 +8,7 @@ import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfil
 import { generatePaymentHash } from "../utils/payment/paymentHash";
 import type { PaymentHashParams } from "../utils/payment/paymentHash";
 import Header from "../components/UI/Header";
+import { Input } from "../components/UI";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign } from "react-icons/fi";
 
 type CheckoutItem = {
@@ -647,7 +648,7 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                       First Name *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       required
                       value={buyerInfo.firstName}
@@ -655,9 +656,7 @@ export default function CheckoutPage() {
                         setBuyerInfo(prev => ({ ...prev, firstName: e.target.value }));
                         clearFieldError('firstName');
                       }}
-                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
-                        validationErrors.firstName ? 'border-red-400' : ''
-                      }`}
+                      className={validationErrors.firstName ? 'border-red-400' : ''}
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: validationErrors.firstName ? '#f87171' : 'rgba(114, 176, 29, 0.3)',

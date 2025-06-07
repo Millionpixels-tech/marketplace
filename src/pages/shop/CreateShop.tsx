@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
-import { db, auth, storage } from "../utils/firebase";
+import { db, auth, storage } from "../../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
-import Header from "../components/UI/Header";
+import { Header, Button, Card, Input } from "../../components/UI";
 
 function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -151,8 +151,7 @@ export default function CreateShop() {
                 <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
                   Shop Name
                 </label>
-                <input
-                  className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
+                <Input
                   maxLength={80}
                   placeholder="Enter your shop name..."
                   value={shopName}
@@ -169,11 +168,10 @@ export default function CreateShop() {
                 <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
                   Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
                 </label>
-                <input
-                  className={`w-full border-2 transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 text-lg
-                    ${userExists 
-                      ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-500/10" 
-                      : "bg-white border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] focus:ring-[#72b01d]/10"}`}
+                <Input
+                  className={userExists 
+                    ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-500/10" 
+                    : ""}
                   maxLength={24}
                   placeholder="e.g. crafty_kavi"
                   value={shopUser}
@@ -220,8 +218,8 @@ export default function CreateShop() {
                 <div className="relative">
                   <div className="flex items-center bg-white border-2 border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
                     <span className="text-lg text-[#6b7280] font-bold mr-3 select-none">+94</span>
-                    <input
-                      className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-lg"
+                    <Input
+                      className="flex-1 bg-transparent outline-none border-0 px-0 py-0 focus:ring-0 shadow-none"
                       maxLength={9}
                       pattern="[0-9]{9}"
                       placeholder="7xxxxxxxx"
@@ -275,30 +273,30 @@ export default function CreateShop() {
 
           {/* --- Save Button --- */}
           <div className="w-full flex justify-end mt-16">
-            <button
-              className="bg-[#72b01d] text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
+            <Button
+              variant="primary"
+              size="lg"
               disabled={
                 !shopName || !shopUser || userExists || !mobile || !desc || !logo || !cover || loading || wordCount(desc) > 300
               }
+              loading={loading}
               onClick={handleSave}
-              type="button"
+              className="px-12 py-4 rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20"
             >
               {done
                 ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>
-                : loading
-                  ? "Creating Shop..."
-                  : "Create Shop ✨"}
-            </button>
+                : "Create Shop ✨"}
+            </Button>
           </div>
           {done && (
             <div className="w-full flex justify-center mt-8">
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex items-center justify-center">
-                <div className="text-green-700 font-bold text-lg flex items-center gap-3">
+              <Card className="p-6 bg-green-50 border-green-200">
+                <div className="text-green-700 font-bold text-lg flex items-center justify-center gap-3">
                   <span className="text-2xl">🎉</span>
                   <span>Shop profile created successfully!</span>
                   <FiCheck className="text-green-600" />
                 </div>
-              </div>
+              </Card>
             </div>
           )}
         </div>

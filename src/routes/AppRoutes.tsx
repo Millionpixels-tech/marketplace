@@ -1,21 +1,21 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
-import Auth from "../pages/Auth";
-import CreateShop from "../pages/CreateShop";
-import AddListing from "../pages/AddListing";
-import ListingPage from "../pages/ListingPage";
-import EditListing from "../pages/EditListing";
+import Auth from "../pages/auth/Auth";
+import CreateShop from "../pages/shop/CreateShop";
+import AddListing from "../pages/listing/AddListing";
+import ListingPage from "../pages/listing/ListingPage";
+import EditListing from "../pages/listing/EditListing";
 import Search from "../pages/Search";
 import Cart from "../pages/Cart";
 import CheckoutPage from "../pages/CheckoutPage";
-import ShopPage from "../pages/ShopPage";
-import Profile from "../pages/Dashboard";
+import ShopPage from "../pages/shop/ShopPage";
+import Profile from "../pages/user/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import OrderPage from "../pages/OrderPage";
+import OrderPage from "../pages/order/OrderPage";
 import WishlistPage from "../pages/WishlistPage";
-import EditShop from "../pages/EditShop";
-import PublicProfile from "../pages/PublicProfile";
-import ResetPassword from "../pages/ResetPassword";
+import EditShop from "../pages/shop/EditShop";
+import PublicProfile from "../pages/user/PublicProfile";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 const AppRoutes = () => (
   <Routes>

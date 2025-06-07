@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { db, auth, storage } from "../utils/firebase";
-import { useAuth } from "../context/AuthContext";
+import { db, auth, storage } from "../../utils/firebase";
+import { useAuth } from "../../context/AuthContext";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 import { FiX } from "react-icons/fi";
-import { categories, categoryIcons, subCategoryIcons } from "../utils/categories";
-import Header from "../components/UI/Header";
+import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
+import { Header, Button, Input } from "../../components/UI";
 
 const steps = [
   { label: "Shop" },
@@ -201,14 +201,14 @@ export default function AddListing() {
                     ))}
                   </div>
                   <div className="flex justify-end mt-8">
-                    <button
-                      type="button"
-                      className="px-7 py-3 bg-[#72b01d] text-white rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
+                    <Button
+                      variant="primary"
                       disabled={!shopId}
                       onClick={() => setStep(2)}
+                      className="px-7 py-3 rounded-2xl uppercase tracking-wide shadow-sm"
                     >
                       Next
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}
@@ -237,21 +237,21 @@ export default function AddListing() {
                 ))}
               </div>
               <div className="flex justify-between mt-8">
-                <button
-                  type="button"
-                  className="px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
+                <Button
+                  variant="secondary"
                   onClick={() => setStep(1)}
+                  className="px-7 py-3 rounded-2xl uppercase tracking-wide shadow-sm"
                 >
                   Back
-                </button>
-                <button
-                  type="button"
-                  className="px-7 py-3 bg-[#72b01d] text-white rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
+                </Button>
+                <Button
+                  variant="primary"
                   disabled={!cat}
                   onClick={() => setStep(3)}
+                  className="px-7 py-3 rounded-2xl uppercase tracking-wide shadow-sm"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -306,8 +306,7 @@ export default function AddListing() {
                 {/* Item Title */}
                 <div>
                   <label className="block font-semibold text-[#0d0a0b] mb-2">Item Title</label>
-                  <input
-                    className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
+                  <Input
                     maxLength={120}
                     placeholder="Enter a clear, descriptive title for your item"
                     value={name}
@@ -337,7 +336,7 @@ export default function AddListing() {
                   <div>
                     <label className="block font-semibold text-[#0d0a0b] mb-2">Item Price</label>
                     <div className="relative">
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         step="0.01"
@@ -361,10 +360,9 @@ export default function AddListing() {
                   {/* Available Quantity */}
                   <div>
                     <label className="block font-semibold text-[#0d0a0b] mb-2">Available Quantity</label>
-                    <input
+                    <Input
                       type="number"
                       min="1"
-                      className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-4 py-3 rounded-xl font-medium text-[#0d0a0b] shadow-sm placeholder:text-[#454955]/60"
                       placeholder="Enter quantity"
                       value={quantity}
                       onChange={e => setQuantity(e.target.value)}

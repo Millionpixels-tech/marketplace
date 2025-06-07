@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../utils/firebase";
-import Header from "../components/UI/Header";
-import { useAuth } from "../context/AuthContext";
+import { db } from "../../utils/firebase";
+import Header from "../../components/UI/Header";
+import { useAuth } from "../../context/AuthContext";
 
 export default function OrderPage() {
     const { id } = useParams();

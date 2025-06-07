@@ -1,14 +1,14 @@
 
 import { useEffect, useState } from "react";
-import OrderSellerRow from "./OrderSellerRow";
-import { useAuth } from "../context/AuthContext";
+import OrderSellerRow from "../order/OrderSellerRow";
+import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db } from "../utils/firebase";
+import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
-import Header from "../components/UI/Header";
+import Header from "../../components/UI/Header";
 
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },

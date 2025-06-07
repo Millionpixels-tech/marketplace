@@ -5,6 +5,7 @@ import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "../components/UI/Header";
 import ListingTile from "../components/UI/ListingTile";
+import { Button, Input, Pagination } from "../components/UI";
 import { getUserIP } from "../utils/ipUtils";
 
 const Search: React.FC = () => {
@@ -249,7 +250,7 @@ const Search: React.FC = () => {
                 <div>
                   <label className="block text-xs font-semibold mb-2" style={{ color: '#454955' }}>Price Range (LKR)</label>
                   <div className="flex gap-2 items-center">
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
@@ -263,7 +264,7 @@ const Search: React.FC = () => {
                       onChange={e => setFilterMinPrice(e.target.value)}
                     />
                     <span className="text-xs" style={{ color: '#454955' }}>—</span>
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
@@ -312,7 +313,7 @@ const Search: React.FC = () => {
                   <label htmlFor="free-shipping" className="text-sm select-none cursor-pointer" style={{ color: '#454955' }}>Free Shipping Only</label>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <button
+                  <Button
                     className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     style={{
                       background: 'linear-gradient(to right, #72b01d, #3f7d20)'
@@ -333,8 +334,9 @@ const Search: React.FC = () => {
                     }}
                   >
                     Apply Filters
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="outline"
                     className="flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm border"
                     style={{
                       backgroundColor: 'rgba(114, 176, 29, 0.1)',
@@ -361,7 +363,7 @@ const Search: React.FC = () => {
                     }}
                   >
                     Reset
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -382,7 +384,7 @@ const Search: React.FC = () => {
                   navigate({ pathname: "/search", search: params.toString() });
                 }}
               >
-                <input
+                <Input
                   className="flex-1 outline-none px-5 py-3 rounded-l-xl font-medium text-lg transition border border-r-0"
                   style={{
                     backgroundColor: '#ffffff',
@@ -394,7 +396,7 @@ const Search: React.FC = () => {
                   onChange={e => setSearchInput(e.target.value)}
                   aria-label="Search products"
                 />
-                <button
+                <Button
                   type="submit"
                   className="px-6 py-3 rounded-r-xl text-white font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border"
                   style={{
@@ -404,7 +406,7 @@ const Search: React.FC = () => {
                   aria-label="Search"
                 >
                   Search
-                </button>
+                </Button>
               </form>
             </div>
             {/* Results header with count */}
@@ -433,166 +435,12 @@ const Search: React.FC = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-12 flex items-center justify-center gap-2">
-                {/* Previous button */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#454955',
-                    border: '1px solid rgba(114, 176, 29, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentPage !== 1) {
-                      e.currentTarget.style.backgroundColor = '#72b01d';
-                      e.currentTarget.style.color = '#ffffff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentPage !== 1) {
-                      e.currentTarget.style.backgroundColor = '#ffffff';
-                      e.currentTarget.style.color = '#454955';
-                    }
-                  }}
-                  aria-label="Previous page"
-                >
-                  ← Previous
-                </button>
-
-                {/* Page numbers */}
-                <div className="flex items-center gap-1">
-                  {/* First page */}
-                  {currentPage > 3 && (
-                    <>
-                      <button
-                        onClick={() => handlePageChange(1)}
-                        className="w-10 h-10 rounded-lg font-medium transition"
-                        style={{
-                          backgroundColor: '#ffffff',
-                          color: '#454955',
-                          border: '1px solid rgba(114, 176, 29, 0.3)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#72b01d';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#ffffff';
-                          e.currentTarget.style.color = '#454955';
-                        }}
-                      >
-                        1
-                      </button>
-                      {currentPage > 4 && (
-                        <span className="px-2" style={{ color: '#454955' }}>...</span>
-                      )}
-                    </>
-                  )}
-
-                  {/* Pages around current */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-
-                    if (pageNum < 1 || pageNum > totalPages) return null;
-                    if (currentPage > 3 && pageNum === 1) return null;
-                    if (currentPage < totalPages - 2 && pageNum === totalPages) return null;
-
-                    const isCurrentPage = currentPage === pageNum;
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className="w-10 h-10 rounded-lg font-medium transition"
-                        style={{
-                          backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
-                          color: isCurrentPage ? '#ffffff' : '#454955',
-                          border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isCurrentPage) {
-                            e.currentTarget.style.backgroundColor = '#72b01d';
-                            e.currentTarget.style.color = '#ffffff';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isCurrentPage) {
-                            e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.color = '#454955';
-                          }
-                        }}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  {/* Last page */}
-                  {currentPage < totalPages - 2 && (
-                    <>
-                      {currentPage < totalPages - 3 && (
-                        <span className="px-2" style={{ color: '#454955' }}>...</span>
-                      )}
-                      <button
-                        onClick={() => handlePageChange(totalPages)}
-                        className="w-10 h-10 rounded-lg font-medium transition"
-                        style={{
-                          backgroundColor: '#ffffff',
-                          color: '#454955',
-                          border: '1px solid rgba(114, 176, 29, 0.3)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#72b01d';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#ffffff';
-                          e.currentTarget.style.color = '#454955';
-                        }}
-                      >
-                        {totalPages}
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Next button */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#454955',
-                    border: '1px solid rgba(114, 176, 29, 0.3)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentPage !== totalPages) {
-                      e.currentTarget.style.backgroundColor = '#72b01d';
-                      e.currentTarget.style.color = '#ffffff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentPage !== totalPages) {
-                      e.currentTarget.style.backgroundColor = '#ffffff';
-                      e.currentTarget.style.color = '#454955';
-                    }
-                  }}
-                  aria-label="Next page"
-                >
-                  Next →
-                </button>
+              <div className="mt-12 flex items-center justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             )}
           </main>

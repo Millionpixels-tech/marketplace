@@ -1,14 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
-import { db } from "../utils/firebase";
+import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, limit, startAfter, QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 import { FiBox } from "react-icons/fi";
 import ShopOwnerName from "./ShopOwnerName";
-import Header from "../components/UI/Header";
-import ShopReviews from "../components/UI/ShopReviews";
-import ListingTile from "../components/UI/ListingTile";
-import { getUserIP } from "../utils/ipUtils";
+import Header from "../../components/UI/Header";
+import ShopReviews from "../../components/UI/ShopReviews";
+import ListingTile from "../../components/UI/ListingTile";
+import { LoadingSpinner } from "../../components/UI";
+import { getUserIP } from "../../utils/ipUtils";
 
 type Shop = {
     id: string;
@@ -150,7 +151,7 @@ export default function ShopPage() {
     if (loading && !shop) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
-                <span className="text-xl" style={{ color: '#454955' }}>Loading...</span>
+                <LoadingSpinner size="lg" />
             </div>
         );
     }

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { db, storage } from "../utils/firebase";
+import { db, storage } from "../../utils/firebase";
 import { doc, getDoc, updateDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
-import Header from "../components/UI/Header";
+import Header from "../../components/UI/Header";
 import { useParams } from "react-router-dom";
 
 function wordCount(text: string) {

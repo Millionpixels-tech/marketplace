@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { db } from "../utils/firebase";
+import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
 type ShopOwnerNameProps = {
