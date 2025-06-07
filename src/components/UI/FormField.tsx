@@ -21,20 +21,23 @@ const FormField: React.FC<FormFieldProps> = ({
   textareaProps
 }) => {
   const baseStyles = {
-    backgroundColor: 'rgba(243, 239, 245, 0.8)',
-    borderColor: error ? '#c62828' : 'rgba(114, 176, 29, 0.3)',
+    backgroundColor: '#ffffff',
+    borderColor: error ? '#c62828' : 'rgba(114, 176, 29, 0.2)',
+    borderWidth: '1px',
     color: '#0d0a0b'
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     e.currentTarget.style.borderColor = error ? '#c62828' : '#72b01d';
+    e.currentTarget.style.borderWidth = '1px';
     e.currentTarget.style.boxShadow = error 
       ? '0 0 0 2px rgba(198, 40, 40, 0.2)' 
       : '0 0 0 2px rgba(114, 176, 29, 0.2)';
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    e.currentTarget.style.borderColor = error ? '#c62828' : 'rgba(114, 176, 29, 0.3)';
+    e.currentTarget.style.borderColor = error ? '#c62828' : 'rgba(114, 176, 29, 0.2)';
+    e.currentTarget.style.borderWidth = '1px';
     e.currentTarget.style.boxShadow = 'none';
   };
 

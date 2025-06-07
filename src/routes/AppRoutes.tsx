@@ -25,7 +25,7 @@ const AppRoutes = () => (
     <Route path="/add-listing" element={<ProtectedRoute><AddListing /></ProtectedRoute>} />
     <Route path="/listing/:id" element={<ListingPage />} />
     <Route path="/listing/:listingId/edit" element={<EditListing />} />
-    <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+    <Route path="/checkout" element={<CheckoutPage />} />
     <Route path="/wishlist" element={<WishlistPage />} />
     <Route path="/search" element={<Search />} />
     <Route path="/order/:id" element={<OrderPage />} />

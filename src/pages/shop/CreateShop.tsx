@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { db, auth, storage } from "../../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
+import { FiCamera, FiUpload, FiCheck, FiLoader } from "react-icons/fi";
 import { Header, Button, Card, Input } from "../../components/UI";
 
 function wordCount(text: string) {
@@ -13,6 +13,8 @@ export default function CreateShop() {
   const [shopName, setShopName] = useState("");
   const [shopUser, setShopUser] = useState("");
   const [userExists, setUserExists] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
   const [mobile, setMobile] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
@@ -24,14 +26,65 @@ export default function CreateShop() {
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Username uniqueness check
-  const checkUsername = async (username: string) => {
-    if (!username) return;
-    const q = query(collection(db, "shops"), where("username", "==", username));
-    const docs = await getDocs(q);
-    setUserExists(!docs.empty);
-  };
+  // Username uniqueness check with debouncing
+  const checkUsername = useCallback(async (username: string) => {
+    if (!username.trim()) {
+      setUserExists(false);
+      setUsernameError("");
+      setCheckingUsername(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    setUsernameError("");
+    
+    try {
+      const q = query(collection(db, "shops"), where("username", "==", username.toLowerCase()));
+      const docs = await getDocs(q);
+      const exists = !docs.empty;
+      
+      setUserExists(exists);
+      if (exists) {
+        setUsernameError("This username is already taken. Please choose a different one.");
+      }
+    } catch (error) {
+      console.error("Error checking username:", error);
+      setUsernameError("Error checking username. Please try again.");
+    } finally {
+      setCheckingUsername(false);
+    }
+  }, []);
+
+  // Debounced username change handler
+  const handleUsernameChange = useCallback((value: string) => {
+    const cleanValue = value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
+    setShopUser(cleanValue);
+    setUserExists(false);
+    setUsernameError("");
+    
+    // Clear existing timeout
+    if (usernameTimeoutRef.current) {
+      clearTimeout(usernameTimeoutRef.current);
+    }
+    
+    // Set new timeout for checking username
+    if (cleanValue.trim()) {
+      usernameTimeoutRef.current = setTimeout(() => {
+        checkUsername(cleanValue);
+      }, 500); // Check username after 500ms of no typing
+    }
+  }, [checkUsername]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (usernameTimeoutRef.current) {
+        clearTimeout(usernameTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Image preview logic
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,39 +109,70 @@ export default function CreateShop() {
 
   // Save/Update Shop logic
   const handleSave = async () => {
+    // Double-check username availability before saving
+    if (userExists || checkingUsername) {
+      setUsernameError("Please choose a different username or wait for validation to complete.");
+      return;
+    }
+
+    if (!shopUser.trim()) {
+      setUsernameError("Username is required.");
+      return;
+    }
+
     setLoading(true);
-    let logoUrl = "";
-    let coverUrl = "";
+    setUsernameError("");
 
-    // 1. Upload images if present
-    if (logo) {
-      logoUrl = await uploadImage(logo, `shop-logos/${shopUser}_${Date.now()}`);
-    }
-    if (cover) {
-      coverUrl = await uploadImage(cover, `shop-covers/${shopUser}_${Date.now()}`);
-    }
+    try {
+      // Final check for username availability
+      const q = query(collection(db, "shops"), where("username", "==", shopUser.toLowerCase()));
+      const docs = await getDocs(q);
+      
+      if (!docs.empty) {
+        setUserExists(true);
+        setUsernameError("This username is already taken. Please choose a different one.");
+        setLoading(false);
+        return;
+      }
 
-    // 2. Save shop data
-    await addDoc(collection(db, "shops"), {
-      owner: auth.currentUser?.uid,
-      name: shopName,
-      username: shopUser,
-      mobile,
-      description: desc,
-      logo: logoUrl,
-      cover: coverUrl,
-      createdAt: new Date(),
-    });
-    setLoading(false);
-    setDone(true);
+      let logoUrl = "";
+      let coverUrl = "";
+
+      // 1. Upload images if present
+      if (logo) {
+        logoUrl = await uploadImage(logo, `shop-logos/${shopUser}_${Date.now()}`);
+      }
+      if (cover) {
+        coverUrl = await uploadImage(cover, `shop-covers/${shopUser}_${Date.now()}`);
+      }
+
+      // 2. Save shop data
+      await addDoc(collection(db, "shops"), {
+        owner: auth.currentUser?.uid,
+        name: shopName,
+        username: shopUser.toLowerCase(),
+        mobile,
+        description: desc,
+        logo: logoUrl,
+        cover: coverUrl,
+        createdAt: new Date(),
+      });
+      
+      setLoading(false);
+      setDone(true);
+    } catch (error) {
+      console.error("Error creating shop:", error);
+      setUsernameError("Error creating shop. Please try again.");
+      setLoading(false);
+    }
   };
 
   // --- UI starts here ---
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-white flex flex-col items-center py-10 px-2">
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-sm p-0 md:p-12 flex flex-col items-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center py-10 px-2">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-gray-100 p-0 md:p-12 flex flex-col items-center">
           <div className="w-full flex flex-col items-start mb-8">
             <h1 className="text-3xl md:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
             <p className="text-[#454955] text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
@@ -97,7 +181,7 @@ export default function CreateShop() {
           <div className="w-full relative flex flex-col items-center mb-12">
             {/* Cover image */}
             <div
-              className="w-full h-40 md:h-64 rounded-2xl bg-white flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
+              className="w-full h-40 md:h-64 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg border-2 border-dashed border-gray-300 hover:border-[#72b01d]"
               onClick={() => coverInputRef.current?.click()}
               tabIndex={0}
               title="Click to upload cover image"
@@ -105,7 +189,7 @@ export default function CreateShop() {
               {coverPreview ? (
                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="flex flex-col items-center justify-start pt-8 text-[#454955] h-full">
+                <div className="flex flex-col items-center justify-start pt-8 text-[#6b7280] group-hover:text-[#72b01d] transition-colors h-full">
                   <FiUpload className="text-3xl mb-2" />
                   <span className="font-medium text-sm">Click to add cover image</span>
                 </div>
@@ -120,7 +204,7 @@ export default function CreateShop() {
             </div>
             {/* Logo */}
             <div
-              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-sm cursor-pointer group transition"
+              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105"
               onClick={() => logoInputRef.current?.click()}
               title="Click to upload logo"
               tabIndex={0}
@@ -128,7 +212,7 @@ export default function CreateShop() {
               {logoPreview ? (
                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
               ) : (
-                <span className="flex flex-col items-center text-[#454955]">
+                <span className="flex flex-col items-center text-[#6b7280] group-hover:text-[#72b01d] transition-colors">
                   <FiCamera className="text-4xl mb-1" />
                   <span className="font-medium text-xs">Add Logo</span>
                 </span>
@@ -148,7 +232,7 @@ export default function CreateShop() {
             <div className="flex-1 space-y-8">
               {/* Shop Name */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
                   Shop Name
                 </label>
                 <Input
@@ -165,7 +249,7 @@ export default function CreateShop() {
 
               {/* Shop Username */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
                   Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
                 </label>
                 <Input
@@ -175,25 +259,26 @@ export default function CreateShop() {
                   maxLength={24}
                   placeholder="e.g. crafty_kavi"
                   value={shopUser}
-                  onBlur={() => shopUser && checkUsername(shopUser)}
-                  onChange={e => {
-                    setShopUser(e.target.value.replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase());
-                    setUserExists(false);
-                  }}
+                  onChange={e => handleUsernameChange(e.target.value)}
                   required
                 />
+                {/* Username validation status */}
                 {shopUser && (
                   <div className="mt-3">
-                    {userExists ? (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                        <div className="text-sm text-red-700 font-medium flex items-center">
-                          ❌ This username is already taken
-                        </div>
-                        <div className="text-xs text-red-600 mt-1">
-                          Please choose a different username
+                    {checkingUsername ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                        <div className="text-sm text-blue-700 font-medium flex items-center">
+                          <FiLoader className="animate-spin mr-2" />
+                          Checking username availability...
                         </div>
                       </div>
-                    ) : (
+                    ) : usernameError ? (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                        <div className="text-sm text-red-700 font-medium flex items-center">
+                          ❌ {usernameError}
+                        </div>
+                      </div>
+                    ) : !userExists ? (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-3">
                         <div className="text-sm text-green-700 font-medium flex items-center">
                           ✅ Username available!
@@ -202,7 +287,7 @@ export default function CreateShop() {
                           Your shop URL: https://sina.lk/shop/{shopUser}
                         </div>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 )}
                 <div className="text-xs text-[#6b7280] mt-2 ml-1">
@@ -212,14 +297,17 @@ export default function CreateShop() {
 
               {/* Shop Mobile */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
                   Mobile Number
                 </label>
                 <div className="relative">
-                  <div className="flex items-center bg-white border-2 border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
-                    <span className="text-lg text-[#6b7280] font-bold mr-3 select-none">+94</span>
-                    <Input
-                      className="flex-1 bg-transparent outline-none border-0 px-0 py-0 focus:ring-0 shadow-none"
+                  <div 
+                    className="flex items-center bg-white border rounded-xl transition-all duration-200 focus-within:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus-within:shadow-lg focus-within:ring-4 focus-within:ring-[#72b01d]/10"
+                    style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                  >
+                    <span className="text-lg text-[#6b7280] font-bold pl-4 pr-2 select-none">+94</span>
+                    <input
+                      className="flex-1 bg-transparent outline-none border-0 px-2 py-3 font-medium placeholder-[#9ca3af] text-[#0d0a0b]"
                       maxLength={9}
                       pattern="[0-9]{9}"
                       placeholder="7xxxxxxxx"
@@ -237,11 +325,12 @@ export default function CreateShop() {
             {/* Description */}
             <div className="flex-1">
               <div className="group">
-                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
                   Shop Description
                 </label>
                 <textarea
-                  className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
+                  className="w-full bg-white border rounded-xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] px-4 py-3 transition-all duration-200 focus:outline-none resize-none focus:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus:shadow-lg focus:ring-4 focus:ring-[#72b01d]/10"
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                   maxLength={1500}
                   rows={8}
                   placeholder="Describe your shop - what you sell, what makes it unique, your story..."
@@ -277,11 +366,21 @@ export default function CreateShop() {
               variant="primary"
               size="lg"
               disabled={
-                !shopName || !shopUser || userExists || !mobile || !desc || !logo || !cover || loading || wordCount(desc) > 300
+                !shopName || 
+                !shopUser || 
+                userExists || 
+                checkingUsername || 
+                usernameError !== "" ||
+                !mobile || 
+                !desc || 
+                !logo || 
+                !cover || 
+                loading || 
+                wordCount(desc) > 300
               }
               loading={loading}
               onClick={handleSave}
-              className="px-12 py-4 rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20"
+              className="px-12 py-4 rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20 bg-gradient-to-r from-[#72b01d] to-[#5a8a17] hover:from-[#5a8a17] hover:to-[#4a7314] transform hover:scale-105 transition-all duration-200"
             >
               {done
                 ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>

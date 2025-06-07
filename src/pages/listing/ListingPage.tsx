@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { getUserIP } from "../../utils/ipUtils";
@@ -24,7 +23,6 @@ type Shop = {
 export default function ListingSingle() {
   // Payment method state for COD
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(PaymentMethod.PAY_NOW);
-  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState<any>(null);
@@ -421,10 +419,6 @@ export default function ListingSingle() {
                     disabled={qty > (item.quantity || 1)}
                     onClick={() => {
                       if (!item || !shop || qty > (item.quantity || 1)) return;
-                      if (!user) {
-                        alert("Please log in to place an order");
-                        return;
-                      }
                       
                       // Navigate to checkout page with parameters
                       const params = new URLSearchParams({
@@ -454,10 +448,6 @@ export default function ListingSingle() {
                   disabled={qty > (item.quantity || 1)}
                   onClick={() => {
                     if (!item || !shop || qty > (item.quantity || 1)) return;
-                    if (!user) {
-                      alert("Please log in to place an order");
-                      return;
-                    }
                     
                     // Navigate to checkout page with parameters
                     const params = new URLSearchParams({

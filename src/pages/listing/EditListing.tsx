@@ -337,7 +337,7 @@ export default function EditListing() {
                                         Item Title
                                     </label>
                                     <input
-                                        className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
+                                        className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
                                         maxLength={120}
                                         placeholder="Enter item title..."
                                         value={name}
@@ -355,7 +355,7 @@ export default function EditListing() {
                                         Description
                                     </label>
                                     <textarea
-                                        className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
+                                        className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
                                         maxLength={1200}
                                         placeholder="Describe your item in detail..."
                                         value={desc}
@@ -379,7 +379,7 @@ export default function EditListing() {
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
-                                                className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
+                                                className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
                                                 placeholder="0.00"
                                                 value={price}
                                                 onChange={e => setPrice(e.target.value)}
@@ -409,7 +409,7 @@ export default function EditListing() {
                                         <input
                                             type="number"
                                             min="1"
-                                            className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
+                                            className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
                                             placeholder="Enter quantity..."
                                             value={quantity}
                                             onChange={e => setQuantity(e.target.value)}
@@ -584,7 +584,7 @@ export default function EditListing() {
                                                         type="number"
                                                         min="0"
                                                         step="0.01"
-                                                        className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
+                                                        className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
                                                         placeholder="0.00"
                                                         value={deliveryPerItem}
                                                         onChange={e => setDeliveryPerItem(e.target.value)}
@@ -608,7 +608,7 @@ export default function EditListing() {
                                                         type="number"
                                                         min="0"
                                                         step="0.01"
-                                                        className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
+                                                        className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] pr-16 shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10"
                                                         placeholder="0.00"
                                                         value={deliveryAdditional}
                                                         onChange={e => setDeliveryAdditional(e.target.value)}

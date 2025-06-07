@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import { db, auth } from "../utils/firebase";
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { createOrder, updateOrderPaymentStatus, deleteOrderByPayHereId, getOrderByPayHereId } from "../utils/orders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfile";
 import { generatePaymentHash } from "../utils/payment/paymentHash";
@@ -11,7 +12,7 @@ import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
 import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
 import Header from "../components/UI/Header";
 import { Input } from "../components/UI";
-import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign } from "react-icons/fi";
+import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
 type CheckoutItem = {
   id: string;
@@ -90,6 +91,14 @@ export default function CheckoutPage() {
   // Validation state
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string>('');
+  
+  // Authentication state for guest users
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
   
   // PayHere merchant credentials from environment variables
   const MERCHANT_ID = import.meta.env.VITE_PAYHERE_MERCHANT_ID;
@@ -172,6 +181,11 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (user?.email) {
       setBuyerInfo(prev => ({ ...prev, email: user.email || '' }));
+      // Reset auth form when user logs in
+      setShowAuth(false);
+      setAuthEmail('');
+      setAuthPassword('');
+      setAuthError('');
     }
   }, [user?.email]);
 
@@ -538,6 +552,39 @@ export default function CheckoutPage() {
     }
   };
 
+  // Authentication functions for guest users
+  const handleEmailAuth = async () => {
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      if (authMode === 'login') {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      } else {
+        await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+      }
+      // User will be automatically updated through useAuth hook
+      setShowAuth(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      setAuthError(errorMessage);
+    }
+    setAuthLoading(false);
+  };
+
+  const handleGoogleAuth = async () => {
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setShowAuth(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Google sign in failed';
+      setAuthError(errorMessage);
+    }
+    setAuthLoading(false);
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -545,6 +592,13 @@ export default function CheckoutPage() {
     // Clear any previous general error and cancelled status
     setGeneralError('');
     setPaymentCancelled(false);
+    
+    // Check if user is authenticated
+    if (!user) {
+      setGeneralError('Please sign in or create an account to complete your order.');
+      setShowAuth(true);
+      return;
+    }
     
     // Validate form
     if (!validateForm()) {
@@ -610,6 +664,104 @@ export default function CheckoutPage() {
                 <FiShoppingBag size={20} />
                 Buyer Information
               </h2>
+              
+              {/* Authentication Section for Guest Users */}
+              {!user && (
+                <div className="mb-6 p-4 rounded-xl border" style={{ 
+                  backgroundColor: 'rgba(114, 176, 29, 0.05)', 
+                  borderColor: 'rgba(114, 176, 29, 0.2)' 
+                }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <FiUser size={18} style={{ color: '#72b01d' }} />
+                    <span className="text-sm font-medium" style={{ color: '#454955' }}>
+                      Sign in to save your information and track your order
+                    </span>
+                  </div>
+                  
+                  {!showAuth ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowAuth(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition flex-1"
+                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3f7d20'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#72b01d'}
+                      >
+                        <FiLock size={16} />
+                        Sign in / Create Account
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleGoogleAuth}
+                        disabled={authLoading}
+                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition flex-1"
+                        style={{ 
+                          backgroundColor: '#ffffff', 
+                          borderColor: 'rgba(114, 176, 29, 0.3)',
+                          color: '#454955'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#72b01d'}
+                        onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                      >
+                        <svg className="w-4 h-4" viewBox="0 0 48 48">
+                          <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.6 33.1 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6.5-6.5C34.4 6.2 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 18.7-7.2 19.8-17H44.5z"/>
+                        </svg>
+                        Continue with Google
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {authError && (
+                        <div className="text-red-500 text-sm font-medium">{authError}</div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Input
+                          type="email"
+                          placeholder="Email"
+                          value={authEmail}
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          required
+                        />
+                        <Input
+                          type="password"
+                          placeholder="Password"
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={handleEmailAuth}
+                          disabled={authLoading}
+                          className="px-4 py-2 rounded-lg text-sm font-medium transition flex-1"
+                          style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                        >
+                          {authLoading ? 'Processing...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                          className="px-4 py-2 text-sm font-medium transition"
+                          style={{ color: '#72b01d' }}
+                        >
+                          {authMode === 'login' ? 'Create account instead' : 'Sign in instead'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAuth(false)}
+                          className="px-4 py-2 text-sm font-medium transition"
+                          style={{ color: '#454955' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* General Error Message */}
               {generalError && (
@@ -678,7 +830,7 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                       Last Name *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       required
                       value={buyerInfo.lastName}
@@ -686,9 +838,7 @@ export default function CheckoutPage() {
                         setBuyerInfo(prev => ({ ...prev, lastName: e.target.value }));
                         clearFieldError('lastName');
                       }}
-                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
-                        validationErrors.lastName ? 'border-red-400' : ''
-                      }`}
+                      className={validationErrors.lastName ? 'border-red-400' : ''}
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: validationErrors.lastName ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
@@ -709,7 +859,7 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                     Email Address *
                   </label>
-                  <input
+                  <Input
                     type="email"
                     required
                     value={buyerInfo.email}
@@ -717,9 +867,7 @@ export default function CheckoutPage() {
                       setBuyerInfo(prev => ({ ...prev, email: e.target.value }));
                       clearFieldError('email');
                     }}
-                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
-                      validationErrors.email ? 'border-red-400' : ''
-                    }`}
+                    className={validationErrors.email ? 'border-red-400' : ''}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: validationErrors.email ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
@@ -739,7 +887,7 @@ export default function CheckoutPage() {
                   <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                     Phone Number *
                   </label>
-                  <input
+                  <Input
                     type="tel"
                     required
                     value={buyerInfo.phone}
@@ -748,9 +896,7 @@ export default function CheckoutPage() {
                       clearFieldError('phone');
                     }}
                     placeholder="e.g., 0771234567"
-                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
-                      validationErrors.phone ? 'border-red-400' : ''
-                    }`}
+                    className={validationErrors.phone ? 'border-red-400' : ''}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: validationErrors.phone ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
@@ -802,7 +948,7 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                       City *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       required
                       value={buyerInfo.city}
@@ -810,9 +956,7 @@ export default function CheckoutPage() {
                         setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
                         clearFieldError('city');
                       }}
-                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
-                        validationErrors.city ? 'border-red-400' : ''
-                      }`}
+                      className={validationErrors.city ? 'border-red-400' : ''}
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
@@ -831,11 +975,10 @@ export default function CheckoutPage() {
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
                       Postal Code
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={buyerInfo.postalCode}
                       onChange={(e) => setBuyerInfo(prev => ({ ...prev, postalCode: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -935,7 +1078,7 @@ export default function CheckoutPage() {
                     <p className="text-sm mb-1" style={{ color: '#454955' }}>From {shop.name}</p>
                   )}
                   <p className="text-sm" style={{ color: '#454955' }}>Quantity: {quantity}</p>
-                  <p className="font-semibold" style={{ color: '#0d0a0b' }}>LKR {item.price?.toLocaleString()}</p>
+                  {/* <p className="font-semibold" style={{ color: '#0d0a0b' }}>LKR {item.price?.toLocaleString()}</p> */}
                 </div>
               </div>
 
@@ -993,7 +1136,8 @@ export default function CheckoutPage() {
                   }
                 }}
               >
-                {submitting && paymentProcessing ? 'Processing Payment...' :
+                {!user ? 'Sign in to Complete Order' :
+                 submitting && paymentProcessing ? 'Processing Payment...' :
                  submitting ? 'Placing Order...' : 
                  paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Place Order (COD)' : 
                  !scriptLoaded ? 'Loading Payment...' : 'Pay with PayHere'}

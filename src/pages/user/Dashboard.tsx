@@ -12,6 +12,17 @@ import Header from "../../components/UI/Header";
 import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
+import { 
+    calculatePaymentSchedule, 
+    getEligibleOrdersForPayment, 
+    calculatePeriodEarnings, 
+    formatPaymentDate, 
+    getDaysUntilNextPayment,
+    initializePaymentSystem,
+    debugOrderEligibility,
+    resetPaymentSystem,
+    type PaymentSchedule
+} from "../../utils/paymentSchedule";
 
 interface VerifyForm {
     fullName: string;
@@ -55,7 +66,7 @@ export default function ProfileDashboard() {
     const [loading, setLoading] = useState(true);
     // Settings form state
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
-    const [verifyForm, setVerifyForm] = useState<VerifyForm>({ fullName: '', idFront: null, idBack: null, selfie: null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: VerificationStatus.PENDING });
+    const [verifyForm, setVerifyForm] = useState<VerifyForm>({ fullName: '', idFront: null, idBack: null, selfie: null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: VerificationStatus.NO_DATA });
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -94,9 +105,15 @@ export default function ProfileDashboard() {
             if (verifyForm.selfie) {
                 selfieUrl = await uploadFile(verifyForm.selfie, `users/${user.uid}/selfie.jpg`);
             }
+            
+            // When user submits verification documents, set status to PENDING
+            const verificationStatus = (verifyForm.isVerified === VerificationStatus.NO_DATA || verifyForm.isVerified === VerificationStatus.REJECTED) 
+                ? VerificationStatus.PENDING 
+                : verifyForm.isVerified;
+            
             await updateDoc(doc(db, 'users', user.uid), {
                 verification: {
-                    isVerified: verifyForm.isVerified,
+                    isVerified: verificationStatus,
                     fullName: verifyForm.fullName,
                     idFrontUrl: idFrontUrl || '',
                     idBackUrl: idBackUrl || '',
@@ -104,7 +121,7 @@ export default function ProfileDashboard() {
                     address: verifyForm.address,
                 }
             });
-            setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl, isVerified: verifyForm.isVerified }));
+            setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl, isVerified: verificationStatus }));
 
             setSettingsSuccess('All settings saved!');
         } catch (e: any) {
@@ -119,40 +136,62 @@ export default function ProfileDashboard() {
 
     // Payments state
     const [payments, setPayments] = useState<any[]>([]);
+    const [paymentSchedule, setPaymentSchedule] = useState<PaymentSchedule | null>(null);
+    const [allSellerOrders, setAllSellerOrders] = useState<any[]>([]);
     // Bank details state
     // Payments fetching
     useEffect(() => {
         if (selectedTab !== "payments" || !profileUid) return;
-        // Fetch only last 14 days orders for payments calculation
-        const fetchPayments = async () => {
+        
+        const fetchPaymentsAndSchedule = async () => {
             try {
-                const now = new Date();
-                const cutoff = new Date(now.getTime());
-                //const cutoffTimestamp = Math.floor(cutoff.getTime() / 1000);
+                // Initialize payment system if not already done
+                initializePaymentSystem();
+                
+                // Calculate payment schedule
+                const schedule = calculatePaymentSchedule();
+                setPaymentSchedule(schedule);
+
+                // Fetch all seller orders without date restriction first to ensure we get all orders
+                // We'll filter by payment period in the client-side logic
                 const q = query(
                     collection(db, "orders"),
                     where("sellerId", "==", profileUid),
-                    where("createdAt", "<=", cutoff)
+                    orderBy("createdAt", "desc")
                 );
+                
                 const snap = await getDocs(q);
-                const validStatuses = [OrderStatus.RECEIVED];
                 const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                console.log("Fetched payments:", orders);
-                setPayments(orders.filter((o: any) => validStatuses.includes(o.status)));
+                setAllSellerOrders(orders);
+
+                // Get eligible orders for current payment period
+                const eligibleOrders = getEligibleOrdersForPayment(orders, schedule.currentPeriod);
+                setPayments(eligibleOrders);
+                
+                console.log("Payment schedule:", schedule);
+                console.log("All seller orders count:", orders.length);
+                console.log("Eligible orders for payment:", eligibleOrders);
+                console.log("Current period:", {
+                    start: schedule.currentPeriod.startDate.toISOString(),
+                    end: schedule.currentPeriod.endDate.toISOString(),
+                    paymentDate: schedule.currentPeriod.paymentDate.toISOString()
+                });
+                
+                // Debug each order
+                console.log("=== Order Eligibility Debug ===");
+                orders.forEach(order => {
+                    const debug = debugOrderEligibility(order, schedule.currentPeriod);
+                    console.log(`Order ${order.id}:`, debug);
+                });
+                console.log("=== End Debug ===");
             } catch (err) {
                 console.error("Error loading payments:", err);
                 setPayments([]);
-            } finally {
+                setAllSellerOrders([]);
             }
         };
-        // Fetch bank details (placeholder, replace with Firestore logic)
-        const fetchBankDetails = async () => {
-            // Example: fetch from users collection
-            // const userSnap = await getDocs(query(collection(db, "users"), where("uid", "==", profileUid)));
-            // if (!userSnap.empty) setBankDetails(userSnap.docs[0].data().bankDetails || null);
-        };
-        fetchPayments();
-        fetchBankDetails();
+
+        fetchPaymentsAndSchedule();
     }, [selectedTab, profileUid]);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -701,7 +740,7 @@ export default function ProfileDashboard() {
                                 {isOwner && editing ? (
                                     <input
                                         className="text-2xl font-black text-center border rounded-xl px-3 py-1 w-full max-w-xs mb-2"
-                                        style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
+                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
                                         value={displayName}
                                         onChange={e => setDisplayName(e.target.value)}
                                         maxLength={40}
@@ -725,7 +764,7 @@ export default function ProfileDashboard() {
                                 {isOwner && editing ? (
                                     <textarea
                                         className="w-full max-w-md border rounded-xl p-3 text-lg text-center"
-                                        style={{ backgroundColor: 'rgba(243, 239, 245, 0.8)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
+                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
                                         rows={3}
                                         value={desc}
                                         onChange={e => setDesc(e.target.value)}
@@ -1256,74 +1295,144 @@ export default function ProfileDashboard() {
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-bold">Your Payments</h2>
-                            </div>
-                            {/* Earnings and next payout */}
-                            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                                <div className="flex-1 rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                    <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Total Earnings (last 14 days)</div>
-                                    <div className="text-2xl font-bold" style={{ color: '#3f7d20' }}>
-                                        {(() => {
-                                            const now = Date.now();
-                                            const cutoff = now - 14 * 24 * 60 * 60 * 1000;
-                                            const total = payments
-                                                .filter(p => p.createdAt && new Date(p.createdAt.seconds ? p.createdAt.seconds * 1000 : p.createdAt).getTime() >= cutoff)
-                                                .reduce((sum, p) => sum + (p.total || 0), 0);
-                                            return `LKR ${total.toLocaleString()}`;
-                                        })()}
-                                    </div>
-                                </div>
-                                <div className="flex-1 rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                    <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Due</div>
-                                    <div className="text-2xl font-bold" style={{ color: '#72b01d' }}>
-                                        {(() => {
-                                            const next = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                                            return next.toLocaleDateString();
-                                        })()}
-                                    </div>
+                                {/* Debug/Test buttons */}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            resetPaymentSystem();
+                                            window.location.reload();
+                                        }}
+                                        className="px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                                    >
+                                        Reset Payment System
+                                    </button>
                                 </div>
                             </div>
-                            {/* Payment summary for last 14 days */}
+
+                            {/* Payment Schedule Information */}
+                            {paymentSchedule && (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    {/* Next Payment Info */}
+                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Date</div>
+                                        <div className="text-lg font-bold" style={{ color: '#72b01d' }}>
+                                            {formatPaymentDate(paymentSchedule.nextPaymentDate)}
+                                        </div>
+                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                            {getDaysUntilNextPayment(paymentSchedule.nextPaymentDate)} days remaining
+                                        </div>
+                                    </div>
+
+                                    {/* Current Period Earnings */}
+                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Pending Payment</div>
+                                        <div className="text-lg font-bold" style={{ color: '#3f7d20' }}>
+                                            LKR {calculatePeriodEarnings(payments).toLocaleString()}
+                                        </div>
+                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                            From {formatPaymentDate(paymentSchedule.currentPeriod.startDate)} to {formatPaymentDate(paymentSchedule.currentPeriod.endDate)}
+                                        </div>
+                                    </div>
+
+                                    {/* Last Payment Info */}
+                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Last Payment Date</div>
+                                        <div className="text-lg font-bold" style={{ color: '#454955' }}>
+                                            {formatPaymentDate(paymentSchedule.lastPaymentDate)}
+                                        </div>
+                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                            {paymentSchedule.previousPeriod ? 
+                                                `LKR ${calculatePeriodEarnings(getEligibleOrdersForPayment(allSellerOrders, paymentSchedule.previousPeriod)).toLocaleString()} paid` 
+                                                : 'No previous payment'
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payment Period Information */}
+                            {paymentSchedule && (
+                                <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', border: '1px solid rgba(114, 176, 29, 0.2)' }}>
+                                    <h3 className="font-bold mb-2" style={{ color: '#0d0a0b' }}>Payment System Information</h3>
+                                    <div className="text-sm space-y-1" style={{ color: '#454955' }}>
+                                        <p>• Payments are made every 14 days</p>
+                                        <p>• We hold your earnings for a minimum of 14 days before payment</p>
+                                        <p>• Only orders with payment method "PayNow" are eligible for payment</p>
+                                        <p>• Orders with status "Received", "Shipped", or "Pending" are eligible for payment</p>
+                                        <p>• COD (Cash on Delivery) orders are excluded from automated payments</p>
+                                        <p>• Current payment period: <strong>{formatPaymentDate(paymentSchedule.currentPeriod.startDate)}</strong> to <strong>{formatPaymentDate(paymentSchedule.currentPeriod.endDate)}</strong></p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Payment Summary for Current Period */}
                             <div className="mb-6">
-                                <h3 className="text-lg font-bold mb-2" style={{ color: '#0d0a0b' }}>Payment Summary (Last 14 Days)</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                        <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                            <tr>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Total</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Shipping</th>
-                                                <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {payments
-                                                .filter(p => p.status === OrderStatus.RECEIVED && p.createdAt)
-                                                .sort((a, b) => (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0))
-                                                .map(p => (
-                                                    <tr key={p.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
-                                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                    }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                        }}>
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-mono" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.id}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.createdAt && new Date(p.createdAt.seconds * 1000).toLocaleDateString()}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-semibold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.itemName || '-'}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{p.quantity || 1}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {(p.price && p.quantity ? (p.price * p.quantity).toLocaleString() : '-')}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {p.shipping?.toLocaleString() || '-'}</td>
-                                                        <td className="px-4 py-2 border-b text-xs text-left font-bold" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {p.total?.toLocaleString()}</td>
-                                                    </tr>
-                                                ))}
-                                        </tbody>
-                                    </table>
-                                    {payments.filter(p => p.status === OrderStatus.RECEIVED).length === 0 && (
-                                        <div className="text-center py-6" style={{ color: '#454955', opacity: 0.7 }}>No received orders in the last 14 days.</div>
-                                    )}
-                                </div>
+                                <h3 className="text-lg font-bold mb-2" style={{ color: '#0d0a0b' }}>Orders Eligible for Next Payment</h3>
+                                {payments.length > 0 ? (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                            <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                                <tr>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Status</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Payment Method</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
+                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {payments
+                                                    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                                                    .map(order => (
+                                                        <tr key={order.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                        }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                            }}>
+                                                            <td className="px-4 py-2 border-b text-xs text-left font-mono" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.id}</td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                                {order.createdAt && new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleDateString()}
+                                                            </td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                                                    order.status === 'received' ? 'bg-green-100 text-green-800' :
+                                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                                                    'bg-yellow-100 text-yellow-800'
+                                                                }`}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                                <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
+                                                                    {order.paymentMethod || 'N/A'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left font-semibold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.itemName || '-'}</td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.quantity || 1}</td>
+                                                            <td className="px-4 py-2 border-b text-xs text-left font-bold" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {order.total?.toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                            <tfoot style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)' }}>
+                                                <tr>
+                                                    <td colSpan={6} className="px-4 py-3 border-t text-right font-bold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                                        Total Payment:
+                                                    </td>
+                                                    <td className="px-4 py-3 border-t text-left font-bold text-lg" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                                        LKR {calculatePeriodEarnings(payments).toLocaleString()}
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6" style={{ color: '#454955', opacity: 0.7 }}>
+                                        No eligible orders for the current payment period.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1346,7 +1455,7 @@ export default function ProfileDashboard() {
                                             <input
                                                 className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
                                                 style={{
-                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
                                                     color: '#0d0a0b'
                                                 }}
@@ -1367,7 +1476,7 @@ export default function ProfileDashboard() {
                                             <input
                                                 className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
                                                 style={{
-                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
                                                     color: '#0d0a0b'
                                                 }}
@@ -1388,7 +1497,7 @@ export default function ProfileDashboard() {
                                             <input
                                                 className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
                                                 style={{
-                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
                                                     color: '#0d0a0b'
                                                 }}
@@ -1409,7 +1518,7 @@ export default function ProfileDashboard() {
                                             <input
                                                 className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
                                                 style={{
-                                                    backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                    backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
                                                     color: '#0d0a0b'
                                                 }}
@@ -1431,14 +1540,19 @@ export default function ProfileDashboard() {
                                 {/* Seller Verification */}
                                 <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                     <h3 className="font-bold text-xl mb-6" style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
+                                    
+                                    {/* Verified Status */}
                                     {verifyForm.isVerified === VerificationStatus.COMPLETED && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
                                             <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
                                                 <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
                                             <div className="font-semibold text-lg text-center" style={{ color: '#3f7d20' }}>You are a verified seller!</div>
+                                            <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and you can sell on our platform.</div>
                                         </div>
                                     )}
+                                    
+                                    {/* Pending Review Status */}
                                     {verifyForm.isVerified === VerificationStatus.PENDING && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
                                             <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.15)' }}>
@@ -1448,14 +1562,43 @@ export default function ProfileDashboard() {
                                             <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>We will notify you when verification is complete.</div>
                                         </div>
                                     )}
-                                    {verifyForm.isVerified === VerificationStatus.NO_DATA && (
+                                    
+                                    {/* Rejected Status */}
+                                    {verifyForm.isVerified === VerificationStatus.REJECTED && (
                                         <>
+                                            <div className="w-full flex flex-col items-center gap-2 py-4 mb-6">
+                                                <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(244, 67, 54, 0.15)' }}>
+                                                    <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#f44336" fillOpacity="0.12" /><path d="M15 9l-6 6m0-6l6 6" stroke="#f44336" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                                </div>
+                                                <div className="font-semibold text-lg text-center" style={{ color: '#d32f2f' }}>Verification was rejected.</div>
+                                                <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>Please resubmit your documents with the correct information.</div>
+                                            </div>
+                                            {/* Show form for resubmission */}
+                                            <div className="border-t pt-6" style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                <h4 className="font-semibold text-lg mb-4" style={{ color: '#0d0a0b' }}>Resubmit Verification Documents</h4>
+                                                {/* Form content will go here */}
+                                            </div>
+                                        </>
+                                    )}
+                                    
+                                    {/* No Data or Rejected - Show Form */}
+                                    {(verifyForm.isVerified === VerificationStatus.NO_DATA || verifyForm.isVerified === VerificationStatus.REJECTED) && (
+                                        <>
+                                            {verifyForm.isVerified === VerificationStatus.NO_DATA && (
+                                                <div className="mb-6">
+                                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                                                        <div className="text-sm text-blue-700 font-medium">📋 Complete your seller verification</div>
+                                                        <div className="text-xs text-blue-600 mt-1">Submit your documents to become a verified seller and gain customer trust.</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
                                             <div className="mb-4 w-full max-w-xl">
                                                 <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Full Name as in ID</label>
                                                 <input
                                                     className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2"
                                                     style={{
-                                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                        backgroundColor: '#ffffff',
                                                         borderColor: 'rgba(114, 176, 29, 0.3)',
                                                         color: '#0d0a0b'
                                                     }}
@@ -1467,6 +1610,7 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         e.currentTarget.style.boxShadow = 'none';
                                                     }}
+                                                    placeholder="Enter your full name as it appears on your ID"
                                                     value={verifyForm.fullName}
                                                     onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))}
                                                 />
@@ -1474,21 +1618,39 @@ export default function ProfileDashboard() {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
                                                 <div>
                                                     <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Front Side</label>
-                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} 
+                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                    />
                                                     {(verifyForm.idFront || verifyForm.idFrontUrl) && (
                                                         <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Back Side</label>
-                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} 
+                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                    />
                                                     {(verifyForm.idBack || verifyForm.idBackUrl) && (
                                                         <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Selfie with ID</label>
-                                                    <input type="file" accept="image/*" onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} className="block w-full" />
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} 
+                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                    />
                                                     {(verifyForm.selfie || verifyForm.selfieUrl) && (
                                                         <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
@@ -1496,10 +1658,10 @@ export default function ProfileDashboard() {
                                             </div>
                                             <div className="mb-6 w-full max-w-xl">
                                                 <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Address</label>
-                                                <input
-                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2"
+                                                <textarea
+                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2 resize-none"
                                                     style={{
-                                                        backgroundColor: 'rgba(243, 239, 245, 0.8)',
+                                                        backgroundColor: '#ffffff',
                                                         borderColor: 'rgba(114, 176, 29, 0.3)',
                                                         color: '#0d0a0b'
                                                     }}
@@ -1511,6 +1673,8 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         e.currentTarget.style.boxShadow = 'none';
                                                     }}
+                                                    rows={3}
+                                                    placeholder="Enter your full address"
                                                     value={verifyForm.address}
                                                     onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))}
                                                 />

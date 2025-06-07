@@ -172,7 +172,7 @@ export default function EditShop() {
                                     Shop Name
                                 </label>
                                 <input
-                                    className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
                                     maxLength={80}
                                     placeholder="Enter your shop name..."
                                     value={shopName}
@@ -190,7 +190,7 @@ export default function EditShop() {
                                     Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
                                 </label>
                                 <input
-                                    className={`w-full border-2 transition-all duration-200 px-6 py-4 rounded-2xl font-medium placeholder-[#9ca3af] shadow-sm text-lg
+                                    className={`w-full border transition-all duration-200 px-6 py-4 rounded-2xl font-medium placeholder-[#9ca3af] shadow-sm text-lg
                                         ${userExists 
                                             ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-500/10 text-red-700" 
                                             : "bg-gray-50 border-gray-300 text-gray-600 cursor-not-allowed"}`}
@@ -240,7 +240,7 @@ export default function EditShop() {
                                     Mobile Number
                                 </label>
                                 <div className="relative">
-                                    <div className="flex items-center bg-white border-2 border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
+                                    <div className="flex items-center bg-white border border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
                                         <span className="text-lg text-[#6b7280] font-bold mr-3 select-none">+94</span>
                                         <input
                                             className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-lg"
@@ -265,7 +265,7 @@ export default function EditShop() {
                                     Shop Description
                                 </label>
                                 <textarea
-                                    className="w-full bg-white border-2 border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
                                     maxLength={1500}
                                     rows={8}
                                     placeholder="Describe your shop - what you sell, what makes it unique, your story..."

@@ -176,7 +176,7 @@ const Home = () => {
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}></div>
                 <div className="relative backdrop-blur-sm rounded-full p-6 border-2 shadow-2xl"
                   style={{
-                    backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                    backgroundColor: '#ffffff',
                     borderColor: '#72b01d'
                   }}>
                   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style={{ color: '#72b01d' }}>
@@ -524,7 +524,7 @@ const Home = () => {
                   >
                     <div className="px-6 py-5 rounded-2xl border-2 text-center font-semibold transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-2 hover:scale-105 min-w-max backdrop-blur-sm overflow-hidden relative"
                       style={{
-                        backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                        backgroundColor: '#ffffff',
                         color: '#454955',
                         borderColor: 'rgba(114, 176, 29, 0.2)',
                         minWidth: '160px'
@@ -537,7 +537,7 @@ const Home = () => {
                         e.currentTarget.style.boxShadow = '0 20px 40px rgba(114, 176, 29, 0.3)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(243, 239, 245, 0.9)';
+                        e.currentTarget.style.backgroundColor = '#ffffff';
                         e.currentTarget.style.background = 'rgba(243, 239, 245, 0.9)';
                         e.currentTarget.style.color = '#454955';
                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.2)';
@@ -1037,7 +1037,7 @@ const Home = () => {
 
                   <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}>
                     {/* Step number circle */}
@@ -1090,7 +1090,7 @@ const Home = () => {
 
                   <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(63, 125, 32, 0.3)'
                     }}>
                     {/* Step number circle */}
@@ -1144,7 +1144,7 @@ const Home = () => {
 
                   <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
                     style={{
-                      backgroundColor: 'rgba(243, 239, 245, 0.9)',
+                      backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}>
                     {/* Step number circle */}
