@@ -6,9 +6,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
 import Header from "../../components/UI/Header";
+import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
 
@@ -165,9 +166,18 @@ export default function ProfileDashboard() {
 
     // Order sub-tabs
     const [orderSubTab, setOrderSubTab] = useState<"buyer" | "seller">("buyer");
+    const [ordersLoading, setOrdersLoading] = useState(false);
+
+    // Order pagination state - server-side pagination
+    const [buyerOrdersPage, setBuyerOrdersPage] = useState(1);
+    const [sellerOrdersPage, setSellerOrdersPage] = useState(1);
     const [buyerOrders, setBuyerOrders] = useState<any[]>([]);
     const [sellerOrders, setSellerOrders] = useState<any[]>([]);
-    const [ordersLoading, setOrdersLoading] = useState(false);
+    const [buyerOrdersCursors, setBuyerOrdersCursors] = useState<any[]>([null]); // Array of cursors for each page
+    const [sellerOrdersCursors, setSellerOrdersCursors] = useState<any[]>([null]); // Array of cursors for each page
+    const [buyerTotalCount, setBuyerTotalCount] = useState(0);
+    const [sellerTotalCount, setSellerTotalCount] = useState(0);
+    const ORDERS_PER_PAGE = 8;
 
     // Review sub-tabs
     const [sellerReviews, setSellerReviews] = useState<any[]>([]);
@@ -285,41 +295,225 @@ export default function ProfileDashboard() {
         setListingsPage(1);
     }, [listings]);
 
-    // Orders fetching - Optimized with batching
+    // Orders fetching - Server-side pagination
     useEffect(() => {
         if (selectedTab !== "orders" || !profileUid) return;
-        setOrdersLoading(true);
-        const fetchOrders = async () => {
-            try {
-                // Batch both queries for better performance
-                const [buyerSnap, sellerSnap] = await Promise.all([
-                    getDocs(query(
-                        collection(db, "orders"), 
-                        where("buyerId", "==", profileUid),
-                        // Add ordering and limit to improve performance
-                        // orderBy("createdAt", "desc"),
-                        // limit(50)
-                    )),
-                    getDocs(query(
-                        collection(db, "orders"), 
-                        where("sellerId", "==", profileUid),
-                        // orderBy("createdAt", "desc"),
-                        // limit(50)
-                    ))
-                ]);
-                
-                setBuyerOrders(buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                setSellerOrders(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (error) {
-                console.error("Error fetching orders:", error);
-                setBuyerOrders([]);
-                setSellerOrders([]);
-            } finally {
-                setOrdersLoading(false);
-            }
-        };
-        fetchOrders();
+        // Reset pagination when tab changes
+        setBuyerOrdersPage(1);
+        setSellerOrdersPage(1);
+        setBuyerOrdersCursors([null]);
+        setSellerOrdersCursors([null]);
+        setBuyerOrders([]);
+        setSellerOrders([]);
+        fetchOrdersPage(1);
     }, [selectedTab, profileUid]);
+
+    // Fetch orders when sub-tab changes
+    useEffect(() => {
+        if (selectedTab !== "orders" || !profileUid) return;
+        // Reset pagination when switching tabs
+        setBuyerOrdersPage(1);
+        setSellerOrdersPage(1);
+        fetchOrdersPage(1);
+    }, [orderSubTab]);
+
+    const fetchOrdersPage = async (page: number) => {
+        if (selectedTab !== "orders" || !profileUid) return;
+        console.log("fetchOrdersPage called. page:", page, "orderSubTab:", orderSubTab);
+        setOrdersLoading(true);
+        
+        try {
+            if (orderSubTab === "buyer") {
+                await fetchBuyerOrdersPage(page);
+            } else {
+                await fetchSellerOrdersPage(page);
+            }
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setOrdersLoading(false);
+        }
+    };
+
+    const fetchBuyerOrdersPage = async (page: number) => {
+        try {
+            console.log("Fetching buyer orders page:", page, "for profileUid:", profileUid);
+            
+            // Get the cursor for this page
+            const cursor = buyerOrdersCursors[page - 1];
+            
+            let buyerQuery = query(
+                collection(db, "orders"),
+                where("buyerId", "==", profileUid),
+                orderBy("createdAt", "desc"),
+                limit(ORDERS_PER_PAGE)
+            );
+
+            if (cursor) {
+                buyerQuery = query(
+                    collection(db, "orders"),
+                    where("buyerId", "==", profileUid),
+                    orderBy("createdAt", "desc"),
+                    startAfter(cursor),
+                    limit(ORDERS_PER_PAGE)
+                );
+            }
+
+            let buyerSnap;
+            try {
+                buyerSnap = await getDocs(buyerQuery);
+            } catch (indexError) {
+                console.warn("Index error for buyer orders, trying without orderBy:", indexError);
+                // Fallback query without orderBy if index doesn't exist
+                buyerQuery = query(
+                    collection(db, "orders"),
+                    where("buyerId", "==", profileUid),
+                    limit(ORDERS_PER_PAGE)
+                );
+                if (cursor) {
+                    buyerQuery = query(
+                        collection(db, "orders"),
+                        where("buyerId", "==", profileUid),
+                        startAfter(cursor),
+                        limit(ORDERS_PER_PAGE)
+                    );
+                }
+                buyerSnap = await getDocs(buyerQuery);
+            }
+
+            const newOrders = buyerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Sort by createdAt desc as a fallback if Firestore ordering failed
+            newOrders.sort((a: any, b: any) => {
+                const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt || 0);
+                const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt || 0);
+                return bTime - aTime; // Latest first (descending)
+            });
+            
+            console.log("Buyer orders found for page", page, ":", newOrders.length);
+            
+            setBuyerOrders(newOrders);
+            
+            // Store cursor for next page if we have more results
+            if (buyerSnap.docs.length === ORDERS_PER_PAGE) {
+                const lastDoc = buyerSnap.docs[buyerSnap.docs.length - 1];
+                setBuyerOrdersCursors(prev => {
+                    const newCursors = [...prev];
+                    newCursors[page] = lastDoc;
+                    return newCursors;
+                });
+            }
+
+            // For total count estimation (this is approximate since we don't fetch all)
+            if (page === 1) {
+                // First time, try to get a rough count
+                const countQuery = query(
+                    collection(db, "orders"),
+                    where("buyerId", "==", profileUid)
+                );
+                try {
+                    const countSnap = await getDocs(countQuery);
+                    setBuyerTotalCount(countSnap.size);
+                } catch {
+                    // If counting fails, estimate based on current page
+                    setBuyerTotalCount(newOrders.length === ORDERS_PER_PAGE ? (page * ORDERS_PER_PAGE) + 1 : newOrders.length);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching buyer orders:", error);
+            setBuyerOrders([]);
+        }
+    };
+
+    const fetchSellerOrdersPage = async (page: number) => {
+        try {
+            console.log("Fetching seller orders page:", page, "for profileUid:", profileUid);
+            
+            // Get the cursor for this page
+            const cursor = sellerOrdersCursors[page - 1];
+            
+            let sellerQuery = query(
+                collection(db, "orders"),
+                where("sellerId", "==", profileUid),
+                orderBy("createdAt", "desc"),
+                limit(ORDERS_PER_PAGE)
+            );
+
+            if (cursor) {
+                sellerQuery = query(
+                    collection(db, "orders"),
+                    where("sellerId", "==", profileUid),
+                    orderBy("createdAt", "desc"),
+                    startAfter(cursor),
+                    limit(ORDERS_PER_PAGE)
+                );
+            }
+
+            let sellerSnap;
+            try {
+                sellerSnap = await getDocs(sellerQuery);
+            } catch (indexError) {
+                console.warn("Index error for seller orders, trying without orderBy:", indexError);
+                // Fallback query without orderBy if index doesn't exist
+                sellerQuery = query(
+                    collection(db, "orders"),
+                    where("sellerId", "==", profileUid),
+                    limit(ORDERS_PER_PAGE)
+                );
+                if (cursor) {
+                    sellerQuery = query(
+                        collection(db, "orders"),
+                        where("sellerId", "==", profileUid),
+                        startAfter(cursor),
+                        limit(ORDERS_PER_PAGE)
+                    );
+                }
+                sellerSnap = await getDocs(sellerQuery);
+            }
+
+            const newOrders = sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Sort by createdAt desc as a fallback if Firestore ordering failed
+            newOrders.sort((a: any, b: any) => {
+                const aTime = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt || 0);
+                const bTime = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt || 0);
+                return bTime - aTime; // Latest first (descending)
+            });
+            
+            console.log("Seller orders found for page", page, ":", newOrders.length);
+            
+            setSellerOrders(newOrders);
+            
+            // Store cursor for next page if we have more results
+            if (sellerSnap.docs.length === ORDERS_PER_PAGE) {
+                const lastDoc = sellerSnap.docs[sellerSnap.docs.length - 1];
+                setSellerOrdersCursors(prev => {
+                    const newCursors = [...prev];
+                    newCursors[page] = lastDoc;
+                    return newCursors;
+                });
+            }
+
+            // For total count estimation (this is approximate since we don't fetch all)
+            if (page === 1) {
+                // First time, try to get a rough count
+                const countQuery = query(
+                    collection(db, "orders"),
+                    where("sellerId", "==", profileUid)
+                );
+                try {
+                    const countSnap = await getDocs(countQuery);
+                    setSellerTotalCount(countSnap.size);
+                } catch {
+                    // If counting fails, estimate based on current page
+                    setSellerTotalCount(newOrders.length === ORDERS_PER_PAGE ? (page * ORDERS_PER_PAGE) + 1 : newOrders.length);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching seller orders:", error);
+            setSellerOrders([]);
+        }
+    };
 
     // Reviews fetching - Optimized
     useEffect(() => {
@@ -402,13 +596,27 @@ export default function ProfileDashboard() {
         setUploadingPic(false);
     };
 
-    // Pagination logic
+    // Pagination logic for listings
     const totalListings = listings.length;
     const totalPages = Math.ceil(totalListings / LISTINGS_PER_PAGE);
     const paginatedListings = listings.slice(
         (listingsPage - 1) * LISTINGS_PER_PAGE,
         listingsPage * LISTINGS_PER_PAGE
     );
+
+    // Pagination logic for orders - server-side pagination
+    const currentTotalCount = orderSubTab === "buyer" ? buyerTotalCount : sellerTotalCount;
+    const totalOrderPages = Math.ceil(currentTotalCount / ORDERS_PER_PAGE);
+
+    // Handler for orders pagination
+    const handleOrdersPageChange = (page: number) => {
+        if (orderSubTab === "buyer") {
+            setBuyerOrdersPage(page);
+        } else {
+            setSellerOrdersPage(page);
+        }
+        fetchOrdersPage(page);
+    };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>Loading...</div>;
     if (!profileUid) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>User not found.</div>;
@@ -721,55 +929,73 @@ export default function ProfileDashboard() {
                                             {buyerOrders.length === 0 ? (
                                                 <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
                                             ) : (
-                                                <div className="space-y-4">
-                                                    {buyerOrders.map(order => (
-                                                        <Link
-                                                            to={`/order/${order.id}`}
-                                                            key={order.id}
-                                                            className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
-                                                            style={{
-                                                                backgroundColor: '#ffffff',
-                                                                borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                                textDecoration: 'none',
-                                                                color: 'inherit'
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                                e.currentTarget.style.borderColor = '#72b01d';
-                                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                                e.currentTarget.style.boxShadow = '';
-                                                            }}
-                                                        >
-                                                            <img
-                                                                src={order.itemImage || '/placeholder.png'}
-                                                                alt={order.itemName}
-                                                                className="w-16 h-16 object-cover rounded-lg border"
-                                                                style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                                            />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
-                                                                <div className="text-sm mb-1" style={{ color: '#454955' }}>
-                                                                    Status: <span className="font-semibold">
-                                                                        {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
-                                                                        {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
-                                                                        {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
-                                                                        {order.status === OrderStatus.RECEIVED && 'Order Completed'}
-                                                                        {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
-                                                                        {order.status === OrderStatus.PENDING && 'Order Pending'}
-                                                                        {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
-                                                                        {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
-                                                                    </span>
+                                                <>
+                                                    <div className="space-y-4">
+                                                        {buyerOrders.map((order: any) => (
+                                                            <Link
+                                                                to={`/order/${order.id}`}
+                                                                key={order.id}
+                                                                className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
+                                                                style={{
+                                                                    backgroundColor: '#ffffff',
+                                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                                    textDecoration: 'none',
+                                                                    color: 'inherit'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
+                                                                    e.currentTarget.style.borderColor = '#72b01d';
+                                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                                    e.currentTarget.style.boxShadow = '';
+                                                                }}
+                                                            >
+                                                                <img
+                                                                    src={order.itemImage || '/placeholder.png'}
+                                                                    alt={order.itemName}
+                                                                    className="w-16 h-16 object-cover rounded-lg border"
+                                                                    style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                                />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
+                                                                    <div className="text-sm mb-1" style={{ color: '#454955' }}>
+                                                                        Status: <span className="font-semibold">
+                                                                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                                                                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                                                                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                                                                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                                                                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                                                                            {order.status === OrderStatus.PENDING && 'Order Pending'}
+                                                                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                                                                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
                                                                 </div>
-                                                                <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
-                                                            </div>
-                                                            <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
-                                                        </Link>
-                                                    ))}
-                                                </div>
+                                                                <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                    
+                                                    {/* Buyer Orders Pagination */}
+                                                    {totalOrderPages > 1 && (
+                                                        <div className="mt-6 flex justify-center">
+                                                            <Pagination
+                                                                currentPage={buyerOrdersPage}
+                                                                totalPages={totalOrderPages}
+                                                                onPageChange={handleOrdersPageChange}
+                                                                totalItems={buyerTotalCount}
+                                                                startIndex={(buyerOrdersPage - 1) * ORDERS_PER_PAGE + 1}
+                                                                endIndex={Math.min(buyerOrdersPage * ORDERS_PER_PAGE, buyerTotalCount)}
+                                                                showInfo={true}
+                                                                showJumpTo={totalOrderPages > 10}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     )}
@@ -779,11 +1005,29 @@ export default function ProfileDashboard() {
                                             {sellerOrders.length === 0 ? (
                                                 <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as seller yet.</div>
                                             ) : (
-                                                <div className="space-y-4">
-                                                    {sellerOrders.map(order => (
-                                                        <OrderSellerRow key={order.id} order={order} setSellerOrders={setSellerOrders} />
-                                                    ))}
-                                                </div>
+                                                <>
+                                                    <div className="space-y-4">
+                                                        {sellerOrders.map((order: any) => (
+                                                            <OrderSellerRow key={order.id} order={order} setSellerOrders={setSellerOrders} />
+                                                        ))}
+                                                    </div>
+                                                    
+                                                    {/* Seller Orders Pagination */}
+                                                    {totalOrderPages > 1 && (
+                                                        <div className="mt-6 flex justify-center">
+                                                            <Pagination
+                                                                currentPage={sellerOrdersPage}
+                                                                totalPages={totalOrderPages}
+                                                                onPageChange={handleOrdersPageChange}
+                                                                totalItems={sellerTotalCount}
+                                                                startIndex={(sellerOrdersPage - 1) * ORDERS_PER_PAGE + 1}
+                                                                endIndex={Math.min(sellerOrdersPage * ORDERS_PER_PAGE, sellerTotalCount)}
+                                                                showInfo={true}
+                                                                showJumpTo={totalOrderPages > 10}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     )}
