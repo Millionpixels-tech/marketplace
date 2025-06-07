@@ -3,8 +3,10 @@ import { useAuth } from "../context/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { createOrder } from "../utils/orders";
+import { createOrder, updateOrderPaymentStatus, deleteOrderByPayHereId, getOrderByPayHereId } from "../utils/orders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfile";
+import { generatePaymentHash } from "../utils/payment/paymentHash";
+import type { PaymentHashParams } from "../utils/payment/paymentHash";
 import Header from "../components/UI/Header";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign } from "react-icons/fi";
 
@@ -30,6 +32,45 @@ type Shop = {
   owner: string;
 };
 
+// PayHere payment object interface
+interface PayHerePayment {
+  sandbox: boolean;
+  merchant_id: string;
+  return_url?: string;
+  cancel_url?: string;
+  notify_url: string;
+  order_id: string;
+  items: string;
+  amount: string;
+  currency: string;
+  hash: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  delivery_address: string;
+  delivery_city: string;
+  delivery_country: string;
+  custom_1?: string;
+  custom_2?: string;
+}
+
+// PayHere global object type
+declare global {
+  interface Window {
+    payhere: {
+      startPayment: (payment: PayHerePayment) => void;
+      onCompleted: (orderId: string) => void;
+      onDismissed: () => void;
+      onError: (error: string) => void;
+    };
+    currentPayHereOrderId?: string;
+  }
+}
+
 export default function CheckoutPage() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -39,6 +80,26 @@ export default function CheckoutPage() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [paymentCancelled, setPaymentCancelled] = useState(false);
+  
+  // Validation state
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [generalError, setGeneralError] = useState<string>('');
+  
+  // PayHere merchant credentials from environment variables
+  const MERCHANT_ID = import.meta.env.VITE_PAYHERE_MERCHANT_ID;
+  const MERCHANT_SECRET = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET;
+  const IS_SANDBOX = import.meta.env.VITE_PAYHERE_SANDBOX === 'true';
+
+  // Validate environment variables
+  useEffect(() => {
+    if (!MERCHANT_ID || !MERCHANT_SECRET) {
+      console.error('PayHere credentials not found in environment variables');
+      setGeneralError('Payment system is not properly configured. Please contact support.');
+    }
+  }, [MERCHANT_ID, MERCHANT_SECRET]);
   
   // Get parameters from URL
   const itemId = searchParams.get("itemId");
@@ -128,6 +189,116 @@ export default function CheckoutPage() {
     loadSavedBuyerInfo();
   }, [user?.uid]);
 
+  // Load PayHere script and setup callbacks
+  useEffect(() => {
+    const loadPayHereScript = () => {
+      if (window.payhere) {
+        setScriptLoaded(true);
+        setupPayHereCallbacks();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://www.payhere.lk/lib/payhere.js';
+      script.type = 'text/javascript';
+      script.onload = () => {
+        setScriptLoaded(true);
+        setupPayHereCallbacks();
+      };
+      script.onerror = () => {
+        console.error('Failed to load PayHere script');
+      };
+      document.head.appendChild(script);
+    };
+
+    loadPayHereScript();
+
+    return () => {
+      // Cleanup script if component unmounts
+      const existingScript = document.querySelector('script[src="https://www.payhere.lk/lib/payhere.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, []);
+
+  // Setup PayHere event callbacks
+  const setupPayHereCallbacks = () => {
+    if (!window.payhere) return;
+
+    // Payment completed callback
+    window.payhere.onCompleted = async function(orderId: string) {
+      console.log("Payment completed. OrderID:" + orderId);
+      setPaymentProcessing(false);
+      setSubmitting(false);
+      
+      try {
+        // Update order status to 'completed' in database
+        await updateOrderPaymentStatus(orderId, 'completed');
+        console.log("Order status updated to completed");
+        
+        // Get the order document to get its database ID for navigation
+        const order = await getOrderByPayHereId(orderId);
+        if (order && order.id) {
+          // Navigate to the order summary page
+          navigate(`/order/${order.id}`);
+        } else {
+          // Fallback to dashboard if we can't find the order
+          navigate('/dashboard/' + user?.uid);
+        }
+        
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        // Still navigate to dashboard as payment was successful
+        navigate('/dashboard/' + user?.uid);
+      }
+    };
+
+    // Payment window closed callback
+    window.payhere.onDismissed = async function() {
+      console.log("Payment dismissed");
+      setPaymentProcessing(false);
+      setSubmitting(false);
+      setPaymentCancelled(true);
+      
+      // Delete the pending order from the database since payment was cancelled
+      try {
+        // We need to get the current order ID that was being processed
+        // This should be stored when payment starts
+        const currentOrderId = window.currentPayHereOrderId;
+        if (currentOrderId) {
+          await deleteOrderByPayHereId(currentOrderId);
+          console.log("Pending order deleted due to payment cancellation");
+        }
+      } catch (error) {
+        console.error("Error deleting cancelled order:", error);
+      }
+      
+      setGeneralError("Payment was cancelled. Please try again to complete your order.");
+    };
+
+    // Error callback
+    window.payhere.onError = async function(error: string) {
+      console.log("PayHere Error: " + error);
+      setPaymentProcessing(false);
+      setSubmitting(false);
+      setPaymentCancelled(true);
+      
+      // Delete the pending order from the database since payment failed
+      try {
+        const currentOrderId = window.currentPayHereOrderId;
+        if (currentOrderId) {
+          await deleteOrderByPayHereId(currentOrderId);
+          console.log("Pending order deleted due to payment failure");
+        }
+      } catch (error) {
+        console.error("Error deleting failed order:", error);
+      }
+      
+      setGeneralError("Payment failed: " + error + ". Please try again or contact support.");
+    };
+  };
+
   // Calculate totals
   const calculateTotals = () => {
     if (!item) return { subtotal: 0, shipping: 0, total: 0 };
@@ -148,27 +319,78 @@ export default function CheckoutPage() {
 
   const { subtotal, shipping, total } = calculateTotals();
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Validation functions
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    setGeneralError('');
+
+    // Required fields validation
+    const requiredFields = [
+      { key: 'firstName', label: 'First Name' },
+      { key: 'lastName', label: 'Last Name' },
+      { key: 'email', label: 'Email Address' },
+      { key: 'phone', label: 'Phone Number' },
+      { key: 'address', label: 'Address' },
+      { key: 'city', label: 'City' }
+    ];
+
+    requiredFields.forEach(field => {
+      const value = buyerInfo[field.key as keyof BuyerInfo];
+      if (!value || !value.toString().trim()) {
+        errors[field.key] = `${field.label} is required`;
+      }
+    });
+
+    // Email format validation
+    if (buyerInfo.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(buyerInfo.email)) {
+        errors.email = 'Please enter a valid email address';
+      }
+    }
+
+    // Phone number validation
+    if (buyerInfo.phone) {
+      const phoneRegex = /^[0-9]{10}$/;
+      const cleanPhone = buyerInfo.phone.replace(/\s+/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        errors.phone = 'Please enter a valid 10-digit phone number';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Clear specific field error when user starts typing
+  const clearFieldError = (fieldName: string) => {
+    if (validationErrors[fieldName]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  // Generate unique order ID
+  const generateOrderId = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    return `ORDER_${timestamp}_${random}`;
+  };
+
+  // Handle Cash on Delivery order
+  const handleCODOrder = async () => {
     if (!item || !shop || !user) {
-      alert("Missing required data");
+      setGeneralError("Missing required data. Please refresh the page and try again.");
       return;
     }
-    
-    // Validate form
-    const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city'];
-    const missingFields = requiredFields.filter(field => !buyerInfo[field as keyof BuyerInfo].trim());
-    
-    if (missingFields.length > 0) {
-      alert(`Please fill in the following fields: ${missingFields.join(', ')}`);
-      return;
-    }
-    
-    setSubmitting(true);
     
     try {
+      setSubmitting(true);
+      setGeneralError('');
+      
       // Save buyer information to user profile first
       await saveBuyerInfo(user.uid, buyerInfo);
       
@@ -179,7 +401,7 @@ export default function CheckoutPage() {
         itemImage: item.images?.[0] || "",
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
-        buyerInfo: buyerInfo, // Store complete buyer info
+        buyerInfo: buyerInfo,
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
@@ -187,22 +409,150 @@ export default function CheckoutPage() {
         quantity: quantity,
         shipping: shipping,
         total: total,
-        paymentMethod: paymentMethod,
+        paymentMethod: 'cod',
       });
       
-      // Show success message and redirect
-      const message = paymentMethod === 'cod' 
-        ? "Order placed successfully with Cash on Delivery! You'll receive a confirmation shortly."
-        : "Order placed successfully! You'll receive a confirmation shortly.";
-      
-      alert(message);
-      navigate('/dashboard'); // Redirect to dashboard or orders page
+      alert("Order placed successfully with Cash on Delivery! You'll receive a confirmation shortly.");
+      navigate('/dashboard/' + user.uid);
       
     } catch (error) {
-      console.error("Error creating order:", error);
-      alert("Failed to place order. Please try again.");
+      console.error("Error creating COD order:", error);
+      setGeneralError("Failed to place order. Please try again.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Handle PayHere payment
+  const handlePayHerePayment = async () => {
+    if (!item || !shop || !user) {
+      setGeneralError("Missing required data. Please refresh the page and try again.");
+      return;
+    }
+
+    if (!scriptLoaded || !window.payhere) {
+      setGeneralError('PayHere payment system is not ready. Please try again in a moment.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setPaymentProcessing(true);
+      setGeneralError('');
+
+      // Save buyer information first
+      await saveBuyerInfo(user.uid, buyerInfo);
+
+      // Generate unique order ID
+      const orderId = generateOrderId();
+
+      // Prepare hash parameters
+      const hashParams: PaymentHashParams = {
+        merchant_id: MERCHANT_ID,
+        order_id: orderId,
+        amount: total.toFixed(2),
+        currency: 'LKR',
+        merchant_secret: MERCHANT_SECRET
+      };
+
+      // Generate hash using our utility function
+      const hashResult = await generatePaymentHash(hashParams);
+
+      if (!hashResult.success) {
+        throw new Error(hashResult.error || 'Failed to generate payment hash');
+      }
+
+      // Create order in database before payment (with pending status)
+      const dbOrderId = await createOrder({
+        itemId: item.id,
+        itemName: item.name,
+        itemImage: item.images?.[0] || "",
+        buyerId: user.uid,
+        buyerEmail: buyerInfo.email,
+        buyerInfo: buyerInfo,
+        sellerId: item.owner,
+        sellerShopId: item.shopId || item.shop || "",
+        sellerShopName: shop.name,
+        price: Number(item.price || 0),
+        quantity: quantity,
+        shipping: shipping,
+        total: total,
+        paymentMethod: 'paynow',
+        paymentStatus: 'pending',
+        orderId: orderId
+      });
+
+      console.log(`Order created in database with ID: ${dbOrderId}, PayHere Order ID: ${orderId}`);
+
+      // Prepare PayHere payment object
+      const payment: PayHerePayment = {
+        sandbox: IS_SANDBOX,
+        merchant_id: MERCHANT_ID,
+        return_url: undefined,
+        cancel_url: undefined,
+        notify_url: `${window.location.origin}/api/payhere/notify`, // You'll need to implement this endpoint
+        order_id: orderId,
+        items: `${item.name} (Qty: ${quantity})`,
+        amount: total.toFixed(2),
+        currency: 'LKR',
+        hash: hashResult.hash,
+        first_name: buyerInfo.firstName,
+        last_name: buyerInfo.lastName,
+        email: buyerInfo.email,
+        phone: buyerInfo.phone.replace(/\s+/g, ''), // Use cleaned phone number
+        address: buyerInfo.address,
+        city: buyerInfo.city,
+        country: 'Sri Lanka',
+        delivery_address: buyerInfo.address,
+        delivery_city: buyerInfo.city,
+        delivery_country: 'Sri Lanka',
+        custom_1: item.id, // Store item ID for reference
+        custom_2: user.uid  // Store buyer ID for reference
+      };
+
+      console.log('Initiating PayHere payment:', {
+        order_id: payment.order_id,
+        amount: payment.amount,
+        currency: payment.currency,
+        items: payment.items,
+        merchant_id: payment.merchant_id,
+        sandbox: payment.sandbox
+      });
+
+      // Store the order ID globally for use in callbacks
+      window.currentPayHereOrderId = orderId;
+
+      // Start PayHere payment
+      window.payhere.startPayment(payment);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('PayHere payment error:', error);
+      setGeneralError('Failed to process payment: ' + errorMessage);
+      setSubmitting(false);
+      setPaymentProcessing(false);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Clear any previous general error and cancelled status
+    setGeneralError('');
+    setPaymentCancelled(false);
+    
+    // Validate form
+    if (!validateForm()) {
+      setGeneralError('Please correct the errors below and try again.');
+      return;
+    }
+
+    // Route to appropriate payment method
+    if (paymentMethod === 'cod') {
+      await handleCODOrder();
+    } else {
+      await handlePayHerePayment();
     }
   };
 
@@ -257,6 +607,40 @@ export default function CheckoutPage() {
                 Buyer Information
               </h2>
               
+              {/* General Error Message */}
+              {generalError && (
+                <div className="mb-4 p-4 rounded-xl border" style={{ 
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                  borderColor: 'rgba(239, 68, 68, 0.3)' 
+                }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#ef4444' }}>
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: '#dc2626' }}>
+                      {generalError}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Cancelled Status */}
+              {paymentCancelled && (
+                <div className="mb-4 p-4 rounded-xl border" style={{ 
+                  backgroundColor: 'rgba(251, 191, 36, 0.1)', 
+                  borderColor: 'rgba(251, 191, 36, 0.3)' 
+                }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f59e0b' }}>
+                      <span className="text-white text-xs font-bold">⚠</span>
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: '#d97706' }}>
+                      Order Cancelled - Payment was not completed. Please retry your order.
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -267,16 +651,26 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       value={buyerInfo.firstName}
-                      onChange={(e) => setBuyerInfo(prev => ({ ...prev, firstName: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
+                      onChange={(e) => {
+                        setBuyerInfo(prev => ({ ...prev, firstName: e.target.value }));
+                        clearFieldError('firstName');
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
+                        validationErrors.firstName ? 'border-red-400' : ''
+                      }`}
                       style={{
                         backgroundColor: '#ffffff',
-                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                        borderColor: validationErrors.firstName ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                         color: '#0d0a0b'
                       }}
-                      onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                      onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                      onFocus={(e) => e.target.style.borderColor = validationErrors.firstName ? '#ef4444' : '#72b01d'}
+                      onBlur={(e) => e.target.style.borderColor = validationErrors.firstName ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                     />
+                    {validationErrors.firstName && (
+                      <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                        {validationErrors.firstName}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
@@ -286,16 +680,26 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       value={buyerInfo.lastName}
-                      onChange={(e) => setBuyerInfo(prev => ({ ...prev, lastName: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
+                      onChange={(e) => {
+                        setBuyerInfo(prev => ({ ...prev, lastName: e.target.value }));
+                        clearFieldError('lastName');
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
+                        validationErrors.lastName ? 'border-red-400' : ''
+                      }`}
                       style={{
                         backgroundColor: '#ffffff',
-                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                        borderColor: validationErrors.lastName ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                         color: '#0d0a0b'
                       }}
-                      onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                      onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                      onFocus={(e) => e.target.style.borderColor = validationErrors.lastName ? '#ef4444' : '#72b01d'}
+                      onBlur={(e) => e.target.style.borderColor = validationErrors.lastName ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                     />
+                    {validationErrors.lastName && (
+                      <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                        {validationErrors.lastName}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -307,16 +711,26 @@ export default function CheckoutPage() {
                     type="email"
                     required
                     value={buyerInfo.email}
-                    onChange={(e) => setBuyerInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
+                    onChange={(e) => {
+                      setBuyerInfo(prev => ({ ...prev, email: e.target.value }));
+                      clearFieldError('email');
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
+                      validationErrors.email ? 'border-red-400' : ''
+                    }`}
                     style={{
                       backgroundColor: '#ffffff',
-                      borderColor: 'rgba(114, 176, 29, 0.3)',
+                      borderColor: validationErrors.email ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                       color: '#0d0a0b'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                    onFocus={(e) => e.target.style.borderColor = validationErrors.email ? '#ef4444' : '#72b01d'}
+                    onBlur={(e) => e.target.style.borderColor = validationErrors.email ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                   />
+                  {validationErrors.email && (
+                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                      {validationErrors.email}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -327,17 +741,27 @@ export default function CheckoutPage() {
                     type="tel"
                     required
                     value={buyerInfo.phone}
-                    onChange={(e) => setBuyerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => {
+                      setBuyerInfo(prev => ({ ...prev, phone: e.target.value }));
+                      clearFieldError('phone');
+                    }}
                     placeholder="e.g., 0771234567"
-                    className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
+                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
+                      validationErrors.phone ? 'border-red-400' : ''
+                    }`}
                     style={{
                       backgroundColor: '#ffffff',
-                      borderColor: 'rgba(114, 176, 29, 0.3)',
+                      borderColor: validationErrors.phone ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                       color: '#0d0a0b'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                    onFocus={(e) => e.target.style.borderColor = validationErrors.phone ? '#ef4444' : '#72b01d'}
+                    onBlur={(e) => e.target.style.borderColor = validationErrors.phone ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                   />
+                  {validationErrors.phone && (
+                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                      {validationErrors.phone}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -347,18 +771,28 @@ export default function CheckoutPage() {
                   <textarea
                     required
                     value={buyerInfo.address}
-                    onChange={(e) => setBuyerInfo(prev => ({ ...prev, address: e.target.value }))}
+                    onChange={(e) => {
+                      setBuyerInfo(prev => ({ ...prev, address: e.target.value }));
+                      clearFieldError('address');
+                    }}
                     placeholder="Street address, apartment, suite, etc."
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 resize-none"
+                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 resize-none ${
+                      validationErrors.address ? 'border-red-400' : ''
+                    }`}
                     style={{
                       backgroundColor: '#ffffff',
-                      borderColor: 'rgba(114, 176, 29, 0.3)',
+                      borderColor: validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                       color: '#0d0a0b'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                    onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                    onFocus={(e) => e.target.style.borderColor = validationErrors.address ? '#ef4444' : '#72b01d'}
+                    onBlur={(e) => e.target.style.borderColor = validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                   />
+                  {validationErrors.address && (
+                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                      {validationErrors.address}
+                    </p>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -370,16 +804,26 @@ export default function CheckoutPage() {
                       type="text"
                       required
                       value={buyerInfo.city}
-                      onChange={(e) => setBuyerInfo(prev => ({ ...prev, city: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100"
+                      onChange={(e) => {
+                        setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
+                        clearFieldError('city');
+                      }}
+                      className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 ${
+                        validationErrors.city ? 'border-red-400' : ''
+                      }`}
                       style={{
                         backgroundColor: '#ffffff',
-                        borderColor: 'rgba(114, 176, 29, 0.3)',
+                        borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
                         color: '#0d0a0b'
                       }}
-                      onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                      onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                      onFocus={(e) => e.target.style.borderColor = validationErrors.city ? '#ef4444' : '#72b01d'}
+                      onBlur={(e) => e.target.style.borderColor = validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
                     />
+                    {validationErrors.city && (
+                      <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                        {validationErrors.city}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
@@ -451,8 +895,11 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-3">
                     <FiCreditCard size={20} style={{ color: '#72b01d' }} />
                     <div>
-                      <div className="font-medium" style={{ color: '#0d0a0b' }}>Pay Now</div>
-                      <div className="text-sm" style={{ color: '#454955' }}>Complete payment online</div>
+                      <div className="font-medium" style={{ color: '#0d0a0b' }}>Pay with PayHere</div>
+                      <div className="text-sm" style={{ color: '#454955' }}>Secure online payment via PayHere</div>
+                      <div className="text-xs mt-1" style={{ color: '#72b01d' }}>
+                        Visa • MasterCard • American Express • Local Banks
+                      </div>
                     </div>
                   </div>
                 </label>
@@ -527,26 +974,50 @@ export default function CheckoutPage() {
               {/* Place Order Button */}
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || (paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))}
                 className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: '#72b01d',
                   color: '#ffffff'
                 }}
                 onMouseEnter={(e) => {
-                  if (!submitting) {
+                  if (!submitting && !(paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))) {
                     e.currentTarget.style.backgroundColor = '#3f7d20';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!submitting) {
+                  if (!submitting && !(paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))) {
                     e.currentTarget.style.backgroundColor = '#72b01d';
                   }
                 }}
               >
-                {submitting ? 'Placing Order...' : 
-                 paymentMethod === 'cod' ? 'Place Order (COD)' : 'Place Order'}
+                {submitting && paymentProcessing ? 'Processing Payment...' :
+                 submitting ? 'Placing Order...' : 
+                 paymentMethod === 'cod' ? 'Place Order (COD)' : 
+                 !scriptLoaded ? 'Loading Payment...' : 'Pay with PayHere'}
               </button>
+              
+              {paymentMethod === 'paynow' && !scriptLoaded && (
+                <p className="text-xs text-center mt-2" style={{ color: '#454955' }}>
+                  Loading PayHere payment system...
+                </p>
+              )}
+              
+              {paymentMethod === 'paynow' && scriptLoaded && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiCreditCard size={16} style={{ color: '#72b01d' }} />
+                    <span className="text-sm font-medium" style={{ color: '#0d0a0b' }}>
+                      Secure Payment with PayHere
+                    </span>
+                  </div>
+                  <ul className="text-xs space-y-1" style={{ color: '#454955' }}>
+                    <li>• Payment processed securely via PayHere</li>
+                    <li>• Supports Visa, MasterCard, and local banks</li>
+                    <li>• SSL encrypted transaction</li>
+                  </ul>
+                </div>
+              )}
               
               <p className="text-xs text-center mt-3" style={{ color: '#454955' }}>
                 By placing this order, you agree to our terms and conditions.
