@@ -1,5 +1,7 @@
 import { db } from "./firebase";
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { OrderStatus } from "../types/enums";
+import type { PaymentMethod, PaymentStatus, OrderStatus as OrderStatusType } from "../types/enums";
 
 export interface BuyerInfo {
     firstName: string;
@@ -25,8 +27,9 @@ export interface Order {
     quantity: number;
     shipping: number;
     total: number;
-    paymentMethod?: 'cod' | 'paynow';
-    paymentStatus?: 'pending' | 'completed' | 'failed' | 'cancelled';
+    paymentMethod?: PaymentMethod;
+    paymentStatus?: PaymentStatus;
+    status?: OrderStatusType;
     orderId?: string; // PayHere order ID
     createdAt: any;
 }
@@ -34,7 +37,7 @@ export interface Order {
 export async function createOrder(order: Omit<Order, "createdAt">) {
     const docRef = await addDoc(collection(db, "orders"), {
         ...order,
-        status: "PENDING", // Set default status
+        status: OrderStatus.PENDING, // Set default status using enum
         createdAt: Timestamp.now(),
     });
     return docRef.id;
@@ -43,7 +46,7 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
 // Update order payment status
 export async function updateOrderPaymentStatus(
     orderId: string, 
-    paymentStatus: 'completed' | 'failed' | 'cancelled'
+    paymentStatus: PaymentStatus
 ): Promise<void> {
     try {
         // Find the order by orderId field (PayHere order ID)

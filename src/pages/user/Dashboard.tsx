@@ -9,6 +9,20 @@ import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
 import Header from "../../components/UI/Header";
+import { VerificationStatus, OrderStatus } from "../../types/enums";
+import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
+
+interface VerifyForm {
+    fullName: string;
+    idFront: File | null;
+    idBack: File | null;
+    selfie: File | null;
+    address: string;
+    idFrontUrl: string;
+    idBackUrl: string;
+    selfieUrl: string;
+    isVerified: VerificationStatusType;
+}
 
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
@@ -40,7 +54,7 @@ export default function ProfileDashboard() {
     const [loading, setLoading] = useState(true);
     // Settings form state
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
-    const [verifyForm, setVerifyForm] = useState({ fullName: '', idFront: null as File | null, idBack: null as File | null, selfie: null as File | null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: 'PENDING' });
+    const [verifyForm, setVerifyForm] = useState<VerifyForm>({ fullName: '', idFront: null, idBack: null, selfie: null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: VerificationStatus.PENDING });
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
@@ -120,7 +134,7 @@ export default function ProfileDashboard() {
                     where("createdAt", "<=", cutoff)
                 );
                 const snap = await getDocs(q);
-                const validStatuses = ["RECEIVED"];
+                const validStatuses = [OrderStatus.RECEIVED];
                 const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 console.log("Fetched payments:", orders);
                 setPayments(orders.filter((o: any) => validStatuses.includes(o.status)));
@@ -487,7 +501,7 @@ export default function ProfileDashboard() {
                                 ) : (
                                     <>
                                         <span>{displayName || profileEmail}</span>
-                                        {verifyForm.isVerified === 'COMPLETED' && (
+                                        {verifyForm.isVerified === VerificationStatus.COMPLETED && (
                                             <span className="inline-flex items-center justify-center ml-2 rounded-full w-6 h-6" style={{ backgroundColor: '#72b01d' }}>
                                                 <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
                                                     <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
@@ -738,7 +752,18 @@ export default function ProfileDashboard() {
                                                             />
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
-                                                                <div className="text-sm mb-1" style={{ color: '#454955' }}>Status: <span className="font-semibold">{order.status}</span></div>
+                                                                <div className="text-sm mb-1" style={{ color: '#454955' }}>
+                                                                    Status: <span className="font-semibold">
+                                                                        {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                                                                        {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                                                                        {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                                                                        {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                                                                        {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                                                                        {order.status === OrderStatus.PENDING && 'Order Pending'}
+                                                                        {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                                                                        {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                                                                    </span>
+                                                                </div>
                                                                 <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
                                                             </div>
                                                             <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
@@ -1031,7 +1056,7 @@ export default function ProfileDashboard() {
                                         </thead>
                                         <tbody>
                                             {payments
-                                                .filter(p => p.status === "RECEIVED" && p.createdAt)
+                                                .filter(p => p.status === OrderStatus.RECEIVED && p.createdAt)
                                                 .sort((a, b) => (b.createdAt.seconds || 0) - (a.createdAt.seconds || 0))
                                                 .map(p => (
                                                     <tr key={p.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
@@ -1051,7 +1076,7 @@ export default function ProfileDashboard() {
                                                 ))}
                                         </tbody>
                                     </table>
-                                    {payments.filter(p => p.status === "RECEIVED").length === 0 && (
+                                    {payments.filter(p => p.status === OrderStatus.RECEIVED).length === 0 && (
                                         <div className="text-center py-6" style={{ color: '#454955', opacity: 0.7 }}>No received orders in the last 14 days.</div>
                                     )}
                                 </div>
@@ -1162,7 +1187,7 @@ export default function ProfileDashboard() {
                                 {/* Seller Verification */}
                                 <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                     <h3 className="font-bold text-xl mb-6" style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
-                                    {verifyForm.isVerified === 'COMPLETED' && (
+                                    {verifyForm.isVerified === VerificationStatus.COMPLETED && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
                                             <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
                                                 <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -1170,7 +1195,7 @@ export default function ProfileDashboard() {
                                             <div className="font-semibold text-lg text-center" style={{ color: '#3f7d20' }}>You are a verified seller!</div>
                                         </div>
                                     )}
-                                    {verifyForm.isVerified === 'PENDING' && (
+                                    {verifyForm.isVerified === VerificationStatus.PENDING && (
                                         <div className="w-full flex flex-col items-center gap-2 py-8">
                                             <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.15)' }}>
                                                 <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#facc15" fillOpacity="0.12" /><path d="M12 7v4m0 4h.01" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -1179,7 +1204,7 @@ export default function ProfileDashboard() {
                                             <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>We will notify you when verification is complete.</div>
                                         </div>
                                     )}
-                                    {verifyForm.isVerified === 'NO_DATA' && (
+                                    {verifyForm.isVerified === VerificationStatus.NO_DATA && (
                                         <>
                                             <div className="mb-4 w-full max-w-xl">
                                                 <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Full Name as in ID</label>

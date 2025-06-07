@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import Header from "../../components/UI/Header";
 import { useAuth } from "../../context/AuthContext";
+import { OrderStatus } from "../../types/enums";
 
 export default function OrderPage() {
     const { id } = useParams();
@@ -54,16 +55,16 @@ export default function OrderPage() {
     const requestRefund = async () => {
         if (!order) return;
         setRefundSubmitting(true);
-        await updateDoc(doc(db, "orders", order.id), { status: "REFUND_REQUESTED" });
-        setOrder({ ...order, status: "REFUND_REQUESTED" });
+        await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUND_REQUESTED });
+        setOrder({ ...order, status: OrderStatus.REFUND_REQUESTED });
         setRefundSubmitting(false);
     };
 
     const markAsReceived = async () => {
         if (!order) return;
         setSubmitting(true);
-        await updateDoc(doc(db, "orders", order.id), { status: "RECEIVED" });
-        setOrder({ ...order, status: "RECEIVED" });
+        await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.RECEIVED });
+        setOrder({ ...order, status: OrderStatus.RECEIVED });
         setSubmitting(false);
     };
 
@@ -154,15 +155,23 @@ export default function OrderPage() {
                     {/* Order Status Steps or Refund Requested */}
                     <div className="flex flex-col gap-2 mt-4 w-full">
                         <span className="text-sm font-semibold mb-2 text-[#0d0a0b]">Order Status:</span>
-                        {order.status === "REFUND_REQUESTED" ? (
+                        {order.status === OrderStatus.REFUND_REQUESTED ? (
                             <div className="w-full text-center py-3 bg-[#72b01d20] text-[#3f7d20] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
                                 Refund Requested
                             </div>
+                        ) : order.status === OrderStatus.REFUNDED ? (
+                            <div className="w-full text-center py-3 bg-[#ff4444aa] text-[#cc0000] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
+                                Order Refunded
+                            </div>
+                        ) : order.status === OrderStatus.CANCELLED ? (
+                            <div className="w-full text-center py-3 bg-[#45495522] text-[#454955] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
+                                Order Cancelled
+                            </div>
                         ) : (
                             <div className="relative flex items-center w-full justify-between px-1 md:px-4">
-                                {['PENDING', 'SHIPPED', 'RECEIVED'].map((step, idx, arr) => {
-                                    const statusOrder = ['PENDING', 'SHIPPED', 'RECEIVED'];
-                                    let normalizedStatus = (order.status || 'PENDING').toUpperCase();
+                                {[OrderStatus.PENDING, OrderStatus.SHIPPED, OrderStatus.RECEIVED].map((step, idx, arr) => {
+                                    const statusOrder = [OrderStatus.PENDING, OrderStatus.SHIPPED, OrderStatus.RECEIVED];
+                                    let normalizedStatus = (order.status || OrderStatus.PENDING);
                                     const currentIdx = statusOrder.indexOf(normalizedStatus);
                                     const isActive = idx <= currentIdx;
                                     const isCompleted = idx < currentIdx;
@@ -207,7 +216,7 @@ export default function OrderPage() {
                         )}
                     </div>
                     {/* Only buyer can interact (refund, review) */}
-                    {isBuyer && order.status !== "CANCELLED" && order.status !== "RECEIVED" && order.status !== "REFUND_REQUESTED" && (
+                    {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && (
                         <>
                             <button
                                 className="mt-2 w-full py-3 bg-[#72b01d] text-white rounded-2xl font-bold text-lg uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition"
@@ -230,7 +239,7 @@ export default function OrderPage() {
                     )}
                     <div className="mt-6">
                         <h2 className="font-bold mb-2 text-[#0d0a0b]">Your Review</h2>
-                        {order.status === "CANCELLED" ? (
+                        {order.status === OrderStatus.CANCELLED ? (
                             <div className="bg-white border border-[#45495522] rounded-2xl p-4 text-[#454955] text-center font-semibold shadow-sm">You cannot leave a review for a cancelled order.</div>
                         ) : order.review ? (
                             <div className="bg-white border border-[#45495522] rounded-2xl p-4 text-[#454955] shadow-sm">

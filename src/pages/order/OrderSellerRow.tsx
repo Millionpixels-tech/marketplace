@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
+import { OrderStatus } from "../../types/enums";
 
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);
@@ -14,7 +15,18 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                 />
                 <div className="flex-1 min-w-0">
                     <div className="font-bold text-lg mb-1 truncate text-[#0d0a0b]">{order.itemName}</div>
-                    <div className="text-[#454955] text-sm mb-1">Status: <span className="font-semibold">{order.status}</span></div>
+                    <div className="text-[#454955] text-sm mb-1">
+                        Status: <span className="font-semibold">
+                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                            {order.status === OrderStatus.PENDING && 'Order Pending'}
+                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                        </span>
+                    </div>
                     <div className="text-[#454955] text-xs truncate">Buyer: {order.buyerName || order.buyerId}</div>
                 </div>
                 <div className="ml-2 flex flex-col items-end">
@@ -38,17 +50,26 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         <div><span className="font-semibold text-[#3f7d20]">Price:</span> LKR {order.price?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Total:</span> LKR {order.total?.toLocaleString()}</div>
-                        <div><span className="font-semibold text-[#3f7d20]">Status:</span> {order.status === 'REFUND_REQUESTED' ? <span className="text-[#72b01d] font-bold">Refund Requested</span> : order.status}</div>
+                        <div><span className="font-semibold text-[#3f7d20]">Status:</span> 
+                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                            {order.status === OrderStatus.REFUND_REQUESTED && <span className="text-[#72b01d] font-bold">Refund Requested</span>}
+                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                            {order.status === OrderStatus.PENDING && 'Order Pending'}
+                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                        </div>
                         {order.paymentMethod && <div><span className="font-semibold text-[#3f7d20]">Payment:</span> {order.paymentMethod}</div>}
                         {order.createdAt && <div><span className="font-semibold text-[#3f7d20]">Created:</span> {new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : Date.now()).toLocaleString()}</div>}
                     </div>
-                    {order.status === 'REFUND_REQUESTED' && (
+                    {order.status === OrderStatus.REFUND_REQUESTED && (
                         <button
                             className="mt-4 px-4 py-2 bg-[#72b01d] text-white rounded-lg font-bold hover:bg-[#3f7d20] transition text-sm shadow-sm"
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                await updateDoc(doc(db, "orders", order.id), { status: "REFUNDED" });
-                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: "REFUNDED" } : o));
+                                await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
+                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
                             }}
                         >
                             Refund Buyer
@@ -57,14 +78,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                 </div>
             )}
             <div className="flex gap-2 mt-2">
-                {['CANCELLED', 'REFUND_REQUESTED', 'REFUNDED', 'RECEIVED'].includes(order.status) ? (
+                {[OrderStatus.CANCELLED, OrderStatus.REFUND_REQUESTED, OrderStatus.REFUNDED, OrderStatus.RECEIVED].includes(order.status) ? (
                     <div className="text-xs text-[#454955] py-2 italic">
-                        {order.status === 'CANCELLED' && 'Order Cancelled'}
-                        {order.status === 'REFUND_REQUESTED' && 'Refund Requested - Awaiting your action'}
-                        {order.status === 'REFUNDED' && 'Order Refunded'}
-                        {order.status === 'RECEIVED' && 'Order Completed'}
+                        {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                        {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested - Awaiting your action'}
+                        {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                        {order.status === OrderStatus.RECEIVED && 'Order Completed'}
                     </div>
-                ) : order.status === 'SHIPPED' ? (
+                ) : order.status === OrderStatus.SHIPPED ? (
                     <div className="text-xs text-[#454955] py-2 italic">Order Shipped. Waiting for buyer response.</div>
                 ) : (
                     <>
@@ -72,8 +93,8 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             className="px-3 py-1.5 text-xs rounded-lg bg-[#72b01d] text-white border-none hover:bg-[#3f7d20] transition shadow-sm"
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                await updateDoc(doc(db, "orders", order.id), { status: "SHIPPED" });
-                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: "SHIPPED" } : o));
+                                await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.SHIPPED });
+                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.SHIPPED } : o));
                             }}
                         >
                             Mark as Shipped
@@ -82,8 +103,8 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             className="px-3 py-1.5 text-xs rounded-lg bg-[#454955] text-white border-none hover:bg-[#0d0a0b] transition shadow-sm"
                             onClick={async (e) => {
                                 e.stopPropagation();
-                                await updateDoc(doc(db, "orders", order.id), { status: "REFUNDED" });
-                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: "REFUNDED" } : o));
+                                await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
+                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
                             }}
                         >
                             Cancel & Refund

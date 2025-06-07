@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import Header from "../components/UI/Header";
 import ListingTile from "../components/UI/ListingTile";
 import { getUserIP as getIP } from "../utils/ipUtils";
+import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 // --- Type Definitions ---
 type WishlistEntry = {
@@ -21,7 +22,7 @@ type Listing = {
     description?: string;
     wishlist?: WishlistEntry[];
     reviews?: any[];
-    deliveryType?: 'free' | 'paid';
+    deliveryType?: DeliveryTypeType;
     cashOnDelivery?: boolean;
 };
 

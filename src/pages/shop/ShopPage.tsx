@@ -10,6 +10,7 @@ import ShopReviews from "../../components/UI/ShopReviews";
 import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
 import { getUserIP } from "../../utils/ipUtils";
+import type { DeliveryType as DeliveryTypeType } from "../../types/enums";
 
 type Shop = {
     id: string;
@@ -30,7 +31,7 @@ type Listing = {
     price: number;
     images?: string[];
     description?: string;
-    deliveryType?: 'free' | 'paid';
+    deliveryType?: DeliveryTypeType;
     cashOnDelivery?: boolean;
     reviews?: Array<{ rating: number;[key: string]: any }>;
     __client_ip?: string;

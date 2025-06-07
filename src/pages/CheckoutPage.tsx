@@ -7,6 +7,8 @@ import { createOrder, updateOrderPaymentStatus, deleteOrderByPayHereId, getOrder
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfile";
 import { generatePaymentHash } from "../utils/payment/paymentHash";
 import type { PaymentHashParams } from "../utils/payment/paymentHash";
+import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
+import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
 import Header from "../components/UI/Header";
 import { Input } from "../components/UI";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign } from "react-icons/fi";
@@ -16,7 +18,7 @@ type CheckoutItem = {
   name: string;
   price: number;
   images?: string[];
-  deliveryType?: 'free' | 'paid';
+  deliveryType?: DeliveryTypeType;
   deliveryPerItem?: number;
   deliveryAdditional?: number;
   cashOnDelivery?: boolean;
@@ -105,10 +107,10 @@ export default function CheckoutPage() {
   // Get parameters from URL
   const itemId = searchParams.get("itemId");
   const quantity = parseInt(searchParams.get("quantity") || "1");
-  const paymentMethodParam = searchParams.get("paymentMethod") as 'cod' | 'paynow' | null;
+  const paymentMethodParam = searchParams.get("paymentMethod") as PaymentMethodType | null;
   
   // Form state
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'paynow'>(paymentMethodParam || 'paynow');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.PAY_NOW);
   const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
     firstName: '',
     lastName: '',
@@ -151,7 +153,7 @@ export default function CheckoutPage() {
         
         // Set payment method based on item COD availability
         if (itemData.cashOnDelivery && !paymentMethodParam) {
-          setPaymentMethod('cod');
+          setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
         }
         
       } catch (error) {
@@ -236,7 +238,7 @@ export default function CheckoutPage() {
       
       try {
         // Update order status to 'completed' in database
-        await updateOrderPaymentStatus(orderId, 'completed');
+        await updateOrderPaymentStatus(orderId, PaymentStatus.COMPLETED);
         console.log("Order status updated to completed");
         
         // Get the order document to get its database ID for navigation
@@ -309,7 +311,7 @@ export default function CheckoutPage() {
     const subtotal = price * quantity;
     
     let shipping = 0;
-    if (item.deliveryType === "paid") {
+    if (item.deliveryType === DeliveryType.PAID) {
       const deliveryPerItem = Number(item.deliveryPerItem || 0);
       const deliveryAdditional = Number(item.deliveryAdditional || 0);
       shipping = deliveryPerItem + (quantity > 1 ? deliveryAdditional * (quantity - 1) : 0);
@@ -411,7 +413,7 @@ export default function CheckoutPage() {
         quantity: quantity,
         shipping: shipping,
         total: total,
-        paymentMethod: 'cod',
+        paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
       });
       
       alert("Order placed successfully with Cash on Delivery! You'll receive a confirmation shortly.");
@@ -479,8 +481,8 @@ export default function CheckoutPage() {
         quantity: quantity,
         shipping: shipping,
         total: total,
-        paymentMethod: 'paynow',
-        paymentStatus: 'pending',
+        paymentMethod: PaymentMethod.PAY_NOW,
+        paymentStatus: PaymentStatus.PENDING,
         orderId: orderId
       });
 
@@ -551,7 +553,7 @@ export default function CheckoutPage() {
     }
 
     // Route to appropriate payment method
-    if (paymentMethod === 'cod') {
+    if (paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
       await handleCODOrder();
     } else {
       await handlePayHerePayment();
@@ -858,15 +860,15 @@ export default function CheckoutPage() {
                 {item.cashOnDelivery && (
                   <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
                     style={{
-                      backgroundColor: paymentMethod === 'cod' ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
-                      borderColor: paymentMethod === 'cod' ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
+                      backgroundColor: paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
+                      borderColor: paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
                     }}>
                     <input
                       type="radio"
                       name="paymentMethod"
-                      value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={(e) => setPaymentMethod(e.target.value as 'cod')}
+                      value={PaymentMethod.CASH_ON_DELIVERY}
+                      checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
+                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
                       className="mr-3"
                     />
                     <div className="flex items-center gap-3">
@@ -881,15 +883,15 @@ export default function CheckoutPage() {
                 
                 <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
                   style={{
-                    backgroundColor: paymentMethod === 'paynow' ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
-                    borderColor: paymentMethod === 'paynow' ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
+                    backgroundColor: paymentMethod === PaymentMethod.PAY_NOW ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
+                    borderColor: paymentMethod === PaymentMethod.PAY_NOW ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
                   }}>
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="paynow"
-                    checked={paymentMethod === 'paynow'}
-                    onChange={(e) => setPaymentMethod(e.target.value as 'paynow')}
+                    value={PaymentMethod.PAY_NOW}
+                    checked={paymentMethod === PaymentMethod.PAY_NOW}
+                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
                     className="mr-3"
                   />
                   <div className="flex items-center gap-3">
@@ -943,7 +945,7 @@ export default function CheckoutPage() {
                   <FiTruck size={18} style={{ color: '#72b01d' }} />
                   <span className="font-medium" style={{ color: '#0d0a0b' }}>Delivery</span>
                 </div>
-                {item.deliveryType === 'free' ? (
+                {item.deliveryType === DeliveryType.FREE ? (
                   <p className="text-sm font-medium" style={{ color: '#72b01d' }}>Free Delivery</p>
                 ) : (
                   <p className="text-sm" style={{ color: '#454955' }}>
@@ -974,36 +976,36 @@ export default function CheckoutPage() {
               {/* Place Order Button */}
               <button
                 onClick={handleSubmit}
-                disabled={submitting || (paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))}
+                disabled={submitting || (paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))}
                 className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: '#72b01d',
                   color: '#ffffff'
                 }}
                 onMouseEnter={(e) => {
-                  if (!submitting && !(paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))) {
+                  if (!submitting && !(paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))) {
                     e.currentTarget.style.backgroundColor = '#3f7d20';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!submitting && !(paymentMethod === 'paynow' && (!scriptLoaded || paymentProcessing))) {
+                  if (!submitting && !(paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))) {
                     e.currentTarget.style.backgroundColor = '#72b01d';
                   }
                 }}
               >
                 {submitting && paymentProcessing ? 'Processing Payment...' :
                  submitting ? 'Placing Order...' : 
-                 paymentMethod === 'cod' ? 'Place Order (COD)' : 
+                 paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Place Order (COD)' : 
                  !scriptLoaded ? 'Loading Payment...' : 'Pay with PayHere'}
               </button>
               
-              {paymentMethod === 'paynow' && !scriptLoaded && (
+              {paymentMethod === PaymentMethod.PAY_NOW && !scriptLoaded && (
                 <p className="text-xs text-center mt-2" style={{ color: '#454955' }}>
                   Loading PayHere payment system...
                 </p>
               )}
               
-              {paymentMethod === 'paynow' && scriptLoaded && (
+              {paymentMethod === PaymentMethod.PAY_NOW && scriptLoaded && (
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <FiCreditCard size={16} style={{ color: '#72b01d' }} />

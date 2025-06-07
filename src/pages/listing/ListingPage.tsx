@@ -10,6 +10,8 @@ import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
 import ShopOwnerName from "../shop/ShopOwnerName";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
+import { PaymentMethod } from "../../types/enums";
+import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
 
 type Shop = {
   name: string;
@@ -21,7 +23,7 @@ type Shop = {
 
 export default function ListingSingle() {
   // Payment method state for COD
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'paynow'>('paynow');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(PaymentMethod.PAY_NOW);
   const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -72,11 +74,11 @@ export default function ListingSingle() {
   }, []);
 
   useEffect(() => {
-    // If item allows COD, default to 'cod', else 'paynow'
+    // If item allows COD, default to COD, else Pay Now
     if (item?.cashOnDelivery) {
-      setPaymentMethod('cod');
+      setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
     } else {
-      setPaymentMethod('paynow');
+      setPaymentMethod(PaymentMethod.PAY_NOW);
     }
   }, [item?.cashOnDelivery]);
 
@@ -380,8 +382,8 @@ export default function ListingSingle() {
                       type="radio"
                       name="paymentMethod"
                       value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
+                      checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
+                      onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
                       className="w-5 h-5"
                       style={{ accentColor: '#72b01d' }}
                     />
@@ -395,8 +397,8 @@ export default function ListingSingle() {
                       type="radio"
                       name="paymentMethod"
                       value="paynow"
-                      checked={paymentMethod === 'paynow'}
-                      onChange={() => setPaymentMethod('paynow')}
+                      checked={paymentMethod === PaymentMethod.PAY_NOW}
+                      onChange={() => setPaymentMethod(PaymentMethod.PAY_NOW)}
                       className="w-5 h-5"
                       style={{ accentColor: '#72b01d' }}
                     />
@@ -433,7 +435,7 @@ export default function ListingSingle() {
                       navigate(`/checkout?${params.toString()}`);
                     }}
                   >
-                    {paymentMethod === 'cod' ? 'Order with Cash on Delivery' : 'Pay Now'}
+                    {paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Order with Cash on Delivery' : 'Pay Now'}
                   </button>
                 </div>
               ) : (

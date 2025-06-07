@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import WishlistButton from './WishlistButton';
+import type { DeliveryType as DeliveryTypeType } from '../../types/enums';
 
 interface ReviewStats {
   avg: number | null;
@@ -15,7 +16,7 @@ interface Listing {
   description?: string;
   createdAt?: any;
   reviews?: any[];
-  deliveryType?: 'free' | 'paid';
+  deliveryType?: DeliveryTypeType;
   cashOnDelivery?: boolean;
   wishlist?: Array<{ ip?: string; ownerId?: string; }>;
 }

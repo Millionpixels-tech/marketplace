@@ -7,6 +7,7 @@ import { categories, categoryIcons } from "../utils/categories";
 import Header from "../components/UI/Header";
 import ListingTile from "../components/UI/ListingTile";
 import { getUserIP } from "../utils/ipUtils";
+import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 function ProductHeroSearch() {
   const [q, setQ] = useState("");
@@ -88,7 +89,7 @@ type Listing = {
   description?: string;
   createdAt?: any;
   reviews?: any[];
-  deliveryType?: 'free' | 'paid';
+  deliveryType?: DeliveryTypeType;
   cashOnDelivery?: boolean;
   wishlist?: Array<{ ip?: string; ownerId?: string; }>;
 };

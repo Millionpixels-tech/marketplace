@@ -98,10 +98,8 @@ export function getWishlistedIdsFromListings(
 }
 
 // Optimized function to get wishlist count without fetching all listings
-export async function getWishlistCount(ownerId?: string | null): Promise<number> {
+export async function getWishlistCount(_ownerId?: string | null): Promise<number> {
     try {
-        const ip = await getUserIP().catch(() => null);
-        
         // For now, we'll use a simplified approach that doesn't require fetching all listings
         // In a real production app, you'd want to maintain a separate wishlist collection
         // or use a user document with wishlist item references
