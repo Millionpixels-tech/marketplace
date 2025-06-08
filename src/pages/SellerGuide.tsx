@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/UI/Header';
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
 import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiPhone, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
+import { getArticleStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 
 export default function SellerGuide() {
   const { user } = useAuth();
@@ -170,6 +172,27 @@ export default function SellerGuide() {
 
   return (
     <>
+      <SEOHead
+        title="Seller Guide - How to Start Selling on Sri Lankan Marketplace"
+        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your business on our marketplace."
+        keywords={generateKeywords([
+          'seller guide',
+          'how to sell online',
+          'Sri Lankan marketplace selling',
+          'start online business',
+          'sell crafts online',
+          'artisan business guide',
+          'online selling tips'
+        ])}
+        canonicalUrl={getCanonicalUrl('/seller-guide')}
+        structuredData={getArticleStructuredData({
+          title: 'Complete Seller Guide for Sri Lankan Marketplace',
+          description: 'Step-by-step guide to start selling authentic Sri Lankan products online',
+          author: 'Sri Lankan Marketplace Team',
+          datePublished: '2025-01-01',
+          url: getCanonicalUrl('/seller-guide')
+        })}
+      />
       <Header />
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
         {/* Hero Section */}

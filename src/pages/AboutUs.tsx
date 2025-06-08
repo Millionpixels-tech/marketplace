@@ -1,6 +1,8 @@
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { FiHeart, FiUsers, FiAward, FiGlobe, FiTarget, FiTrendingUp } from "react-icons/fi";
+import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 
 export default function AboutUs() {
   const values = [
@@ -56,6 +58,21 @@ export default function AboutUs() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead
+        title="About Us - Sri Lankan Marketplace"
+        description="Learn about our mission to celebrate Sri Lankan craftsmanship and connect authentic artisans with customers worldwide. Discover our story, values, and commitment to supporting local communities."
+        keywords={generateKeywords([
+          'about Sri Lankan marketplace',
+          'our story',
+          'supporting artisans',
+          'Sri Lankan culture',
+          'authentic crafts',
+          'local community',
+          'handmade products'
+        ])}
+        canonicalUrl={getCanonicalUrl('/about')}
+        structuredData={getOrganizationStructuredData()}
+      />
       <Header />
       
       {/* Hero Section */}

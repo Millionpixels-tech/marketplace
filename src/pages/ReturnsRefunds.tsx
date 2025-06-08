@@ -1,9 +1,20 @@
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { getOrganizationStructuredData } from '../utils/seo';
 import { FiTruck, FiRefreshCw, FiCheckCircle, FiClock, FiDollarSign, FiAlertCircle } from 'react-icons/fi';
 
 export default function ReturnsRefunds() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead
+        title="Returns & Refunds Policy - SinaMarketplace"
+        description="Learn about our comprehensive returns and refunds policy. 30-day return window, easy process, and full refunds for eligible items in Sri Lanka."
+        keywords="returns policy, refunds, return items, 30 day returns, Sri Lanka marketplace, customer protection"
+        canonicalUrl="https://sinamarketplace.com/returns"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -211,5 +222,6 @@ export default function ReturnsRefunds() {
 
       <Footer />
     </div>
+    </>
   );
 }

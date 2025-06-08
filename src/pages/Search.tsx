@@ -5,7 +5,9 @@ import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header, ListingTile, Button, Input, Pagination, BackToTop } from "../components/UI";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
+import { getCanonicalUrl, generateKeywords } from "../utils/seo";
 
 interface Listing {
   id: string;
@@ -253,9 +255,46 @@ const Search: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchParams, navigate]);
 
+  // Generate SEO data based on search parameters
+  const searchQuery = searchParams.get("q") || "";
+  const categoryFilter = searchParams.get("cat") || "";
+  
+  const generateSearchSEO = () => {
+    let title = "Search Results";
+    let description = "Find authentic Sri Lankan products and crafts";
+    let keywords = ['search', 'Sri Lankan products', 'marketplace'];
+    
+    if (searchQuery) {
+      title = `Search: ${searchQuery}`;
+      description = `Search results for "${searchQuery}" - Find authentic Sri Lankan products and crafts`;
+      keywords.push(searchQuery);
+    }
+    
+    if (categoryFilter) {
+      title += ` in ${categoryFilter}`;
+      description += ` in ${categoryFilter} category`;
+      keywords.push(categoryFilter);
+    }
+    
+    return {
+      title: `${title} | Sri Lankan Marketplace`,
+      description,
+      keywords: generateKeywords(keywords)
+    };
+  };
+
+  const seoData = generateSearchSEO();
+
   // Main JSX
   return (
     <>
+      <SEOHead
+        title={seoData.title}
+        description={seoData.description}
+        keywords={seoData.keywords}
+        canonicalUrl={getCanonicalUrl('/search')}
+        noIndex={!searchQuery && !categoryFilter} // Don't index empty search pages
+      />
       <Header />
       <div className="w-full min-h-screen py-10 px-1 md:px-4" style={{ backgroundColor: '#ffffff' }}>
         <div className="flex flex-col md:flex-row gap-10 w-full">

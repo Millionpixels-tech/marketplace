@@ -1,9 +1,20 @@
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { getOrganizationStructuredData } from '../utils/seo';
 import { FiShield, FiEye, FiLock, FiDatabase, FiGlobe, FiMail } from 'react-icons/fi';
 
 export default function CookiePolicy() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead
+        title="Cookie Policy - SinaMarketplace"
+        description="Learn how SinaMarketplace uses cookies and similar technologies to enhance your browsing experience and improve our services."
+        keywords="cookie policy, privacy, data protection, web cookies, tracking, Sri Lanka marketplace"
+        canonicalUrl="https://sinamarketplace.com/cookies"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -262,5 +273,6 @@ export default function CookiePolicy() {
 
       <Footer />
     </div>
+    </>
   );
 }

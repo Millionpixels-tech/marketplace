@@ -7,7 +7,9 @@ import { categories, categoryIcons } from "../utils/categories";
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
 import ListingTile from "../components/UI/ListingTile";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
+import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 function ProductHeroSearch() {
@@ -151,6 +153,26 @@ const Home = () => {
   return (
 
     <>
+      <SEOHead
+        title="Sri Lankan Marketplace - Authentic Products & Crafts"
+        description="Discover authentic Sri Lankan products, handmade crafts, traditional textiles, Ceylon tea, and unique artisan creations. Connect with local sellers and support Sri Lankan businesses worldwide."
+        keywords={generateKeywords([
+          'Sri Lankan marketplace',
+          'Ceylon crafts',
+          'handmade products',
+          'traditional Sri Lankan goods',
+          'local artisans',
+          'authentic Sri Lankan items',
+          'woodcraft',
+          'jewelry',
+          'textiles',
+          'pottery',
+          'Ceylon tea'
+        ])}
+        canonicalUrl={getCanonicalUrl('/')}
+        ogType="website"
+        structuredData={getWebsiteStructuredData()}
+      />
       <Header />
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* Hero Section */}

@@ -1,9 +1,20 @@
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { getOrganizationStructuredData } from '../utils/seo';
 import { FiUsers, FiHeart, FiShield, FiFlag, FiMessageCircle, FiMail } from 'react-icons/fi';
 
 export default function CommunityGuidelines() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead
+        title="Community Guidelines - SinaMarketplace"
+        description="Learn about our community guidelines for creating a safe, respectful marketplace that celebrates Sri Lankan culture and craftsmanship."
+        keywords="community guidelines, marketplace rules, safe shopping, Sri Lanka community, respectful trading, platform rules"
+        canonicalUrl="https://sinamarketplace.com/community-guidelines"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
         <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -328,5 +339,6 @@ export default function CommunityGuidelines() {
 
       <Footer />
     </div>
+    </>
   );
 }

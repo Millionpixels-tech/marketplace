@@ -1,6 +1,8 @@
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { FiSearch, FiMessageCircle, FiShoppingBag, FiTruck, FiCreditCard, FiUser, FiHelpCircle, FiMail } from "react-icons/fi";
+import { getFAQStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 
 export default function HelpCenter() {
   const faqCategories = [
@@ -102,8 +104,31 @@ export default function HelpCenter() {
     }
   ];
 
+  // Generate FAQ structured data
+  const allFAQs = faqCategories.flatMap(category => 
+    category.faqs.map(faq => ({
+      question: faq.question,
+      answer: faq.answer
+    }))
+  );
+
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead
+        title="Help Center - Sri Lankan Marketplace"
+        description="Find answers to your questions about buying, selling, payments, shipping, and more. Get support for all your Sri Lankan Marketplace needs."
+        keywords={generateKeywords([
+          'help center',
+          'customer support',
+          'frequently asked questions',
+          'buying guide',
+          'selling help',
+          'payment support',
+          'shipping information'
+        ])}
+        canonicalUrl={getCanonicalUrl('/help')}
+        structuredData={getFAQStructuredData(allFAQs)}
+      />
       <Header />
       
       {/* Hero Section */}

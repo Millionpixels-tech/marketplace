@@ -10,7 +10,9 @@ import Footer from "../../components/UI/Footer";
 import ShopReviews from "../../components/UI/ShopReviews";
 import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
+import { SEOHead } from "../../components/SEO/SEOHead";
 import { getUserIP } from "../../utils/ipUtils";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import type { DeliveryType as DeliveryTypeType } from "../../types/enums";
 
 type Shop = {
@@ -169,6 +171,44 @@ export default function ShopPage() {
             </div>
         );
     }
+
+    // Generate SEO data
+    const generateShopSEO = () => {
+        const shopName = shop.name || 'Shop';
+        const description = shop.description || `Discover authentic Sri Lankan products from ${shopName}`;
+        const rating = shop.rating || 0;
+        const ratingCount = shop.ratingCount || 0;
+        
+        return {
+            title: `${shopName} - Authentic Sri Lankan Products & Crafts`,
+            description: description.length > 160 ? description.substring(0, 157) + '...' : description,
+            keywords: generateKeywords([
+                shopName,
+                'Sri Lankan shop',
+                'authentic products',
+                'local artisan',
+                'handmade crafts'
+            ]),
+            structuredData: {
+                '@context': 'https://schema.org',
+                '@type': 'Store',
+                name: shopName,
+                description,
+                url: getCanonicalUrl(`/shop/${username}`),
+                logo: shop.logo,
+                image: shop.cover || shop.logo,
+                ...(rating > 0 && ratingCount > 0 && {
+                    aggregateRating: {
+                        '@type': 'AggregateRating',
+                        ratingValue: rating,
+                        reviewCount: ratingCount
+                    }
+                })
+            }
+        };
+    };
+
+    const seoData = generateShopSEO();
 
     // 8. Pagination controls
     function Pagination() {
@@ -342,6 +382,14 @@ export default function ShopPage() {
     // 9. Render shop page
     return (
         <>
+            <SEOHead
+                title={seoData.title}
+                description={seoData.description}
+                keywords={seoData.keywords}
+                canonicalUrl={getCanonicalUrl(`/shop/${username}`)}
+                ogImage={shop.cover || shop.logo || '/default-shop.jpg'}
+                structuredData={seoData.structuredData}
+            />
             <Header />
             <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
                 {/* Cover + Logo */}

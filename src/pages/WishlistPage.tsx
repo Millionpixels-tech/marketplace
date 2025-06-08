@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
 import ListingTile from "../components/UI/ListingTile";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP as getIP } from "../utils/ipUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
@@ -191,6 +192,13 @@ export default function WishlistPage() {
 
     return (
         <>
+            <SEOHead
+                title="My Wishlist - SinaMarketplace"
+                description="View and manage your saved items on SinaMarketplace. Keep track of your favorite products and never miss out on great deals."
+                keywords="wishlist, saved items, favorites, Sri Lanka marketplace, online shopping, wish list"
+                canonicalUrl="https://sinamarketplace.com/wishlist"
+                noIndex={true}
+            />
             <Header />
             <div className="min-h-screen bg-white w-full">
                 <div className="w-full py-12 px-4">

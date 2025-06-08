@@ -1,5 +1,7 @@
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
+import { getOrganizationStructuredData } from "../utils/seo";
 import { FiFileText, FiUser, FiShoppingBag, FiCreditCard, FiShield, FiAlertTriangle, FiCalendar } from "react-icons/fi";
 
 export default function TermsOfService() {
@@ -155,8 +157,17 @@ export default function TermsOfService() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      <SEOHead
+        title="Terms of Service - SinaMarketplace"
+        description="Read our comprehensive terms of service that govern the use of SinaMarketplace, Sri Lanka's premier online marketplace platform."
+        keywords="terms of service, user agreement, marketplace terms, Sri Lanka, legal agreement, platform rules"
+        canonicalUrl="https://sinamarketplace.com/terms"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-white">
+        <Header />
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white py-16">
@@ -268,10 +279,10 @@ export default function TermsOfService() {
               These Terms of Service are governed by and construed in accordance with the laws of Sri Lanka. Any disputes arising from these terms or your use of SinaMarketplace will be subject to the exclusive jurisdiction of the courts of Sri Lanka.
             </p>
           </div>
-        </div>
-      </div>
+        </div>        </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   );
 }

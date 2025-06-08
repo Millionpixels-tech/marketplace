@@ -1,9 +1,20 @@
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { getOrganizationStructuredData } from '../utils/seo';
 import { FiTruck, FiClock, FiMapPin, FiPackage, FiGlobe } from 'react-icons/fi';
 
 export default function ShippingInfo() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead
+        title="Shipping Information - SinaMarketplace"
+        description="Learn about shipping options, delivery times, and policies for Sri Lanka and international orders. Standard and express delivery available."
+        keywords="shipping information, delivery, Sri Lanka shipping, international shipping, delivery times, shipping costs"
+        canonicalUrl="https://sinamarketplace.com/shipping"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -140,5 +151,6 @@ export default function ShippingInfo() {
 
       <Footer />
     </div>
+    </>
   );
 }

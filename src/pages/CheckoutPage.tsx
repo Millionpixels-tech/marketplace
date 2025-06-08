@@ -12,6 +12,7 @@ import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
 import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
 import { Input } from "../components/UI";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
@@ -641,8 +642,16 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
-      <Header />
+    <>
+      <SEOHead
+        title="Checkout - SinaMarketplace"
+        description="Complete your purchase securely on SinaMarketplace. Multiple payment options and secure checkout process."
+        keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, secure payment"
+        canonicalUrl="https://sinamarketplace.com/checkout"
+        noIndex={true}
+      />
+      <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
+        <Header />
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back button */}
@@ -1175,5 +1184,6 @@ export default function CheckoutPage() {
       </div>
       <Footer />
     </div>
+    </>
   );
 }

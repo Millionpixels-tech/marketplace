@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Header, Button, Input, Card } from "../../components/UI";
 import Footer from "../../components/UI/Footer";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -50,6 +52,23 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen w-full bg-white flex flex-col">
+      <SEOHead
+        title={isLogin ? "Sign In - Sri Lankan Marketplace" : "Create Account - Sri Lankan Marketplace"}
+        description={isLogin 
+          ? "Sign in to your Sri Lankan Marketplace account to access your dashboard, manage listings, and connect with authentic Sri Lankan artisans."
+          : "Create your Sri Lankan Marketplace account to start buying authentic Sri Lankan products or become a seller and showcase your crafts to the world."
+        }
+        keywords={generateKeywords([
+          isLogin ? 'sign in' : 'create account',
+          'login',
+          'register',
+          'user account',
+          'seller dashboard',
+          'buyer account'
+        ])}
+        canonicalUrl={getCanonicalUrl('/auth')}
+        noIndex={true}
+      />
       {/* Minimal Header */}
       <Header />
 

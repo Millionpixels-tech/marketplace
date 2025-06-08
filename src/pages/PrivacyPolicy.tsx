@@ -1,5 +1,7 @@
 import Header from "../components/UI/Header";
 import Footer from "../components/UI/Footer";
+import { SEOHead } from "../components/SEO/SEOHead";
+import { getOrganizationStructuredData } from "../utils/seo";
 import { FiShield, FiEye, FiLock, FiMail, FiCalendar } from "react-icons/fi";
 
 export default function PrivacyPolicy() {
@@ -129,8 +131,17 @@ export default function PrivacyPolicy() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      <SEOHead
+        title="Privacy Policy - SinaMarketplace"
+        description="Learn about how SinaMarketplace collects, uses, and protects your personal information and data privacy rights in Sri Lanka."
+        keywords="privacy policy, data protection, personal information, Sri Lanka, marketplace privacy, GDPR compliance"
+        canonicalUrl="https://sinamarketplace.com/privacy"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-white">
+        <Header />
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white py-16">
@@ -232,5 +243,6 @@ export default function PrivacyPolicy() {
 
       <Footer />
     </div>
+    </>
   );
 }

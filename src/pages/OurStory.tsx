@@ -1,9 +1,20 @@
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { getOrganizationStructuredData } from '../utils/seo';
 import { FiHeart, FiUsers, FiGlobe, FiAward } from 'react-icons/fi';
 
 export default function OurStory() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEOHead
+        title="Our Story - SinaMarketplace"
+        description="Learn about SinaMarketplace's journey connecting Sri Lankan artisans with global audiences. Discover our mission to showcase authentic handcrafted treasures."
+        keywords="our story, Sri Lankan artisans, marketplace history, cultural heritage, handcrafted products, authentic crafts"
+        canonicalUrl="https://sinamarketplace.com/our-story"
+        noIndex={false}
+        structuredData={getOrganizationStructuredData()}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -152,5 +163,6 @@ export default function OurStory() {
 
       <Footer />
     </div>
+    </>
   );
 }

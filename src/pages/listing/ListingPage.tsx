@@ -8,9 +8,11 @@ import Footer from "../../components/UI/Footer";
 import WishlistButton from "../../components/UI/WishlistButton";
 import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
+import { SEOHead } from "../../components/SEO/SEOHead";
 import ShopOwnerName from "../shop/ShopOwnerName";
 import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
 import { PaymentMethod } from "../../types/enums";
+import { getProductStructuredData, getBreadcrumbStructuredData, getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
 
 type Shop = {
@@ -166,8 +168,55 @@ export default function ListingSingle() {
     if (docSnap.exists()) setItem({ ...docSnap.data(), __client_ip: ip });
   };
 
+  // Generate SEO data
+  const generateProductSEO = () => {
+    const productName = item.name || 'Product';
+    const description = item.description || 'Authentic Sri Lankan product';
+    const price = item.price || 0;
+    const image = item.images?.[0] || '/default-product.jpg';
+    
+    return {
+      title: `${productName} - Buy Authentic Sri Lankan Products`,
+      description: description.length > 160 ? description.substring(0, 157) + '...' : description,
+      keywords: generateKeywords([
+        productName,
+        item.category || '',
+        item.subcategory || '',
+        'authentic Sri Lankan product',
+        'handmade',
+        'artisan craft'
+      ]),
+      structuredData: getProductStructuredData({
+        name: productName,
+        description,
+        price,
+        currency: 'LKR',
+        image,
+        category: item.category,
+        brand: shop?.name || 'Sri Lankan Marketplace',
+        seller: shop?.name || 'Local Artisan'
+      }),
+      breadcrumbData: getBreadcrumbStructuredData([
+        { name: 'Home', url: getCanonicalUrl('/') },
+        ...(item.category ? [{ name: item.category, url: getCanonicalUrl(`/search?cat=${item.category}`) }] : []),
+        { name: productName, url: getCanonicalUrl(`/listing/${id}`) }
+      ])
+    };
+  };
+
+  const seoData = generateProductSEO();
+
   return (
     <div className="min-h-screen w-full pb-8" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
+      <SEOHead
+        title={seoData.title}
+        description={seoData.description}
+        keywords={seoData.keywords}
+        canonicalUrl={getCanonicalUrl(`/listing/${id}`)}
+        ogType="product"
+        ogImage={item.images?.[0] || '/default-product.jpg'}
+        structuredData={[seoData.structuredData, seoData.breadcrumbData]}
+      />
       <Header />
 
       {/* Breadcrumb */}
