@@ -4,6 +4,7 @@ import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebas
 import { getUserIP } from "../../utils/ipUtils";
 import { db } from "../../utils/firebase";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import WishlistButton from "../../components/UI/WishlistButton";
 import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
@@ -521,6 +522,7 @@ export default function ListingSingle() {
           />
         </div>
       )}
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import Header from "../components/UI/Header";
+import Footer from "../components/UI/Footer";
 import ListingTile from "../components/UI/ListingTile";
 import { getUserIP as getIP } from "../utils/ipUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
@@ -200,6 +201,7 @@ export default function WishlistPage() {
                     {items.length === 0 ? emptyWishlistState : itemsGrid}
                 </div>
             </div>
+            <Footer />
         </>
     );
 }

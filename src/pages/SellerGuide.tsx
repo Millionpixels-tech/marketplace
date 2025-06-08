@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/UI/Header';
+import Footer from '../components/UI/Footer';
 import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiPhone, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
 
 export default function SellerGuide() {
@@ -421,6 +422,8 @@ export default function SellerGuide() {
             </div>
           </div>
         </div>
+
+        <Footer />
       </div>
     </>
   );

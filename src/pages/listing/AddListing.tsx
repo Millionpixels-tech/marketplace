@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { FiX } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { Header, Button, Input } from "../../components/UI";
+import Footer from "../../components/UI/Footer";
 
 const steps = [
   { label: "Shop" },
@@ -584,6 +585,7 @@ export default function AddListing() {
           }
         `}</style>
       </div>
+      <Footer />
     </>
   );
 }

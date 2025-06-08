@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, query, collection, where, getDocs } from "fireb
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import { useParams } from "react-router-dom";
 
 function wordCount(text: string) {
@@ -344,6 +345,7 @@ export default function EditShop() {
                     )}
                 </div>
             </div>
+            <Footer />
         </>
     );
 }

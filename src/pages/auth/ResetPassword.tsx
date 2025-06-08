@@ -2,6 +2,7 @@ import { useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../utils/firebase";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import { Button, Input, Card } from "../../components/UI";
 
 export default function ResetPassword() {
@@ -60,6 +61,7 @@ export default function ResetPassword() {
                     </div>
                 </Card>
             </div>
+            <Footer />
         </>
     );
 }

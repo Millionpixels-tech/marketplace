@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import Header from "../components/UI/Header";
+import Footer from "../components/UI/Footer";
 import ListingTile from "../components/UI/ListingTile";
 import { getUserIP } from "../utils/ipUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
@@ -1218,10 +1219,8 @@ const Home = () => {
           </div>
         </section>
 
-
-
         {/* Mission or Call to Action */}
-        <footer className="w-full py-16 border-t text-center"
+        <section className="w-full py-16 border-t text-center"
           style={{
             backgroundColor: '#ffffff',
             borderColor: 'rgba(69, 73, 85, 0.2)'
@@ -1279,7 +1278,9 @@ const Home = () => {
               </Link>
             </div>
           </div>
-        </footer>
+        </section>
+
+        <Footer />
       </div>
     </>
   );

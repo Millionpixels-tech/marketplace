@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck, FiLoader } from "react-icons/fi";
 import { Header, Button, Card, Input } from "../../components/UI";
+import Footer from "../../components/UI/Footer";
 
 function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -419,6 +420,8 @@ export default function CreateShop() {
             </div>
           )}
         </div>
-      </div></>
+      </div>
+      <Footer />
+      </>
   );
 }

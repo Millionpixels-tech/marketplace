@@ -6,6 +6,7 @@ import { collection, query, where, getDocs, limit, startAfter, QueryDocumentSnap
 import { FiBox } from "react-icons/fi";
 import ShopOwnerName from "./ShopOwnerName";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import ShopReviews from "../../components/UI/ShopReviews";
 import ListingTile from "../../components/UI/ListingTile";
 import { LoadingSpinner } from "../../components/UI";
@@ -463,6 +464,7 @@ export default function ShopPage() {
                     </div>
                 )}
             </div>
+            <Footer />
         </>
     );
 }

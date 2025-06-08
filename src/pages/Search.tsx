@@ -4,6 +4,7 @@ import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Header, ListingTile, Button, Input, Pagination, BackToTop } from "../components/UI";
+import Footer from "../components/UI/Footer";
 import { getUserIP } from "../utils/ipUtils";
 
 interface Listing {
@@ -664,6 +665,8 @@ const Search: React.FC = () => {
       
       {/* Back to Top Button */}
       <BackToTop />
+      
+      <Footer />
     </>
   );
 };

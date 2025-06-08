@@ -11,6 +11,7 @@ import type { PaymentHashParams } from "../utils/payment/paymentHash";
 import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
 import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
 import Header from "../components/UI/Header";
+import Footer from "../components/UI/Footer";
 import { Input } from "../components/UI";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
@@ -1172,6 +1173,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

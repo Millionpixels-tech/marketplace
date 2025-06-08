@@ -9,6 +9,7 @@ import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
@@ -1709,6 +1710,7 @@ export default function ProfileDashboard() {
 
                 </main>
             </div>
+            <Footer />
         </div>
     );
 }

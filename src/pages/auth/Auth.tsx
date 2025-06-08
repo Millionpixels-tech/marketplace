@@ -4,6 +4,7 @@ import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, create
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Header, Button, Input, Card } from "../../components/UI";
+import Footer from "../../components/UI/Footer";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -145,6 +146,7 @@ const Auth = () => {
           </div>
         </Card>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 
 export default function PublicProfile() {
     const { id } = useParams();
@@ -114,6 +115,7 @@ export default function PublicProfile() {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 }

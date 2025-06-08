@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import Header from "../../components/UI/Header";
+import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
 
@@ -288,6 +289,7 @@ export default function OrderPage() {
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }
