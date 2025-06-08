@@ -16,6 +16,7 @@ export default function CreateShop() {
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [mobile, setMobile] = useState("");
+  const [address, setAddress] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -152,6 +153,7 @@ export default function CreateShop() {
         name: shopName,
         username: shopUser.toLowerCase(),
         mobile,
+        address,
         description: desc,
         logo: logoUrl,
         cover: coverUrl,
@@ -321,6 +323,23 @@ export default function CreateShop() {
                   Your Sri Lankan contact number for customers to reach you
                 </div>
               </div>
+
+              {/* Shop Address */}
+              <div className="group">
+                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                  Shop Address
+                </label>
+                <Input
+                  maxLength={150}
+                  placeholder="Enter your complete shop address..."
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  required
+                />
+                <div className="text-xs text-[#6b7280] mt-2 ml-1">
+                  Your shop's physical address for delivery purposes ({address.length}/150 characters)
+                </div>
+              </div>
             </div>
             {/* Description */}
             <div className="flex-1">
@@ -372,6 +391,7 @@ export default function CreateShop() {
                 checkingUsername || 
                 usernameError !== "" ||
                 !mobile || 
+                !address ||
                 !desc || 
                 !logo || 
                 !cover || 

@@ -15,6 +15,7 @@ export default function EditShop() {
     const [shopName, setShopName] = useState("");
     const [shopUser, setShopUser] = useState("");
     const [mobile, setMobile] = useState("");
+    const [address, setAddress] = useState("");
     const [logo, setLogo] = useState<File | null>(null);
     const [cover, setCover] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function EditShop() {
                 setShopName(d.name);
                 setShopUser(d.username);
                 setMobile(d.mobile);
+                setAddress(d.address || "");
                 setLogoPreview(d.logo);
                 setCoverPreview(d.cover);
                 setDesc(d.description);
@@ -97,6 +99,7 @@ export default function EditShop() {
             name: shopName,
             username: shopUser,
             mobile,
+            address,
             description: desc,
             logo: logoUrl,
             cover: coverUrl,
@@ -257,6 +260,24 @@ export default function EditShop() {
                                     Your Sri Lankan contact number for customers to reach you
                                 </div>
                             </div>
+
+                            {/* Shop Address */}
+                            <div className="group">
+                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                    Shop Address
+                                </label>
+                                <input
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
+                                    maxLength={150}
+                                    placeholder="Enter your complete shop address..."
+                                    value={address}
+                                    onChange={e => setAddress(e.target.value)}
+                                    required
+                                />
+                                <div className="text-xs text-[#6b7280] mt-2 ml-1">
+                                    Your shop's physical address for delivery purposes ({address.length}/150 characters)
+                                </div>
+                            </div>
                         </div>
                         {/* Description */}
                         <div className="flex-1">
@@ -298,7 +319,7 @@ export default function EditShop() {
                         <button
                             className="bg-[#72b01d] text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
                             disabled={
-                                !shopName || !shopUser || userExists || !mobile || !desc || loading || wordCount(desc) > 300
+                                !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || wordCount(desc) > 300
                             }
                             onClick={handleUpdate}
                             type="button"

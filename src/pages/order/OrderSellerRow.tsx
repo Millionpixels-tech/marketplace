@@ -1,7 +1,206 @@
 import { useState } from "react";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { OrderStatus } from "../../types/enums";
+
+// Function to print delivery label
+const printDeliveryLabel = async (order: any) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('Please allow popups to print the delivery label');
+        return;
+    }
+
+    // Fetch shop information for FROM address
+    let shopInfo = null;
+    if (order.sellerShopId) {
+        try {
+            const shopDoc = await getDoc(doc(db, "shops", order.sellerShopId));
+            if (shopDoc.exists()) {
+                shopInfo = shopDoc.data();
+            }
+        } catch (error) {
+            console.error('Error fetching shop info:', error);
+        }
+    }
+
+    const labelHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Delivery Label - Order ${order.id}</title>
+            <style>
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+                body {
+                    font-family: 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    background: white;
+                    color: #000;
+                }
+                .label-container {
+                    width: 4in;
+                    height: 3in;
+                    background: white;
+                    border: 2px solid #000;
+                    padding: 12px;
+                    margin: 0 auto;
+                    position: relative;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 6px;
+                    margin-bottom: 10px;
+                }
+                .header h1 {
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 2px;
+                }
+                .website {
+                    font-size: 10px;
+                    font-weight: bold;
+                    color: #000;
+                }
+                .main-content {
+                    display: flex;
+                    gap: 8px;
+                    height: calc(100% - 55px);
+                }
+                .left-column {
+                    flex: 3;
+                }
+                .right-column {
+                    flex: 2;
+                    border-left: 1px solid #000;
+                    padding-left: 8px;
+                }
+                .section {
+                    margin-bottom: 8px;
+                }
+                .section-title {
+                    font-weight: bold;
+                    font-size: 9px;
+                    margin-bottom: 2px;
+                    text-transform: uppercase;
+                    border-bottom: 1px solid #000;
+                    padding-bottom: 1px;
+                }
+                .content {
+                    font-size: 8px;
+                    line-height: 1.2;
+                }
+                .content strong {
+                    font-weight: bold;
+                }
+                .order-info {
+                    position: absolute;
+                    bottom: 6px;
+                    right: 12px;
+                    font-size: 7px;
+                    text-align: right;
+                }
+                .payment-highlight {
+                    background: #f0f0f0;
+                    padding: 2px 4px;
+                    margin-top: 2px;
+                    font-weight: bold;
+                    border: 1px solid #000;
+                    text-align: center;
+                    font-size: 7px;
+                }
+                @media print {
+                    body { 
+                        margin: 0; 
+                        padding: 0;
+                        background: white;
+                    }
+                    .label-container { 
+                        margin: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="label-container">
+                <div class="header">
+                    <h1>DELIVERY LABEL</h1>
+                    <div class="website">sina.lk</div>
+                </div>
+                
+                <div class="main-content">
+                    <div class="left-column">
+                        <div class="section">
+                            <div class="section-title">From (Seller)</div>
+                            <div class="content">
+                                <strong>${order.sellerShopName || 'Shop'}</strong><br>
+                                ${shopInfo?.address ? `${shopInfo.address}` : 'Sri Lankan Shop'}<br>
+                                ${shopInfo?.mobile ? `Phone: +94${shopInfo.mobile}` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">To (Buyer)</div>
+                            <div class="content">
+                                <strong>${order.buyerInfo?.firstName || ''} ${order.buyerInfo?.lastName || ''}</strong><br>
+                                ${order.buyerInfo?.address || ''}<br>
+                                ${order.buyerInfo?.city || ''}<br>
+                                Phone: ${order.buyerInfo?.phone || ''}
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Item Details</div>
+                            <div class="content">
+                                <strong>${order.itemName || ''}</strong><br>
+                                Qty: ${order.quantity || 1} | Total: LKR ${order.total?.toLocaleString() || '0'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="right-column">
+                        <div class="section">
+                            <div class="section-title">Payment</div>
+                            <div class="content">
+                                ${order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Online Payment'}
+                                ${order.paymentMethod === 'cash_on_delivery' ? 
+                                    `<div class="payment-highlight">COLLECT<br>LKR ${order.total?.toLocaleString() || '0'}</div>` : 
+                                    '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">PAID</div>'
+                                }
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Order Info</div>
+                            <div class="content">
+                                Order: ${order.id}<br>
+                                Date: ${new Date(order.createdAt?.seconds ? order.createdAt.seconds * 1000 : Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(labelHTML);
+    printWindow.document.close();
+};
 
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);
@@ -46,6 +245,12 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         <div><span className="font-semibold text-[#3f7d20]">Order ID:</span> {order.id}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Item:</span> {order.itemName}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Buyer:</span> {order.buyerName || order.buyerId}</div>
+                        {order.buyerInfo && (
+                            <>
+                                <div><span className="font-semibold text-[#3f7d20]">Buyer Phone:</span> {order.buyerInfo.phone}</div>
+                                <div><span className="font-semibold text-[#3f7d20]">Buyer Address:</span> {order.buyerInfo.address}, {order.buyerInfo.city}</div>
+                            </>
+                        )}
                         <div><span className="font-semibold text-[#3f7d20]">Quantity:</span> {order.quantity}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Price:</span> LKR {order.price?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>
@@ -63,18 +268,36 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         {order.paymentMethod && <div><span className="font-semibold text-[#3f7d20]">Payment:</span> {order.paymentMethod}</div>}
                         {order.createdAt && <div><span className="font-semibold text-[#3f7d20]">Created:</span> {new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : Date.now()).toLocaleString()}</div>}
                     </div>
-                    {order.status === OrderStatus.REFUND_REQUESTED && (
-                        <button
-                            className="mt-4 px-4 py-2 bg-[#72b01d] text-white rounded-lg font-bold hover:bg-[#3f7d20] transition text-sm shadow-sm"
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
-                                setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
-                            }}
-                        >
-                            Refund Buyer
-                        </button>
-                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 mt-4">
+                        {/* Print Delivery Label Button - Available for all active orders */}
+                        {order.buyerInfo && ![OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status) && (
+                            <button
+                                className="px-4 py-2 bg-[#454955] text-white rounded-lg font-bold hover:bg-[#0d0a0b] transition text-sm shadow-sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    printDeliveryLabel(order);
+                                }}
+                            >
+                                Print Delivery Label
+                            </button>
+                        )}
+                        
+                        {/* Refund Button */}
+                        {order.status === OrderStatus.REFUND_REQUESTED && (
+                            <button
+                                className="px-4 py-2 bg-[#72b01d] text-white rounded-lg font-bold hover:bg-[#3f7d20] transition text-sm shadow-sm"
+                                onClick={async (e) => {
+                                    e.stopPropagation();
+                                    await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
+                                    setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
+                                }}
+                            >
+                                Refund Buyer
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
             <div className="flex gap-2 mt-2">

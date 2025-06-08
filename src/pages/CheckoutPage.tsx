@@ -412,8 +412,8 @@ export default function CheckoutPage() {
       // Save buyer information to user profile first
       await saveBuyerInfo(user.uid, buyerInfo);
       
-      // Create order with buyer information
-      await createOrder({
+      // Create order with buyer information and get the order ID
+      const orderId = await createOrder({
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
@@ -430,8 +430,8 @@ export default function CheckoutPage() {
         paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
       });
       
-      alert("Order placed successfully with Cash on Delivery! You'll receive a confirmation shortly.");
-      navigate('/dashboard/' + user.uid);
+      // Redirect to order summary page
+      navigate('/order/' + orderId);
       
     } catch (error) {
       console.error("Error creating COD order:", error);
