@@ -17,6 +17,7 @@ import EditShop from "../pages/shop/EditShop";
 import PublicProfile from "../pages/user/PublicProfile";
 import ResetPassword from "../pages/auth/ResetPassword";
 import AdminPayments from "../pages/admin/AdminPayments";
+import SellerGuide from "../pages/SellerGuide";
 
 const AppRoutes = () => (
   <Routes>
@@ -36,6 +37,7 @@ const AppRoutes = () => (
     <Route path="/edit-shop/:shopId" element={<EditShop />} />
     <Route path="/profile/:id" element={<PublicProfile />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/seller-guide" element={<SellerGuide />} />
     <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
   </Routes>
 );

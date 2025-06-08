@@ -69,7 +69,7 @@ const Header = () => {
                     <div className="relative hidden md:block">
                         <button
                             onClick={() => setCatOpen((open) => !open)}
-                            className="flex items-center px-4 py-2 rounded-lg font-semibold border transition uppercase"
+                            className="flex items-center px-4 py-2 rounded-lg font-semibold border transition"
                             style={{
                                 borderColor: 'rgba(114, 176, 29, 0.6)',
                                 color: '#0d0a0b',
@@ -182,26 +182,45 @@ const Header = () => {
                 <div className="hidden md:flex items-center gap-4">
                     <Link
                         to="/search"
-                        className="hover:underline text-lg uppercase font-light transition-colors duration-300"
-                        style={{ color: '#454955' }}
+                        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+                        style={{ color: '#0d0a0b' }}
                         onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
                             e.currentTarget.style.color = '#72b01d';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
                         Browse Items
                     </Link>
                     <Link
-                        to="/wishlist"
-                        className="hover:underline text-lg uppercase font-light relative flex items-center transition-colors duration-300"
-                        style={{ color: '#454955' }}
+                        to="/seller-guide"
+                        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+                        style={{ color: '#0d0a0b' }}
                         onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
                             e.currentTarget.style.color = '#72b01d';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#0d0a0b';
+                        }}
+                    >
+                        Start Selling
+                    </Link>
+                    <Link
+                        to="/wishlist"
+                        className="px-4 py-2 rounded-lg font-semibold relative flex items-center transition-all duration-300 hover:scale-105"
+                        style={{ color: '#0d0a0b' }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
                         Wishlist
@@ -214,7 +233,7 @@ const Header = () => {
                         {loading ? null : !user ? (
                             <Link
                                 to="/auth"
-                                className="border rounded-full px-5 py-2 font-semibold uppercase transition"
+                                className="border rounded-full px-5 py-2 font-semibold transition"
                                 style={{
                                     borderColor: 'rgba(114, 176, 29, 0.6)',
                                     color: '#0d0a0b',
@@ -371,11 +390,11 @@ const Header = () => {
                         {/* Links */}
                         <nav className="flex flex-col gap-4 mt-10">
                             <button
-                                className="flex items-center w-full justify-between font-semibold py-3 px-2 rounded transition uppercase"
+                                className="flex items-center w-full justify-between font-semibold py-3 px-4 rounded-lg transition"
                                 style={{ color: '#0d0a0b' }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
@@ -421,31 +440,47 @@ const Header = () => {
                             )}
                             <Link
                                 to="/search"
-                                className="py-3 px-2 rounded transition uppercase font-medium"
-                                style={{ color: '#454955' }}
+                                className="py-3 px-4 rounded-lg transition font-semibold"
+                                style={{ color: '#0d0a0b' }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#0d0a0b';
                                 }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Browse Items
                             </Link>
                             <Link
-                                to="/wishlist"
-                                className="py-3 px-2 rounded transition uppercase font-medium relative flex items-center"
-                                style={{ color: '#454955' }}
+                                to="/seller-guide"
+                                className="py-3 px-4 rounded-lg transition font-semibold"
+                                style={{ color: '#0d0a0b' }}
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                    e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#0d0a0b';
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Start Selling
+                            </Link>
+                            <Link
+                                to="/wishlist"
+                                className="py-3 px-4 rounded-lg transition font-semibold relative flex items-center"
+                                style={{ color: '#0d0a0b' }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#72b01d';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#0d0a0b';
                                 }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
@@ -462,7 +497,7 @@ const Header = () => {
                             {!user ? (
                                 <Link
                                     to="/auth"
-                                    className="py-3 px-2 rounded border transition uppercase font-medium text-center"
+                                    className="py-3 px-4 rounded-lg border transition font-semibold text-center"
                                     style={{
                                         borderColor: 'rgba(114, 176, 29, 0.6)',
                                         color: '#0d0a0b',
