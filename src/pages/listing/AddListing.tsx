@@ -115,35 +115,95 @@ export default function AddListing() {
     <>
       <ResponsiveHeader />
       <div className="bg-white min-h-screen flex flex-col items-center py-4 md:py-8 px-2 md:px-4">
-        {/* Stepper */}
-        <div className="w-full max-w-3xl flex items-center justify-center mb-6 md:mb-12">
-          <ol className="flex w-full justify-center gap-0 md:gap-6 px-2 md:px-0">
-            {steps.map((s, idx) => (
-              <li key={s.label} className="flex flex-col items-center flex-1 relative">
-                <div
-                  className={`w-6 md:w-7 h-6 md:h-7 rounded-full flex items-center justify-center font-bold text-sm md:text-base mb-1
-                  ${step === idx + 1
-                      ? "bg-[#72b01d] text-white"
-                      : step > idx + 1
-                        ? "bg-[#3f7d20] text-white"
-                        : "bg-white border border-[#45495522] text-[#454955]"}
-                `}
-                >
-                  {idx + 1}
+        {/* Modern Progress Stepper */}
+        <div className="w-full max-w-4xl mx-auto mb-4 md:mb-12 px-4">
+          {/* Mobile Progress Bar */}
+          <div className="block md:hidden mb-3">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-[#72b01d]">
+                Step {step} of {steps.length}
+              </span>
+              <span className="text-xs text-[#454955] bg-gray-100 px-2 py-1 rounded-full">
+                {Math.round((step / steps.length) * 100)}% Complete
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+              <div 
+                className="bg-gradient-to-r from-[#72b01d] to-[#3f7d20] h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(step / steps.length) * 100}%` }}
+              ></div>
+            </div>
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#72b01d] to-[#3f7d20] rounded-xl flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-sm">{step}</span>
                 </div>
-                <span
-                  className={`mt-1 text-xs font-medium uppercase tracking-wider text-center
-                  ${step === idx + 1 ? "text-[#0d0a0b]" : "text-[#45495599]"}
-                `}
-                >
-                  {s.label}
-                </span>
-                {idx < steps.length - 1 && (
-                  <div className="absolute top-2 md:top-3 left-1/2 h-[38px] w-px bg-[#45495522] md:bg-transparent md:w-full md:h-px md:top-1/2 md:left-0" />
-                )}
-              </li>
-            ))}
-          </ol>
+                <div>
+                  <h3 className="font-bold text-[#0d0a0b] text-lg">{steps[step - 1]?.label}</h3>
+                  <p className="text-xs text-[#454955] mt-0.5">
+                    {step === 1 && "Choose which shop to list your item under"}
+                    {step === 2 && "Select the main category for your item"}
+                    {step === 3 && "Pick a specific subcategory"}
+                    {step === 4 && "Add item details, price, and quantity"}
+                    {step === 5 && "Upload photos of your item"}
+                    {step === 6 && "Set delivery options and pricing"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Stepper */}
+          <div className="hidden md:block">
+            <div className="flex items-center justify-between relative">
+              {/* Progress Line */}
+              <div className="absolute top-6 left-0 w-full h-0.5 bg-gray-200 z-0">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#72b01d] to-[#3f7d20] transition-all duration-500 ease-out"
+                  style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                ></div>
+              </div>
+              
+              {steps.map((s, idx) => (
+                <div key={s.label} className="flex flex-col items-center relative z-10">
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-lg mb-3
+                    ${step === idx + 1
+                        ? "bg-gradient-to-br from-[#72b01d] to-[#3f7d20] text-white scale-110 shadow-[#72b01d]/30"
+                        : step > idx + 1
+                          ? "bg-gradient-to-br from-[#3f7d20] to-[#2d5c17] text-white"
+                          : "bg-white border-2 border-gray-200 text-[#454955] hover:border-[#72b01d]/30"}
+                  `}
+                  >
+                    {step > idx + 1 ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      idx + 1
+                    )}
+                  </div>
+                  <div className="text-center max-w-[100px]">
+                    <span
+                      className={`text-sm font-semibold block leading-tight
+                      ${step === idx + 1 ? "text-[#72b01d]" : step > idx + 1 ? "text-[#3f7d20]" : "text-[#454955]"}
+                    `}
+                    >
+                      {s.label}
+                    </span>
+                    <span className="text-xs text-[#454955]/70 mt-1 block">
+                      {idx === 0 && "Shop"}
+                      {idx === 1 && "Category"}
+                      {idx === 2 && "Subcategory"}
+                      {idx === 3 && "Details"}
+                      {idx === 4 && "Images"}
+                      {idx === 5 && "Delivery"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <form

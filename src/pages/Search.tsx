@@ -300,7 +300,7 @@ const Search: React.FC = () => {
       />
       <ResponsiveHeader />
       <div className={`w-full min-h-screen ${isMobile ? 'py-4 px-2' : 'py-10 px-1 md:px-4'}`} style={{ backgroundColor: '#ffffff' }}>
-        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col md:flex-row'} gap-${isMobile ? '4' : '10'} w-full`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-6' : 'flex-col md:flex-row md:gap-10'} w-full`}>
           {/* -------- Sidebar -------- */}
           {isMobile && (
             <div className="mb-4">
