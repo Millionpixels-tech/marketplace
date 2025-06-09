@@ -3,7 +3,8 @@ import { db, auth, storage } from "../../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck, FiLoader } from "react-icons/fi";
-import { Header, Button, Card, Input } from "../../components/UI";
+import { Button, Card, Input } from "../../components/UI";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 
 function wordCount(text: string) {
@@ -173,18 +174,18 @@ export default function CreateShop() {
   // --- UI starts here ---
   return (
     <>
-      <Header />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center py-10 px-2">
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-gray-100 p-0 md:p-12 flex flex-col items-center">
-          <div className="w-full flex flex-col items-start mb-8">
-            <h1 className="text-3xl md:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
-            <p className="text-[#454955] text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
+      <ResponsiveHeader />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center py-4 md:py-10 px-2 md:px-4">
+        <div className="w-full max-w-5xl bg-white rounded-xl md:rounded-3xl shadow-xl border border-gray-100 p-4 md:p-12 flex flex-col items-center">
+          <div className="w-full flex flex-col items-start mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
+            <p className="text-[#454955] text-base md:text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
           </div>
           {/* --- Cover + Logo Section --- */}
-          <div className="w-full relative flex flex-col items-center mb-12">
+          <div className="w-full relative flex flex-col items-center mb-8 md:mb-12">
             {/* Cover image */}
             <div
-              className="w-full h-40 md:h-64 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg border-2 border-dashed border-gray-300 hover:border-[#72b01d]"
+              className="w-full h-32 md:h-40 lg:h-64 rounded-xl md:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg border-2 border-dashed border-gray-300 hover:border-[#72b01d]"
               onClick={() => coverInputRef.current?.click()}
               tabIndex={0}
               title="Click to upload cover image"
@@ -192,9 +193,9 @@ export default function CreateShop() {
               {coverPreview ? (
                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
               ) : (
-                <div className="flex flex-col items-center justify-start pt-8 text-[#6b7280] group-hover:text-[#72b01d] transition-colors h-full">
-                  <FiUpload className="text-3xl mb-2" />
-                  <span className="font-medium text-sm">Click to add cover image</span>
+                <div className="flex flex-col items-center justify-start pt-4 md:pt-8 text-[#6b7280] group-hover:text-[#72b01d] transition-colors h-full">
+                  <FiUpload className="text-2xl md:text-3xl mb-1 md:mb-2" />
+                  <span className="font-medium text-xs md:text-sm">Click to add cover image</span>
                 </div>
               )}
               <input
@@ -207,7 +208,7 @@ export default function CreateShop() {
             </div>
             {/* Logo */}
             <div
-              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105"
               onClick={() => logoInputRef.current?.click()}
               title="Click to upload logo"
               tabIndex={0}
@@ -216,7 +217,7 @@ export default function CreateShop() {
                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
               ) : (
                 <span className="flex flex-col items-center text-[#6b7280] group-hover:text-[#72b01d] transition-colors">
-                  <FiCamera className="text-4xl mb-1" />
+                  <FiCamera className="text-2xl md:text-4xl mb-1" />
                   <span className="font-medium text-xs">Add Logo</span>
                 </span>
               )}
@@ -231,11 +232,11 @@ export default function CreateShop() {
           </div>
 
           {/* --- Shop Main Info --- */}
-          <div className="w-full flex flex-col md:flex-row gap-10 mt-20 md:mt-16">
-            <div className="flex-1 space-y-8">
+          <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10 mt-12 md:mt-20 lg:mt-16">
+            <div className="flex-1 space-y-6 md:space-y-8">
               {/* Shop Name */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                   Shop Name
                 </label>
                 <Input
@@ -252,7 +253,7 @@ export default function CreateShop() {
 
               {/* Shop Username */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                   Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
                 </label>
                 <Input
@@ -300,7 +301,7 @@ export default function CreateShop() {
 
               {/* Shop Mobile */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                   Mobile Number
                 </label>
                 <div className="relative">
@@ -308,9 +309,9 @@ export default function CreateShop() {
                     className="flex items-center bg-white border rounded-xl transition-all duration-200 focus-within:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus-within:shadow-lg focus-within:ring-4 focus-within:ring-[#72b01d]/10"
                     style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                   >
-                    <span className="text-lg text-[#6b7280] font-bold pl-4 pr-2 select-none">+94</span>
+                    <span className="text-base md:text-lg text-[#6b7280] font-bold pl-3 md:pl-4 pr-1 md:pr-2 select-none">+94</span>
                     <input
-                      className="flex-1 bg-transparent outline-none border-0 px-2 py-3 font-medium placeholder-[#9ca3af] text-[#0d0a0b]"
+                      className="flex-1 bg-transparent outline-none border-0 px-1 md:px-2 py-2 md:py-3 font-medium placeholder-[#9ca3af] text-[#0d0a0b] text-base md:text-base"
                       maxLength={9}
                       pattern="[0-9]{9}"
                       placeholder="7xxxxxxxx"
@@ -327,7 +328,7 @@ export default function CreateShop() {
 
               {/* Shop Address */}
               <div className="group">
-                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                   Shop Address
                 </label>
                 <Input
@@ -345,14 +346,14 @@ export default function CreateShop() {
             {/* Description */}
             <div className="flex-1">
               <div className="group">
-                <label className="block text-sm font-bold text-[#2d3748] mb-3 tracking-wide uppercase">
+                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                   Shop Description
                 </label>
                 <textarea
-                  className="w-full bg-white border rounded-xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] px-4 py-3 transition-all duration-200 focus:outline-none resize-none focus:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus:shadow-lg focus:ring-4 focus:ring-[#72b01d]/10"
+                  className="w-full bg-white border rounded-xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] md:min-h-[180px] px-3 md:px-4 py-2 md:py-3 transition-all duration-200 focus:outline-none resize-none focus:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus:shadow-lg focus:ring-4 focus:ring-[#72b01d]/10 text-sm md:text-base"
                   style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                   maxLength={1500}
-                  rows={8}
+                  rows={6}
                   placeholder="Describe your shop - what you sell, what makes it unique, your story..."
                   value={desc}
                   onChange={e => setDesc(e.target.value)}
@@ -381,7 +382,7 @@ export default function CreateShop() {
           </div>
 
           {/* --- Save Button --- */}
-          <div className="w-full flex justify-end mt-16">
+          <div className="w-full flex justify-center md:justify-end mt-8 md:mt-16">
             <Button
               variant="primary"
               size="lg"
@@ -401,7 +402,7 @@ export default function CreateShop() {
               }
               loading={loading}
               onClick={handleSave}
-              className="px-12 py-4 rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20 bg-gradient-to-r from-[#72b01d] to-[#5a8a17] hover:from-[#5a8a17] hover:to-[#4a7314] transform hover:scale-105 transition-all duration-200"
+              className="w-full md:w-auto px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20 bg-gradient-to-r from-[#72b01d] to-[#5a8a17] hover:from-[#5a8a17] hover:to-[#4a7314] transform hover:scale-105 transition-all duration-200"
             >
               {done
                 ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>
@@ -409,10 +410,10 @@ export default function CreateShop() {
             </Button>
           </div>
           {done && (
-            <div className="w-full flex justify-center mt-8">
-              <Card className="p-6 bg-green-50 border-green-200">
-                <div className="text-green-700 font-bold text-lg flex items-center justify-center gap-3">
-                  <span className="text-2xl">🎉</span>
+            <div className="w-full flex justify-center mt-6 md:mt-8">
+              <Card className="p-4 md:p-6 bg-green-50 border-green-200">
+                <div className="text-green-700 font-bold text-base md:text-lg flex items-center justify-center gap-2 md:gap-3">
+                  <span className="text-xl md:text-2xl">🎉</span>
                   <span>Shop profile created successfully!</span>
                   <FiCheck className="text-green-600" />
                 </div>

@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiX } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 
 const steps = [
@@ -147,15 +147,15 @@ export default function EditListing() {
     // Steps rendering (same as AddListing)
     return (
         <>
-            <Header />
-            <div className="bg-white min-h-screen flex flex-col items-center py-8 px-2">
+            <ResponsiveHeader />
+            <div className="bg-white min-h-screen flex flex-col items-center py-2 md:py-8 px-2 md:px-4">
                 {/* Stepper */}
-                <div className="w-full max-w-3xl flex items-center justify-center mb-12">
-                    <ol className="flex w-full justify-center gap-0 md:gap-6">
+                <div className="w-full max-w-3xl flex items-center justify-center mb-4 md:mb-12">
+                    <ol className="flex w-full justify-center gap-0 md:gap-6 px-2">
                         {steps.map((s, idx) => (
                             <li key={s.label} className="flex flex-col items-center flex-1 relative">
                                 <div
-                                    className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-base mb-1
+                                    className={`w-5 h-5 md:w-7 md:h-7 rounded-full flex items-center justify-center font-bold text-xs md:text-base mb-1
                   ${step === idx + 1
                                             ? "bg-[#72b01d] text-white"
                                             : step > idx + 1
@@ -166,14 +166,14 @@ export default function EditListing() {
                                     {idx + 1}
                                 </div>
                                 <span
-                                    className={`mt-1 text-xs font-medium uppercase tracking-wider
+                                    className={`mt-1 text-xs md:text-sm font-medium uppercase tracking-wider text-center
                   ${step === idx + 1 ? "text-[#0d0a0b]" : "text-[#45495599]"}
                 `}
                                 >
                                     {s.label}
                                 </span>
                                 {idx < steps.length - 1 && (
-                                    <div className="absolute top-3 left-1/2 h-[38px] w-px bg-[#45495522] md:bg-transparent md:w-full md:h-px md:top-1/2 md:left-0" />
+                                    <div className="absolute top-2.5 md:top-3 left-1/2 h-[28px] md:h-[38px] w-px bg-[#45495522] md:bg-transparent md:w-full md:h-px md:top-1/2 md:left-0" />
                                 )}
                             </li>
                         ))}
@@ -181,35 +181,35 @@ export default function EditListing() {
                 </div>
 
                 <form
-                    className="w-full max-w-2xl mx-auto bg-white rounded-3xl shadow-lg px-0 md:px-12 py-10 transition-all"
+                    className="w-full max-w-2xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-lg px-3 md:px-12 py-4 md:py-10 transition-all"
                     onSubmit={e => { e.preventDefault(); handleSubmit(); }}
                     autoComplete="off"
                 >
                     {/* Step 1: Shop selection */}
                     {step === 1 && (
                         <div className="animate-fade-in">
-                            <h2 className="text-2xl font-black mb-8 text-center text-[#0d0a0b]">Select your shop</h2>
+                            <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-8 text-center text-[#0d0a0b]">Select your shop</h2>
                             {userLoading ? (
                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="text-[#454955] text-lg text-center mb-4">
+                                    <div className="text-[#454955] text-base md:text-lg text-center mb-4">
                                         Loading your shops...
                                     </div>
                                 </div>
                             ) : shops.length === 0 ? (
                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="text-[#454955] text-lg text-center mb-4">
+                                    <div className="text-[#454955] text-base md:text-lg text-center mb-4">
                                         You haven't created a shop yet.
                                     </div>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                    <div className="grid grid-cols-1 gap-3 md:gap-4 mb-4 md:mb-6">
                                         {shops.map(shop => (
                                             <button
                                                 type="button"
                                                 key={shop.id}
                                                 onClick={() => setShopId(shop.id)}
-                                                className={`flex items-center gap-3 px-4 py-4 rounded-2xl transition text-left
+                                                className={`flex items-center gap-3 px-3 md:px-4 py-3 md:py-4 rounded-xl md:rounded-2xl transition text-left
                           ${shopId === shop.id
                                                         ? "border border-[#72b01d] bg-[#72b01d] text-white scale-105 shadow-sm"
                                                         : "border border-[#45495522] bg-white hover:bg-white"}
@@ -219,20 +219,20 @@ export default function EditListing() {
                                                     <img
                                                         src={shop.logo}
                                                         alt={shop.name}
-                                                        className="w-12 h-12 rounded-full object-cover border border-[#45495522] shadow-sm"
+                                                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border border-[#45495522] shadow-sm"
                                                     />
                                                 )}
                                                 <div>
-                                                    <div className="font-bold text-lg text-[#0d0a0b]">{shop.name}</div>
+                                                    <div className="font-bold text-base md:text-lg text-[#0d0a0b]">{shop.name}</div>
                                                     <div className="text-xs text-[#454955]">@{shop.username}</div>
                                                 </div>
                                             </button>
                                         ))}
                                     </div>
-                                    <div className="flex justify-end mt-8">
+                                    <div className="flex justify-end mt-6 md:mt-8">
                                         <button
                                             type="button"
-                                            className="px-7 py-3 bg-[#72b01d] text-white rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
+                                            className="px-5 md:px-7 py-2.5 md:py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                                             disabled={!shopId}
                                             onClick={() => setStep(2)}
                                         >

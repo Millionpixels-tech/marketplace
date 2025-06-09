@@ -3,7 +3,7 @@ import { db, storage } from "../../utils/firebase";
 import { doc, getDoc, updateDoc, query, collection, where, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { useParams } from "react-router-dom";
 
@@ -113,17 +113,17 @@ export default function EditShop() {
     // --- UI is almost the same as CreateShop ---
     return (
         <>
-            <Header />
-            <div className="min-h-screen bg-white flex flex-col items-center py-10 px-2">
-                <div className="w-full max-w-5xl bg-white rounded-3xl shadow-sm p-0 md:p-12 flex flex-col items-center">
-                    <div className="w-full flex flex-col items-start mb-8">
-                        <h1 className="text-3xl md:text-4xl font-black mb-2 text-[#0d0a0b]">Edit Shop</h1>
-                        <p className="text-[#454955] text-lg">Update your shop details and images.</p>
+            <ResponsiveHeader />
+            <div className="min-h-screen bg-white flex flex-col items-center py-4 md:py-10 px-2 md:px-4">
+                <div className="w-full max-w-5xl bg-white rounded-xl md:rounded-3xl shadow-sm p-4 md:p-12 flex flex-col items-center">
+                    <div className="w-full flex flex-col items-start mb-6 md:mb-8">
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 text-[#0d0a0b]">Edit Shop</h1>
+                        <p className="text-[#454955] text-base md:text-lg">Update your shop details and images.</p>
                     </div>
                     {/* Cover + Logo Section */}
-                    <div className="w-full relative flex flex-col items-center mb-12">
+                    <div className="w-full relative flex flex-col items-center mb-8 md:mb-12">
                         <div
-                            className="w-full h-40 md:h-64 rounded-2xl bg-white flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
+                            className="w-full h-32 md:h-40 lg:h-64 rounded-xl md:rounded-2xl bg-white flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
                             onClick={() => coverInputRef.current?.click()}
                             tabIndex={0}
                             title="Click to upload cover image"
@@ -132,8 +132,8 @@ export default function EditShop() {
                                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
                             ) : (
                                 <div className="flex flex-col items-center text-[#454955]">
-                                    <FiUpload className="text-3xl mb-2" />
-                                    <span className="font-medium text-sm">Click to add cover image</span>
+                                    <FiUpload className="text-2xl md:text-3xl mb-1 md:mb-2" />
+                                    <span className="font-medium text-xs md:text-sm">Click to add cover image</span>
                                 </div>
                             )}
                             <input
@@ -145,7 +145,7 @@ export default function EditShop() {
                             />
                         </div>
                         <div
-                            className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-sm cursor-pointer group transition"
+                            className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white bg-white flex items-center justify-center shadow-sm cursor-pointer group transition"
                             onClick={() => logoInputRef.current?.click()}
                             title="Click to upload logo"
                             tabIndex={0}
@@ -154,7 +154,7 @@ export default function EditShop() {
                                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
                             ) : (
                                 <span className="flex flex-col items-center text-[#454955]">
-                                    <FiCamera className="text-4xl mb-1" />
+                                    <FiCamera className="text-2xl md:text-4xl mb-1" />
                                     <span className="font-medium text-xs">Add Logo</span>
                                 </span>
                             )}
@@ -168,15 +168,15 @@ export default function EditShop() {
                         </div>
                     </div>
                     {/* Main Info & Description */}
-                    <div className="w-full flex flex-col md:flex-row gap-10 mt-14 md:mt-8">
-                        <div className="flex-1 space-y-8">
+                    <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10 mt-12 md:mt-14 lg:mt-8">
+                        <div className="flex-1 space-y-6 md:space-y-8">
                             {/* Shop Name */}
                             <div className="group">
-                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
                                     Shop Name
                                 </label>
                                 <input
-                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-base md:text-lg"
                                     maxLength={80}
                                     placeholder="Enter your shop name..."
                                     value={shopName}
@@ -190,11 +190,11 @@ export default function EditShop() {
 
                             {/* Shop Username */}
                             <div className="group">
-                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
                                     Shop Username <span className="font-normal text-[#6b7280] normal-case">(unique URL)</span>
                                 </label>
                                 <input
-                                    className={`w-full border transition-all duration-200 px-6 py-4 rounded-2xl font-medium placeholder-[#9ca3af] shadow-sm text-lg
+                                    className={`w-full border transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl font-medium placeholder-[#9ca3af] shadow-sm text-base md:text-lg
                                         ${userExists 
                                             ? "bg-red-50 border-red-300 focus:border-red-500 focus:ring-red-500/10 text-red-700" 
                                             : "bg-gray-50 border-gray-300 text-gray-600 cursor-not-allowed"}`}
@@ -240,14 +240,14 @@ export default function EditShop() {
 
                             {/* Shop Mobile */}
                             <div className="group">
-                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
                                     Mobile Number
                                 </label>
                                 <div className="relative">
-                                    <div className="flex items-center bg-white border border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
-                                        <span className="text-lg text-[#6b7280] font-bold mr-3 select-none">+94</span>
+                                    <div className="flex items-center bg-white border border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
+                                        <span className="text-base md:text-lg text-[#6b7280] font-bold mr-2 md:mr-3 select-none">+94</span>
                                         <input
-                                            className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-lg"
+                                            className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-base md:text-lg"
                                             maxLength={9}
                                             pattern="[0-9]{9}"
                                             placeholder="7xxxxxxxx"
@@ -264,11 +264,11 @@ export default function EditShop() {
 
                             {/* Shop Address */}
                             <div className="group">
-                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
                                     Shop Address
                                 </label>
                                 <input
-                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-lg"
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-base md:text-lg"
                                     maxLength={150}
                                     placeholder="Enter your complete shop address..."
                                     value={address}
@@ -283,13 +283,13 @@ export default function EditShop() {
                         {/* Description */}
                         <div className="flex-1">
                             <div className="group">
-                                <label className="block text-sm font-bold text-[#0d0a0b] mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
                                     Shop Description
                                 </label>
                                 <textarea
-                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-6 py-4 rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none"
+                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] md:min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none text-sm md:text-base"
                                     maxLength={1500}
-                                    rows={8}
+                                    rows={6}
                                     placeholder="Describe your shop - what you sell, what makes it unique, your story..."
                                     value={desc}
                                     onChange={e => setDesc(e.target.value)}
@@ -316,9 +316,9 @@ export default function EditShop() {
                             </div>
                         </div>
                     </div>
-                    <div className="w-full flex justify-end mt-16">
+                    <div className="w-full flex justify-center md:justify-end mt-8 md:mt-16">
                         <button
-                            className="bg-[#72b01d] text-white px-12 py-4 rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
+                            className="w-full md:w-auto bg-[#72b01d] text-white px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
                             disabled={
                                 !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || wordCount(desc) > 300
                             }
@@ -333,10 +333,10 @@ export default function EditShop() {
                         </button>
                     </div>
                     {done && (
-                        <div className="w-full flex justify-center mt-8">
-                            <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex items-center justify-center">
-                                <div className="text-green-700 font-bold text-lg flex items-center gap-3">
-                                    <span className="text-2xl">🎉</span>
+                        <div className="w-full flex justify-center mt-6 md:mt-8">
+                            <div className="bg-green-50 border border-green-200 rounded-xl md:rounded-2xl p-4 md:p-6 flex items-center justify-center">
+                                <div className="text-green-700 font-bold text-base md:text-lg flex items-center gap-2 md:gap-3">
+                                    <span className="text-xl md:text-2xl">🎉</span>
                                     <span>Shop updated successfully!</span>
                                     <FiCheck className="text-green-600" />
                                 </div>
