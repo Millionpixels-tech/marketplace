@@ -1,10 +1,12 @@
 import { Button, Card } from "../components/UI";
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../utils/seo";
+import { useResponsive } from "../hooks/useResponsive";
 
 const Cart = () => {
+  const { isMobile } = useResponsive();
   // Simple: keep cart in localStorage or Context API, add logic as needed.
   return (
     <>
@@ -15,13 +17,13 @@ const Cart = () => {
         canonicalUrl={getCanonicalUrl('/cart')}
         noIndex={true}
       />
-      <Header />
-      <div className="max-w-2xl mx-auto py-12 min-h-screen">
-        <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
-        <Card className="p-6">
-          <p className="text-[#454955] mb-4">Your cart is empty</p>
+      <ResponsiveHeader />
+      <div className={`${isMobile ? 'max-w-sm px-4 py-8' : 'max-w-2xl py-12'} mx-auto min-h-screen`}>
+        <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold mb-4`}>Your Cart</h2>
+        <Card className={`${isMobile ? 'p-4' : 'p-6'}`}>
+          <p className={`text-[#454955] ${isMobile ? 'mb-3 text-sm' : 'mb-4'}`}>Your cart is empty</p>
           {/* List items here */}
-          <Button className="mt-4">
+          <Button className={`${isMobile ? 'mt-3 text-sm' : 'mt-4'}`}>
             Checkout
           </Button>
         </Card>

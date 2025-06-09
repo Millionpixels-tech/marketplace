@@ -3,8 +3,11 @@ import { collection, getDocs, query, where, orderBy, limit } from "firebase/fire
 import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Header, ListingTile, Button, Input, Pagination, BackToTop } from "../components/UI";
+import { Button, Input, Pagination, BackToTop } from "../components/UI";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
+import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import Footer from "../components/UI/Footer";
+import { useResponsive } from "../hooks/useResponsive";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../utils/seo";
@@ -25,9 +28,11 @@ const Search: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const cacheRef = useRef<Map<string, Listing[]>>(new Map());
+  const { isMobile } = useResponsive();
 
   // For sidebar filter
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false); // Mobile filter visibility
 
   // Listings & user IP
   const [items, setItems] = useState<Listing[]>([]);
@@ -281,9 +286,7 @@ const Search: React.FC = () => {
       description,
       keywords: generateKeywords(keywords)
     };
-  };
-
-  const seoData = generateSearchSEO();
+  };  const seoData = generateSearchSEO();
 
   // Main JSX
   return (
@@ -295,23 +298,45 @@ const Search: React.FC = () => {
         canonicalUrl={getCanonicalUrl('/search')}
         noIndex={!searchQuery && !categoryFilter} // Don't index empty search pages
       />
-      <Header />
-      <div className="w-full min-h-screen py-10 px-1 md:px-4" style={{ backgroundColor: '#ffffff' }}>
-        <div className="flex flex-col md:flex-row gap-10 w-full">
+      <ResponsiveHeader />
+      <div className={`w-full min-h-screen ${isMobile ? 'py-4 px-2' : 'py-10 px-1 md:px-4'}`} style={{ backgroundColor: '#ffffff' }}>
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col md:flex-row'} gap-${isMobile ? '4' : '10'} w-full`}>
           {/* -------- Sidebar -------- */}
-          <aside className="w-full md:w-80 mb-8 md:mb-0 flex flex-col gap-6">
+          {isMobile && (
+            <div className="mb-4">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-white border rounded-xl shadow-sm"
+                style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+              >
+                <span className="font-medium text-sm" style={{ color: '#0d0a0b' }}>
+                  Filters & Categories
+                </span>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  fill="none" 
+                  viewBox="0 0 24 24"
+                  className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                >
+                  <path stroke="#72b01d" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+          )}
+          <aside className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'w-full md:w-80'} ${isMobile ? 'w-full' : 'mb-8 md:mb-0'} flex flex-col gap-${isMobile ? '4' : '6'}`}>
             {/* Category Filter Card */}
-            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
-                <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>Categories</h2>
+            <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
+                <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
+                <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
-              <ul className="flex flex-col gap-1 px-4 py-4">
+              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
                 {categories.map((c) => (
                   <li key={c.name} className="flex flex-col">
                     <div className="flex items-center w-full group">
                       <button
-                        className={`flex-1 text-left px-3 py-2 rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
+                        className={`flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
                         style={{
                           backgroundColor: cat === c.name ? '#72b01d' : 'transparent',
                           color: cat === c.name ? '#ffffff' : '#0d0a0b'
@@ -333,18 +358,18 @@ const Search: React.FC = () => {
                         }}
                       >
                         {expanded === c.name ? (
-                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
+                          <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
                         ) : (
-                          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
+                          <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
                         )}
                       </button>
                     </div>
                     {expanded === c.name && c.subcategories && (
-                      <ul className="pl-4 py-1 flex flex-col gap-1">
+                      <ul className={`${isMobile ? 'pl-3 py-1' : 'pl-4 py-1'} flex flex-col gap-1`}>
                         {c.subcategories.map(sc => (
                           <li key={sc}>
                             <button
-                              className={`w-full text-left px-3 py-1.5 rounded-lg transition-all duration-300 text-sm ${sub === sc ? "text-white shadow-lg" : ""}`}
+                              className={`w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${sub === sc ? "text-white shadow-lg" : ""}`}
                               style={{
                                 backgroundColor: sub === sc ? '#3f7d20' : 'transparent',
                                 color: sub === sc ? '#ffffff' : '#454955'
@@ -360,9 +385,9 @@ const Search: React.FC = () => {
                   </li>
                 ))}
                 {/* Reset filter */}
-                <li className="pt-2">
+                <li className={`${isMobile ? 'pt-1' : 'pt-2'}`}>
                   <button
-                    className="w-full px-3 py-2 rounded-lg text-left text-sm font-semibold transition-all duration-300 disabled:opacity-50"
+                    className={`w-full ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg text-left font-semibold transition-all duration-300 disabled:opacity-50`}
                     style={{
                       backgroundColor: (!cat && !sub) ? 'rgba(114, 176, 29, 0.1)' : 'rgba(114, 176, 29, 0.05)',
                       color: '#72b01d'
@@ -386,20 +411,20 @@ const Search: React.FC = () => {
             </div>
 
             {/* Additional Filters Card */}
-            <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
-                <h2 className="text-base font-semibold tracking-tight" style={{ color: '#0d0a0b' }}>More Filters</h2>
+            <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
+                <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>More Filters</h2>
               </div>
-              <div className="flex flex-col gap-5 px-4 py-4">
+              <div className={`flex flex-col gap-${isMobile ? '4' : '5'} ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
                 {/* Price Range */}
                 <div>
-                  <label className="block text-xs font-semibold mb-2" style={{ color: '#454955' }}>Price Range (LKR)</label>
+                  <label className={`block ${isMobile ? 'text-xs' : 'text-xs'} font-semibold mb-2`} style={{ color: '#454955' }}>Price Range (LKR)</label>
                   <div className="flex gap-2 items-center">
                     <Input
                       type="number"
                       min="0"
-                      className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                      className={`w-1/2 ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg border outline-none transition-all`}
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -409,11 +434,11 @@ const Search: React.FC = () => {
                       value={filterMinPrice}
                       onChange={e => setFilterMinPrice(e.target.value)}
                     />
-                    <span className="text-xs" style={{ color: '#454955' }}>—</span>
+                    <span className={`${isMobile ? 'text-xs' : 'text-xs'}`} style={{ color: '#454955' }}>—</span>
                     <Input
                       type="number"
                       min="0"
-                      className="w-1/2 px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                      className={`w-1/2 ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg border outline-none transition-all`}
                       style={{
                         backgroundColor: '#ffffff',
                         borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -428,9 +453,9 @@ const Search: React.FC = () => {
                 <div className="border-t" style={{ borderTopColor: 'rgba(114, 176, 29, 0.2)' }} />
                 {/* Sort By */}
                 <div>
-                  <label className="block text-xs font-semibold mb-2" style={{ color: '#454955' }}>Sort By</label>
+                  <label className={`block ${isMobile ? 'text-xs' : 'text-xs'} font-semibold mb-2`} style={{ color: '#454955' }}>Sort By</label>
                   <select
-                    className="w-full px-3 py-2 rounded-lg border outline-none transition-all text-sm"
+                    className={`w-full ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg border outline-none transition-all`}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -453,14 +478,14 @@ const Search: React.FC = () => {
                     type="checkbox"
                     checked={filterFreeShipping}
                     onChange={e => setFilterFreeShipping(e.target.checked)}
-                    className="w-4 h-4 rounded"
+                    className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded`}
                     style={{ accentColor: '#72b01d' }}
                   />
-                  <label htmlFor="free-shipping" className="text-sm select-none cursor-pointer" style={{ color: '#454955' }}>Free Shipping Only</label>
+                  <label htmlFor="free-shipping" className={`${isMobile ? 'text-xs' : 'text-sm'} select-none cursor-pointer`} style={{ color: '#454955' }}>Free Shipping Only</label>
                 </div>
-                <div className="flex gap-2 mt-2">
+                <div className={`flex gap-2 ${isMobile ? 'mt-1' : 'mt-2'}`}>
                   <Button
-                    className="flex-1 px-4 py-2 rounded-lg text-white font-semibold transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className={`flex-1 ${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
                     style={{
                       background: 'linear-gradient(to right, #72b01d, #3f7d20)'
                     }}
@@ -479,13 +504,14 @@ const Search: React.FC = () => {
                       if (filterFreeShipping) params.set("free", "1"); else params.delete("free");
                       params.delete("page"); // Reset page when applying filters
                       navigate({ pathname: "/search", search: params.toString() });
+                      if (isMobile) setShowFilters(false); // Hide filters on mobile after applying
                     }}
                   >
                     Apply Filters
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-sm border"
+                    className={`flex-1 ${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-semibold transition-all duration-300 border`}
                     style={{
                       backgroundColor: 'rgba(114, 176, 29, 0.1)',
                       color: '#72b01d',
@@ -510,6 +536,7 @@ const Search: React.FC = () => {
                       params.delete("free");
                       params.delete("page"); // Reset page when resetting filters
                       navigate({ pathname: "/search", search: params.toString() });
+                      if (isMobile) setShowFilters(false); // Hide filters on mobile after resetting
                     }}
                   >
                     Reset
@@ -521,7 +548,7 @@ const Search: React.FC = () => {
           {/* --------- Main Search/Results --------- */}
           <main className="flex-1">
             {/* Search Bar */}
-            <div className="mb-8">
+            <div className={`${isMobile ? 'mb-4' : 'mb-8'}`}>
               <form
                 className="flex w-full gap-0"
                 onSubmit={e => {
@@ -538,7 +565,7 @@ const Search: React.FC = () => {
                 }}
               >
                 <Input
-                  className="flex-1 outline-none px-5 py-3 rounded-l-xl font-medium text-lg transition border border-r-0"
+                  className={`flex-1 outline-none ${isMobile ? 'px-3 py-2 text-base' : 'px-5 py-3 text-lg'} rounded-l-xl font-medium transition border border-r-0`}
                   style={{
                     backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -551,26 +578,32 @@ const Search: React.FC = () => {
                 />
                 <Button
                   type="submit"
-                  className="px-6 py-3 rounded-r-xl text-white font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border"
+                  className={`${isMobile ? 'px-4 py-2 text-base' : 'px-6 py-3 text-lg'} rounded-r-xl text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border`}
                   style={{
                     background: 'linear-gradient(to right, #72b01d, #3f7d20)',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}
                   aria-label="Search"
                 >
-                  Search
+                  {isMobile ? (
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                    </svg>
+                  ) : (
+                    'Search'
+                  )}
                 </Button>
               </form>
             </div>
             {/* Results header with count and active filters */}
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
+              <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}`}>
                 {/* Results count */}
                 <div className="flex flex-col">
-                  <p className="text-lg font-semibold" style={{ color: '#0d0a0b' }}>
+                  <p className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`} style={{ color: '#0d0a0b' }}>
                     {totalItems} {totalItems === 1 ? 'Product' : 'Products'} Found
                   </p>
-                  <p className="text-sm" style={{ color: '#454955' }}>
+                  <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
                     Showing {Math.min(startIndex + 1, totalItems)}-{Math.min(endIndex, totalItems)}
                     {currentPage > 1 && ` • Page ${currentPage} of ${totalPages}`}
                   </p>
@@ -578,9 +611,9 @@ const Search: React.FC = () => {
                 
                 {/* Active filters summary */}
                 {(appliedSearch || cat || sub || appliedMinPrice || appliedMaxPrice || appliedSort || appliedFreeShipping) && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className={`flex flex-wrap gap-${isMobile ? '1' : '2'}`}>
                     {appliedSearch && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Search: "{appliedSearch}"
                         <button 
@@ -593,7 +626,7 @@ const Search: React.FC = () => {
                           }}
                           className="ml-1 hover:bg-red-100 rounded-full p-0.5"
                         >
-                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                          <svg width={isMobile ? "10" : "12"} height={isMobile ? "10" : "12"} fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" strokeWidth="2" d="M18 6L6 18M6 6l12 12"/>
                           </svg>
                         </button>
@@ -601,14 +634,14 @@ const Search: React.FC = () => {
                     )}
                     
                     {cat && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Category: {cat}
                         <button 
                           onClick={() => handleCategoryClick(cat)}
                           className="ml-1 hover:bg-red-100 rounded-full p-0.5"
                         >
-                          <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
+                          <svg width={isMobile ? "10" : "12"} height={isMobile ? "10" : "12"} fill="none" viewBox="0 0 24 24">
                             <path stroke="currentColor" strokeWidth="2" d="M18 6L6 18M6 6l12 12"/>
                           </svg>
                         </button>
@@ -616,35 +649,35 @@ const Search: React.FC = () => {
                     )}
                     
                     {sub && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         {sub}
                       </span>
                     )}
                     
                     {appliedMinPrice && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Min: ${appliedMinPrice}
                       </span>
                     )}
                     
                     {appliedMaxPrice && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Max: ${appliedMaxPrice}
                       </span>
                     )}
                     
                     {appliedSort && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Sort: {appliedSort === 'price-asc' ? 'Price ↑' : appliedSort === 'price-desc' ? 'Price ↓' : appliedSort === 'newest' ? 'Newest' : appliedSort}
                       </span>
                     )}
                     
                     {appliedFreeShipping && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border" 
+                      <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
                         Free Shipping
                       </span>
@@ -666,9 +699,9 @@ const Search: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
                 {paginatedItems.map((item: Listing) => (
-                  <ListingTile 
+                  <ResponsiveListingTile 
                     key={item.id}
                     listing={item}
                     onRefresh={refreshListings}
@@ -685,7 +718,7 @@ const Search: React.FC = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-12 flex items-center justify-center">
+              <div className={`${isMobile ? 'mt-8' : 'mt-12'} flex items-center justify-center`}>
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -693,8 +726,8 @@ const Search: React.FC = () => {
                   totalItems={totalItems}
                   startIndex={startIndex}
                   endIndex={Math.min(endIndex, totalItems)}
-                  showInfo={true}
-                  showJumpTo={totalPages > 10}
+                  showInfo={!isMobile}
+                  showJumpTo={totalPages > 10 && !isMobile}
                 />
               </div>
             )}

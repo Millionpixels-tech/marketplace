@@ -4,17 +4,19 @@ import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
-import ListingTile from "../components/UI/ListingTile";
+import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
+import { useResponsive } from "../hooks/useResponsive";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 function ProductHeroSearch() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+  const { isMobile } = useResponsive();
 
   const handleSearch = (e: any) => {
     e.preventDefault();
@@ -28,39 +30,41 @@ function ProductHeroSearch() {
       onSubmit={handleSearch}
       className="w-full max-w-3xl mx-auto relative group"
     >
-      <div className="relative backdrop-blur-md rounded-2xl shadow-2xl border overflow-hidden group-focus-within:shadow-xl transition-all duration-500"
+      <div className={`relative backdrop-blur-md rounded-2xl shadow-2xl border overflow-hidden group-focus-within:shadow-xl transition-all duration-500 ${
+        isMobile ? 'rounded-xl' : 'rounded-2xl'
+      }`}
         style={{
           backgroundColor: '#ffffff',
           borderColor: 'rgba(114, 176, 29, 0.3)'
         }}>
-        <div className="flex items-center px-8 py-6">
-          <FiSearch className="text-3xl mr-4 group-focus-within:opacity-80 transition-colors"
+        <div className={`flex items-center ${isMobile ? 'px-4 py-4' : 'px-8 py-6'}`}>
+          <FiSearch className={`${isMobile ? 'text-xl mr-3' : 'text-3xl mr-4'} group-focus-within:opacity-80 transition-colors`}
             style={{ color: '#72b01d' }} />
           <input
-            className="flex-1 bg-transparent outline-none border-none text-xl px-2 py-1"
+            className={`flex-1 bg-transparent outline-none border-none ${isMobile ? 'text-base px-1 py-1' : 'text-xl px-2 py-1'}`}
             style={{
               color: '#0d0a0b'
             }}
             type="text"
-            placeholder="Search for unique Sri Lankan creations..."
+            placeholder={isMobile ? "Search products..." : "Search for unique Sri Lankan creations..."}
             value={q}
             onChange={e => setQ(e.target.value)}
             aria-label="Search for products"
           />
           <button
             type="submit"
-            className="ml-4 px-8 py-3 rounded-xl text-white font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105"
+            className={`${isMobile ? 'ml-2 px-4 py-2 rounded-lg text-sm' : 'ml-4 px-8 py-3 rounded-xl text-lg'} text-white font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105`}
             style={{
               background: `linear-gradient(to right, #72b01d, #3f7d20)`,
             }}
           >
-            Search
+            {isMobile ? "Go" : "Search"}
           </button>
         </div>
       </div>
 
       {/* Popular searches */}
-      <div className="flex flex-wrap gap-3 mt-6 justify-center">
+      <div className={`flex flex-wrap gap-2 ${isMobile ? 'gap-2 mt-4' : 'gap-3 mt-6'} justify-center`}>
         {["Woodcraft", "Jewelry", "Textiles", "Pottery", "Tea"].map(term => (
           <button
             key={term}
@@ -69,7 +73,7 @@ function ProductHeroSearch() {
               setQ(term);
               handleSearch({ preventDefault: () => {} });
             }}
-            className="px-4 py-2 border rounded-full text-sm font-medium transition-all duration-300 hover:shadow-md hover:scale-105"
+            className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
             style={{
               backgroundColor: '#ffffff',
               color: '#72b01d',
@@ -101,6 +105,7 @@ const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [ip, setIp] = useState<string | null>(null);
+  const { isMobile } = useResponsive();
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -173,7 +178,7 @@ const Home = () => {
         ogType="website"
         structuredData={getWebsiteStructuredData()}
       />
-      <Header />
+      <ResponsiveHeader />
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* Hero Section */}
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -212,8 +217,8 @@ const Home = () => {
             </div> */}
 
             {/* Main heading */}
-            <div className="mb-8">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-4 leading-none tracking-tight"
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-3 md:mb-4 leading-none tracking-tight px-2"
                 style={{ color: '#0d0a0b' }}>
                 <span>Sri Lankan </span>
                 <span className="relative">
@@ -227,24 +232,24 @@ const Home = () => {
                   </span>
                 </span>
               </h1>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-none tracking-tighter"
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-none tracking-tighter px-2"
                 style={{ color: '#0d0a0b' }}>
                 Marketplace
               </h1>
             </div>
 
             {/* Subtitle */}
-            <p className="text-lg sm:text-xl md:text-2xl mx-auto mb-4 leading-relaxed font-light px-4 max-w-4xl"
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mx-auto mb-3 md:mb-4 leading-relaxed font-light px-4 max-w-4xl"
               style={{ color: '#454955' }}>
               Discover Quality & Unique Products From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Small Businesses</span>
             </p>
-            <p className="text-base sm:text-lg max-w-2xl mx-auto mb-12 font-medium px-4"
+            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-8 md:mb-12 font-medium px-4"
               style={{ color: '#3f7d20' }}>
               🌱 Shop local • Support dreams • Build community 🌱
             </p>
 
             {/* Search bar */}
-            <div className="mb-12 px-4">
+            <div className="mb-8 md:mb-12 px-4">
               <ProductHeroSearch />
             </div>
 
@@ -294,36 +299,36 @@ const Home = () => {
         </section>
 
         {/* 14 Days Money Back Guarantee Section */}
-        <section className="w-full py-10 border-t border-b"
+        <section className={`w-full border-t border-b ${isMobile ? 'py-8' : 'py-10'}`}
           style={{
             borderColor: 'rgba(114, 176, 29, 0.15)',
             backgroundColor: '#ffffff'
           }}>
-          <div className="max-w-6xl mx-auto px-4">
+          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             <div className="text-center mb-6">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: '#0d0a0b' }}>
+              <h2 className={`font-bold mb-2 ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`} style={{ color: '#0d0a0b' }}>
                 Shop With Confidence
               </h2>
-              <p className="text-base" style={{ color: '#454955' }}>
+              <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
                 We've got you covered with our buyer protection policies
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div className={`grid gap-6 mt-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
               {/* Money Back Guarantee */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md"
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className="relative mb-4">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                     style={{
                       background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                       boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                     }}>
-                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24">
+                    <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" viewBox="0 0 24 24">
                       <path d="M8 12.5l2.5 2.5L16 9" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                  <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center font-bold ${isMobile ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'}`}
                     style={{
                       backgroundColor: '#3f7d20',
                       color: '#ffffff',
@@ -332,13 +337,13 @@ const Home = () => {
                     14
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#0d0a0b' }}>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Money Back Guarantee
                 </h3>
-                <p className="text-base mb-3" style={{ color: '#454955' }}>
+                <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
                   Full refund if your order isn't delivered within 14 days of purchase
                 </p>
-                <span className="text-sm font-medium py-1 px-3 rounded-full"
+                <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
@@ -348,24 +353,24 @@ const Home = () => {
               </div>
 
               {/* Secure Payment */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md"
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                   style={{
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <svg width="32" height="32" fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#0d0a0b' }}>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Secure Payment
                 </h3>
-                <p className="text-base mb-3" style={{ color: '#454955' }}>
+                <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
                   All transactions are encrypted and processed securely through trusted payment gateways
                 </p>
-                <span className="text-sm font-medium py-1 px-3 rounded-full"
+                <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
@@ -375,25 +380,25 @@ const Home = () => {
               </div>
 
               {/* Verified Sellers */}
-              <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md"
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                   style={{
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <svg width="32" height="32" fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 12l2 2 4-4" />
                     <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.27 0 4.33.84 5.91 2.24" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: '#0d0a0b' }}>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Verified Sellers
                 </h3>
-                <p className="text-base mb-3" style={{ color: '#454955' }}>
+                <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
                   All sellers go through our verification process to ensure authentic Sri Lankan products
                 </p>
-                <span className="text-sm font-medium py-1 px-3 rounded-full"
+                <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
@@ -408,7 +413,7 @@ const Home = () => {
 
 
         {/* Featured Products */}
-        <section className="py-20 w-full relative overflow-hidden">
+        <section className={`w-full relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}>
           {/* Background decoration - keeping subtle decorative elements */}
           <div className="absolute inset-0">
             <div className="absolute top-20 left-10 w-20 h-20 rounded-full blur-2xl opacity-20"
@@ -417,15 +422,15 @@ const Home = () => {
               style={{ backgroundColor: '#3f7d20' }}></div>
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4">
+          <div className={`relative z-10 max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             {/* Header with enhanced styling */}
-            <div className="text-center mb-16">
+            <div className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
               <div className="inline-flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}
                   style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
-                  <span className="text-xl">✨</span>
+                  <span className={`${isMobile ? 'text-base' : 'text-xl'}`}>✨</span>
                 </div>
-                <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+                <span className={`font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
@@ -433,23 +438,23 @@ const Home = () => {
                   FRESH ARRIVALS
                 </span>
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4"
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
                 style={{ color: '#0d0a0b' }}>
                 Latest Listings
               </h2>
-              <p className="text-lg mb-8 max-w-2xl mx-auto" style={{ color: '#454955' }}>
+              <p className={`max-w-2xl mx-auto ${isMobile ? 'text-base mb-6' : 'text-lg mb-8'}`} style={{ color: '#454955' }}>
                 Discover the newest handcrafted treasures from talented Sri Lankan artisans
               </p>
               <Link
                 to="/search"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+                className={`inline-flex items-center gap-2 rounded-full font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
                 style={{
                   background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
                   color: '#ffffff'
                 }}
               >
                 <span>Explore All Products</span>
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="m9 18 6-6-6-6" />
                 </svg>
               </Link>
@@ -458,19 +463,19 @@ const Home = () => {
             {/* Products grid with enhanced styling */}
             <div className="w-full">
               {loading ? (
-                <div className="text-center py-16">
+                <div className={`text-center ${isMobile ? 'py-12' : 'py-16'}`}>
                   <div className="inline-flex items-center gap-3">
-                    <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+                    <div className={`border-2 border-t-transparent rounded-full animate-spin ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`}
                       style={{ borderColor: '#72b01d', borderTopColor: 'transparent' }}></div>
-                    <span className="text-lg" style={{ color: '#454955' }}>
+                    <span className={`${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
                       Loading latest products…
                     </span>
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-7 w-full">
                   {latestListings.map(item => (
-                    <ListingTile 
+                    <ResponsiveListingTile 
                       key={item.id}
                       listing={item}
                       onRefresh={refreshListings}
@@ -508,17 +513,17 @@ const Home = () => {
                   DISCOVER
                 </span>
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4"
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-3 md:mb-4"
                 style={{ color: '#0d0a0b' }}>
                 Browse Categories
               </h2>
-              <p className="text-lg max-w-2xl mx-auto" style={{ color: '#454955' }}>
+              <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: '#454955' }}>
                 Explore authentic Sri Lankan crafts across diverse categories
               </p>
             </div>
 
             {/* Horizontal Scrolling Categories */}
-            <div className="relative py-6">
+            <div className="relative py-4 md:py-6">
               {/* Gradient fade edges */}
               <div className="absolute left-0 top-6 w-20 h-full z-10 pointer-events-none"
                 style={{
@@ -545,12 +550,13 @@ const Home = () => {
                     key={`${cat.name}-${index}`}
                     className="group flex-shrink-0 relative"
                   >
-                    <div className="px-6 py-5 rounded-2xl border-2 text-center font-semibold transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-2 hover:scale-105 min-w-max backdrop-blur-sm overflow-hidden relative"
+                    <div className="px-4 py-3 md:px-6 md:py-5 rounded-xl md:rounded-2xl border-2 text-center font-semibold transition-all duration-500 hover:shadow-2xl transform hover:-translate-y-2 hover:scale-105 min-w-max backdrop-blur-sm overflow-hidden relative"
                       style={{
                         backgroundColor: '#ffffff',
                         color: '#454955',
                         borderColor: 'rgba(114, 176, 29, 0.2)',
-                        minWidth: '160px'
+                        minWidth: '130px',
+                        fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = `linear-gradient(135deg, #72b01d, #3f7d20)`;
@@ -653,7 +659,7 @@ const Home = () => {
         </section>
 
         {/* Seller Benefits Section */}
-        <section className="py-20 w-full border-t relative overflow-hidden"
+        <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
@@ -665,15 +671,15 @@ const Home = () => {
               style={{ backgroundColor: 'rgba(63, 125, 32, 0.2)' }}></div>
           </div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4">
+          <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             {/* Header */}
-            <div className="text-center mb-16">
+            <div className={`text-center ${isMobile ? 'mb-10' : 'mb-16'}`}>
               <div className="inline-flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}>
-                  <span className="text-2xl">🚀</span>
+                  <span className={`${isMobile ? 'text-lg' : 'text-2xl'}`}>🚀</span>
                 </div>
-                <span className="text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full"
+                <span className={`font-bold uppercase tracking-wider px-4 py-2 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
@@ -681,7 +687,7 @@ const Home = () => {
                   FOR SELLERS
                 </span>
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4"
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
                 style={{ color: '#0d0a0b' }}>
                 Simple • Unlimited •
                 <span className="relative ml-2">
@@ -695,42 +701,42 @@ const Home = () => {
                   </span>
                 </span>
               </h2>
-              <p className="text-lg md:text-xl max-w-2xl mx-auto"
+              <p className={`max-w-2xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
                 style={{ color: '#454955' }}>
                 Everything you need to start selling online, with zero barriers
               </p>
             </div>
 
             {/* Benefits Grid */}
-            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            <div className={`gap-8 lg:gap-12 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-3'}`}>
               {/* Zero Cost */}
               <div className="group relative">
                 <div className="absolute inset-0 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}></div>
-                <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
+                <div className={`relative backdrop-blur-sm border rounded-3xl shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3 ${isMobile ? 'p-6' : 'p-8'}`}
                   style={{
                     backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}>
                   <div className="text-center">
                     <div className="relative mb-6">
-                      <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center border-4"
+                      <div className={`mx-auto rounded-full flex items-center justify-center border-4 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           backgroundColor: 'rgba(114, 176, 29, 0.1)',
                           borderColor: '#72b01d'
                         }}>
-                        <span className="text-4xl font-black" style={{ color: '#72b01d' }}>0</span>
+                        <span className={`font-black ${isMobile ? 'text-2xl' : 'text-4xl'}`} style={{ color: '#72b01d' }}>0</span>
                       </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                      <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                         style={{ backgroundColor: '#72b01d' }}>
-                        <span className="text-white text-lg">₹</span>
+                        <span className={`text-white ${isMobile ? 'text-sm' : 'text-lg'}`}>₹</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-3"
+                    <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
                       Zero Listing Fees
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                    <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       List all your products for free. No hidden charges, no monthly fees.
                       Just pure profit from day one.
                     </p>
@@ -742,32 +748,32 @@ const Home = () => {
               <div className="group relative">
                 <div className="absolute inset-0 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #3f7d20, #72b01d)` }}></div>
-                <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
+                <div className={`relative backdrop-blur-sm border rounded-3xl shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3 ${isMobile ? 'p-6' : 'p-8'}`}
                   style={{
                     backgroundColor: '#ffffff',
                     borderColor: 'rgba(63, 125, 32, 0.3)'
                   }}>
                   <div className="text-center">
                     <div className="relative mb-6">
-                      <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center border-4"
+                      <div className={`mx-auto rounded-full flex items-center justify-center border-4 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           backgroundColor: 'rgba(63, 125, 32, 0.1)',
                           borderColor: '#3f7d20'
                         }}>
-                        <svg className="w-10 h-10" fill="none" stroke="#3f7d20" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <svg className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} fill="none" stroke="#3f7d20" strokeWidth="2.5" viewBox="0 0 24 24">
                           <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" />
                         </svg>
                       </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                      <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                         style={{ backgroundColor: '#3f7d20' }}>
-                        <span className="text-white text-lg">∞</span>
+                        <span className={`text-white ${isMobile ? 'text-sm' : 'text-lg'}`}>∞</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-3"
+                    <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
                       Unlimited Shops
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                    <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       Create multiple shops for different product categories.
                       Build your empire, one shop at a time.
                     </p>
@@ -779,32 +785,32 @@ const Home = () => {
               <div className="group relative">
                 <div className="absolute inset-0 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}></div>
-                <div className="relative backdrop-blur-sm border rounded-3xl p-8 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3"
+                <div className={`relative backdrop-blur-sm border rounded-3xl shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-3 ${isMobile ? 'p-6' : 'p-8'}`}
                   style={{
                     backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
                   }}>
                   <div className="text-center">
                     <div className="relative mb-6">
-                      <div className="w-20 h-20 mx-auto rounded-full flex items-center justify-center border-4"
+                      <div className={`mx-auto rounded-full flex items-center justify-center border-4 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           backgroundColor: 'rgba(114, 176, 29, 0.1)',
                           borderColor: '#72b01d'
                         }}>
-                        <svg className="w-10 h-10" fill="none" stroke="#72b01d" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <svg className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} fill="none" stroke="#72b01d" strokeWidth="2.5" viewBox="0 0 24 24">
                           <path d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                       </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                      <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                         style={{ backgroundColor: '#72b01d' }}>
-                        <span className="text-white text-lg">+</span>
+                        <span className={`text-white ${isMobile ? 'text-sm' : 'text-lg'}`}>+</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-3"
+                    <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
                       Unlimited Products
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                    <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       Showcase your entire inventory without restrictions.
                       The sky's the limit for your creativity.
                     </p>
@@ -814,17 +820,17 @@ const Home = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="text-center mt-16">
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
               <Link
                 to="/create-shop"
-                className="group inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg shadow-2xl transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 overflow-hidden"
+                className={`group inline-flex items-center gap-3 rounded-full font-bold shadow-2xl transform hover:-translate-y-2 hover:scale-105 transition-all duration-500 overflow-hidden ${isMobile ? 'px-6 py-3 text-base' : 'px-8 py-4 text-lg'}`}
                 style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #3f7d20, #72b01d)` }}></div>
                 <span className="relative flex items-center gap-3">
                   🌟 Start Your Shop Today
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="group-hover:translate-x-1 transition-transform">
+                  <svg className={`group-hover:translate-x-1 transition-transform ${isMobile ? 'w-5 h-5' : 'w-5 h-5'}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path d="M13 7L18 12L13 17M6 12H18" />
                   </svg>
                 </span>
@@ -834,159 +840,161 @@ const Home = () => {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-20 w-full border-t"
+        <section className={`w-full border-t ${isMobile ? 'py-12' : 'py-20'}`}
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
-          <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 uppercase tracking-wide"
+          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            <h2 className={`font-bold text-center mb-4 uppercase tracking-wide ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`}
               style={{ color: '#0d0a0b' }}>
               What Our Community Says
             </h2>
-            <p className="text-center mb-16 text-lg"
+            <p className={`text-center mb-16 ${isMobile ? 'text-base' : 'text-lg'}`}
               style={{ color: '#454955' }}>
               Real stories from Sri Lankan creators and happy customers
             </p>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className={`gap-8 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-3'}`}>
               {/* Testimonial 1 */}
-              <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
+              <div className={`border rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative ${isMobile ? 'p-6' : 'p-8'}`}
                 style={{
                   backgroundColor: '#ffffff',
                   borderColor: 'rgba(114, 176, 29, 0.3)'
                 }}>
-                <div className="flex items-center mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mr-4"
+                <div className={`flex items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                  <div className={`rounded-full flex items-center justify-center mr-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                     style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                    <span className="text-2xl">👩‍🎨</span>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>👩‍🎨</span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-lg" style={{ color: '#0d0a0b' }}>
+                    <h4 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>
                       Priya Jayasinghe
                     </h4>
-                    <p className="text-sm" style={{ color: '#3f7d20' }}>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
                       Handmade Jewelry Seller
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-2xl" style={{ color: '#72b01d' }}>★</span>
+                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                   "This platform changed my life! I started selling my traditional Sri Lankan jewelry from home and now I have customers from all over the island. The zero listing fee means I can focus on creating beautiful pieces."
                 </p>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#72b01d' }}>
-                  <span className="text-white text-xl">"</span>
+                  <span className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`}>"</span>
                 </div>
               </div>
 
-              {/* Testimonial 2 */}              <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
+              {/* Testimonial 2 */}
+              <div className={`border rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative ${isMobile ? 'p-6' : 'p-8'}`}
                 style={{
                   backgroundColor: '#ffffff',
                   borderColor: 'rgba(63, 125, 32, 0.3)'
                 }}>
-                <div className="flex items-center mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mr-4"
+                <div className={`flex items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                  <div className={`rounded-full flex items-center justify-center mr-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                     style={{ backgroundColor: 'rgba(63, 125, 32, 0.1)' }}>
-                    <span className="text-2xl">🛍️</span>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🛍️</span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-lg" style={{ color: '#0d0a0b' }}>
+                    <h4 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>
                       Saman Perera
                     </h4>
-                    <p className="text-sm" style={{ color: '#3f7d20' }}>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
                       Happy Customer
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-2xl" style={{ color: '#72b01d' }}>★</span>
+                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                   "I love supporting local Sri Lankan businesses through this platform. The quality of handmade items is amazing and the 14-day guarantee gives me confidence in every purchase. Highly recommended!"
                 </p>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#3f7d20' }}>
-                  <span className="text-white text-xl">"</span>
+                  <span className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`}>"</span>
                 </div>
               </div>
 
-              {/* Testimonial 3 */}              <div className="border rounded-2xl p-8 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative"
+              {/* Testimonial 3 */}
+              <div className={`border rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2 relative ${isMobile ? 'p-6' : 'p-8'}`}
                 style={{
                   backgroundColor: '#ffffff',
                   borderColor: 'rgba(69, 73, 85, 0.3)'
                 }}>
-                <div className="flex items-center mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center mr-4"
+                <div className={`flex items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                  <div className={`rounded-full flex items-center justify-center mr-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                     style={{ backgroundColor: 'rgba(69, 73, 85, 0.1)' }}>
-                    <span className="text-2xl">🍛</span>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🍛</span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-lg" style={{ color: '#0d0a0b' }}>
+                    <h4 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>
                       Kamala Silva
                     </h4>
-                    <p className="text-sm" style={{ color: '#3f7d20' }}>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
                       Traditional Food Seller
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-2xl" style={{ color: '#72b01d' }}>★</span>
+                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: '#454955' }}>
+                <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                   "As a home-based food business owner, this marketplace gave me the perfect platform to reach more customers. The unlimited listings feature helps me showcase all my traditional Sri Lankan delicacies!"
                 </p>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center"
+                <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#454955' }}>
-                  <span className="text-white text-xl">"</span>
+                  <span className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`}>"</span>
                 </div>
               </div>
             </div>
 
             {/* Statistics Row */}
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className={`text-center gap-8 ${isMobile ? 'mt-12 grid grid-cols-2' : 'mt-16 grid grid-cols-2 md:grid-cols-4'}`}>
               <div className="px-4">
-                <div className="text-3xl md:text-4xl font-black mb-2"
+                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
                   style={{ color: '#72b01d' }}>
                   500+
                 </div>
-                <p className="text-sm font-medium uppercase tracking-wide"
+                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{ color: '#454955' }}>
                   Happy Sellers
                 </p>
               </div>
               <div className="px-4">
-                <div className="text-3xl md:text-4xl font-black mb-2"
+                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
                   style={{ color: '#3f7d20' }}>
                   2,000+
                 </div>
-                <p className="text-sm font-medium uppercase tracking-wide"
+                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{ color: '#454955' }}>
                   Products Listed
                 </p>
               </div>
               <div className="px-4">
-                <div className="text-3xl md:text-4xl font-black mb-2"
+                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
                   style={{ color: '#72b01d' }}>
                   10,000+
                 </div>
-                <p className="text-sm font-medium uppercase tracking-wide"
+                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{ color: '#454955' }}>
                   Satisfied Customers
                 </p>
               </div>
               <div className="px-4">
-                <div className="text-3xl md:text-4xl font-black mb-2"
+                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
                   style={{ color: '#3f7d20' }}>
                   4.9/5
                 </div>
-                <p className="text-sm font-medium uppercase tracking-wide"
+                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{ color: '#454955' }}>
                   Average Rating
                 </p>
@@ -996,7 +1004,7 @@ const Home = () => {
         </section>
 
         {/* How it Works */}
-        <section className="py-20 w-full border-t relative overflow-hidden"
+        <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
@@ -1008,15 +1016,15 @@ const Home = () => {
               style={{ backgroundColor: 'rgba(63, 125, 32, 0.3)' }}></div>
           </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4">
+          <div className={`relative z-10 max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             {/* Header */}
-            <div className="text-center mb-20">
-              <div className="inline-flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center"
+            <div className={`text-center ${isMobile ? 'mb-12' : 'mb-20'}`}>
+              <div className={`inline-flex items-center gap-3 ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}>
-                  <span className="text-2xl">⚡</span>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚡</span>
                 </div>
-                <span className="text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full"
+                <span className={`font-bold uppercase tracking-wider px-4 py-2 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(69, 73, 85, 0.1)',
                     color: '#454955'
@@ -1024,7 +1032,7 @@ const Home = () => {
                   SIMPLE PROCESS
                 </span>
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-4"
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
                 style={{ color: '#0d0a0b' }}>
                 How It
                 <span className="relative ml-2">
@@ -1038,7 +1046,7 @@ const Home = () => {
                   </span>
                 </span>
               </h2>
-              <p className="text-lg md:text-xl max-w-2xl mx-auto"
+              <p className={`max-w-2xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
                 style={{ color: '#454955' }}>
                 Get started in just three simple steps and join our thriving community
               </p>
@@ -1047,55 +1055,45 @@ const Home = () => {
             {/* Steps with connecting lines */}
             <div className="relative">
               {/* Connecting line for desktop */}
-              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0"
+              <div className={`absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 z-0 ${isMobile ? 'hidden' : 'hidden md:block'}`}
                 style={{
                   background: `linear-gradient(to right, transparent 0%, rgba(114, 176, 29, 0.3) 20%, rgba(114, 176, 29, 0.3) 80%, transparent 100%)`
                 }}></div>
 
-              <div className="relative z-10 grid md:grid-cols-3 gap-8 lg:gap-16">
+              <div className={`relative z-10 gap-8 lg:gap-16 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-3'}`}>
                 {/* Step 1 */}
                 <div className="group relative">
                   <div className="absolute inset-0 rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-all duration-700"
                     style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}></div>
 
-                  <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
+                  <div className={`relative backdrop-blur-sm border rounded-3xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4 ${isMobile ? 'p-6' : 'p-8'}`}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}>
                     {/* Step number circle */}
-                    <div className="relative mb-8 flex justify-center">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
+                    <div className={`relative flex justify-center ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                      <div className={`rounded-full flex items-center justify-center border-4 relative z-10 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
                           borderColor: '#ffffff'
                         }}>
-                        <span className="text-2xl font-black text-white">1</span>
+                        <span className={`font-black text-white ${isMobile ? 'text-xl' : 'text-2xl'}`}>1</span>
                       </div>
                       {/* Connecting dot for mobile */}
-                      <div className="md:hidden absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full"
+                      <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full ${isMobile ? '' : 'md:hidden'}`}
                         style={{ backgroundColor: '#72b01d' }}></div>
                     </div>
 
-                    {/* Icon */}
-                    {/* <div className="flex justify-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                        <svg className="w-8 h-8" fill="none" stroke="#72b01d" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                    </div> */}
-
                     <div className="text-center">
-                      <h3 className="text-xl font-bold mb-4"
+                      <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`}
                         style={{ color: '#0d0a0b' }}>
                         Create Your Account
                       </h3>
-                      <p className="text-sm leading-relaxed mb-4" style={{ color: '#454955' }}>
+                      <p className={`leading-relaxed mb-4 ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                         Quick and easy signup with email or Google. Join thousands of Sri Lankan creators and shoppers.
                       </p>
-                      <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full"
+                      <div className={`inline-flex items-center gap-2 font-medium px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
                         style={{
                           backgroundColor: 'rgba(114, 176, 29, 0.1)',
                           color: '#3f7d20'
@@ -1111,45 +1109,34 @@ const Home = () => {
                   <div className="absolute inset-0 rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-all duration-700"
                     style={{ background: `linear-gradient(135deg, #3f7d20, #72b01d)` }}></div>
 
-                  <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
+                  <div className={`relative backdrop-blur-sm border rounded-3xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4 ${isMobile ? 'p-6' : 'p-8'}`}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: 'rgba(63, 125, 32, 0.3)'
                     }}>
                     {/* Step number circle */}
-                    <div className="relative mb-8 flex justify-center">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
+                    <div className={`relative flex justify-center ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                      <div className={`rounded-full flex items-center justify-center border-4 relative z-10 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           background: `linear-gradient(135deg, #3f7d20, #72b01d)`,
                           borderColor: '#ffffff'
                         }}>
-                        <span className="text-2xl font-black text-white">2</span>
+                        <span className={`font-black text-white ${isMobile ? 'text-xl' : 'text-2xl'}`}>2</span>
                       </div>
                       {/* Connecting dot for mobile */}
-                      <div className="md:hidden absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full"
+                      <div className={`absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-3 h-3 rounded-full ${isMobile ? '' : 'md:hidden'}`}
                         style={{ backgroundColor: '#3f7d20' }}></div>
                     </div>
 
-                    {/* Icon */}
-                    {/* <div className="flex justify-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: 'rgba(63, 125, 32, 0.1)' }}>
-                        <svg className="w-8 h-8" fill="none" stroke="#3f7d20" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="M21 21l-4.35-4.35" />
-                        </svg>
-                      </div>
-                    </div> */}
-
                     <div className="text-center">
-                      <h3 className="text-xl font-bold mb-4"
+                      <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`}
                         style={{ color: '#0d0a0b' }}>
                         Browse & Discover
                       </h3>
-                      <p className="text-sm leading-relaxed mb-4" style={{ color: '#454955' }}>
+                      <p className={`leading-relaxed mb-4 ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                         Explore amazing handmade products by category, search, or browse featured shops from across Sri Lanka.
                       </p>
-                      <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full"
+                      <div className={`inline-flex items-center gap-2 font-medium px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
                         style={{
                           backgroundColor: 'rgba(63, 125, 32, 0.1)',
                           color: '#3f7d20'
@@ -1165,41 +1152,31 @@ const Home = () => {
                   <div className="absolute inset-0 rounded-3xl blur-xl opacity-0 group-hover:opacity-30 transition-all duration-700"
                     style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}></div>
 
-                  <div className="relative backdrop-blur-sm border rounded-3xl p-8 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4"
+                  <div className={`relative backdrop-blur-sm border rounded-3xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-4 ${isMobile ? 'p-6' : 'p-8'}`}
                     style={{
                       backgroundColor: '#ffffff',
                       borderColor: 'rgba(114, 176, 29, 0.3)'
                     }}>
                     {/* Step number circle */}
-                    <div className="relative mb-8 flex justify-center">
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center border-4 relative z-10"
+                    <div className={`relative flex justify-center ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                      <div className={`rounded-full flex items-center justify-center border-4 relative z-10 ${isMobile ? 'w-16 h-16' : 'w-20 h-20'}`}
                         style={{
                           background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
                           borderColor: '#ffffff'
                         }}>
-                        <span className="text-2xl font-black text-white">3</span>
+                        <span className={`font-black text-white ${isMobile ? 'text-xl' : 'text-2xl'}`}>3</span>
                       </div>
                     </div>
 
-                    {/* Icon */}
-                    {/* <div className="flex justify-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                        <svg className="w-8 h-8" fill="none" stroke="#72b01d" strokeWidth="2.5" viewBox="0 0 24 24">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                      </div>
-                    </div> */}
-
                     <div className="text-center">
-                      <h3 className="text-xl font-bold mb-4"
+                      <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`}
                         style={{ color: '#0d0a0b' }}>
                         Support Local Creators
                       </h3>
-                      <p className="text-sm leading-relaxed mb-4" style={{ color: '#454955' }}>
+                      <p className={`leading-relaxed mb-4 ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                         Purchase unique items directly from talented Sri Lankan artisans. Secure checkout with money-back guarantee.
                       </p>
-                      <div className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full"
+                      <div className={`inline-flex items-center gap-2 font-medium px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
                         style={{
                           backgroundColor: 'rgba(114, 176, 29, 0.1)',
                           color: '#3f7d20'
@@ -1213,14 +1190,14 @@ const Home = () => {
             </div>
 
             {/* Bottom Call to Action */}
-            <div className="text-center mt-16">
-              <p className="text-lg mb-6" style={{ color: '#454955' }}>
+            <div className={`text-center ${isMobile ? 'mt-12' : 'mt-16'}`}>
+              <p className={`mb-6 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
                 Ready to join our community?
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
                   to="/search"
-                  className="group inline-flex items-center gap-3 px-6 py-3 rounded-full font-semibold border transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold border transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{
                     backgroundColor: '#ffffff',
                     color: '#3f7d20',
@@ -1231,7 +1208,7 @@ const Home = () => {
                 </Link>
                 <Link
                   to="/create-shop"
-                  className="group inline-flex items-center gap-3 px-6 py-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
                   <span>🚀 Start Selling</span>
@@ -1242,25 +1219,25 @@ const Home = () => {
         </section>
 
         {/* Mission or Call to Action */}
-        <section className="w-full py-16 border-t text-center"
+        <section className={`w-full border-t text-center ${isMobile ? 'py-12' : 'py-16'}`}
           style={{
             backgroundColor: '#ffffff',
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
-          <div className="max-w-4xl mx-auto px-4">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 uppercase tracking-wide"
+          <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            <h3 className={`font-bold mb-4 uppercase tracking-wide ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`}
               style={{ color: '#0d0a0b' }}>
               For Sri Lanka, By Sri Lankans
             </h3>
-            <p className="text-lg font-medium max-w-2xl mx-auto mb-8"
+            <p className={`font-medium max-w-2xl mx-auto mb-8 ${isMobile ? 'text-base' : 'text-lg'}`}
               style={{ color: '#454955' }}>
               Every purchase helps a small Sri Lankan business grow.
               Start shopping or open your own shop today.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className={`flex gap-6 justify-center items-center ${isMobile ? 'flex-col gap-4' : 'flex-col sm:flex-row'}`}>
               <Link
                 to="/search"
-                className="border px-8 py-4 rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto min-w-[200px]"
+                className={`border rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto ${isMobile ? 'px-6 py-3 text-sm min-w-[180px]' : 'px-8 py-4 min-w-[200px]'}`}
                 style={{
                   backgroundColor: '#72b01d',
                   color: '#ffffff',
@@ -1279,7 +1256,7 @@ const Home = () => {
               </Link>
               <Link
                 to="/create-shop"
-                className="border px-8 py-4 rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto min-w-[200px]"
+                className={`border rounded-full font-bold uppercase transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 w-full sm:w-auto ${isMobile ? 'px-6 py-3 text-sm min-w-[180px]' : 'px-8 py-4 min-w-[200px]'}`}
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#3f7d20',

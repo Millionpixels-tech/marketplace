@@ -1,10 +1,12 @@
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
+import { useResponsive } from "../hooks/useResponsive";
 import { FiHeart, FiUsers, FiAward, FiGlobe, FiTarget, FiTrendingUp } from "react-icons/fi";
 import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 
 export default function AboutUs() {
+  const { isMobile } = useResponsive();
   const values = [
     {
       icon: <FiHeart className="w-8 h-8" />,
@@ -73,19 +75,19 @@ export default function AboutUs() {
         canonicalUrl={getCanonicalUrl('/about')}
         structuredData={getOrganizationStructuredData()}
       />
-      <Header />
+      <ResponsiveHeader />
       
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white py-20">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className={`relative bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white ${isMobile ? 'py-12' : 'py-20'}`}>
+        <div className={`max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">About SinaMarketplace</h1>
-            <p className="text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto">
+            <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl md:text-6xl'} font-bold ${isMobile ? 'mb-4' : 'mb-6'}`}>About SinaMarketplace</h1>
+            <p className={`${isMobile ? 'text-base' : 'text-xl md:text-2xl'} ${isMobile ? 'mb-6' : 'mb-8'} text-green-100 ${isMobile ? 'max-w-sm' : 'max-w-3xl'} mx-auto`}>
               Celebrating Sri Lankan craftsmanship and connecting artisans with customers who appreciate authentic, handmade products.
             </p>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-white" style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0)' }}></div>
+        <div className={`absolute bottom-0 left-0 right-0 ${isMobile ? 'h-8' : 'h-16'} bg-white`} style={{ clipPath: 'polygon(0 100%, 100% 100%, 100% 0)' }}></div>
       </div>
 
       {/* Our Story Section */}

@@ -10,10 +10,11 @@ import { generatePaymentHash } from "../utils/payment/paymentHash";
 import type { PaymentHashParams } from "../utils/payment/paymentHash";
 import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
 import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { Input } from "../components/UI";
+import { useResponsive } from "../hooks/useResponsive";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
 type CheckoutItem = {
@@ -79,6 +80,7 @@ declare global {
 
 export default function CheckoutPage() {
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -651,49 +653,49 @@ export default function CheckoutPage() {
         noIndex={true}
       />
       <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
-        <Header />
+        <ResponsiveHeader />
       
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className={`${isMobile ? 'max-w-sm px-3 py-6' : 'max-w-6xl px-4 py-8'} mx-auto`}>
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 mb-6 text-sm font-medium transition"
+          className={`flex items-center gap-2 ${isMobile ? 'mb-4 text-xs' : 'mb-6 text-sm'} font-medium transition`}
           style={{ color: '#454955' }}
           onMouseEnter={(e) => e.currentTarget.style.color = '#72b01d'}
           onMouseLeave={(e) => e.currentTarget.style.color = '#454955'}
         >
-          <FiArrowLeft size={18} />
+          <FiArrowLeft size={isMobile ? 16 : 18} />
           Back to Product
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-6' : 'lg:grid-cols-2 gap-8'}`}>
           {/* Left Column - Buyer Information Form */}
-          <div className="space-y-6">
-            <div className="rounded-2xl border p-6" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: '#0d0a0b' }}>
-                <FiShoppingBag size={20} />
+          <div className={`space-y-${isMobile ? '4' : '6'}`}>
+            <div className={`rounded-2xl border ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold ${isMobile ? 'mb-3' : 'mb-4'} flex items-center gap-2`} style={{ color: '#0d0a0b' }}>
+                <FiShoppingBag size={isMobile ? 18 : 20} />
                 Buyer Information
               </h2>
               
               {/* Authentication Section for Guest Users */}
               {!user && (
-                <div className="mb-6 p-4 rounded-xl border" style={{ 
+                <div className={`${isMobile ? 'mb-4 p-3' : 'mb-6 p-4'} rounded-xl border`} style={{ 
                   backgroundColor: 'rgba(114, 176, 29, 0.05)', 
                   borderColor: 'rgba(114, 176, 29, 0.2)' 
                 }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <FiUser size={18} style={{ color: '#72b01d' }} />
-                    <span className="text-sm font-medium" style={{ color: '#454955' }}>
+                  <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : 'mb-3'}`}>
+                    <FiUser size={isMobile ? 16 : 18} style={{ color: '#72b01d' }} />
+                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`} style={{ color: '#454955' }}>
                       Sign in to save your information and track your order
                     </span>
                   </div>
                   
                   {!showAuth ? (
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row gap-2'}`}>
                       <button
                         type="button"
                         onClick={() => setShowAuth(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition flex-1"
+                        className={`flex items-center justify-center gap-2 ${isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-medium transition flex-1`}
                         style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3f7d20'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#72b01d'}

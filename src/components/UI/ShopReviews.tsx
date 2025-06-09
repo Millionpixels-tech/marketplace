@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { useResponsive } from "../../hooks/useResponsive";
 
 type Review = {
     id: string;
@@ -18,6 +19,7 @@ type Review = {
 const REVIEWS_PER_PAGE = 8;
 
 export default function ShopReviews({ shopId }: { shopId: string }) {
+    const { isMobile } = useResponsive();
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
@@ -72,9 +74,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
 
     if (loading)
         return (
-            <div className="w-full py-16">
-                <div className="max-w-5xl mx-auto px-2">
-                    <div className="text-base text-left" style={{ color: '#454955', opacity: 0.7 }}>Loading reviews...</div>
+            <div className={`w-full ${isMobile ? 'py-8' : 'py-16'}`}>
+                <div className={`max-w-5xl mx-auto ${isMobile ? 'px-4' : 'px-2'}`}>
+                    <div className={`${isMobile ? 'text-sm' : 'text-base'} text-left`} style={{ color: '#454955', opacity: 0.7 }}>Loading reviews...</div>
                 </div>
             </div>
         );
@@ -82,8 +84,8 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
     if (reviews.length === 0)
         return (
             <div className="w-full">
-                <div className="max-w-5xl mx-auto px-2">
-                    <div className="text-base text-left" style={{ color: '#454955', opacity: 0.7 }}>
+                <div className={`max-w-5xl mx-auto ${isMobile ? 'px-4' : 'px-2'}`}>
+                    <div className={`${isMobile ? 'text-sm' : 'text-base'} text-left`} style={{ color: '#454955', opacity: 0.7 }}>
                         No reviews yet.
                     </div>
                 </div>
@@ -91,34 +93,34 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
         );
 
     return (
-        <section className="w-full py-2" style={{ backgroundColor: '#ffffff' }}>
-            <div className="mx-auto px-2 md:px-6">
-                <h3 className="text-2xl md:text-3xl font-black mb-8 text-left" style={{ color: '#0d0a0b' }}>Shop Reviews ({reviews.length})</h3>
-                <div className="flex flex-col gap-6">
+        <section className={`w-full ${isMobile ? 'py-1' : 'py-2'}`} style={{ backgroundColor: '#ffffff' }}>
+            <div className={`mx-auto ${isMobile ? 'px-4' : 'px-2 md:px-6'}`}>
+                <h3 className={`${isMobile ? 'text-lg' : 'text-2xl md:text-3xl'} font-black ${isMobile ? 'mb-4' : 'mb-8'} text-left`} style={{ color: '#0d0a0b' }}>Shop Reviews ({reviews.length})</h3>
+                <div className={`flex flex-col ${isMobile ? 'gap-4' : 'gap-6'}`}>
                     {pageReviews.map(r => (
                         <div
                             key={r.id}
-                            className="rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start gap-6 border"
+                            className={`rounded-2xl ${isMobile ? 'p-4' : 'p-6'} shadow-sm flex ${isMobile ? 'flex-col' : 'flex-col md:flex-row'} items-start ${isMobile ? 'gap-3' : 'gap-6'} border`}
                             style={{
                                 backgroundColor: '#ffffff',
                                 borderColor: 'rgba(114, 176, 29, 0.3)'
                             }}
                         >
                             {/* Item details */}
-                            <div className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border flex items-center justify-center" style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+                            <div className={`flex-shrink-0 ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} rounded-xl overflow-hidden border flex items-center justify-center`} style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
                                 {r.itemImage ? (
                                     <img src={r.itemImage} alt={r.itemName} className="object-cover w-full h-full" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center" style={{ color: '#454955' }}>No Image</div>
+                                    <div className={`w-full h-full flex items-center justify-center ${isMobile ? 'text-xs' : ''}`} style={{ color: '#454955' }}>No Image</div>
                                 )}
                             </div>
                             <div className="flex-1 flex flex-col">
-                                <div className="font-bold text-base mb-1" style={{ color: '#0d0a0b' }}>{r.itemName || "Item"}</div>
+                                <div className={`font-bold ${isMobile ? 'text-sm' : 'text-base'} mb-1`} style={{ color: '#0d0a0b' }}>{r.itemName || "Item"}</div>
                                 <div className="flex items-center gap-1 mb-1">
                                     {[1, 2, 3, 4, 5].map(i => (
                                         <svg
                                             key={i}
-                                            className={`h-5 w-5`}
+                                            className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`}
                                             style={{ color: r.rating >= i ? "#fbbf24" : "#454955" }}
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
@@ -127,9 +129,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                                         </svg>
                                     ))}
                                 </div>
-                                <div className="font-medium mb-2 text-base" style={{ color: '#454955' }}>{r.review}</div>
+                                <div className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>{r.review}</div>
                                 {r.createdAt && (
-                                    <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                    <div className={`${isMobile ? 'text-xs' : 'text-xs'} mt-1`} style={{ color: '#454955', opacity: 0.7 }}>
                                         Order date: {new Date(r.createdAt.seconds * 1000).toLocaleDateString()}
                                     </div>
                                 )}
@@ -139,9 +141,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                 </div>
                 {/* Pagination - centered with Prev/Next */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-8 select-none w-full">
+                    <div className={`flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'mt-4' : 'mt-8'} select-none w-full`}>
                         <button
-                            className="px-4 py-2 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'} rounded-xl border font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                             style={{
                                 backgroundColor: page === 1 ? '#ffffff' : '#ffffff',
                                 color: page === 1 ? '#454955' : '#454955',
@@ -162,14 +164,14 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                             onClick={() => setPage(page - 1)}
                             disabled={page === 1}
                         >
-                            Prev
+                            {isMobile ? '←' : 'Prev'}
                         </button>
                         {Array.from({ length: totalPages }).map((_, i) => {
                             const isCurrentPage = page === i + 1;
                             return (
                                 <button
                                     key={i + 1}
-                                    className="px-4 py-2 rounded-xl border text-sm font-bold transition-all"
+                                    className={`${isMobile ? 'w-8 h-8 text-xs' : 'px-4 py-2 text-sm'} rounded-xl border font-bold transition-all`}
                                     style={{
                                         backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
                                         color: isCurrentPage ? '#ffffff' : '#454955',
@@ -215,7 +217,7 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                             onClick={() => setPage(page + 1)}
                             disabled={page === totalPages}
                         >
-                            Next
+                            {isMobile ? '→' : 'Next'}
                         </button>
                     </div>
                 )}

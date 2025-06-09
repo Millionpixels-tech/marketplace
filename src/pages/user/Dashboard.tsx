@@ -8,11 +8,12 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "fire
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
+import { useResponsive } from "../../hooks/useResponsive";
 import { 
     calculatePaymentSchedule, 
     getEligibleOrdersForPayment, 
@@ -53,6 +54,7 @@ const ORDER_SUBTABS = [
 ];
 
 export default function ProfileDashboard() {
+    const { isMobile } = useResponsive();
     const { user } = useAuth();
     const { id } = useParams();
     const [shops, setShops] = useState<any[]>([]);
@@ -663,24 +665,24 @@ export default function ProfileDashboard() {
 
     return (
         <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>
-            <Header />
+            <ResponsiveHeader />
             {/* Full width, no max-w */}
-            <div className="flex flex-col md:flex-row gap-0 py-8 px-0 md:px-8 w-full">
+            <div className={`flex flex-col md:flex-row gap-0 ${isMobile ? 'py-4 px-4' : 'py-8 px-0 md:px-8'} w-full`}>
                 {/* Sidebar */}
-                <aside className={`w-full md:w-64 min-h-screen border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg p-6 flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start mb-6 md:mb-0 relative transition-all`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                <aside className={`w-full md:w-64 ${isMobile ? 'min-h-auto' : 'min-h-screen'} border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start ${isMobile ? 'mb-4' : 'mb-6 md:mb-0'} relative transition-all`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* Burger for mobile */}
                     <button
-                        className="md:hidden absolute top-4 right-4 z-10"
+                        className={`md:hidden absolute ${isMobile ? 'top-2 right-2' : 'top-4 right-4'} z-10`}
                         onClick={() => setSidebarOpen(s => !s)}
                     >
-                        {sidebarOpen ? <FiX size={26} /> : <FiMenu size={26} />}
+                        {sidebarOpen ? <FiX size={isMobile ? 22 : 26} /> : <FiMenu size={isMobile ? 22 : 26} />}
                     </button>
                     {/* Sidebar Nav */}
-                    <nav className={`flex-1 w-full flex ${sidebarOpen ? "flex" : "hidden"} md:flex flex-col gap-2 mt-8 md:mt-0`}>
+                    <nav className={`flex-1 w-full flex ${sidebarOpen ? "flex" : "hidden"} md:flex flex-col ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'mt-6' : 'mt-8 md:mt-0'}`}>
                         {TABS.map(tab => (
                             <button
                                 key={tab.key}
-                                className={`group flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-base transition-all relative overflow-hidden border`}
+                                className={`group flex items-center ${isMobile ? 'gap-2 px-3 py-2' : 'gap-3 px-5 py-3'} rounded-full font-semibold ${isMobile ? 'text-sm' : 'text-base'} transition-all relative overflow-hidden border`}
                                 style={{
                                     backgroundColor: selectedTab === tab.key ? '#72b01d' : '#ffffff',
                                     color: selectedTab === tab.key ? '#ffffff' : '#454955',
@@ -701,7 +703,7 @@ export default function ProfileDashboard() {
                                 }}
                                 onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
                             >
-                                <span className={`transition-all`} style={{
+                                <span className={`transition-all ${isMobile ? 'text-sm' : ''}`} style={{
                                     color: selectedTab === tab.key ? '#ffffff' : '#454955',
                                     transform: selectedTab === tab.key ? 'scale(1.1)' : 'scale(1)',
                                     opacity: selectedTab === tab.key ? 1 : 0.7
@@ -713,34 +715,36 @@ export default function ProfileDashboard() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 min-w-0 w-full shadow-lg p-4 md:p-10 mx-auto border rounded-2xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                <main className={`flex-1 min-w-0 w-full shadow-lg ${isMobile ? 'p-4' : 'p-4 md:p-10'} mx-auto border rounded-2xl`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     {/* PROFILE TAB */}
                     {selectedTab === "profile" && (
                         <div className="flex flex-col items-center w-full">
                             {/* Profile Picture */}
-                            <div className="w-28 h-28 rounded-full border-4 shadow flex items-center justify-center overflow-hidden mb-4 relative group" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: '#72b01d' }}>
+                            <div className={`${isMobile ? 'w-20 h-20' : 'w-28 h-28'} rounded-full border-4 shadow flex items-center justify-center overflow-hidden ${isMobile ? 'mb-3' : 'mb-4'} relative group`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: '#72b01d' }}>
                                 {photoURL ? (
                                     <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
                                 ) : (
-                                    <><span className="text-4xl font-bold" style={{ color: '#454955' }}>
-                                        {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
-                                    </span></>
+                                    <>
+                                        <span className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold`} style={{ color: '#454955' }}>
+                                            {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                        </span>
+                                    </>
                                 )}
                                 {isOwner && editing && (
                                     <>
                                         <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                            <span className="text-white font-semibold">Change</span>
+                                            <span className={`text-white font-semibold ${isMobile ? 'text-xs' : ''}`}>Change</span>
                                             <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
                                         </label>
-                                        {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">Uploading...</div>}
+                                        {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">{isMobile ? 'Loading...' : 'Uploading...'}</div>}
                                     </>
                                 )}
                             </div>
                             {/* Name */}
-                            <div className="text-2xl font-black mb-2 text-center flex items-center justify-center gap-2" style={{ color: '#0d0a0b' }}>
+                            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black ${isMobile ? 'mb-1' : 'mb-2'} text-center flex items-center justify-center gap-2`} style={{ color: '#0d0a0b' }}>
                                 {isOwner && editing ? (
                                     <input
-                                        className="text-2xl font-black text-center border rounded-xl px-3 py-1 w-full max-w-xs mb-2"
+                                        className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black text-center border rounded-xl ${isMobile ? 'px-2 py-1' : 'px-3 py-1'} w-full ${isMobile ? 'max-w-xs' : 'max-w-xs'} ${isMobile ? 'mb-1' : 'mb-2'}`}
                                         style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
                                         value={displayName}
                                         onChange={e => setDisplayName(e.target.value)}
@@ -750,8 +754,8 @@ export default function ProfileDashboard() {
                                     <>
                                         <span>{displayName || profileEmail}</span>
                                         {verifyForm.isVerified === VerificationStatus.COMPLETED && (
-                                            <span className="inline-flex items-center justify-center ml-2 rounded-full w-6 h-6" style={{ backgroundColor: '#72b01d' }}>
-                                                <svg viewBox="0 0 20 20" fill="white" className="w-4 h-4">
+                                            <span className={`inline-flex items-center justify-center ml-2 rounded-full ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} style={{ backgroundColor: '#72b01d' }}>
+                                                <svg viewBox="0 0 20 20" fill="white" className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`}>
                                                     <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
                                                 </svg>
                                             </span>
@@ -761,27 +765,27 @@ export default function ProfileDashboard() {
                             </div>
 
                             {/* Description */}
-                            <div className="w-full mb-6 flex flex-col items-center">
+                            <div className={`w-full ${isMobile ? 'mb-4' : 'mb-6'} flex flex-col items-center`}>
                                 {isOwner && editing ? (
                                     <textarea
-                                        className="w-full max-w-md border rounded-xl p-3 text-lg text-center"
+                                        className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} border rounded-xl ${isMobile ? 'p-2' : 'p-3'} ${isMobile ? 'text-base' : 'text-lg'} text-center`}
                                         style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
-                                        rows={3}
+                                        rows={isMobile ? 2 : 3}
                                         value={desc}
                                         onChange={e => setDesc(e.target.value)}
                                         placeholder="Write something about yourself..."
                                         maxLength={300}
                                     />
                                 ) : (
-                                    <div className="text-lg min-h-[48px] whitespace-pre-line text-center" style={{ color: '#454955' }}>{desc || <span style={{ color: '#454955', opacity: 0.6 }}>No description yet.</span>}</div>
+                                    <div className={`${isMobile ? 'text-base' : 'text-lg'} min-h-[48px] whitespace-pre-line text-center`} style={{ color: '#454955' }}>{desc || <span style={{ color: '#454955', opacity: 0.6 }}>No description yet.</span>}</div>
                                 )}
                             </div>
                             {/* Edit/Save Buttons */}
                             {isOwner && (
-                                <div className="mb-8">
+                                <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
                                     {editing ? (
                                         <button
-                                            className="px-6 py-2 rounded-full font-semibold mr-2 disabled:opacity-50 transition"
+                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold mr-2 disabled:opacity-50 transition`}
                                             style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                             onMouseEnter={(e) => {
                                                 if (!saving) {
@@ -800,7 +804,7 @@ export default function ProfileDashboard() {
                                         </button>
                                     ) : (
                                         <button
-                                            className="px-6 py-2 rounded-full font-semibold transition border"
+                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold transition border`}
                                             style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                             onMouseEnter={(e) => {
                                                 e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
@@ -823,12 +827,12 @@ export default function ProfileDashboard() {
                     {/* SHOPS TAB */}
                     {selectedTab === "shops" && (
                         <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>{isOwner ? "Your Shops" : "Shops"}</h2>
+                            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} ${isMobile ? 'mb-3' : 'mb-4'}`}>
+                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>{isOwner ? "Your Shops" : "Shops"}</h2>
                                 {isOwner && (
                                     <Link
                                         to="/create-shop"
-                                        className="px-5 py-2 rounded-full font-bold uppercase tracking-wide shadow transition text-sm"
+                                        className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-sm'} rounded-full font-bold uppercase tracking-wide shadow transition`}
                                         style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -843,14 +847,14 @@ export default function ProfileDashboard() {
                             </div>
                             {shops.length === 0 ? (
                                 <div className="flex flex-col items-center gap-4">
-                                    <div className="text-center" style={{ color: '#454955', opacity: 0.7 }}>You have not created any shops yet.</div>
+                                    <div className={`text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>You have not created any shops yet.</div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className={`grid grid-cols-1 ${isMobile ? '' : 'sm:grid-cols-2'} gap-4`}>
                                     {shops.map(shop => (
                                         <div
                                             key={shop.id}
-                                            className="border rounded-xl p-4 flex items-center gap-4 transition"
+                                            className={`border rounded-xl ${isMobile ? 'p-3' : 'p-4'} flex items-center ${isMobile ? 'gap-3' : 'gap-4'} transition`}
                                             style={{
                                                 backgroundColor: '#ffffff',
                                                 borderColor: 'rgba(114, 176, 29, 0.3)'
@@ -867,24 +871,24 @@ export default function ProfileDashboard() {
                                             {/* Shop link and image */}
                                             <Link
                                                 to={`/shop/${shop.username}`}
-                                                className="flex items-center gap-4 flex-1"
+                                                className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'} flex-1`}
                                                 style={{ textDecoration: 'none', color: 'inherit' }}
                                             >
                                                 {shop.logo ? (
-                                                    <img src={shop.logo} alt={shop.name} className="w-14 h-14 rounded-full object-cover border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
+                                                    <img src={shop.logo} alt={shop.name} className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full object-cover border`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                 ) : (
-                                                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}>{shop.name[0]}</div>
+                                                    <div className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full flex items-center justify-center ${isMobile ? 'text-lg' : 'text-2xl'} font-bold border`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}>{shop.name[0]}</div>
                                                 )}
                                                 <div>
-                                                    <div className="font-bold text-lg" style={{ color: '#0d0a0b' }}>{shop.name}</div>
+                                                    <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{shop.name}</div>
                                                     <div className="text-xs" style={{ color: '#454955' }}>@{shop.username}</div>
                                                 </div>
                                             </Link>
                                             {isOwner && (
-                                                <div className="flex flex-col gap-2 ml-2">
+                                                <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-col gap-2'} ml-2`}>
                                                     <button
                                                         onClick={() => navigate(`/edit-shop/${shop.id}`)}
-                                                        className="px-3 py-1 rounded text-xs font-semibold transition border"
+                                                        className={`${isMobile ? 'px-2 py-1' : 'px-3 py-1'} rounded text-xs font-semibold transition border`}
                                                         style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
                                                         onMouseEnter={(e) => {
                                                             e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -934,11 +938,11 @@ export default function ProfileDashboard() {
                     {/* ORDERS TAB */}
                     {selectedTab === "orders" && (
                         <div>
-                            <div className="flex gap-6 mb-6 border-b" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                            <div className={`flex ${isMobile ? 'gap-3' : 'gap-6'} ${isMobile ? 'mb-4' : 'mb-6'} border-b`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                 {ORDER_SUBTABS.map(subTab => (
                                     <button
                                         key={subTab.key}
-                                        className={`py-3 px-6 font-bold text-base border-b-2 transition-all`}
+                                        className={`${isMobile ? 'py-2 px-3' : 'py-3 px-6'} font-bold ${isMobile ? 'text-sm' : 'text-base'} border-b-2 transition-all`}
                                         style={{
                                             borderBottomColor: orderSubTab === subTab.key ? '#72b01d' : 'transparent',
                                             color: orderSubTab === subTab.key ? '#0d0a0b' : '#454955'
@@ -960,17 +964,17 @@ export default function ProfileDashboard() {
                                 ))}
                             </div>
                             {ordersLoading ? (
-                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading orders...</div>
+                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955' }}>Loading orders...</div>
                             ) : (
                                 <div>
                                     {/* As Buyer */}
                                     {orderSubTab === "buyer" && (
                                         <div>
                                             {buyerOrders.length === 0 ? (
-                                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
+                                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
                                             ) : (
                                                 <>
-                                                    <div className="space-y-4">
+                                                    <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
                                                         {buyerOrders.map((order: any) => (
                                                             <Link
                                                                 to={`/order/${order.id}`}
@@ -1079,15 +1083,15 @@ export default function ProfileDashboard() {
                     {/* REVIEWS TAB */}
                     {selectedTab === "reviews" && (
                         <div>
-                            <h2 className="text-xl font-bold mb-4" style={{ color: '#0d0a0b' }}>Your Seller Reviews</h2>
+                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Your Seller Reviews</h2>
                             {reviewsLoading ? (
-                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading reviews...</div>
+                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading reviews...</div>
                             ) : sellerReviews.length === 0 ? (
-                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No reviews as seller yet.</div>
+                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No reviews as seller yet.</div>
                             ) : (
-                                <div className="space-y-4">
+                                <div className={`space-y-${isMobile ? '3' : '4'}`}>
                                     {sellerReviews.map(r => (
-                                        <div key={r.id} className="border rounded-xl p-5 shadow transition" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
+                                        <div key={r.id} className={`border rounded-xl shadow transition ${isMobile ? 'p-3' : 'p-5'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
                                             e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
                                             e.currentTarget.style.borderColor = '#72b01d';
                                             e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
@@ -1098,10 +1102,10 @@ export default function ProfileDashboard() {
                                                 e.currentTarget.style.boxShadow = '';
                                             }}>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-bold text-base" style={{ color: '#72b01d' }}>{r.rating}★</span>
+                                                <span className={`font-bold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>{r.rating}★</span>
                                                 <span className="text-xs" style={{ color: '#454955', opacity: 0.8 }}>{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
                                             </div>
-                                            <div style={{ color: '#0d0a0b' }}>{r.text}</div>
+                                            <div className={`${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>{r.text}</div>
                                             {r.writtenByUserName && (
                                                 <div className="mt-2 text-xs" style={{ color: '#454955', opacity: 0.7 }}>
                                                     — {r.writtenByUserName}
@@ -1117,11 +1121,11 @@ export default function ProfileDashboard() {
                     {/* LISTINGS TAB WITH PAGINATION */}
                     {selectedTab === "listings" && (
                         <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>Your Listings</h2>
+                            <div className={`flex items-center justify-between mb-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
+                                <h2 className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Your Listings</h2>
                                 <a
                                     href="/add-listing"
-                                    className="inline-block px-5 py-2 rounded-full font-semibold uppercase tracking-wide transition text-sm"
+                                    className={`inline-block rounded-full font-semibold uppercase tracking-wide transition ${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-sm'}`}
                                     style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -1134,18 +1138,18 @@ export default function ProfileDashboard() {
                                 </a>
                             </div>
                             {listingsLoading ? (
-                                <div className="py-10 text-center" style={{ color: '#454955' }}>Loading listings...</div>
+                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading listings...</div>
                             ) : totalListings === 0 ? (
-                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No listings found.</div>
+                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No listings found.</div>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'} gap-4`}>
                                         {paginatedListings.map(listing => {
                                             const shop = shops.find(s => s.id === listing.shopId);
                                             return (
                                                 <div
                                                     key={listing.id}
-                                                    className="border rounded-xl p-4 transition"
+                                                    className={`border rounded-xl transition ${isMobile ? 'p-3' : 'p-4'}`}
                                                     style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                     onMouseEnter={(e) => {
                                                         e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
@@ -1156,24 +1160,24 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }}
                                                 >
-                                                    <div className="flex items-center gap-4">
+                                                    <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
                                                         <img
                                                             src={listing.images?.[0] || "/placeholder.png"}
                                                             alt={listing.name}
-                                                            className="w-16 h-16 object-cover rounded border"
+                                                            className={`object-cover rounded border ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                                                             style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                         />
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="font-bold text-lg truncate" style={{ color: '#0d0a0b' }}>{listing.name}</h3>
+                                                            <h3 className={`font-bold truncate ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{listing.name}</h3>
                                                             <p className="text-xs truncate mb-1" style={{ color: '#454955', opacity: 0.8 }}>{shop ? shop.name : ''}</p>
-                                                            <p className="text-sm truncate" style={{ color: '#454955' }}>{listing.description}</p>
-                                                            <p className="font-bold mt-1" style={{ color: '#3f7d20' }}>LKR {listing.price?.toLocaleString()}</p>
+                                                            <p className={`truncate ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>{listing.description}</p>
+                                                            <p className={`font-bold mt-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#3f7d20' }}>LKR {listing.price?.toLocaleString()}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="mt-4 flex justify-end gap-2">
+                                                    <div className={`mt-${isMobile ? '3' : '4'} flex justify-end gap-2`}>
                                                         <button
                                                             onClick={() => handleEditListing(listing.id)}
-                                                            className="px-4 py-2 rounded font-semibold transition border"
+                                                            className={`rounded font-semibold transition border ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'}`}
                                                             style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
                                                             onMouseEnter={(e) => {
                                                                 e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -1186,7 +1190,7 @@ export default function ProfileDashboard() {
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteListing(listing.id)}
-                                                            className="px-4 py-2 rounded font-semibold transition border"
+                                                            className={`rounded font-semibold transition border ${isMobile ? 'px-3 py-1 text-xs' : 'px-4 py-2'}`}
                                                             style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                             onMouseEnter={(e) => {
                                                                 e.currentTarget.style.backgroundColor = '#ffebee';
@@ -1208,9 +1212,9 @@ export default function ProfileDashboard() {
                                     </div>
                                     {/* Pagination Controls */}
                                     {totalPages > 1 && (
-                                        <div className="flex justify-center items-center mt-6 gap-2">
+                                        <div className={`flex justify-center items-center mt-6 gap-2 ${isMobile ? 'flex-wrap' : ''}`}>
                                             <button
-                                                className={`px-3 py-1 rounded font-semibold transition border`}
+                                                className={`rounded font-semibold transition border ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1'}`}
                                                 style={{
                                                     backgroundColor: listingsPage === 1 ? 'rgba(69, 73, 85, 0.1)' : '#ffffff',
                                                     color: listingsPage === 1 ? 'rgba(69, 73, 85, 0.4)' : '#454955',
@@ -1232,12 +1236,12 @@ export default function ProfileDashboard() {
                                                 onClick={() => setListingsPage(p => Math.max(p - 1, 1))}
                                                 disabled={listingsPage === 1}
                                             >
-                                                Prev
+                                                {isMobile ? '‹' : 'Prev'}
                                             </button>
-                                            {[...Array(totalPages)].map((_, i) => (
+                                            {[...Array(totalPages)].slice(0, isMobile ? 5 : totalPages).map((_, i) => (
                                                 <button
                                                     key={i}
-                                                    className={`px-3 py-1 rounded font-semibold transition border`}
+                                                    className={`rounded font-semibold transition border ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1'}`}
                                                     style={{
                                                         backgroundColor: listingsPage === i + 1 ? '#72b01d' : '#ffffff',
                                                         color: listingsPage === i + 1 ? '#ffffff' : '#454955',
@@ -1261,7 +1265,7 @@ export default function ProfileDashboard() {
                                                 </button>
                                             ))}
                                             <button
-                                                className={`px-3 py-1 rounded font-semibold transition border`}
+                                                className={`rounded font-semibold transition border ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1'}`}
                                                 style={{
                                                     backgroundColor: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.1)' : '#ffffff',
                                                     color: listingsPage === totalPages ? 'rgba(69, 73, 85, 0.4)' : '#454955',
@@ -1283,7 +1287,7 @@ export default function ProfileDashboard() {
                                                 onClick={() => setListingsPage(p => Math.min(p + 1, totalPages))}
                                                 disabled={listingsPage === totalPages}
                                             >
-                                                Next
+                                                {isMobile ? '›' : 'Next'}
                                             </button>
                                         </div>
                                     )}
@@ -1294,8 +1298,8 @@ export default function ProfileDashboard() {
                     {/* PAYMENTS TAB */}
                     {selectedTab === "payments" && (
                         <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-bold">Your Payments</h2>
+                            <div className={`flex items-center justify-between mb-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
+                                <h2 className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>Your Payments</h2>
                                 {/* Debug/Test buttons */}
                                 <div className="flex gap-2">
                                     <button
@@ -1303,7 +1307,7 @@ export default function ProfileDashboard() {
                                             resetPaymentSystem();
                                             window.location.reload();
                                         }}
-                                        className="px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                                        className={`bg-yellow-500 text-white rounded hover:bg-yellow-600 ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-xs'}`}
                                     >
                                         Reset Payment System
                                     </button>
@@ -1312,11 +1316,11 @@ export default function ProfileDashboard() {
 
                             {/* Payment Schedule Information */}
                             {paymentSchedule && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div className={`grid gap-4 mb-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
                                     {/* Next Payment Info */}
-                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                         <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Date</div>
-                                        <div className="text-lg font-bold" style={{ color: '#72b01d' }}>
+                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#72b01d' }}>
                                             {formatPaymentDate(paymentSchedule.nextPaymentDate)}
                                         </div>
                                         <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
@@ -1325,23 +1329,23 @@ export default function ProfileDashboard() {
                                     </div>
 
                                     {/* Current Period Earnings */}
-                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                         <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Pending Payment</div>
-                                        <div className="text-lg font-bold" style={{ color: '#3f7d20' }}>
+                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>
                                             LKR {calculatePeriodEarnings(payments).toLocaleString()}
                                         </div>
-                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
                                             From {formatPaymentDate(paymentSchedule.currentPeriod.startDate)} to {formatPaymentDate(paymentSchedule.currentPeriod.endDate)}
                                         </div>
                                     </div>
 
                                     {/* Last Payment Info */}
-                                    <div className="rounded-xl p-4 flex flex-col items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                         <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Last Payment Date</div>
-                                        <div className="text-lg font-bold" style={{ color: '#454955' }}>
+                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
                                             {formatPaymentDate(paymentSchedule.lastPaymentDate)}
                                         </div>
-                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
+                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
                                             {paymentSchedule.previousPeriod ? 
                                                 `LKR ${calculatePeriodEarnings(getEligibleOrdersForPayment(allSellerOrders, paymentSchedule.previousPeriod)).toLocaleString()} paid` 
                                                 : 'No previous payment'
@@ -1353,9 +1357,9 @@ export default function ProfileDashboard() {
 
                             {/* Payment Period Information */}
                             {paymentSchedule && (
-                                <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', border: '1px solid rgba(114, 176, 29, 0.2)' }}>
-                                    <h3 className="font-bold mb-2" style={{ color: '#0d0a0b' }}>Payment System Information</h3>
-                                    <div className="text-sm space-y-1" style={{ color: '#454955' }}>
+                                <div className={`mb-6 rounded-xl ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', border: '1px solid rgba(114, 176, 29, 0.2)' }}>
+                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>Payment System Information</h3>
+                                    <div className={`space-y-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
                                         <p>• Payments are made every 14 days</p>
                                         <p>• We hold your earnings for a minimum of 14 days before payment</p>
                                         <p>• Only orders with payment method "PayNow" are eligible for payment</p>
@@ -1368,19 +1372,19 @@ export default function ProfileDashboard() {
 
                             {/* Payment Summary for Current Period */}
                             <div className="mb-6">
-                                <h3 className="text-lg font-bold mb-2" style={{ color: '#0d0a0b' }}>Orders Eligible for Next Payment</h3>
+                                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Orders Eligible for Next Payment</h3>
                                 {payments.length > 0 ? (
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                             <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                                 <tr>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Status</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Payment Method</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
-                                                    <th className="px-4 py-2 border-b text-left font-semibold text-sm" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Status</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Payment Method</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
+                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1393,12 +1397,12 @@ export default function ProfileDashboard() {
                                                             onMouseLeave={(e) => {
                                                                 e.currentTarget.style.backgroundColor = '#ffffff';
                                                             }}>
-                                                            <td className="px-4 py-2 border-b text-xs text-left font-mono" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.id}</td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                            <td className={`border-b text-left font-mono ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? order.id.slice(-8) : order.id}</td>
+                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                                                                 {order.createdAt && new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleDateString()}
                                                             </td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                                <span className={`px-1 py-1 rounded font-semibold ${isMobile ? 'text-xs' : 'text-xs'} ${
                                                                     order.status === 'received' ? 'bg-green-100 text-green-800' :
                                                                     order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
                                                                     'bg-yellow-100 text-yellow-800'
@@ -1406,23 +1410,23 @@ export default function ProfileDashboard() {
                                                                     {order.status}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
+                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                                <span className={`px-1 py-1 rounded font-semibold bg-green-100 text-green-800 ${isMobile ? 'text-xs' : 'text-xs'}`}>
                                                                     {order.paymentMethod || 'N/A'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left font-semibold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.itemName || '-'}</td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left" style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.quantity || 1}</td>
-                                                            <td className="px-4 py-2 border-b text-xs text-left font-bold" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {order.total?.toLocaleString()}</td>
+                                                            <td className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? (order.itemName || '-').slice(0, 15) + '...' : (order.itemName || '-')}</td>
+                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.quantity || 1}</td>
+                                                            <td className={`border-b text-left font-bold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {order.total?.toLocaleString()}</td>
                                                         </tr>
                                                     ))}
                                             </tbody>
                                             <tfoot style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)' }}>
                                                 <tr>
-                                                    <td colSpan={6} className="px-4 py-3 border-t text-right font-bold" style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                                    <td colSpan={6} className={`border-t text-right font-bold ${isMobile ? 'px-2 py-2 text-xs' : 'px-4 py-3'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                                         Total Payment:
                                                     </td>
-                                                    <td className="px-4 py-3 border-t text-left font-bold text-lg" style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                                    <td className={`border-t text-left font-bold ${isMobile ? 'px-2 py-2 text-sm' : 'px-4 py-3 text-lg'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                                                         LKR {calculatePeriodEarnings(payments).toLocaleString()}
                                                     </td>
                                                 </tr>
@@ -1430,7 +1434,7 @@ export default function ProfileDashboard() {
                                         </table>
                                     </div>
                                 ) : (
-                                    <div className="text-center py-6" style={{ color: '#454955', opacity: 0.7 }}>
+                                    <div className={`text-center ${isMobile ? 'py-4' : 'py-6'}`} style={{ color: '#454955', opacity: 0.7 }}>
                                         No eligible orders for the current payment period.
                                     </div>
                                 )}
@@ -1441,20 +1445,20 @@ export default function ProfileDashboard() {
                     {/* SETTINGS TAB */}
                     {selectedTab === "settings" && (
                         <div>
-                            <h2 className="text-xl font-bold mb-4" style={{ color: '#0d0a0b' }}>Settings</h2>
+                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Settings</h2>
                             <form className="w-full space-y-8" onSubmit={e => { e.preventDefault(); }}>
                                 {settingsLoading && <div style={{ color: '#72b01d' }}>Saving...</div>}
                                 {settingsSuccess && <div style={{ color: '#3f7d20' }}>{settingsSuccess}</div>}
                                 {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
 
                                 {/* Bank Account Details */}
-                                <div className="rounded-xl border p-6 w-full" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className="font-bold text-lg mb-2" style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                                <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
+                                    <div className={`grid gap-4 w-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Bank Account Number</label>
+                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Account Number</label>
                                             <input
-                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
                                                 style={{
                                                     backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1473,9 +1477,9 @@ export default function ProfileDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Branch Name</label>
+                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Branch Name</label>
                                             <input
-                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
                                                 style={{
                                                     backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1494,9 +1498,9 @@ export default function ProfileDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Bank Name</label>
+                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Name</label>
                                             <input
-                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
                                                 style={{
                                                     backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1515,9 +1519,9 @@ export default function ProfileDashboard() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold mb-1" style={{ color: '#454955' }}>Full Name as in Bank</label>
+                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Full Name as in Bank</label>
                                             <input
-                                                className="border rounded px-3 py-2 w-full transition focus:outline-none focus:ring-2"
+                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
                                                 style={{
                                                     backgroundColor: '#ffffff',
                                                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1539,44 +1543,44 @@ export default function ProfileDashboard() {
                                 </div>
 
                                 {/* Seller Verification */}
-                                <div className="rounded-2xl border p-6 w-full shadow-sm flex flex-col" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className="font-bold text-xl mb-6" style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
+                                <div className={`rounded-2xl border w-full shadow-sm flex flex-col ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
                                     
                                     {/* Verified Status */}
                                     {verifyForm.isVerified === VerificationStatus.COMPLETED && (
-                                        <div className="w-full flex flex-col items-center gap-2 py-8">
-                                            <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
-                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                        <div className={`w-full flex flex-col items-center gap-2 ${isMobile ? 'py-6' : 'py-8'}`}>
+                                            <div className={`rounded-full mb-2 ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
+                                                <svg width={isMobile ? "28" : "36"} height={isMobile ? "28" : "36"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className="font-semibold text-lg text-center" style={{ color: '#3f7d20' }}>You are a verified seller!</div>
-                                            <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and you can sell on our platform.</div>
+                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>You are a verified seller!</div>
+                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and you can sell on our platform.</div>
                                         </div>
                                     )}
                                     
                                     {/* Pending Review Status */}
                                     {verifyForm.isVerified === VerificationStatus.PENDING && (
-                                        <div className="w-full flex flex-col items-center gap-2 py-8">
-                                            <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(255, 193, 7, 0.15)' }}>
-                                                <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#facc15" fillOpacity="0.12" /><path d="M12 7v4m0 4h.01" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                        <div className={`w-full flex flex-col items-center gap-2 ${isMobile ? 'py-6' : 'py-8'}`}>
+                                            <div className={`rounded-full mb-2 ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(255, 193, 7, 0.15)' }}>
+                                                <svg width={isMobile ? "28" : "36"} height={isMobile ? "28" : "36"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#facc15" fillOpacity="0.12" /><path d="M12 7v4m0 4h.01" stroke="#facc15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className="font-semibold text-lg text-center" style={{ color: '#ff8f00' }}>Your documents are under review.</div>
-                                            <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>We will notify you when verification is complete.</div>
+                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#ff8f00' }}>Your documents are under review.</div>
+                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>We will notify you when verification is complete.</div>
                                         </div>
                                     )}
                                     
                                     {/* Rejected Status */}
                                     {verifyForm.isVerified === VerificationStatus.REJECTED && (
                                         <>
-                                            <div className="w-full flex flex-col items-center gap-2 py-4 mb-6">
-                                                <div className="rounded-full p-4 mb-2" style={{ backgroundColor: 'rgba(244, 67, 54, 0.15)' }}>
-                                                    <svg width="36" height="36" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#f44336" fillOpacity="0.12" /><path d="M15 9l-6 6m0-6l6 6" stroke="#f44336" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                            <div className={`w-full flex flex-col items-center gap-2 mb-6 ${isMobile ? 'py-4' : 'py-4'}`}>
+                                                <div className={`rounded-full mb-2 ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(244, 67, 54, 0.15)' }}>
+                                                    <svg width={isMobile ? "28" : "36"} height={isMobile ? "28" : "36"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#f44336" fillOpacity="0.12" /><path d="M15 9l-6 6m0-6l6 6" stroke="#f44336" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                                 </div>
-                                                <div className="font-semibold text-lg text-center" style={{ color: '#d32f2f' }}>Verification was rejected.</div>
-                                                <div className="text-sm text-center" style={{ color: '#454955', opacity: 0.8 }}>Please resubmit your documents with the correct information.</div>
+                                                <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#d32f2f' }}>Verification was rejected.</div>
+                                                <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Please resubmit your documents with the correct information.</div>
                                             </div>
                                             {/* Show form for resubmission */}
-                                            <div className="border-t pt-6" style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                <h4 className="font-semibold text-lg mb-4" style={{ color: '#0d0a0b' }}>Resubmit Verification Documents</h4>
+                                            <div className={`border-t ${isMobile ? 'pt-4' : 'pt-6'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                                                <h4 className={`font-semibold mb-4 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Resubmit Verification Documents</h4>
                                                 {/* Form content will go here */}
                                             </div>
                                         </>
@@ -1587,17 +1591,17 @@ export default function ProfileDashboard() {
                                         <>
                                             {verifyForm.isVerified === VerificationStatus.NO_DATA && (
                                                 <div className="mb-6">
-                                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                                                        <div className="text-sm text-blue-700 font-medium">📋 Complete your seller verification</div>
-                                                        <div className="text-xs text-blue-600 mt-1">Submit your documents to become a verified seller and gain customer trust.</div>
+                                                    <div className={`bg-blue-50 border border-blue-200 rounded-xl mb-4 ${isMobile ? 'p-3' : 'p-4'}`}>
+                                                        <div className={`text-blue-700 font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>📋 Complete your seller verification</div>
+                                                        <div className={`text-blue-600 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>Submit your documents to become a verified seller and gain customer trust.</div>
                                                     </div>
                                                 </div>
                                             )}
                                             
-                                            <div className="mb-4 w-full max-w-xl">
-                                                <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Full Name as in ID</label>
+                                            <div className={`mb-4 w-full ${isMobile ? 'max-w-full' : 'max-w-xl'}`}>
+                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Full Name as in ID</label>
                                                 <input
-                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2"
+                                                    className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
                                                     style={{
                                                         backgroundColor: '#ffffff',
                                                         borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1616,51 +1620,51 @@ export default function ProfileDashboard() {
                                                     onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))}
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-4">
+                                            <div className={`grid gap-4 w-full mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Front Side</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>ID Front Side</label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} 
-                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                     />
                                                     {(verifyForm.idFront || verifyForm.idFrontUrl) && (
-                                                        <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
+                                                        <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>ID Back Side</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>ID Back Side</label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} 
-                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                     />
                                                     {(verifyForm.idBack || verifyForm.idBackUrl) && (
-                                                        <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
+                                                        <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Selfie with ID</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Selfie with ID</label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} 
-                                                        className="block w-full text-sm border rounded-lg px-3 py-2"
+                                                        className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                     />
                                                     {(verifyForm.selfie || verifyForm.selfieUrl) && (
-                                                        <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className="mt-2 w-full max-w-[120px] h-auto rounded shadow border" style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
+                                                        <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="mb-6 w-full max-w-xl">
-                                                <label className="block text-sm font-semibold mb-2" style={{ color: '#454955' }}>Address</label>
+                                            <div className={`mb-6 w-full ${isMobile ? 'max-w-full' : 'max-w-xl'}`}>
+                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Address</label>
                                                 <textarea
-                                                    className="border rounded-lg px-4 py-2 w-full text-base transition focus:outline-none focus:ring-2 resize-none"
+                                                    className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 resize-none ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
                                                     style={{
                                                         backgroundColor: '#ffffff',
                                                         borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -1686,7 +1690,7 @@ export default function ProfileDashboard() {
                                 <div className="flex justify-end w-full">
                                     <button
                                         type="button"
-                                        className="px-6 py-3 rounded-full font-bold text-base transition"
+                                        className={`rounded-full font-bold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'}`}
                                         style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                         onMouseEnter={(e) => {
                                             if (!settingsLoading) {

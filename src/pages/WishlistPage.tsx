@@ -3,11 +3,12 @@ import { db } from "../utils/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
-import ListingTile from "../components/UI/ListingTile";
+import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP as getIP } from "../utils/ipUtils";
+import { useResponsive } from "../hooks/useResponsive";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 // --- Type Definitions ---
@@ -35,6 +36,7 @@ async function getUserIP(): Promise<string | null> {
 
 export default function WishlistPage() {
     const { user } = useAuth();
+    const { isMobile } = useResponsive();
     const [items, setItems] = useState<Listing[]>([]);
     const [loading, setLoading] = useState(true);
     const [ip, setIp] = useState<string | null>(null);
@@ -140,13 +142,13 @@ export default function WishlistPage() {
     // Memoized empty state for unauthenticated users
     const unauthenticatedEmptyState = useMemo(() => (
         <div className="min-h-screen flex items-center justify-center bg-white">
-            <div className="text-center p-8 max-w-lg bg-white rounded-2xl shadow-lg border border-[#45495522]">
-                <div className="text-[#72b01d] text-5xl mb-4">❤️</div>
-                <h2 className="text-2xl font-bold text-[#0d0a0b] mb-2">Your Wishlist is Empty</h2>
-                <p className="text-[#454955] mb-6">Please log in to view your wishlist or start adding some items you love!</p>
+            <div className={`text-center ${isMobile ? 'p-6 max-w-sm' : 'p-8 max-w-lg'} bg-white rounded-2xl shadow-lg border border-[#45495522]`}>
+                <div className={`text-[#72b01d] ${isMobile ? 'text-3xl mb-3' : 'text-5xl mb-4'}`}>❤️</div>
+                <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[#0d0a0b] mb-2`}>Your Wishlist is Empty</h2>
+                <p className={`text-[#454955] ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Please log in to view your wishlist or start adding some items you love!</p>
                 <Link
                     to="/auth"
-                    className="px-6 py-3 bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors"
+                    className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
                 >
                     Sign In
                 </Link>
@@ -156,13 +158,13 @@ export default function WishlistPage() {
 
     // Memoized empty wishlist state
     const emptyWishlistState = useMemo(() => (
-        <div className="text-[#454955] text-center py-16 max-w-md mx-auto bg-white rounded-2xl shadow-md p-8 border border-[#45495522]">
-            <div className="text-4xl mb-4">💔</div>
-            <h3 className="text-xl font-bold text-[#0d0a0b] mb-2">No items in your wishlist yet</h3>
-            <p className="mb-6">Browse our marketplace and click the heart icon to add items to your wishlist!</p>
+        <div className={`text-[#454955] text-center ${isMobile ? 'py-12 max-w-xs mx-auto p-6' : 'py-16 max-w-md mx-auto p-8'} bg-white rounded-2xl shadow-md border border-[#45495522]`}>
+            <div className={`${isMobile ? 'text-3xl mb-3' : 'text-4xl mb-4'}`}>💔</div>
+            <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-[#0d0a0b] mb-2`}>No items in your wishlist yet</h3>
+            <p className={`${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Browse our marketplace and click the heart icon to add items to your wishlist!</p>
             <Link
                 to="/search"
-                className="px-6 py-3 bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors"
+                className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
             >
                 Go Shopping
             </Link>
@@ -171,16 +173,16 @@ export default function WishlistPage() {
 
     // Memoized items grid for better performance
     const itemsGrid = useMemo(() => (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7 w-full max-w-7xl mx-auto">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7'} w-full max-w-7xl mx-auto`}>
             {items.map(item => (
-                <ListingTile 
+                <ResponsiveListingTile 
                     key={`wishlist-${item.id}`}
                     listing={item}
                     onRefresh={refreshListings}
                 />
             ))}
         </div>
-    ), [items, refreshListings]);
+    ), [items, refreshListings, isMobile]);
 
     if (loading) {
         return loadingComponent;
@@ -199,11 +201,11 @@ export default function WishlistPage() {
                 canonicalUrl="https://sinamarketplace.com/wishlist"
                 noIndex={true}
             />
-            <Header />
+            <ResponsiveHeader />
             <div className="min-h-screen bg-white w-full">
-                <div className="w-full py-12 px-4">
-                    <h1 className="text-3xl font-black mb-2 text-center text-[#0d0a0b]">Your Wishlist</h1>
-                    <p className="text-center text-[#454955] mb-8 max-w-2xl mx-auto">
+                <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
+                    <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
+                    <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
                         Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
                     </p>
                     {items.length === 0 ? emptyWishlistState : itemsGrid}
