@@ -124,6 +124,7 @@ export default function CheckoutPage() {
   
   // Form state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.PAY_NOW);
+  const [buyerNotes, setBuyerNotes] = useState<string>('');
   const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
     firstName: '',
     lastName: '',
@@ -424,6 +425,7 @@ export default function CheckoutPage() {
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
+        buyerNotes: buyerNotes.trim() || undefined,
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
@@ -492,6 +494,7 @@ export default function CheckoutPage() {
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
+        buyerNotes: buyerNotes.trim() || undefined,
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
@@ -953,6 +956,10 @@ export default function CheckoutPage() {
                       {validationErrors.address}
                     </p>
                   )}
+                  <p className="mt-2 text-sm" style={{ color: '#72b01d' }}>
+                    <FiTruck className="inline-block mr-1" size={14} />
+                    The seller will deliver your package to this address for physical items.
+                  </p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1000,6 +1007,31 @@ export default function CheckoutPage() {
                       onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
                     />
                   </div>
+                </div>
+
+                {/* Buyer Notes Section */}
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                    Special Instructions for Seller (Optional)
+                  </label>
+                  <textarea
+                    value={buyerNotes}
+                    onChange={(e) => setBuyerNotes(e.target.value)}
+                    placeholder="Any special requests, delivery instructions, or notes for the seller..."
+                    rows={3}
+                    maxLength={500}
+                    className="w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 resize-none"
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderColor: 'rgba(114, 176, 29, 0.3)',
+                      color: '#0d0a0b'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#72b01d'}
+                    onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                  />
+                  <p className="mt-1 text-xs" style={{ color: '#6b7280' }}>
+                    Share any specific requirements or instructions with the seller. ({buyerNotes.length}/500 characters)
+                  </p>
                 </div>
               </form>
             </div>

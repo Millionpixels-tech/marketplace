@@ -8,6 +8,7 @@ import { FiX } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
+import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
 
 const steps = [
     { label: "Shop" },
@@ -39,6 +40,12 @@ export default function EditListing() {
     const [cashOnDelivery, setCashOnDelivery] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
+
+    // Helper function to change step and scroll to top
+    const goToStep = (newStep: number) => {
+        setStep(newStep);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     // Fetch user's shops
     useEffect(() => {
@@ -78,20 +85,53 @@ export default function EditListing() {
         fetchListing();
     }, [listingId]);
 
-    // Add new image preview on upload
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Add new image preview on upload with compression
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files ? Array.from(e.target.files) : [];
         const newFiles = files.slice(0, 5 - (images.length + existingImageUrls.length));
         if (newFiles.length === 0) return;
-        setImages(prev => [...prev, ...newFiles]);
-        newFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                setImagePreviews(prev => [...prev, event.target?.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
-        if (fileInputRef.current) fileInputRef.current.value = "";
+
+        try {
+            // Process each image with compression
+            const processedFiles = await Promise.all(
+                newFiles.map(async (file, index) => {
+                    try {
+                        // Get shop name for SEO filename
+                        const currentShop = shops.find(s => s.id === shopId);
+                        const shopName = currentShop?.name || '';
+                        
+                        return await processImageForUpload(
+                            file,
+                            name || 'product', // Use product name or fallback
+                            cat || 'general', // Use category or fallback
+                            sub, // subcategory (optional)
+                            images.length + existingImageUrls.length + index, // current index
+                            shopName
+                        );
+                    } catch (error) {
+                        console.error('Error processing image:', error);
+                        // Return original file if processing fails
+                        return file;
+                    }
+                })
+            );
+
+            setImages(prev => [...prev, ...processedFiles]);
+            
+            // Create previews for the processed images
+            processedFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    setImagePreviews(prev => [...prev, event.target?.result as string]);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        } catch (error) {
+            console.error('Error handling image upload:', error);
+            alert('Error processing images. Please try again.');
+        }
     };
 
     // Remove images: index starts with existingImageUrls then new images
@@ -110,38 +150,93 @@ export default function EditListing() {
     const handleSubmit = async () => {
         if (!shopId) return;
         let imageUrls: string[] = [...existingImageUrls];
+        let newImageMetadata: any[] = [];
+        
         try {
-            // Upload new images
-            const uploadedUrls = await Promise.all(
-                images.map(async (file, idx) => {
-                    const storageRef = ref(storage, `listings/${shopId}/${Date.now()}_${idx}_${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    return await getDownloadURL(storageRef);
-                })
-            );
-            imageUrls = [...existingImageUrls, ...uploadedUrls];
+            // Upload new images with better organization and metadata
+            const uploadPromises = images.map(async (file, idx) => {
+                const currentShop = shops.find(s => s.id === shopId);
+                const shopName = currentShop?.name || 'unknown-shop';
+                
+                // Create organized storage path
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const storagePath = `listings/${shopName}/${year}/${month}/${file.name}`;
+                
+                const storageRef = ref(storage, storagePath);
+                
+                // Upload with metadata
+                const uploadResult = await uploadBytes(storageRef, file, {
+                    customMetadata: {
+                        productName: name,
+                        category: cat,
+                        subcategory: sub || '',
+                        shopId: shopId,
+                        shopName: shopName,
+                        uploadedAt: now.toISOString(),
+                        altText: generateImageAltText(name, cat, sub, existingImageUrls.length + idx, shopName),
+                        imageIndex: (existingImageUrls.length + idx).toString(),
+                        originalSize: file.size.toString(),
+                        processedSize: file.size.toString(),
+                        listingUpdate: 'true'
+                    }
+                });
+                
+                const downloadURL = await getDownloadURL(uploadResult.ref);
+                
+                return {
+                    url: downloadURL,
+                    metadata: {
+                        altText: generateImageAltText(name, cat, sub, existingImageUrls.length + idx, shopName),
+                        filename: file.name,
+                        size: file.size,
+                        index: existingImageUrls.length + idx,
+                        storagePath: storagePath
+                    }
+                };
+            });
+            
+            const uploadResults = await Promise.all(uploadPromises);
+            const newUrls = uploadResults.map(result => result.url);
+            newImageMetadata = uploadResults.map(result => result.metadata);
+            imageUrls = [...existingImageUrls, ...newUrls];
+            
         } catch (err) {
+            console.error('Image upload error:', err);
             alert("Image upload failed. Please try again.");
             return;
         }
-        // Update the listing
-        await updateDoc(doc(db, "listings", listingId!), {
-            shopId,
-            category: cat,
-            subcategory: sub,
-            name,
-            description: desc,
-            price: parseFloat(price),
-            quantity: parseInt(quantity, 10),
-            deliveryType,
-            deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
-            deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
-            images: imageUrls,
-            cashOnDelivery,
-            updatedAt: (await import("firebase/firestore")).Timestamp.now(),
-        });
-        alert("Listing updated!");
-        navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
+        
+        try {
+            // Update the listing with enhanced metadata
+            await updateDoc(doc(db, "listings", listingId!), {
+                shopId,
+                category: cat,
+                subcategory: sub,
+                name,
+                description: desc,
+                price: parseFloat(price),
+                quantity: parseInt(quantity, 10),
+                deliveryType,
+                deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
+                deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
+                images: imageUrls,
+                newImageMetadata: newImageMetadata, // Store metadata for new images
+                cashOnDelivery,
+                updatedAt: (await import("firebase/firestore")).Timestamp.now(),
+                // Update SEO fields
+                seoTitle: `${name} - ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
+                seoDescription: desc.length > 160 ? desc.substring(0, 157) + '...' : desc,
+                keywords: [name, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
+            });
+            
+            alert("Listing updated successfully!");
+            navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
+        } catch (err) {
+            console.error('Database update error:', err);
+            alert("Failed to update listing. Please try again.");
+        }
     };
 
     // Steps rendering (same as AddListing)
@@ -294,7 +389,7 @@ export default function EditListing() {
                                             type="button"
                                             className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                                             disabled={!shopId}
-                                            onClick={() => setStep(2)}
+                                            onClick={() => goToStep(2)}
                                         >
                                             Next
                                         </button>
@@ -329,7 +424,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                                    onClick={() => setStep(1)}
+                                    onClick={() => goToStep(1)}
                                 >
                                     Back
                                 </button>
@@ -337,7 +432,7 @@ export default function EditListing() {
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                                     disabled={!cat}
-                                    onClick={() => setStep(3)}
+                                    onClick={() => goToStep(3)}
                                 >
                                     Next
                                 </button>
@@ -370,7 +465,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                                    onClick={() => setStep(2)}
+                                    onClick={() => goToStep(2)}
                                 >
                                     Back
                                 </button>
@@ -378,7 +473,7 @@ export default function EditListing() {
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                                     disabled={!sub}
-                                    onClick={() => setStep(4)}
+                                    onClick={() => goToStep(4)}
                                 >
                                     Next
                                 </button>
@@ -487,7 +582,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                                    onClick={() => setStep(3)}
+                                    onClick={() => goToStep(3)}
                                 >
                                     ← Back
                                 </button>
@@ -495,7 +590,7 @@ export default function EditListing() {
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={!name || !desc || !price || !quantity}
-                                    onClick={() => setStep(5)}
+                                    onClick={() => goToStep(5)}
                                 >
                                     Next →
                                 </button>
@@ -553,7 +648,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                                    onClick={() => setStep(4)}
+                                    onClick={() => goToStep(4)}
                                 >
                                     ← Back
                                 </button>
@@ -561,7 +656,7 @@ export default function EditListing() {
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                                     disabled={imagePreviews.length === 0}
-                                    onClick={() => setStep(6)}
+                                    onClick={() => goToStep(6)}
                                 >
                                     Next →
                                 </button>
@@ -714,7 +809,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                                    onClick={() => setStep(5)}
+                                    onClick={() => goToStep(5)}
                                 >
                                     ← Back
                                 </button>

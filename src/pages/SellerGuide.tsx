@@ -90,7 +90,7 @@ export default function SellerGuide() {
         "Keep customers updated about delivery status"
       ],
       tips: "📞 Quick communication builds trust! Contact customers promptly about their orders.",
-      action: user ? { text: "View Dashboard", link: "/dashboard" } : null
+      action: user ? { text: "View Dashboard", link: `/dashboard/${user.uid}` } : null
     },
     {
       id: 6,
@@ -416,7 +416,7 @@ export default function SellerGuide() {
                     Create Your Shop
                   </Link>
                   <Link
-                    to="/dashboard"
+                    to={user ? `/dashboard/${user.uid}` : "/auth"}
                     className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-[#72b01d] transition"
                   >
                     Go to Dashboard

@@ -251,6 +251,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 <div><span className="font-semibold text-[#3f7d20]">Buyer Address:</span> {order.buyerInfo.address}, {order.buyerInfo.city}</div>
                             </>
                         )}
+                        {order.buyerNotes && (
+                            <div className="mt-2">
+                                <span className="font-semibold text-[#3f7d20]">Buyer Notes:</span> 
+                                <div className="mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                                    {order.buyerNotes}
+                                </div>
+                            </div>
+                        )}
                         <div><span className="font-semibold text-[#3f7d20]">Quantity:</span> {order.quantity}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Price:</span> LKR {order.price?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>

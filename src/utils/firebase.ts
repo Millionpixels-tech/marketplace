@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDQWvX8J5BG-QK4Rgk06ioYG7rllEE1uJY",
   authDomain: "marketplace-bd270.firebaseapp.com",
   projectId: "marketplace-bd270",
-  storageBucket: "marketplace-bd270.appspot.com",
+  storageBucket: "gs://marketplace-bd270.firebasestorage.app",
   messagingSenderId: "308553460725",
   appId: "1:308553460725:web:e2a63b079c2f4d0b48cebc",
   measurementId: "G-YNBS2T66R8"

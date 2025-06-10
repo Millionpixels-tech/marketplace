@@ -20,6 +20,7 @@ export interface Order {
     buyerId: string | null;
     buyerEmail: string | null;
     buyerInfo?: BuyerInfo;
+    buyerNotes?: string;
     sellerId: string;
     sellerShopId: string;
     sellerShopName: string;

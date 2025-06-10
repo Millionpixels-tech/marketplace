@@ -10,6 +10,7 @@ export { default as WishlistButton } from './WishlistButton';
 export { default as ShopReviews } from './ShopReviews';
 export { default as ListingTile } from './ListingTile';
 export { default as BackToTop } from './BackToTop';
+export { default as ScrollToTop } from './ScrollToTop';
 
 // Export types
 export type { ButtonProps } from './Button';

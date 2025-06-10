@@ -6,6 +6,7 @@ import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { useParams } from "react-router-dom";
+import { compressImage, generateSEOFilename } from "../../utils/imageUtils";
 
 function wordCount(text: string) {
     return text.trim().split(/\s+/).filter(Boolean).length;
@@ -60,23 +61,72 @@ export default function EditShop() {
         setUserExists(exists);
     };
 
-    // --- Image change/preview logic
-    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // --- Image change/preview logic with compression
+    const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setLogo(e.target.files[0]);
-            setLogoPreview(URL.createObjectURL(e.target.files[0]));
+            try {
+                const compressedLogo = await compressImage(e.target.files[0], 400, 400, 0.8);
+                setLogo(compressedLogo);
+                setLogoPreview(URL.createObjectURL(compressedLogo));
+            } catch (error) {
+                console.error('Logo compression error:', error);
+                setLogo(e.target.files[0]);
+                setLogoPreview(URL.createObjectURL(e.target.files[0]));
+            }
         }
     };
-    const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    
+    const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setCover(e.target.files[0]);
-            setCoverPreview(URL.createObjectURL(e.target.files[0]));
+            try {
+                const compressedCover = await compressImage(e.target.files[0], 1200, 600, 0.8);
+                setCover(compressedCover);
+                setCoverPreview(URL.createObjectURL(compressedCover));
+            } catch (error) {
+                console.error('Cover compression error:', error);
+                setCover(e.target.files[0]);
+                setCoverPreview(URL.createObjectURL(e.target.files[0]));
+            }
         }
     };
 
-    async function uploadImage(file: File, path: string) {
-        const fileRef = ref(storage, path);
-        await uploadBytes(fileRef, file);
+    // Upload file to Firebase Storage with SEO filename
+    async function uploadImage(file: File, type: 'logo' | 'cover', shopUsername: string) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        
+        // Generate SEO-friendly filename
+        const seoFilename = generateSEOFilename(
+            shopName,
+            'shop',
+            type,
+            0,
+            shopUsername
+        );
+        
+        const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const filename = `${seoFilename}.${extension}`;
+        
+        // Organized storage path
+        const storagePath = `shops/${shopUsername}/${year}/${month}/${type}/${filename}`;
+        const fileRef = ref(storage, storagePath);
+        
+        // Upload with metadata
+        await uploadBytes(fileRef, file, {
+            customMetadata: {
+                shopName: shopName,
+                shopUsername: shopUsername,
+                imageType: type,
+                uploadedAt: now.toISOString(),
+                originalSize: file.size.toString(),
+                seoFilename: filename,
+                altText: type === 'logo' 
+                    ? `${shopName} - Sri Lankan Shop Logo` 
+                    : `${shopName} - Sri Lankan Shop Cover Image`
+            }
+        });
+        
         return await getDownloadURL(fileRef);
     }
 
@@ -88,10 +138,10 @@ export default function EditShop() {
 
         // Upload only if changed
         if (logo) {
-            logoUrl = await uploadImage(logo, `shop-logos/${shopUser}_${Date.now()}`);
+            logoUrl = await uploadImage(logo, 'logo', shopUser);
         }
         if (cover) {
-            coverUrl = await uploadImage(cover, `shop-covers/${shopUser}_${Date.now()}`);
+            coverUrl = await uploadImage(cover, 'cover', shopUser);
         }
 
         // Update the shop doc

@@ -153,6 +153,19 @@ export default function OrderPage() {
                             <span>LKR {order.total.toLocaleString()}</span>
                         </div>
                     </div>
+
+                    {/* Buyer Notes - Show to both buyers and sellers */}
+                    {order.buyerNotes && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="text-sm font-semibold text-blue-800 mb-1">
+                                {isBuyer ? 'Your Notes:' : 'Buyer Notes:'}
+                            </div>
+                            <div className="text-sm text-blue-700">
+                                {order.buyerNotes}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Order Status Steps or Refund Requested */}
                     <div className="flex flex-col gap-2 mt-4 w-full">
                         <span className="text-sm font-semibold mb-2 text-[#0d0a0b]">Order Status:</span>
