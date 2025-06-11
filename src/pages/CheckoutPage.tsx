@@ -420,14 +420,13 @@ export default function CheckoutPage() {
       await saveBuyerInfo(user.uid, buyerInfo);
       
       // Create order with buyer information and get the order ID
-      const orderId = await createOrder({
+      const orderData: any = {
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
-        buyerNotes: buyerNotes.trim() || undefined,
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
@@ -436,7 +435,14 @@ export default function CheckoutPage() {
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
-      });
+      };
+
+      // Only add buyerNotes if it has content
+      if (buyerNotes.trim()) {
+        orderData.buyerNotes = buyerNotes.trim();
+      }
+
+      const orderId = await createOrder(orderData);
       
       // Redirect to order summary page
       navigate('/order/' + orderId);
@@ -489,14 +495,13 @@ export default function CheckoutPage() {
       }
 
       // Create order in database before payment (with pending status)
-      const dbOrderId = await createOrder({
+      const orderData2: any = {
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
-        buyerNotes: buyerNotes.trim() || undefined,
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
@@ -507,7 +512,14 @@ export default function CheckoutPage() {
         paymentMethod: PaymentMethod.PAY_NOW,
         paymentStatus: PaymentStatus.PENDING,
         orderId: orderId
-      });
+      };
+
+      // Only add buyerNotes if it has content
+      if (buyerNotes.trim()) {
+        orderData2.buyerNotes = buyerNotes.trim();
+      }
+
+      const dbOrderId = await createOrder(orderData2);
 
       console.log(`Order created in database with ID: ${dbOrderId}, PayHere Order ID: ${orderId}`);
 

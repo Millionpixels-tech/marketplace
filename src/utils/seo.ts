@@ -1,7 +1,7 @@
 // SEO constants and utilities for consistent SEO across the marketplace
 
 export const SEO_CONFIG = {
-  siteName: 'Sri Lankan Marketplace',
+  siteName: 'Sina.lk - Sri Lankan Marketplace',
   siteUrl: 'https://srilankanmarketplace.com', // Update with actual domain
   defaultDescription: 'Discover authentic Sri Lankan products, crafts, and services. Connect with local artisans, shop unique items, and support Sri Lankan businesses worldwide.',
   defaultKeywords: 'Sri Lankan products, Ceylon crafts, Sri Lankan marketplace, authentic Sri Lankan goods, local artisans, handmade crafts, Ceylon tea, Sri Lankan art, traditional crafts, online marketplace',
