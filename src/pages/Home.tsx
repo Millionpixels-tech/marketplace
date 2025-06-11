@@ -181,18 +181,20 @@ const Home = () => {
       <ResponsiveHeader />
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        <section className="relative pt-8 md:pt-16 pb-16 md:pb-24 overflow-hidden"
           style={{ backgroundColor: '#ffffff' }}>
           {/* Background Pattern - removed for consistent background */}
 
-          {/* Organic shapes */}
+          {/* Animated Waving Blobs */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl animate-pulse"
-              style={{ backgroundColor: 'rgba(114, 176, 29, 0.2)' }}></div>
-            <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl animate-pulse delay-1000"
-              style={{ backgroundColor: 'rgba(63, 125, 32, 0.15)' }}></div>
-            <div className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse delay-2000"
-              style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}></div>
+            <div className="blob blob1 absolute -top-20 -right-20 w-72 h-72 opacity-30"
+              style={{ backgroundColor: '#72b01d' }}></div>
+            <div className="blob blob2 absolute -bottom-32 -left-32 w-96 h-80 opacity-20"
+              style={{ backgroundColor: '#3f7d20' }}></div>
+            <div className="blob blob3 absolute top-1/3 right-1/3 w-64 h-64 opacity-25"
+              style={{ backgroundColor: '#72b01d' }}></div>
+            <div className="blob blob4 absolute bottom-1/4 left-1/4 w-80 h-72 opacity-15"
+              style={{ backgroundColor: '#8bc34a' }}></div>
           </div>
 
           {/* Main content */}
@@ -414,12 +416,12 @@ const Home = () => {
 
         {/* Featured Products */}
         <section className={`w-full relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}>
-          {/* Background decoration - keeping subtle decorative elements */}
-          <div className="absolute inset-0">
-            <div className="absolute top-20 left-10 w-20 h-20 rounded-full blur-2xl opacity-20"
-              style={{ backgroundColor: '#72b01d' }}></div>
-            <div className="absolute bottom-20 right-20 w-32 h-32 rounded-full blur-3xl opacity-15"
-              style={{ backgroundColor: '#3f7d20' }}></div>
+          {/* Featured Products Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob1 absolute top-20 left-10 w-44 h-44 opacity-18"
+              style={{ backgroundColor: '#72b01d', animationDelay: '1s' }}></div>
+            <div className="blob blob3 absolute bottom-20 right-20 w-52 h-52 opacity-14"
+              style={{ backgroundColor: '#3f7d20', animationDelay: '3s' }}></div>
           </div>
 
           <div className={`relative z-10 max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
@@ -663,12 +665,12 @@ const Home = () => {
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
-          {/* Background decorative elements */}
-          <div className="absolute inset-0">
-            <div className="absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl opacity-30"
-              style={{ backgroundColor: 'rgba(114, 176, 29, 0.2)' }}></div>
-            <div className="absolute bottom-10 right-10 w-40 h-40 rounded-full blur-3xl opacity-20"
-              style={{ backgroundColor: 'rgba(63, 125, 32, 0.2)' }}></div>
+          {/* Seller Benefits Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob2 absolute top-10 left-10 w-60 h-60 opacity-16"
+              style={{ backgroundColor: '#72b01d', animationDelay: '0s' }}></div>
+            <div className="blob blob4 absolute bottom-10 right-10 w-64 h-64 opacity-13"
+              style={{ backgroundColor: '#66bb6a', animationDelay: '5s' }}></div>
           </div>
 
           <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
@@ -840,11 +842,21 @@ const Home = () => {
         </section>
 
         {/* Testimonials Section */}
-        <section className={`w-full border-t ${isMobile ? 'py-12' : 'py-20'}`}
+        <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
-          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+          {/* Testimonials Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob2 absolute top-16 left-8 w-48 h-48 opacity-15"
+              style={{ backgroundColor: '#72b01d', animationDelay: '2s' }}></div>
+            <div className="blob blob4 absolute bottom-20 right-12 w-56 h-56 opacity-12"
+              style={{ backgroundColor: '#8bc34a', animationDelay: '4s' }}></div>
+            <div className="blob blob3 absolute top-32 right-1/3 w-40 h-40 opacity-10"
+              style={{ backgroundColor: '#4caf50', animationDelay: '6s' }}></div>
+          </div>
+          
+          <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             <h2 className={`font-bold text-center mb-4 uppercase tracking-wide ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`}
               style={{ color: '#0d0a0b' }}>
               What Our Community Says

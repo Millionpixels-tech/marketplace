@@ -1098,7 +1098,7 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-3">
                     <FiCreditCard size={20} style={{ color: '#72b01d' }} />
                     <div>
-                      <div className="font-medium" style={{ color: '#0d0a0b' }}>Pay with PayHere</div>
+                      <div className="font-medium" style={{ color: '#0d0a0b' }}>Online Payment</div>
                       <div className="text-sm" style={{ color: '#454955' }}>Secure online payment via PayHere</div>
                       <div className="text-xs mt-1" style={{ color: '#72b01d' }}>
                         Visa • MasterCard • American Express • Local Banks
@@ -1198,7 +1198,7 @@ export default function CheckoutPage() {
                  submitting && paymentProcessing ? 'Processing Payment...' :
                  submitting ? 'Placing Order...' : 
                  paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Place Order (COD)' : 
-                 !scriptLoaded ? 'Loading Payment...' : 'Pay with PayHere'}
+                 !scriptLoaded ? 'Loading Payment...' : 'Pay Now'}
               </button>
               
               {paymentMethod === PaymentMethod.PAY_NOW && !scriptLoaded && (
