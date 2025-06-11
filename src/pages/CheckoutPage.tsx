@@ -15,6 +15,7 @@ import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { Input } from "../components/UI";
 import { useResponsive } from "../hooks/useResponsive";
+import { useToast } from "../context/ToastContext";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
 type CheckoutItem = {
@@ -81,6 +82,7 @@ declare global {
 export default function CheckoutPage() {
   const { user } = useAuth();
   const { isMobile } = useResponsive();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -147,7 +149,7 @@ export default function CheckoutPage() {
         // Fetch item
         const itemDoc = await getDoc(doc(db, "listings", itemId));
         if (!itemDoc.exists()) {
-          alert("Item not found");
+          showToast('error', 'Item not found');
           navigate('/');
           return;
         }
@@ -172,7 +174,7 @@ export default function CheckoutPage() {
         
       } catch (error) {
         console.error("Error fetching checkout data:", error);
-        alert("Error loading checkout data");
+        showToast('error', 'Error loading checkout data');
         navigate('/');
       } finally {
         setLoading(false);

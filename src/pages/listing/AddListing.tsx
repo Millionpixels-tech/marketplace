@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { db, auth, storage } from "../../utils/firebase";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ export default function AddListing() {
   const [cashOnDelivery, setCashOnDelivery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Use AuthContext for user and loading
   const { user, loading } = useAuth();
@@ -106,7 +108,7 @@ export default function AddListing() {
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error('Error handling image upload:', error);
-      alert('Error processing images. Please try again.');
+      showToast('error', 'Error processing images. Please try again.');
     }
   };
 
@@ -170,7 +172,7 @@ export default function AddListing() {
       
     } catch (err) {
       console.error('Image upload error:', err);
-      alert("Image upload failed. Please try again.");
+      showToast('error', 'Image upload failed. Please try again.');
       return;
     }
     
@@ -197,11 +199,11 @@ export default function AddListing() {
         keywords: [name, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
       });
       
-      alert("Listing added successfully!");
+      showToast('success', 'Listing added successfully!');
       navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
     } catch (err) {
       console.error('Database save error:', err);
-      alert("Failed to save listing. Please try again.");
+      showToast('error', 'Failed to save listing. Please try again.');
     }
   };
 

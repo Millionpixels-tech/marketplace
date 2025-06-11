@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { db, storage } from "../../utils/firebase";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
@@ -40,6 +41,7 @@ export default function EditListing() {
     const [cashOnDelivery, setCashOnDelivery] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     // Helper function to change step and scroll to top
     const goToStep = (newStep: number) => {
@@ -130,7 +132,7 @@ export default function EditListing() {
             if (fileInputRef.current) fileInputRef.current.value = "";
         } catch (error) {
             console.error('Error handling image upload:', error);
-            alert('Error processing images. Please try again.');
+            showToast('error', 'Error processing images. Please try again.');
         }
     };
 
@@ -204,7 +206,7 @@ export default function EditListing() {
             
         } catch (err) {
             console.error('Image upload error:', err);
-            alert("Image upload failed. Please try again.");
+            showToast('error', 'Image upload failed. Please try again.');
             return;
         }
         
@@ -231,11 +233,11 @@ export default function EditListing() {
                 keywords: [name, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
             });
             
-            alert("Listing updated successfully!");
+            showToast('success', 'Listing updated successfully!');
             navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
         } catch (err) {
             console.error('Database update error:', err);
-            alert("Failed to update listing. Please try again.");
+            showToast('error', 'Failed to update listing. Please try again.');
         }
     };
 
