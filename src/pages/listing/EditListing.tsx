@@ -604,12 +604,18 @@ export default function EditListing() {
                     {/* Step 5: Images */}
                     {step === 5 && (
                         <div className="animate-fade-in">
-                            <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-8 text-center text-[#0d0a0b]">Add images</h2>
-                            <div className="flex flex-wrap gap-3 md:gap-6 mb-4 md:mb-6 justify-center">
+                            <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 text-[#0d0a0b]">Add images</h2>
+                            
+                            {/* Simple message about real images */}
+                            <p className="text-sm md:text-base text-[#454955] mb-4 md:mb-6 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                                📸 <strong>Important:</strong> Please upload only real photos of your actual products. Images from the internet may result in listing removal.
+                            </p>
+
+                            <div className="flex flex-wrap gap-3 md:gap-6 mb-4 md:mb-6">
                                 {imagePreviews.map((src, idx) => (
                                     <div
                                         key={idx}
-                                        className="relative w-24 h-24 md:w-28 md:h-28 rounded-xl md:rounded-2xl overflow-hidden bg-white border border-[#45495522] shadow-sm flex items-center justify-center"
+                                        className="relative w-20 md:w-28 h-20 md:h-28 rounded-xl md:rounded-2xl overflow-hidden bg-white border border-[#45495522] shadow-sm flex items-center justify-center"
                                     >
                                         <img
                                             src={src}
@@ -618,18 +624,18 @@ export default function EditListing() {
                                         />
                                         <button
                                             type="button"
-                                            className="absolute top-1 right-1 md:top-2 md:right-2 bg-[#72b01d] text-white rounded-full p-1 opacity-80 hover:opacity-100 transition z-10"
+                                            className="absolute top-1 md:top-2 right-1 md:right-2 bg-[#72b01d] text-white rounded-full p-1 opacity-80 hover:opacity-100 transition z-10"
                                             onClick={() => removeImage(idx)}
                                             aria-label="Remove image"
                                         >
-                                            <FiX size={16} className="md:w-[18px] md:h-[18px]" />
+                                            <FiX size={14} className="md:w-[18px] md:h-[18px]" />
                                         </button>
                                     </div>
                                 ))}
                                 {imagePreviews.length < 5 && (
                                     <button
                                         type="button"
-                                        className="w-24 h-24 md:w-28 md:h-28 rounded-xl md:rounded-2xl flex items-center justify-center bg-white border border-[#45495522] shadow-sm text-2xl md:text-3xl text-[#454955] hover:bg-white transition"
+                                        className="w-20 md:w-28 h-20 md:h-28 rounded-xl md:rounded-2xl flex items-center justify-center bg-white border border-[#45495544] border-dashed shadow-sm text-2xl md:text-3xl text-[#45495577] hover:bg-gray-50 hover:text-[#72b01d] transition"
                                         onClick={() => fileInputRef.current?.click()}
                                     >
                                         +
@@ -645,14 +651,14 @@ export default function EditListing() {
                                     </button>
                                 )}
                             </div>
-                            <div className="text-sm text-[#454955] mb-2 text-center">{imagePreviews.length} / 5 images selected</div>
+                            <div className="text-sm text-[#454955] mb-2">{imagePreviews.length} / 5 images selected</div>
                             <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-10">
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                                     onClick={() => goToStep(4)}
                                 >
-                                    ← Back
+                                    Back
                                 </button>
                                 <button
                                     type="button"
@@ -660,7 +666,7 @@ export default function EditListing() {
                                     disabled={imagePreviews.length === 0}
                                     onClick={() => goToStep(6)}
                                 >
-                                    Next →
+                                    Next
                                 </button>
                             </div>
                         </div>

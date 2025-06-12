@@ -555,7 +555,13 @@ export default function AddListing() {
           {/* Step 5: Images */}
           {step === 5 && (
             <div className="animate-fade-in">
-              <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Add images</h2>
+              <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 text-[#0d0a0b]">Add images</h2>
+              
+              {/* Simple message about real images */}
+              <p className="text-sm md:text-base text-[#454955] mb-4 md:mb-6 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                📸 <strong>Important:</strong> Please upload only real photos of your actual products. Images from the internet may result in listing removal.
+              </p>
+
               <div className="flex flex-wrap gap-3 md:gap-6 mb-4 md:mb-6">
                 {imagePreviews.map((src, idx) => (
                   <div
