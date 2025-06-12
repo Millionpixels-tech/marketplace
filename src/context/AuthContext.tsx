@@ -17,7 +17,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (user) => {
-            setUser(user);
+            if (user) {
+                // Check if email is verified
+                if (user.emailVerified || user.providerData.some(provider => provider.providerId === 'google.com')) {
+                    // User is verified (either email verified or signed in with Google)
+                    setUser(user);
+                } else {
+                    // User exists but email is not verified
+                    setUser(null);
+                }
+            } else {
+                // No user signed in
+                setUser(null);
+            }
         });
         return () => unsub();
     }, []);
