@@ -141,20 +141,28 @@ export default function WishlistPage() {
 
     // Memoized empty state for unauthenticated users
     const unauthenticatedEmptyState = useMemo(() => (
-        <div className="min-h-screen flex items-center justify-center bg-white">
-            <div className={`text-center ${isMobile ? 'p-6 max-w-sm' : 'p-8 max-w-lg'} bg-white rounded-2xl shadow-lg border border-[#45495522]`}>
-                <div className={`text-[#72b01d] ${isMobile ? 'text-3xl mb-3' : 'text-5xl mb-4'}`}>❤️</div>
-                <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[#0d0a0b] mb-2`}>Your Wishlist is Empty</h2>
-                <p className={`text-[#454955] ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Please log in to view your wishlist or start adding some items you love!</p>
-                <Link
-                    to="/auth"
-                    className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
-                >
-                    Sign In
-                </Link>
+        <div className="min-h-screen bg-white w-full">
+            <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
+                <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
+                <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
+                    Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
+                </p>
+                <div className="flex items-center justify-center">
+                    <div className={`text-center ${isMobile ? 'p-6 max-w-sm' : 'p-8 max-w-lg'} bg-white rounded-2xl shadow-lg border border-[#45495522]`}>
+                        <div className={`text-[#72b01d] ${isMobile ? 'text-3xl mb-3' : 'text-5xl mb-4'}`}>❤️</div>
+                        <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[#0d0a0b] mb-2`}>Your Wishlist is Empty</h2>
+                        <p className={`text-[#454955] ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Please log in to view your wishlist or start adding some items you love!</p>
+                        <Link
+                            to="/auth"
+                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
+                        >
+                            Sign In
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
-    ), []);
+    ), [isMobile]);
 
     // Memoized empty wishlist state
     const emptyWishlistState = useMemo(() => (
@@ -185,11 +193,20 @@ export default function WishlistPage() {
     ), [items, refreshListings, isMobile]);
 
     if (loading) {
-        return loadingComponent;
-    }
-
-    if (!user && items.length === 0) {
-        return unauthenticatedEmptyState;
+        return (
+            <>
+                <SEOHead
+                    title="My Wishlist - SinaMarketplace"
+                    description="View and manage your saved items on SinaMarketplace. Keep track of your favorite products and never miss out on great deals."
+                    keywords="wishlist, saved items, favorites, Sri Lanka marketplace, online shopping, wish list"
+                    canonicalUrl="https://sinamarketplace.com/wishlist"
+                    noIndex={true}
+                />
+                <ResponsiveHeader />
+                {loadingComponent}
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -202,15 +219,19 @@ export default function WishlistPage() {
                 noIndex={true}
             />
             <ResponsiveHeader />
-            <div className="min-h-screen bg-white w-full">
-                <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
-                    <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
-                    <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
-                        Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
-                    </p>
-                    {items.length === 0 ? emptyWishlistState : itemsGrid}
+            {!user && items.length === 0 ? (
+                unauthenticatedEmptyState
+            ) : (
+                <div className="min-h-screen bg-white w-full">
+                    <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
+                        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
+                        <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
+                            Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
+                        </p>
+                        {items.length === 0 ? emptyWishlistState : itemsGrid}
+                    </div>
                 </div>
-            </div>
+            )}
             <Footer />
         </>
     );

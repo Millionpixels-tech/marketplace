@@ -1,5 +1,13 @@
-// Local marketplace categories specific to Sri Lankan products
-export const LocalCategory = {
+// Category types for marketplace
+export const ItemType = {
+  PHYSICAL: 'Physical',
+  DIGITAL: 'Digital'
+} as const;
+
+export type ItemType = typeof ItemType[keyof typeof ItemType];
+
+// Physical product categories specific to Sri Lankan products
+export const PhysicalCategory = {
   FOOD_SNACKS: 'Food & Snacks',
   CLOTHING_ACCESSORIES: 'Clothing & Accessories',
   ART_CRAFTS: 'Art & Crafts',
@@ -9,6 +17,30 @@ export const LocalCategory = {
   STATIONERY_GIFTS: 'Stationery & Gifts',
   WEDDINGS_EVENTS: 'Weddings & Events',
   PET_SUPPLIES: 'Pet Supplies'
+} as const;
+
+export type PhysicalCategory = typeof PhysicalCategory[keyof typeof PhysicalCategory];
+
+// Digital product categories
+export const DigitalCategory = {
+  EBOOKS_MAGAZINES: 'eBooks & Magazines',
+  MUSIC_AUDIO: 'Music & Audio',
+  SOFTWARE_APPS: 'Software & Apps',
+  COURSES_TUTORIALS: 'Courses & Tutorials',
+  DIGITAL_ART: 'Digital Art & Graphics',
+  PHOTOGRAPHY: 'Photography & Stock Images',
+  TEMPLATES_DESIGNS: 'Templates & Designs',
+  VIDEOS_FILMS: 'Videos & Films',
+  GAMES: 'Games & Entertainment',
+  DOCUMENTS_GUIDES: 'Documents & Guides'
+} as const;
+
+export type DigitalCategory = typeof DigitalCategory[keyof typeof DigitalCategory];
+
+// Combined for backward compatibility
+export const LocalCategory = {
+  ...PhysicalCategory,
+  ...DigitalCategory
 } as const;
 
 export type LocalCategory = typeof LocalCategory[keyof typeof LocalCategory];
@@ -141,43 +173,244 @@ export const PetSuppliesSubcategory = {
 
 export type PetSuppliesSubcategory = typeof PetSuppliesSubcategory[keyof typeof PetSuppliesSubcategory];
 
+// Digital Categories Subcategories
+
+// eBooks & Magazines Subcategories
+export const EbooksMagazinesSubcategory = {
+  FICTION: 'Fiction',
+  NON_FICTION: 'Non-Fiction',
+  EDUCATIONAL: 'Educational',
+  SELF_HELP: 'Self-Help',
+  TRAVEL_GUIDES: 'Travel Guides',
+  COOKBOOKS: 'Cookbooks',
+  BUSINESS: 'Business',
+  MAGAZINES: 'Magazines',
+  POETRY: 'Poetry',
+  CHILDRENS_BOOKS: 'Children\'s Books'
+} as const;
+
+export type EbooksMagazinesSubcategory = typeof EbooksMagazinesSubcategory[keyof typeof EbooksMagazinesSubcategory];
+
+// Music & Audio Subcategories
+export const MusicAudioSubcategory = {
+  INSTRUMENTAL: 'Instrumental',
+  VOCAL: 'Vocal',
+  TRADITIONAL: 'Traditional Music',
+  MODERN: 'Modern Music',
+  SOUND_EFFECTS: 'Sound Effects',
+  PODCASTS: 'Podcasts',
+  AUDIOBOOKS: 'Audiobooks',
+  MEDITATION: 'Meditation & Relaxation',
+  NATURE_SOUNDS: 'Nature Sounds'
+} as const;
+
+export type MusicAudioSubcategory = typeof MusicAudioSubcategory[keyof typeof MusicAudioSubcategory];
+
+// Software & Apps Subcategories
+export const SoftwareAppsSubcategory = {
+  MOBILE_APPS: 'Mobile Apps',
+  WEB_APPS: 'Web Applications',
+  PRODUCTIVITY: 'Productivity Tools',
+  EDUCATIONAL_SOFTWARE: 'Educational Software',
+  GAMES: 'Games',
+  UTILITIES: 'Utilities',
+  PLUGINS: 'Plugins & Extensions'
+} as const;
+
+export type SoftwareAppsSubcategory = typeof SoftwareAppsSubcategory[keyof typeof SoftwareAppsSubcategory];
+
+// Courses & Tutorials Subcategories
+export const CoursesTutorialsSubcategory = {
+  COOKING: 'Cooking Classes',
+  ARTS_CRAFTS: 'Arts & Crafts',
+  BUSINESS: 'Business & Entrepreneurship',
+  TECHNOLOGY: 'Technology',
+  LANGUAGES: 'Languages',
+  MUSIC: 'Music Lessons',
+  FITNESS: 'Fitness & Health',
+  PHOTOGRAPHY: 'Photography',
+  PERSONAL_DEVELOPMENT: 'Personal Development'
+} as const;
+
+export type CoursesTutorialsSubcategory = typeof CoursesTutorialsSubcategory[keyof typeof CoursesTutorialsSubcategory];
+
+// Digital Art & Graphics Subcategories
+export const DigitalArtSubcategory = {
+  ILLUSTRATIONS: 'Illustrations',
+  LOGOS: 'Logos',
+  ICONS: 'Icons',
+  WALLPAPERS: 'Wallpapers',
+  DIGITAL_PAINTINGS: 'Digital Paintings',
+  GRAPHIC_DESIGNS: 'Graphic Designs',
+  PATTERNS: 'Patterns & Textures',
+  CLIPART: 'Clipart'
+} as const;
+
+export type DigitalArtSubcategory = typeof DigitalArtSubcategory[keyof typeof DigitalArtSubcategory];
+
+// Photography & Stock Images Subcategories
+export const PhotographySubcategory = {
+  NATURE: 'Nature Photography',
+  PORTRAITS: 'Portraits',
+  LANDSCAPES: 'Landscapes',
+  ARCHITECTURE: 'Architecture',
+  FOOD: 'Food Photography',
+  BUSINESS: 'Business & Corporate',
+  STOCK_PHOTOS: 'Stock Photos',
+  EVENT_PHOTOGRAPHY: 'Event Photography'
+} as const;
+
+export type PhotographySubcategory = typeof PhotographySubcategory[keyof typeof PhotographySubcategory];
+
+// Templates & Designs Subcategories
+export const TemplatesDesignsSubcategory = {
+  WEBSITE_TEMPLATES: 'Website Templates',
+  PRESENTATION_TEMPLATES: 'Presentation Templates',
+  RESUME_TEMPLATES: 'Resume Templates',
+  INVITATION_TEMPLATES: 'Invitation Templates',
+  BUSINESS_CARDS: 'Business Card Templates',
+  SOCIAL_MEDIA: 'Social Media Templates',
+  PRINT_DESIGNS: 'Print Design Templates'
+} as const;
+
+export type TemplatesDesignsSubcategory = typeof TemplatesDesignsSubcategory[keyof typeof TemplatesDesignsSubcategory];
+
+// Videos & Films Subcategories
+export const VideosFilmsSubcategory = {
+  SHORT_FILMS: 'Short Films',
+  DOCUMENTARIES: 'Documentaries',
+  TUTORIALS: 'Video Tutorials',
+  ANIMATIONS: 'Animations',
+  STOCK_FOOTAGE: 'Stock Footage',
+  MUSIC_VIDEOS: 'Music Videos',
+  PROMOTIONAL: 'Promotional Videos'
+} as const;
+
+export type VideosFilmsSubcategory = typeof VideosFilmsSubcategory[keyof typeof VideosFilmsSubcategory];
+
+// Games Subcategories
+export const GamesSubcategory = {
+  MOBILE_GAMES: 'Mobile Games',
+  PC_GAMES: 'PC Games',
+  BROWSER_GAMES: 'Browser Games',
+  EDUCATIONAL_GAMES: 'Educational Games',
+  PUZZLE_GAMES: 'Puzzle Games',
+  ADVENTURE_GAMES: 'Adventure Games'
+} as const;
+
+export type GamesSubcategory = typeof GamesSubcategory[keyof typeof GamesSubcategory];
+
+// Documents & Guides Subcategories
+export const DocumentsGuidesSubcategory = {
+  BUSINESS_PLANS: 'Business Plans',
+  LEGAL_DOCUMENTS: 'Legal Documents',
+  HOW_TO_GUIDES: 'How-to Guides',
+  CHECKLISTS: 'Checklists',
+  FORMS: 'Forms & Templates',
+  RESEARCH_PAPERS: 'Research Papers',
+  MANUALS: 'Manuals & Instructions'
+} as const;
+
+export type DocumentsGuidesSubcategory = typeof DocumentsGuidesSubcategory[keyof typeof DocumentsGuidesSubcategory];
+
 // Combined categories structure for easier use
 export const categories = [
+  // Physical Products
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.FOOD_SNACKS,
     subcategories: Object.values(FoodSnacksSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.CLOTHING_ACCESSORIES,
     subcategories: Object.values(ClothingAccessoriesSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.ART_CRAFTS,
     subcategories: Object.values(ArtCraftsSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.HOME_LIVING,
     subcategories: Object.values(HomeLivingSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.HEALTH_BEAUTY,
     subcategories: Object.values(HealthBeautyLocalSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.TOYS_BABY,
     subcategories: Object.values(ToysBabySubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.STATIONERY_GIFTS,
     subcategories: Object.values(StationeryGiftsSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.WEDDINGS_EVENTS,
     subcategories: Object.values(WeddingsEventsSubcategory)
   },
   {
+    type: ItemType.PHYSICAL,
     name: LocalCategory.PET_SUPPLIES,
     subcategories: Object.values(PetSuppliesSubcategory)
+  },
+  // Digital Products
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.EBOOKS_MAGAZINES,
+    subcategories: Object.values(EbooksMagazinesSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.MUSIC_AUDIO,
+    subcategories: Object.values(MusicAudioSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.SOFTWARE_APPS,
+    subcategories: Object.values(SoftwareAppsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.COURSES_TUTORIALS,
+    subcategories: Object.values(CoursesTutorialsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.DIGITAL_ART,
+    subcategories: Object.values(DigitalArtSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.PHOTOGRAPHY,
+    subcategories: Object.values(PhotographySubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.TEMPLATES_DESIGNS,
+    subcategories: Object.values(TemplatesDesignsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.VIDEOS_FILMS,
+    subcategories: Object.values(VideosFilmsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.GAMES,
+    subcategories: Object.values(GamesSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: LocalCategory.DOCUMENTS_GUIDES,
+    subcategories: Object.values(DocumentsGuidesSubcategory)
   }
 ] as const;
 
@@ -190,7 +423,17 @@ export const categoryIcons: Record<LocalCategory, string> = {
   [LocalCategory.TOYS_BABY]: "🧸",
   [LocalCategory.STATIONERY_GIFTS]: "📒",
   [LocalCategory.WEDDINGS_EVENTS]: "🎁",
-  [LocalCategory.PET_SUPPLIES]: "🐾"
+  [LocalCategory.PET_SUPPLIES]: "🐾",
+  [LocalCategory.EBOOKS_MAGAZINES]: "📚",
+  [LocalCategory.MUSIC_AUDIO]: "🎶",
+  [LocalCategory.SOFTWARE_APPS]: "💻",
+  [LocalCategory.COURSES_TUTORIALS]: "🎓",
+  [LocalCategory.DIGITAL_ART]: "🖌️",
+  [LocalCategory.PHOTOGRAPHY]: "📸",
+  [LocalCategory.TEMPLATES_DESIGNS]: "🖥️",
+  [LocalCategory.VIDEOS_FILMS]: "🎬",
+  [LocalCategory.GAMES]: "🎮",
+  [LocalCategory.DOCUMENTS_GUIDES]: "📄"
 };
 
 export const subCategoryIcons: Record<string, string> = {
@@ -275,7 +518,95 @@ export const subCategoryIcons: Record<string, string> = {
   [PetSuppliesSubcategory.PET_FOOD]: "🥩",
   [PetSuppliesSubcategory.PET_CLOTHING]: "🐕",
   [PetSuppliesSubcategory.PET_ACCESSORIES]: "🦴",
-  [PetSuppliesSubcategory.PET_TOYS]: "🧶"
+  [PetSuppliesSubcategory.PET_TOYS]: "🧶",
+  // eBooks & Magazines
+  [EbooksMagazinesSubcategory.FICTION]: "📖",
+  [EbooksMagazinesSubcategory.NON_FICTION]: "📚",
+  [EbooksMagazinesSubcategory.EDUCATIONAL]: "🎓",
+  [EbooksMagazinesSubcategory.SELF_HELP]: "💡",
+  [EbooksMagazinesSubcategory.TRAVEL_GUIDES]: "🗺️",
+  [EbooksMagazinesSubcategory.COOKBOOKS]: "🍳",
+  [EbooksMagazinesSubcategory.BUSINESS]: "💼",
+  [EbooksMagazinesSubcategory.MAGAZINES]: "📰",
+  [EbooksMagazinesSubcategory.POETRY]: "📜",
+  [EbooksMagazinesSubcategory.CHILDRENS_BOOKS]: "📚",
+  // Music & Audio
+  [MusicAudioSubcategory.INSTRUMENTAL]: "🎻",
+  [MusicAudioSubcategory.VOCAL]: "🎤",
+  [MusicAudioSubcategory.TRADITIONAL]: "🎶",
+  [MusicAudioSubcategory.MODERN]: "🎵",
+  [MusicAudioSubcategory.SOUND_EFFECTS]: "🔊",
+  [MusicAudioSubcategory.PODCASTS]: "🎧",
+  [MusicAudioSubcategory.AUDIOBOOKS]: "📚",
+  [MusicAudioSubcategory.MEDITATION]: "🧘‍♀️",
+  [MusicAudioSubcategory.NATURE_SOUNDS]: "🌳",
+  // Software & Apps
+  [SoftwareAppsSubcategory.MOBILE_APPS]: "📱",
+  [SoftwareAppsSubcategory.WEB_APPS]: "💻",
+  [SoftwareAppsSubcategory.PRODUCTIVITY]: "📈",
+  [SoftwareAppsSubcategory.EDUCATIONAL_SOFTWARE]: "🎓",
+  [SoftwareAppsSubcategory.GAMES]: "🎮",
+  [SoftwareAppsSubcategory.UTILITIES]: "🛠️",
+  [SoftwareAppsSubcategory.PLUGINS]: "🔌",
+  // Courses & Tutorials
+  [CoursesTutorialsSubcategory.COOKING]: "🍳",
+  [CoursesTutorialsSubcategory.ARTS_CRAFTS]: "🎨",
+  [CoursesTutorialsSubcategory.BUSINESS]: "💼",
+  [CoursesTutorialsSubcategory.TECHNOLOGY]: "💻",
+  [CoursesTutorialsSubcategory.LANGUAGES]: "🗣️",
+  [CoursesTutorialsSubcategory.MUSIC]: "🎶",
+  [CoursesTutorialsSubcategory.FITNESS]: "🏋️‍♀️",
+  [CoursesTutorialsSubcategory.PHOTOGRAPHY]: "📸",
+  [CoursesTutorialsSubcategory.PERSONAL_DEVELOPMENT]: "🌱",
+  // Digital Art & Graphics
+  [DigitalArtSubcategory.ILLUSTRATIONS]: "🖌️",
+  [DigitalArtSubcategory.LOGOS]: "🔤",
+  [DigitalArtSubcategory.ICONS]: "🖼️",
+  [DigitalArtSubcategory.WALLPAPERS]: "🖥️",
+  [DigitalArtSubcategory.DIGITAL_PAINTINGS]: "🎨",
+  [DigitalArtSubcategory.GRAPHIC_DESIGNS]: "🖌️",
+  [DigitalArtSubcategory.PATTERNS]: "🧵",
+  [DigitalArtSubcategory.CLIPART]: "🖼️",
+  // Photography & Stock Images
+  [PhotographySubcategory.NATURE]: "🌳",
+  [PhotographySubcategory.PORTRAITS]: "👤",
+  [PhotographySubcategory.LANDSCAPES]: "🏞️",
+  [PhotographySubcategory.ARCHITECTURE]: "🏛️",
+  [PhotographySubcategory.FOOD]: "🍽️",
+  [PhotographySubcategory.BUSINESS]: "💼",
+  [PhotographySubcategory.STOCK_PHOTOS]: "🖼️",
+  [PhotographySubcategory.EVENT_PHOTOGRAPHY]: "📸",
+  // Templates & Designs
+  [TemplatesDesignsSubcategory.WEBSITE_TEMPLATES]: "🖥️",
+  [TemplatesDesignsSubcategory.PRESENTATION_TEMPLATES]: "📊",
+  [TemplatesDesignsSubcategory.RESUME_TEMPLATES]: "📄",
+  [TemplatesDesignsSubcategory.INVITATION_TEMPLATES]: "✉️",
+  [TemplatesDesignsSubcategory.BUSINESS_CARDS]: "💳",
+  [TemplatesDesignsSubcategory.SOCIAL_MEDIA]: "📱",
+  [TemplatesDesignsSubcategory.PRINT_DESIGNS]: "🖨️",
+  // Videos & Films
+  [VideosFilmsSubcategory.SHORT_FILMS]: "🎥",
+  [VideosFilmsSubcategory.DOCUMENTARIES]: "📽️",
+  [VideosFilmsSubcategory.TUTORIALS]: "📹",
+  [VideosFilmsSubcategory.ANIMATIONS]: "🌀",
+  [VideosFilmsSubcategory.STOCK_FOOTAGE]: "🎞️",
+  [VideosFilmsSubcategory.MUSIC_VIDEOS]: "🎶",
+  [VideosFilmsSubcategory.PROMOTIONAL]: "📢",
+  // Games
+  [GamesSubcategory.MOBILE_GAMES]: "📱",
+  [GamesSubcategory.PC_GAMES]: "💻",
+  [GamesSubcategory.BROWSER_GAMES]: "🌐",
+  [GamesSubcategory.EDUCATIONAL_GAMES]: "🎓",
+  [GamesSubcategory.PUZZLE_GAMES]: "🧩",
+  [GamesSubcategory.ADVENTURE_GAMES]: "🗺️",
+  // Documents & Guides
+  [DocumentsGuidesSubcategory.BUSINESS_PLANS]: "📊",
+  [DocumentsGuidesSubcategory.LEGAL_DOCUMENTS]: "⚖️",
+  [DocumentsGuidesSubcategory.HOW_TO_GUIDES]: "📝",
+  [DocumentsGuidesSubcategory.CHECKLISTS]: "☑️",
+  [DocumentsGuidesSubcategory.FORMS]: "📄",
+  [DocumentsGuidesSubcategory.RESEARCH_PAPERS]: "📚",
+  [DocumentsGuidesSubcategory.MANUALS]: "📖"
 };
 
 

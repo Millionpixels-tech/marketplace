@@ -14,6 +14,7 @@ import { processImageForUpload, generateImageAltText } from "../../utils/imageUt
 
 const steps = [
   { label: "Shop" },
+  { label: "Item Type" },
   { label: "Category" },
   { label: "Subcategory" },
   { label: "Details" },
@@ -25,10 +26,12 @@ export default function AddListing() {
   const [step, setStep] = useState(1);
   const [shops, setShops] = useState<any[]>([]);
   const [shopId, setShopId] = useState("");
+  const [itemType, setItemType] = useState<"Physical" | "Digital" | "">("");
   const [cat, setCat] = useState("");
   const [sub, setSub] = useState("");
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
+  const [sellerNotes, setSellerNotes] = useState("");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -63,6 +66,30 @@ export default function AddListing() {
       fetchShops();
     }
   }, [user, loading]);
+
+  // Auto-configure delivery and payment options for digital items
+  useEffect(() => {
+    if (itemType === "Digital") {
+      // Digital items should have free delivery (no shipping needed)
+      setDeliveryType("free");
+      setDeliveryPerItem("");
+      setDeliveryAdditional("");
+      
+      // Digital items should only allow bank transfer (no COD)
+      setCashOnDelivery(false);
+      setBankTransfer(true);
+      
+      // Provide default seller notes for digital items
+      if (!sellerNotes) {
+        setSellerNotes("After payment confirmation, you will receive download links via email within 24 hours. Please check your email inbox and spam folder.");
+      }
+    } else if (itemType === "Physical") {
+      // Provide default seller notes for physical items
+      if (!sellerNotes) {
+        setSellerNotes("We will ship your order within 2-3 business days. Delivery time may vary based on your location. Please provide accurate delivery address.");
+      }
+    }
+  }, [itemType]);
 
   // Handle image preview and selection with compression
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,10 +215,12 @@ export default function AddListing() {
       await addDoc(collection(db, "listings"), {
         owner: auth.currentUser?.uid,
         shopId,
+        itemType,
         category: cat,
         subcategory: sub,
         name,
         description: desc,
+        sellerNotes,
         price: parseFloat(price),
         quantity: parseInt(quantity, 10),
         deliveryType,
@@ -203,9 +232,9 @@ export default function AddListing() {
         cashOnDelivery,
         bankTransfer,
         // SEO fields
-        seoTitle: `${name} - ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
+        seoTitle: `${name} - ${itemType} ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
         seoDescription: desc.length > 160 ? desc.substring(0, 157) + '...' : desc,
-        keywords: [name, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
+        keywords: [name, itemType, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
       });
       
       showToast('success', 'Listing added successfully!');
@@ -298,11 +327,12 @@ export default function AddListing() {
                     </span>
                     <span className="text-xs text-[#454955]/70 mt-1 block">
                       {idx === 0 && "Shop"}
-                      {idx === 1 && "Category"}
-                      {idx === 2 && "Subcategory"}
-                      {idx === 3 && "Details"}
-                      {idx === 4 && "Images"}
-                      {idx === 5 && "Delivery"}
+                      {idx === 1 && "Item Type"}
+                      {idx === 2 && "Category"}
+                      {idx === 3 && "Subcategory"}
+                      {idx === 4 && "Details"}
+                      {idx === 5 && "Images"}
+                      {idx === 6 && "Delivery"}
                     </span>
                   </div>
                 </div>
@@ -382,12 +412,75 @@ export default function AddListing() {
             </div>
           )}
 
-          {/* Step 2: Category */}
+          {/* Step 2: Item Type */}
           {step === 2 && (
+            <div className="animate-fade-in">
+              <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">What type of item are you selling?</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setItemType("Physical")}
+                  className={`flex flex-col items-center gap-4 p-6 md:p-8 rounded-xl md:rounded-2xl transition
+                    ${itemType === "Physical"
+                      ? "bg-[#72b01d] text-white shadow-sm scale-105"
+                      : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
+                  `}
+                >
+                  <span className="text-4xl">📦</span>
+                  <div className="text-center">
+                    <div className="font-bold text-lg">Physical Items</div>
+                    <div className="text-sm opacity-80 mt-1">Items that need to be shipped</div>
+                  </div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setItemType("Digital")}
+                  className={`flex flex-col items-center gap-4 p-6 md:p-8 rounded-xl md:rounded-2xl transition
+                    ${itemType === "Digital"
+                      ? "bg-[#72b01d] text-white shadow-sm scale-105"
+                      : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
+                  `}
+                >
+                  <span className="text-4xl">💻</span>
+                  <div className="text-center">
+                    <div className="font-bold text-lg">Digital Items</div>
+                    <div className="text-sm opacity-80 mt-1">Items that can be downloaded</div>
+                  </div>
+                </button>
+              </div>
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={() => goToStep(1)}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!itemType}
+                  onClick={() => {
+                    setCat(""); // Reset category when item type changes
+                    setSub(""); // Reset subcategory when item type changes
+                    goToStep(3);
+                  }}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Category */}
+          {step === 3 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Pick a main category</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
-                {categories.map((c) => (
+                {categories
+                  .filter(c => c.type === itemType)
+                  .map((c) => (
                   <button
                     key={c.name}
                     type="button"
@@ -406,7 +499,7 @@ export default function AddListing() {
               <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
                 <Button
                   variant="secondary"
-                  onClick={() => goToStep(1)}
+                  onClick={() => goToStep(2)}
                   className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
                 >
                   Back
@@ -414,7 +507,7 @@ export default function AddListing() {
                 <Button
                   variant="primary"
                   disabled={!cat}
-                  onClick={() => goToStep(3)}
+                  onClick={() => goToStep(4)}
                   className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
                 >
                   Next
@@ -423,8 +516,8 @@ export default function AddListing() {
             </div>
           )}
 
-          {/* Step 3: Subcategory */}
-          {step === 3 && (
+          {/* Step 4: Subcategory */}
+          {step === 4 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Pick a sub category</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
@@ -448,7 +541,7 @@ export default function AddListing() {
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                  onClick={() => goToStep(2)}
+                  onClick={() => goToStep(3)}
                 >
                   Back
                 </button>
@@ -456,7 +549,7 @@ export default function AddListing() {
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                   disabled={!sub}
-                  onClick={() => goToStep(4)}
+                  onClick={() => goToStep(5)}
                 >
                   Next
                 </button>
@@ -464,8 +557,8 @@ export default function AddListing() {
             </div>
           )}
 
-          {/* Step 4: Details */}
-          {step === 4 && (
+          {/* Step 5: Details */}
+          {step === 5 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Item details</h2>
 
@@ -495,6 +588,36 @@ export default function AddListing() {
                     required
                   />
                   <div className="text-xs text-[#454955] mt-1">{desc.length}/1200 characters</div>
+                </div>
+
+                {/* Seller Notes */}
+                <div>
+                  <label className="block font-semibold text-[#0d0a0b] mb-2 text-sm md:text-base">
+                    {itemType === "Digital" ? "Download Instructions" : "Delivery & Important Notes"}
+                  </label>
+                  <textarea
+                    className="w-full bg-white border border-[#45495522] focus:border-[#72b01d] focus:ring-2 focus:ring-[#72b01d]/20 transition-all duration-200 px-3 md:px-4 py-2 md:py-3 rounded-xl font-medium text-[#0d0a0b] min-h-[80px] md:min-h-[100px] shadow-sm placeholder:text-[#454955]/60 resize-vertical text-sm md:text-base"
+                    maxLength={500}
+                    placeholder={
+                      itemType === "Digital" 
+                        ? "Explain how buyers will receive their digital product (download links, access instructions, etc.)"
+                        : "Provide important information about delivery, shipping, or handling instructions"
+                    }
+                    value={sellerNotes}
+                    onChange={e => setSellerNotes(e.target.value)}
+                    required
+                  />
+                  <div className="text-xs text-[#454955] mt-1">{sellerNotes.length}/500 characters</div>
+                  {itemType === "Digital" && (
+                    <div className="text-xs text-blue-600 mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                      💡 <strong>Tip:</strong> Be specific about file formats, download process, and any software requirements.
+                    </div>
+                  )}
+                  {itemType === "Physical" && (
+                    <div className="text-xs text-green-600 mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                      💡 <strong>Tip:</strong> Include handling time, packaging details, and any special delivery instructions.
+                    </div>
+                  )}
                 </div>
 
                 {/* Price and Quantity Row */}
@@ -544,15 +667,15 @@ export default function AddListing() {
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                  onClick={() => goToStep(3)}
+                  onClick={() => goToStep(4)}
                 >
                   ← Back
                 </button>
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!name || !desc || !price || !quantity}
-                  onClick={() => goToStep(5)}
+                  disabled={!name || !desc || !sellerNotes || !price || !quantity}
+                  onClick={() => goToStep(6)}
                 >
                   Next →
                 </button>
@@ -561,8 +684,8 @@ export default function AddListing() {
           )}
 
 
-          {/* Step 5: Images */}
-          {step === 5 && (
+          {/* Step 6: Images */}
+          {step === 6 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 text-[#0d0a0b]">Add images</h2>
               
@@ -616,7 +739,7 @@ export default function AddListing() {
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                  onClick={() => goToStep(4)}
+                  onClick={() => goToStep(5)}
                 >
                   Back
                 </button>
@@ -624,7 +747,7 @@ export default function AddListing() {
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                   disabled={images.length === 0}
-                  onClick={() => goToStep(6)}
+                  onClick={() => goToStep(7)}
                 >
                   Next
                 </button>
@@ -632,10 +755,26 @@ export default function AddListing() {
             </div>
           )}
 
-          {/* Step 6: Delivery */}
-          {step === 6 && (
+          {/* Step 7: Delivery */}
+          {step === 7 && (
             <div className="animate-fade-in">
-              <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Delivery options</h2>
+              <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">
+                {itemType === "Digital" ? "Delivery & Payment" : "Delivery options"}
+              </h2>
+              
+              {itemType === "Digital" && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">💻</span>
+                    <div>
+                      <h3 className="font-semibold text-blue-800">Digital Product Detected</h3>
+                      <p className="text-sm text-blue-600 mt-1">
+                        Delivery is set to free (instant download) and payment is configured for bank transfer only.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-4 md:space-y-6">
                 {/* Delivery Type Selection */}
@@ -644,29 +783,35 @@ export default function AddListing() {
                   <div className="grid grid-cols-1 gap-3 md:gap-4">
                     <button
                       type="button"
+                      disabled={itemType === "Digital"}
                       className={`px-4 md:px-6 py-3 md:py-4 rounded-xl font-semibold transition-all duration-200 border-2 text-sm md:text-base
                         ${deliveryType === "free"
                           ? "bg-[#72b01d] text-white border-[#72b01d] shadow-md"
+                          : itemType === "Digital"
+                          ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
                           : "bg-white border-[#45495522] text-[#454955] hover:bg-gray-50 hover:border-[#454955]/30"}`}
-                      onClick={() => setDeliveryType("free")}
+                      onClick={() => itemType !== "Digital" && setDeliveryType("free")}
                     >
-                      🚚 Free Delivery
+                      {itemType === "Digital" ? "� Instant Download (Free)" : "�🚚 Free Delivery"}
                     </button>
                     <button
                       type="button"
+                      disabled={itemType === "Digital"}
                       className={`px-4 md:px-6 py-3 md:py-4 rounded-xl font-semibold transition-all duration-200 border-2 text-sm md:text-base
                         ${deliveryType === "paid"
                           ? "bg-[#72b01d] text-white border-[#72b01d] shadow-md"
+                          : itemType === "Digital"
+                          ? "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
                           : "bg-white border-[#45495522] text-[#454955] hover:bg-gray-50 hover:border-[#454955]/30"}`}
-                      onClick={() => setDeliveryType("paid")}
+                      onClick={() => itemType !== "Digital" && setDeliveryType("paid")}
                     >
-                      📦 Buyer Pays Delivery
+                      📦 Buyer Pays Delivery {itemType === "Digital" && "(Not applicable)"}
                     </button>
                   </div>
                 </div>
 
                 {/* Delivery Pricing (only show when paid delivery is selected) */}
-                {deliveryType === "paid" && (
+                {deliveryType === "paid" && itemType !== "Digital" && (
                   <div className="bg-gray-50 p-4 md:p-6 rounded-xl border border-[#45495522]">
                     <h3 className="font-semibold text-[#0d0a0b] mb-3 md:mb-4 text-sm md:text-base">Delivery Pricing</h3>
                     <div className="grid grid-cols-1 gap-3 md:gap-4">
@@ -707,28 +852,47 @@ export default function AddListing() {
                   </h3>
                   <div className="space-y-3">
                     {/* Cash on Delivery Option */}
-                    <div className="bg-blue-50 p-4 md:p-6 rounded-xl border border-blue-200">
+                    <div className={`p-4 md:p-6 rounded-xl border ${
+                      itemType === "Digital" 
+                        ? "bg-gray-50 border-gray-200" 
+                        : "bg-blue-50 border-blue-200"
+                    }`}>
                       <div className="flex items-start gap-2 md:gap-3">
                         <input
                           id="cod"
                           type="checkbox"
                           checked={cashOnDelivery}
+                          disabled={itemType === "Digital"}
                           onChange={e => setCashOnDelivery(e.target.checked)}
-                          className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
+                          className={`w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm ${
+                            itemType === "Digital" ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         />
                         <div className="flex-1">
-                          <label htmlFor="cod" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
+                          <label htmlFor="cod" className={`font-semibold cursor-pointer text-sm md:text-base ${
+                            itemType === "Digital" ? "text-gray-400" : "text-[#0d0a0b]"
+                          }`}>
                             💰 Allow Cash on Delivery (COD)
+                            {itemType === "Digital" && " (Not available for digital items)"}
                           </label>
-                          <p className="text-xs md:text-sm text-[#454955] mt-1">
-                            Let customers pay when they receive their order
+                          <p className={`text-xs md:text-sm mt-1 ${
+                            itemType === "Digital" ? "text-gray-400" : "text-[#454955]"
+                          }`}>
+                            {itemType === "Digital" 
+                              ? "Digital products require advance payment" 
+                              : "Let customers pay when they receive their order"
+                            }
                           </p>
                         </div>
                       </div>
                     </div>
 
                     {/* Bank Transfer Option */}
-                    <div className="bg-green-50 p-4 md:p-6 rounded-xl border border-green-200">
+                    <div className={`p-4 md:p-6 rounded-xl border ${
+                      itemType === "Digital" 
+                        ? "bg-green-100 border-green-300 ring-2 ring-green-200" 
+                        : "bg-green-50 border-green-200"
+                    }`}>
                       <div className="flex items-start gap-2 md:gap-3">
                         <input
                           id="bank-transfer"
@@ -740,9 +904,13 @@ export default function AddListing() {
                         <div className="flex-1">
                           <label htmlFor="bank-transfer" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
                             🏦 Allow Bank Transfer
+                            {itemType === "Digital" && " (Recommended for digital items)"}
                           </label>
                           <p className="text-xs md:text-sm text-[#454955] mt-1">
-                            Customers transfer money directly to your bank account
+                            {itemType === "Digital" 
+                              ? "Secure payment method ideal for digital products - customers transfer money and receive download links"
+                              : "Customers transfer money directly to your bank account"
+                            }
                           </p>
                         </div>
                       </div>
@@ -753,6 +921,7 @@ export default function AddListing() {
                       <div className="bg-red-50 p-3 rounded-lg border border-red-200">
                         <p className="text-xs md:text-sm text-red-700">
                           ⚠️ Please select at least one payment method for this listing.
+                          {itemType === "Digital" && " Bank transfer is recommended for digital products."}
                         </p>
                       </div>
                     )}
@@ -764,7 +933,7 @@ export default function AddListing() {
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                  onClick={() => goToStep(5)}
+                  onClick={() => goToStep(6)}
                 >
                   ← Back
                 </button>
@@ -773,8 +942,9 @@ export default function AddListing() {
                   className="w-full md:w-auto px-6 md:px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={
                     !deliveryType ||
-                    (deliveryType === "paid" &&
-                      (!deliveryPerItem || !deliveryAdditional))
+                    (deliveryType === "paid" && itemType !== "Digital" &&
+                      (!deliveryPerItem || !deliveryAdditional)) ||
+                    (!cashOnDelivery && !bankTransfer)
                   }
                 >
                   Submit →
