@@ -7,7 +7,7 @@ import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
-import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
@@ -45,8 +45,7 @@ interface BankAccount {
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
-    { key: "orders", label: "Orders", icon: <FiList /> },
-    { key: "reviews", label: "Reviews", icon: <FiStar /> },
+    { key: "orders", label: "Orders", icon: <FiPackage /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
     { key: "earnings", label: "Earnings", icon: <FiStar /> },
     { key: "settings", label: "Settings", icon: <FiUser /> },
@@ -340,13 +339,15 @@ export default function ProfileDashboard() {
     };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings" | "earnings" | "settings">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "earnings" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [listings, setListings] = useState<any[]>([]);
     const [listingsLoading, setListingsLoading] = useState(false);
-    const [listingsPage, setListingsPage] = useState(1); // <-- Pagination
+    const [listingsPage, setListingsPage] = useState(1);
+    const [listingsCursors, setListingsCursors] = useState<any[]>([null]); // Array of cursors for each page
+    const [listingsTotalCount, setListingsTotalCount] = useState(0);
     const LISTINGS_PER_PAGE = 8;
 
     const navigate = useNavigate();
@@ -365,10 +366,6 @@ export default function ProfileDashboard() {
     const [buyerTotalCount, setBuyerTotalCount] = useState(0);
     const [sellerTotalCount, setSellerTotalCount] = useState(0);
     const ORDERS_PER_PAGE = 8;
-
-    // Review sub-tabs
-    const [sellerReviews, setSellerReviews] = useState<any[]>([]);
-    const [reviewsLoading, setReviewsLoading] = useState(false);
 
     const isOwner = user && profileUid === user?.uid;
 
@@ -450,50 +447,75 @@ export default function ProfileDashboard() {
         fetchProfile();
     }, [user, id]);
 
-    // Listings fetching - Optimized
-    useEffect(() => {
-        const fetchListings = async () => {
-            if (selectedTab !== "listings" || !profileUid) return;
-            setListingsLoading(true);
-            try {
-                // First get user's shops, then batch query for listings
-                const shopsQuery = query(
-                    collection(db, "shops"), 
+    // Listings fetching - Server-side pagination
+    const fetchListings = async (page: number) => {
+        if (selectedTab !== "listings" || !profileUid) return;
+        setListingsLoading(true);
+        try {
+            // First get the total count for accurate pagination
+            if (page === 1) {
+                const countQuery = query(
+                    collection(db, "listings"),
                     where("owner", "==", profileUid)
                 );
-                const shopsSnapshot = await getDocs(shopsQuery);
-                const shopIds = shopsSnapshot.docs.map(doc => doc.id);
-                
-                if (shopIds.length === 0) {
-                    setListings([]);
+                const countSnapshot = await getDocs(countQuery);
+                setListingsTotalCount(countSnapshot.size);
+            }
+
+            // Build paginated listings query - directly query by owner
+            let listingsQuery;
+            
+            if (page === 1) {
+                // First page - use document ID for ordering (always exists)
+                listingsQuery = query(
+                    collection(db, "listings"), 
+                    where("owner", "==", profileUid),
+                    orderBy("__name__", "desc"),
+                    limit(LISTINGS_PER_PAGE)
+                );
+            } else {
+                // Subsequent pages - use cursor with document ID ordering
+                const cursor = listingsCursors[page - 2]; // previous page's last doc
+                if (!cursor) {
                     setListingsLoading(false);
                     return;
                 }
-
-                // Optimize listings query with limit and ordering
-                const listingsQuery = query(
+                listingsQuery = query(
                     collection(db, "listings"), 
-                    where("shopId", "in", shopIds),
-                    // Add ordering for better UX
-                    // orderBy("createdAt", "desc"),
-                    // limit(100) // Limit to prevent large queries
+                    where("owner", "==", profileUid),
+                    orderBy("__name__", "desc"),
+                    startAfter(cursor),
+                    limit(LISTINGS_PER_PAGE)
                 );
-                const listingsSnapshot = await getDocs(listingsQuery);
-                setListings(listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (err) {
-                console.error("Error loading listings:", err);
-                setListings([]);
-            } finally {
-                setListingsLoading(false);
             }
-        };
-        fetchListings();
-    }, [selectedTab, profileUid]);
 
-    // Reset page on listings change
+            const listingsSnapshot = await getDocs(listingsQuery);
+            const newListings = listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            setListings(newListings);
+            setListingsPage(page);
+            
+            // Update cursors for pagination
+            if (listingsSnapshot.docs.length > 0) {
+                const newCursors = [...listingsCursors];
+                newCursors[page - 1] = listingsSnapshot.docs[listingsSnapshot.docs.length - 1];
+                setListingsCursors(newCursors);
+            }
+            
+        } catch (err) {
+            console.error("Error loading listings:", err);
+            setListings([]);
+        } finally {
+            setListingsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        setListingsPage(1);
-    }, [listings]);
+        if (selectedTab === "listings") {
+            setListingsCursors([null]); // Reset cursors
+            fetchListings(1); // Always start from page 1 when tab changes
+        }
+    }, [selectedTab, profileUid]);
 
     // Orders fetching - Server-side pagination
     useEffect(() => {
@@ -715,34 +737,6 @@ export default function ProfileDashboard() {
         }
     };
 
-    // Reviews fetching - Optimized
-    useEffect(() => {
-        if (selectedTab !== "reviews" || !profileUid) return;
-        setReviewsLoading(true);
-        const fetchReviews = async () => {
-            try {
-                // For now, only fetch seller reviews as commented
-                // In the future, you could add buyer reviews query as well
-                const sellerSnap = await getDocs(
-                    query(collection(db, "reviews"),
-                        where("reviewedUserId", "==", profileUid),
-                        where("role", "==", "seller"),
-                        // Add ordering for better UX
-                        // orderBy("createdAt", "desc"),
-                        // limit(20)
-                    )
-                );
-                setSellerReviews(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (error) {
-                console.error("Error fetching reviews:", error);
-                setSellerReviews([]);
-            } finally {
-                setReviewsLoading(false);
-            }
-        };
-        fetchReviews();
-    }, [selectedTab, profileUid]);
-
     const handleEditListing = (listingId: string) => {
         navigate(`/listing/${listingId}/edit`);
     };
@@ -802,13 +796,9 @@ export default function ProfileDashboard() {
         setUploadingPic(false);
     };
 
-    // Pagination logic for listings
-    const totalListings = listings.length;
-    const totalPages = Math.ceil(totalListings / LISTINGS_PER_PAGE);
-    const paginatedListings = listings.slice(
-        (listingsPage - 1) * LISTINGS_PER_PAGE,
-        listingsPage * LISTINGS_PER_PAGE
-    );
+    // Pagination logic for listings - server-side pagination
+    const totalPages = Math.ceil(listingsTotalCount / LISTINGS_PER_PAGE);
+    const paginatedListings = listings; // Already paginated from server
 
     // Pagination logic for orders - server-side pagination
     const currentTotalCount = orderSubTab === "buyer" ? buyerTotalCount : sellerTotalCount;
@@ -1367,44 +1357,6 @@ export default function ProfileDashboard() {
                         </div>
                     )}
 
-                    {/* REVIEWS TAB */}
-                    {selectedTab === "reviews" && (
-                        <div>
-                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Your Seller Reviews</h2>
-                            {reviewsLoading ? (
-                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading reviews...</div>
-                            ) : sellerReviews.length === 0 ? (
-                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No reviews as seller yet.</div>
-                            ) : (
-                                <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                                    {sellerReviews.map(r => (
-                                        <div key={r.id} className={`border rounded-xl shadow transition ${isMobile ? 'p-3' : 'p-5'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                            e.currentTarget.style.borderColor = '#72b01d';
-                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
-                                        }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                e.currentTarget.style.boxShadow = '';
-                                            }}>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className={`font-bold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>{r.rating}★</span>
-                                                <span className="text-xs" style={{ color: '#454955', opacity: 0.8 }}>{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
-                                            </div>
-                                            <div className={`${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>{r.text}</div>
-                                            {r.writtenByUserName && (
-                                                <div className="mt-2 text-xs" style={{ color: '#454955', opacity: 0.7 }}>
-                                                    — {r.writtenByUserName}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     {/* LISTINGS TAB WITH PAGINATION */}
                     {selectedTab === "listings" && (
                         <div>
@@ -1426,7 +1378,7 @@ export default function ProfileDashboard() {
                             </div>
                             {listingsLoading ? (
                                 <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading listings...</div>
-                            ) : totalListings === 0 ? (
+                            ) : listingsTotalCount === 0 ? (
                                 <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No listings found.</div>
                             ) : (
                                 <>
@@ -1520,7 +1472,7 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
-                                                onClick={() => setListingsPage(p => Math.max(p - 1, 1))}
+                                                onClick={() => fetchListings(Math.max(listingsPage - 1, 1))}
                                                 disabled={listingsPage === 1}
                                             >
                                                 {isMobile ? '‹' : 'Prev'}
@@ -1546,7 +1498,7 @@ export default function ProfileDashboard() {
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         }
                                                     }}
-                                                    onClick={() => setListingsPage(i + 1)}
+                                                    onClick={() => fetchListings(i + 1)}
                                                 >
                                                     {i + 1}
                                                 </button>
@@ -1571,7 +1523,7 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
-                                                onClick={() => setListingsPage(p => Math.min(p + 1, totalPages))}
+                                                onClick={() => fetchListings(Math.min(listingsPage + 1, totalPages))}
                                                 disabled={listingsPage === totalPages}
                                             >
                                                 {isMobile ? '›' : 'Next'}

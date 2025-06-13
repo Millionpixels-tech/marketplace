@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { doc, getDoc, collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import { doc, getDoc, collection, query, orderBy, limit, getDocs, where, startAfter } from "firebase/firestore";
 import { getUserIP } from "../../utils/ipUtils";
 import { db } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -49,6 +49,7 @@ export default function ListingSingle() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [currentReviewPage, setCurrentReviewPage] = useState(1);
   const [totalReviewPages, setTotalReviewPages] = useState(1);
+  const [reviewsCursors, setReviewsCursors] = useState<any[]>([null]); // Array of cursors for each page
   const reviewsPerPage = 10;
 
   // Function to fetch latest items with improved performance
@@ -186,6 +187,13 @@ export default function ListingSingle() {
           ...doc.data()
         })) as any[];
         
+        // Set up cursor for pagination
+        if (reviewsSnapshot.docs.length > 0) {
+          const newCursors: any[] = [null]; // First page has no cursor
+          newCursors[1] = reviewsSnapshot.docs[reviewsSnapshot.docs.length - 1];
+          setReviewsCursors(newCursors);
+        }
+        
         // Enrich reviews with user names
         const enrichedReviews = await Promise.all(
           reviewsData.map(async (review: any) => {
@@ -228,7 +236,7 @@ export default function ListingSingle() {
       let reviewsQuery;
       
       if (page === 1) {
-        // First page
+        // First page - no cursor needed
         reviewsQuery = query(
           collection(db, "reviews"),
           where("itemId", "==", id),
@@ -236,27 +244,33 @@ export default function ListingSingle() {
           limit(reviewsPerPage)
         );
       } else {
-        // Subsequent pages - this is a simplified approach
-        // For better performance, you might want to store last docs for each page
-        const offset = (page - 1) * reviewsPerPage;
+        // Subsequent pages - use cursor from previous page
+        const cursor = reviewsCursors[page - 2]; // previous page's last doc
+        if (!cursor) {
+          console.error("No cursor available for page", page);
+          return;
+        }
+        
         reviewsQuery = query(
           collection(db, "reviews"),
           where("itemId", "==", id),
           orderBy("createdAt", "desc"),
-          limit(offset + reviewsPerPage)
+          startAfter(cursor),
+          limit(reviewsPerPage)
         );
       }
       
       const reviewsSnapshot = await getDocs(reviewsQuery);
-      let reviewsData = reviewsSnapshot.docs.map(doc => ({
+      const reviewsData = reviewsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as any[];
       
-      // If not first page, slice to get only the current page data
-      if (page > 1) {
-        const startIndex = (page - 1) * reviewsPerPage;
-        reviewsData = reviewsData.slice(startIndex, startIndex + reviewsPerPage);
+      // Update cursors for pagination
+      if (reviewsSnapshot.docs.length > 0) {
+        const newCursors = [...reviewsCursors];
+        newCursors[page - 1] = reviewsSnapshot.docs[reviewsSnapshot.docs.length - 1];
+        setReviewsCursors(newCursors);
       }
       
       // Enrich reviews with user names

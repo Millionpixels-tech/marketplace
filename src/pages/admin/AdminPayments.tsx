@@ -41,8 +41,9 @@ export default function AdminPayments() {
     const [paymentSchedule, setPaymentSchedule] = useState<PaymentSchedule | null>(null);
     const [sellerPayments, setSellerPayments] = useState<SellerPaymentData[]>([]);
     
-    // Pagination state
+    // Pagination state - server-side pagination
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalSellers, setTotalSellers] = useState(0);
     const sellersPerPage = 10;
     
     // Modal state
@@ -63,13 +64,13 @@ export default function AdminPayments() {
         if (hasAdminAccess(password)) {
             setIsAuthenticated(true);
             setAuthError("");
-            loadPaymentData();
+            loadPaymentData(1);
         } else {
             setAuthError("Invalid password");
         }
     };
 
-    const loadPaymentData = async () => {
+    const loadPaymentData = async (page: number = 1) => {
         setLoading(true);
         try {
             // Initialize payment system
@@ -101,7 +102,7 @@ export default function AdminPayments() {
             });
 
             // Calculate eligible orders and earnings for each seller
-            const sellerPaymentData: SellerPaymentData[] = [];
+            const allSellerPaymentData: SellerPaymentData[] = [];
             
             for (const [sellerId, orders] of sellerOrdersMap) {
                 const eligibleOrders = getEligibleOrdersForPayment(orders, schedule.currentPeriod);
@@ -115,7 +116,7 @@ export default function AdminPayments() {
                     const userSnap = await getDocs(userQuery);
                     const sellerEmail = userSnap.docs[0]?.data()?.email || "Unknown";
 
-                    sellerPaymentData.push({
+                    allSellerPaymentData.push({
                         sellerId,
                         sellerEmail,
                         eligibleOrders,
@@ -126,8 +127,16 @@ export default function AdminPayments() {
             }
 
             // Sort by total earnings (highest first)
-            sellerPaymentData.sort((a, b) => b.totalEarnings - a.totalEarnings);
-            setSellerPayments(sellerPaymentData);
+            allSellerPaymentData.sort((a, b) => b.totalEarnings - a.totalEarnings);
+            
+            // Server-side pagination
+            setTotalSellers(allSellerPaymentData.length);
+            const startIndex = (page - 1) * sellersPerPage;
+            const endIndex = startIndex + sellersPerPage;
+            const paginatedData = allSellerPaymentData.slice(startIndex, endIndex);
+            
+            setSellerPayments(paginatedData);
+            setCurrentPage(page);
 
         } catch (error) {
             console.error("Error loading payment data:", error);
@@ -136,11 +145,9 @@ export default function AdminPayments() {
         }
     };
 
-    // Pagination calculations
-    const totalPages = Math.ceil(sellerPayments.length / sellersPerPage);
-    const startIndex = (currentPage - 1) * sellersPerPage;
-    const endIndex = startIndex + sellersPerPage;
-    const paginatedSellers = sellerPayments.slice(startIndex, endIndex);
+    // Pagination calculations - server-side
+    const totalPages = Math.ceil(totalSellers / sellersPerPage);
+    const paginatedSellers = sellerPayments; // Already paginated from server
 
     // Modal handlers
     const openOrderModal = (seller: SellerPaymentData) => {
@@ -388,13 +395,13 @@ export default function AdminPayments() {
                     <div className="mt-6">
                         <div className="text-center mb-4">
                             <p className="text-sm" style={{ color: '#454955' }}>
-                                Showing {startIndex + 1} to {Math.min(endIndex, sellerPayments.length)} of {sellerPayments.length} sellers
+                                Showing {((currentPage - 1) * sellersPerPage) + 1} to {Math.min(currentPage * sellersPerPage, totalSellers)} of {totalSellers} sellers
                             </p>
                         </div>
                         
                         <div className="flex justify-center items-center space-x-2">
                             <button
-                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                onClick={() => loadPaymentData(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
                                 className="px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ 
@@ -409,7 +416,7 @@ export default function AdminPayments() {
                                 {currentPage > 3 && totalPages > 5 && (
                                     <>
                                         <button
-                                            onClick={() => setCurrentPage(1)}
+                                            onClick={() => loadPaymentData(1)}
                                             className="px-3 py-2 rounded-md text-sm font-medium"
                                             style={{
                                                 backgroundColor: 'white',
@@ -426,7 +433,7 @@ export default function AdminPayments() {
                                 {getPageNumbers().map((page) => (
                                     <button
                                         key={page}
-                                        onClick={() => setCurrentPage(page)}
+                                        onClick={() => loadPaymentData(page)}
                                         className="px-3 py-2 rounded-md text-sm font-medium"
                                         style={{
                                             backgroundColor: currentPage === page ? '#72b01d' : 'white',
@@ -442,7 +449,7 @@ export default function AdminPayments() {
                                     <>
                                         {currentPage < totalPages - 3 && <span className="px-2 py-2 text-sm" style={{ color: '#454955' }}>...</span>}
                                         <button
-                                            onClick={() => setCurrentPage(totalPages)}
+                                            onClick={() => loadPaymentData(totalPages)}
                                             className="px-3 py-2 rounded-md text-sm font-medium"
                                             style={{
                                                 backgroundColor: 'white',
@@ -457,7 +464,7 @@ export default function AdminPayments() {
                             </div>
                             
                             <button
-                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                onClick={() => loadPaymentData(Math.min(totalPages, currentPage + 1))}
                                 disabled={currentPage === totalPages}
                                 className="px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ 
