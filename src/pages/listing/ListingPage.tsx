@@ -8,14 +8,15 @@ import Footer from "../../components/UI/Footer";
 import WishlistButton from "../../components/UI/WishlistButton";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../../components/HOC/WithReviewStats";
-import { LoadingSpinner } from "../../components/UI";
+import { LoadingSpinner, Pagination } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import ShopOwnerName from "../shop/ShopOwnerName";
-import { FiChevronLeft, FiChevronRight, FiMaximize2 } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMaximize2, FiStar } from "react-icons/fi";
 import { PaymentMethod } from "../../types/enums";
 import { getProductStructuredData, getBreadcrumbStructuredData, getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
+import type { UserProfile } from "../../utils/userProfile";
 
 type Shop = {
   name: string;
@@ -42,6 +43,13 @@ export default function ListingSingle() {
   // Reviews state - fetch from reviews collection for optimal performance
   const [listingReviewCount, setListingReviewCount] = useState(0);
   const [listingAvgRating, setListingAvgRating] = useState<number | null>(null);
+  
+  // Paginated reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [currentReviewPage, setCurrentReviewPage] = useState(1);
+  const [totalReviewPages, setTotalReviewPages] = useState(1);
+  const reviewsPerPage = 10;
 
   // Function to fetch latest items with improved performance
   const fetchLatestItems = async () => {
@@ -134,42 +142,186 @@ export default function ListingSingle() {
     }
   }, [id]);
 
-  // Optimized reviews fetch from reviews collection
-  useEffect(() => {
-    const fetchListingReviews = async () => {
-      if (!id) return;
+  // Simplified reviews fetch with pagination
+  const fetchReviews = async () => {
+    if (!id) return;
+    
+    console.log('Fetching reviews for item:', id);
+    
+    try {
+      setReviewsLoading(true);
       
-      try {
-        // Query reviews collection for this specific item
+      // First, get total count for pagination calculations
+      const countQuery = query(
+        collection(db, "reviews"),
+        where("itemId", "==", id)
+      );
+      const countSnapshot = await getDocs(countQuery);
+      const totalReviews = countSnapshot.size;
+      console.log('Total reviews found:', totalReviews);
+      setListingReviewCount(totalReviews);
+      
+      if (totalReviews > 0) {
+        // Calculate average rating from all reviews
+        const allReviews = countSnapshot.docs.map(doc => doc.data());
+        const totalRating = allReviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+        const averageRating = totalRating / totalReviews;
+        setListingAvgRating(Math.round(averageRating * 100) / 100);
+        
+        // Calculate total pages
+        const totalPages = Math.ceil(totalReviews / reviewsPerPage);
+        setTotalReviewPages(totalPages);
+        
+        // Get paginated reviews for display
         const reviewsQuery = query(
           collection(db, "reviews"),
-          where("itemId", "==", id)
+          where("itemId", "==", id),
+          orderBy("createdAt", "desc"),
+          limit(reviewsPerPage)
         );
         
-        const reviewsSnap = await getDocs(reviewsQuery);
-        const reviews = reviewsSnap.docs.map(doc => ({ 
-          id: doc.id, 
-          ...doc.data() 
+        const reviewsSnapshot = await getDocs(reviewsQuery);
+        const reviewsData = reviewsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
         })) as any[];
         
-        // Calculate average rating and count for optimal performance
-        if (reviews.length > 0) {
-          const totalRating = reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
-          const averageRating = totalRating / reviews.length;
-          setListingAvgRating(Math.round(averageRating * 100) / 100); // Round to 2 decimal places
-          setListingReviewCount(reviews.length);
-        } else {
-          setListingAvgRating(null);
-          setListingReviewCount(0);
-        }
-      } catch (error) {
-        console.error("Error fetching listing reviews:", error);
+        // Enrich reviews with user names
+        const enrichedReviews = await Promise.all(
+          reviewsData.map(async (review: any) => {
+            if (review.buyerId) {
+              const userName = await getUserDisplayName(review.buyerId);
+              return { ...review, reviewerName: userName };
+            }
+            return { ...review, reviewerName: review.reviewerName || 'Anonymous User' };
+          })
+        );
+        
+        console.log('Enriched reviews data:', enrichedReviews);
+        setReviews(enrichedReviews);
+        setCurrentReviewPage(1);
+        
+        // Reviews fetched successfully
+      } else {
         setListingAvgRating(null);
-        setListingReviewCount(0);
+        setTotalReviewPages(1);
+        setReviews([]);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      setListingAvgRating(null);
+      setListingReviewCount(0);
+      setTotalReviewPages(1);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Function to fetch specific page of reviews
+  const fetchReviewPage = async (page: number) => {
+    if (!id || page === currentReviewPage) return;
     
-    fetchListingReviews();
+    try {
+      setReviewsLoading(true);
+      
+      let reviewsQuery;
+      
+      if (page === 1) {
+        // First page
+        reviewsQuery = query(
+          collection(db, "reviews"),
+          where("itemId", "==", id),
+          orderBy("createdAt", "desc"),
+          limit(reviewsPerPage)
+        );
+      } else {
+        // Subsequent pages - this is a simplified approach
+        // For better performance, you might want to store last docs for each page
+        const offset = (page - 1) * reviewsPerPage;
+        reviewsQuery = query(
+          collection(db, "reviews"),
+          where("itemId", "==", id),
+          orderBy("createdAt", "desc"),
+          limit(offset + reviewsPerPage)
+        );
+      }
+      
+      const reviewsSnapshot = await getDocs(reviewsQuery);
+      let reviewsData = reviewsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as any[];
+      
+      // If not first page, slice to get only the current page data
+      if (page > 1) {
+        const startIndex = (page - 1) * reviewsPerPage;
+        reviewsData = reviewsData.slice(startIndex, startIndex + reviewsPerPage);
+      }
+      
+      // Enrich reviews with user names
+      const enrichedReviews = await Promise.all(
+        reviewsData.map(async (review: any) => {
+          if (review.buyerId) {
+            const userName = await getUserDisplayName(review.buyerId);
+            return { ...review, reviewerName: userName };
+          }
+          return { ...review, reviewerName: review.reviewerName || 'Anonymous User' };
+        })
+      );
+      
+      setReviews(enrichedReviews);
+      setCurrentReviewPage(page);
+    } catch (error) {
+      console.error("Error fetching review page:", error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  // Handle review page changes
+  const handleReviewPageChange = async (page: number) => {
+    await fetchReviewPage(page);
+    // Scroll to reviews section
+    const reviewsSection = document.getElementById('reviews-section');
+    if (reviewsSection) {
+      reviewsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Function to get user display name
+  const getUserDisplayName = async (userId: string): Promise<string> => {
+    try {
+      const userRef = doc(db, "users", userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as UserProfile;
+        // Try different name fields in order of preference
+        if (userData.displayName) {
+          return userData.displayName;
+        }
+        if (userData.buyerInfo?.firstName && userData.buyerInfo?.lastName) {
+          return `${userData.buyerInfo.firstName} ${userData.buyerInfo.lastName}`;
+        }
+        if (userData.buyerInfo?.firstName) {
+          return userData.buyerInfo.firstName;
+        }
+        if (userData.email) {
+          // Use email username as fallback
+          return userData.email.split('@')[0];
+        }
+      }
+      return 'Anonymous User';
+    } catch (error) {
+      console.error('Error fetching user name:', error);
+      return 'Anonymous User';
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
   }, [id]);
 
   if (loading) {
@@ -615,6 +767,142 @@ export default function ListingSingle() {
             </div>
           </section>
         )}
+
+        {/* Reviews Section */}
+        <section id="reviews-section" className={`w-full max-w-4xl mx-auto mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>
+              Customer Reviews
+              {listingReviewCount > 0 && (
+                <span className={`ml-2 ${isMobile ? 'text-sm' : 'text-base'} font-normal`} style={{ color: '#454955' }}>
+                  ({listingReviewCount} {listingReviewCount === 1 ? 'review' : 'reviews'})
+                </span>
+              )}
+            </h2>
+            {listingAvgRating && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FiStar
+                      key={star}
+                      className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
+                        star <= Math.round(listingAvgRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                  {listingAvgRating}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {listingReviewCount === 0 ? (
+            <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-6' : 'p-8'} text-center border`} 
+              style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+              <div className="flex flex-col items-center gap-3">
+                <FiStar className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-300`} />
+                <p className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`} style={{ color: '#454955' }}>
+                  No reviews yet
+                </p>
+                <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
+                  Be the first to review this product!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Reviews List */}
+              <div className="space-y-4 mb-6">
+                {reviewsLoading ? (
+                  // Loading skeleton
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} border animate-pulse`} 
+                      style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                      <div className="flex items-start gap-3">
+                        <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} bg-gray-200 rounded-full`}></div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`h-4 bg-gray-200 rounded ${isMobile ? 'w-20' : 'w-24'}`}></div>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <div key={star} className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} bg-gray-200 rounded`}></div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  reviews.map((review) => (
+                    <div key={review.id} className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} border`} 
+                      style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                      <div className="flex items-start gap-3">
+                        <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-full flex items-center justify-center text-white font-semibold`}
+                          style={{ backgroundColor: '#72b01d' }}>
+                          {review.reviewerName ? review.reviewerName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="mb-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                                {review.reviewerName || 'Anonymous User'}
+                              </span>
+                              <div className="flex items-center">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <FiStar
+                                    key={star}
+                                    className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} ${
+                                      star <= (review.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {review.createdAt && (
+                              <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                {new Date(review.createdAt.seconds * 1000).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          {review.comment && (
+                            <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed`} style={{ color: '#454955' }}>
+                              {review.comment}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Pagination for Reviews */}
+              {totalReviewPages > 1 && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={currentReviewPage}
+                    totalPages={totalReviewPages}
+                    onPageChange={handleReviewPageChange}
+                    totalItems={listingReviewCount}
+                    showInfo={false}
+                    showJumpTo={false}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </section>
 
         
       </main>
