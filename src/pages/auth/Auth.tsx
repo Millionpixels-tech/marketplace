@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { auth } from "../../utils/firebase";
+import { auth, db } from "../../utils/firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Header, Button, Input, Card } from "../../components/UI";
@@ -11,6 +12,7 @@ import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -81,6 +83,22 @@ const Auth = () => {
         }
       } else if (mode === 'signup') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Create user document in Firestore
+        const userData = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          displayName: displayName.trim() || '',
+          photoURL: userCredential.user.photoURL || '',
+          createdAt: new Date(),
+          isGoogleUser: false,
+          emailVerified: userCredential.user.emailVerified,
+          description: '',
+          bankAccounts: []
+        };
+        
+        await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+        
         await sendEmailVerification(userCredential.user);
         await auth.signOut();
         setMessage(`Verification email sent to ${email}. Please check your inbox and verify your email before signing in.`);
@@ -135,6 +153,9 @@ const Auth = () => {
     if (newMode === 'reset') {
       setPassword("");
     }
+    if (newMode !== 'signup') {
+      setDisplayName("");
+    }
   };
 
   const getTitle = () => {
@@ -177,7 +198,7 @@ const Auth = () => {
       
       <Header />
 
-      <main className="flex flex-1 items-center justify-center p-4">
+      <main className="flex flex-1 items-center justify-center p-4 py-16 md:py-24">
         <div className="w-full max-w-sm">
           <Card className="p-6 shadow-lg bg-white">
             <h2 className="text-2xl font-bold text-center mb-6 text-[#0d0a0b]">
@@ -223,6 +244,17 @@ const Auth = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === 'signup' && (
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-[#72b01d] focus:ring-1 focus:ring-[#72b01d]"
+                />
+              )}
+              
               <Input
                 type="email"
                 placeholder="Email"

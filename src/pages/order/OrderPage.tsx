@@ -7,6 +7,8 @@ import Header from "../../components/UI/Header";
 import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
+import { ConfirmDialog } from "../../components/UI";
+import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 
 interface BankAccount {
     id: string;
@@ -35,6 +37,9 @@ export default function OrderPage() {
     // Role determination
     const [isBuyer, setIsBuyer] = useState(false);
     const [isSeller, setIsSeller] = useState(false);
+
+    // Custom confirmation dialog hook
+    const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
 
     // Fetch order and determine role
     useEffect(() => {
@@ -104,6 +109,16 @@ export default function OrderPage() {
 
     const requestRefund = async () => {
         if (!order) return;
+        
+        const confirmed = await showConfirmDialog({
+            title: "Request Refund",
+            message: "Are you sure you want to request a refund for this order? This will notify the seller and they will review your request.",
+            confirmText: "Request Refund",
+            cancelText: "Cancel",
+            type: "warning"
+        });
+        if (!confirmed) return;
+        
         setRefundSubmitting(true);
         await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUND_REQUESTED });
         setOrder({ ...order, status: OrderStatus.REFUND_REQUESTED });
@@ -112,6 +127,16 @@ export default function OrderPage() {
 
     const markAsReceived = async () => {
         if (!order) return;
+        
+        const confirmed = await showConfirmDialog({
+            title: "Mark as Received",
+            message: "Are you sure you want to mark this order as received? This will complete the order and finalize the transaction.",
+            confirmText: "Mark as Received",
+            cancelText: "Cancel",
+            type: "info"
+        });
+        if (!confirmed) return;
+        
         setSubmitting(true);
         await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.RECEIVED });
         setOrder({ ...order, status: OrderStatus.RECEIVED });
@@ -652,6 +677,16 @@ export default function OrderPage() {
                 </div>
             </main>
             <Footer />
+            <ConfirmDialog
+                isOpen={isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                cancelText={confirmDialog.cancelText}
+                type={confirmDialog.type}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
 }

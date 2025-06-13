@@ -45,7 +45,7 @@ export default function ResetPassword() {
     return (
         <div className="min-h-screen w-full bg-gray-50 flex flex-col">
             <Header />
-            <main className="flex flex-1 items-center justify-center p-4">
+            <main className="flex flex-1 items-center justify-center p-4 py-16 md:py-24">
                 <div className="w-full max-w-sm">
                     <Card className="p-6 shadow-lg bg-white">
                         <h2 className="text-2xl font-bold mb-6 text-center text-[#0d0a0b]">Reset Password</h2>

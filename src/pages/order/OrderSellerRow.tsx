@@ -2,6 +2,8 @@ import { useState } from "react";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { OrderStatus } from "../../types/enums";
+import { ConfirmDialog } from "../../components/UI";
+import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 
 // Function to print delivery label
 const printDeliveryLabel = async (order: any) => {
@@ -208,8 +210,13 @@ const printDeliveryLabel = async (order: any) => {
 
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);
+    
+    // Custom confirmation dialog hook
+    const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+    
     return (
-        <div className="bg-white border border-[#45495522] rounded-2xl p-5 flex flex-col gap-2 shadow-sm hover:shadow transition cursor-pointer">
+        <>
+            <div className="bg-white border border-[#45495522] rounded-2xl p-5 flex flex-col gap-2 shadow-sm hover:shadow transition cursor-pointer">
             <div className="flex items-center gap-4" onClick={() => setExpanded(e => !e)} style={{ cursor: 'pointer' }}>
                 <img
                     src={order.itemImage || '/placeholder.png'}
@@ -361,6 +368,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 className="px-4 py-2 bg-[#72b01d] text-white rounded-lg font-bold hover:bg-[#3f7d20] transition text-sm shadow-sm"
                                 onClick={async (e) => {
                                     e.stopPropagation();
+                                    const confirmed = await showConfirmDialog({
+                                        title: "Process Refund",
+                                        message: "Are you sure you want to process this refund? This action cannot be undone and the buyer will be notified that their refund has been processed.",
+                                        confirmText: "Process Refund",
+                                        cancelText: "Cancel",
+                                        type: "warning"
+                                    });
+                                    if (!confirmed) return;
                                     await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
                                     setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
                                 }}
@@ -391,6 +406,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             className="px-3 py-1.5 text-xs rounded-lg bg-[#72b01d] text-white border-none hover:bg-[#3f7d20] transition shadow-sm"
                             onClick={async (e) => {
                                 e.stopPropagation();
+                                const confirmed = await showConfirmDialog({
+                                    title: "Mark as Shipped",
+                                    message: "Are you sure you want to mark this order as shipped? This will notify the buyer that their order is on the way.",
+                                    confirmText: "Mark as Shipped",
+                                    cancelText: "Cancel",
+                                    type: "info"
+                                });
+                                if (!confirmed) return;
                                 await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.SHIPPED });
                                 setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.SHIPPED } : o));
                             }}
@@ -401,6 +424,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             className="px-3 py-1.5 text-xs rounded-lg bg-[#454955] text-white border-none hover:bg-[#0d0a0b] transition shadow-sm"
                             onClick={async (e) => {
                                 e.stopPropagation();
+                                const confirmed = await showConfirmDialog({
+                                    title: "Cancel & Refund Order",
+                                    message: "Are you sure you want to cancel and refund this order? This action cannot be undone and the buyer will be notified.",
+                                    confirmText: "Cancel & Refund",
+                                    cancelText: "Cancel",
+                                    type: "danger"
+                                });
+                                if (!confirmed) return;
                                 await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
                                 setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
                             }}
@@ -410,6 +441,17 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     </>
                 )}
             </div>
-        </div>
+            </div>
+            <ConfirmDialog
+                isOpen={isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                cancelText={confirmDialog.cancelText}
+                type={confirmDialog.type}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+        </>
     );
 }

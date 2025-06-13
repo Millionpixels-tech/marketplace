@@ -7,6 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
 import { FiX } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
+import { AddBankAccountModal, Button } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
@@ -42,6 +43,9 @@ export default function EditListing() {
     const [deliveryAdditional, setDeliveryAdditional] = useState("");
     const [cashOnDelivery, setCashOnDelivery] = useState(false);
     const [bankTransfer, setBankTransfer] = useState(false);
+    const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+    const [showBankAccountModal, setShowBankAccountModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -63,6 +67,34 @@ export default function EditListing() {
             fetchShops();
         }
     }, [user, userLoading]);
+
+    // Fetch bank accounts when user is ready
+    useEffect(() => {
+        if (!userLoading && user?.uid) {
+            const fetchBankAccounts = async () => {
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        if (userData.bankAccounts) {
+                            setBankAccounts(userData.bankAccounts);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching bank accounts:", error);
+                }
+            };
+            fetchBankAccounts();
+        }
+    }, [user, userLoading]);
+
+    // Auto-enable bank transfer when bank accounts become available
+    useEffect(() => {
+        // If user previously had bank transfer disabled due to no accounts,
+        // and now they have accounts, we could auto-enable it
+        // But we'll leave this as manual choice for better UX
+    }, [bankAccounts]);
 
     // Provide default seller notes for physical items
     useEffect(() => {
@@ -190,13 +222,15 @@ export default function EditListing() {
     };
 
     const handleSubmit = async () => {
-        if (!shopId) return;
+        if (!shopId || submitting) return;
         
         // Validate that at least one payment method is selected
         if (!cashOnDelivery && !bankTransfer) {
             showToast('error', 'Please select at least one payment method for this listing.');
             return;
         }
+        
+        setSubmitting(true);
         
         let imageUrls: string[] = [...existingImageUrls];
         let newImageMetadata: any[] = [];
@@ -254,6 +288,7 @@ export default function EditListing() {
         } catch (err) {
             console.error('Image upload error:', err);
             showToast('error', 'Image upload failed. Please try again.');
+            setSubmitting(false);
             return;
         }
         
@@ -288,6 +323,7 @@ export default function EditListing() {
         } catch (err) {
             console.error('Database update error:', err);
             showToast('error', 'Failed to update listing. Please try again.');
+            setSubmitting(false);
         }
     };
 
@@ -444,7 +480,7 @@ export default function EditListing() {
                                             disabled={!shopId}
                                             onClick={() => goToStep(2)}
                                         >
-                                            Next
+                                            Next →
                                         </button>
                                     </div>
                                 </>
@@ -481,7 +517,7 @@ export default function EditListing() {
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                                     onClick={() => goToStep(1)}
                                 >
-                                    Back
+                                    ← Back
                                 </button>
                                 <button
                                     type="button"
@@ -489,7 +525,7 @@ export default function EditListing() {
                                     disabled={!cat}
                                     onClick={() => goToStep(3)}
                                 >
-                                    Next
+                                    Next →
                                 </button>
                             </div>
                         </div>
@@ -522,7 +558,7 @@ export default function EditListing() {
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                                     onClick={() => goToStep(2)}
                                 >
-                                    Back
+                                    ← Back
                                 </button>
                                 <button
                                     type="button"
@@ -530,7 +566,7 @@ export default function EditListing() {
                                     disabled={!sub}
                                     onClick={() => goToStep(4)}
                                 >
-                                    Next
+                                    Next →
                                 </button>
                             </div>
                         </div>
@@ -732,7 +768,7 @@ export default function EditListing() {
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
                                     onClick={() => goToStep(4)}
                                 >
-                                    Back
+                                    ← Back
                                 </button>
                                 <button
                                     type="button"
@@ -740,7 +776,7 @@ export default function EditListing() {
                                     disabled={imagePreviews.length === 0}
                                     onClick={() => goToStep(6)}
                                 >
-                                    Next
+                                    Next →
                                 </button>
                             </div>
                         </div>
@@ -894,22 +930,41 @@ export default function EditListing() {
                                         </div>
 
                                         {/* Bank Transfer Option */}
-                                        <div className="p-4 md:p-6 rounded-xl border bg-green-50 border-green-200">
+                                        <div className={`p-4 md:p-6 rounded-xl border ${bankAccounts.length === 0 ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200'}`}>
                                             <div className="flex items-start gap-2 md:gap-3">
                                                 <input
                                                     id="bank-transfer-checkbox"
                                                     type="checkbox"
                                                     checked={bankTransfer}
-                                                    onChange={e => setBankTransfer(e.target.checked)}
-                                                    className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
+                                                    onChange={e => {
+                                                        if (e.target.checked && bankAccounts.length === 0) {
+                                                            // Don't allow checking if no bank accounts
+                                                            return;
+                                                        }
+                                                        setBankTransfer(e.target.checked);
+                                                    }}
+                                                    disabled={bankAccounts.length === 0}
+                                                    className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm disabled:opacity-50"
                                                 />
                                                 <div className="flex-1">
-                                                    <label htmlFor="bank-transfer-checkbox" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
+                                                    <label htmlFor="bank-transfer-checkbox" className={`font-semibold cursor-pointer text-sm md:text-base ${bankAccounts.length === 0 ? 'text-gray-500' : 'text-[#0d0a0b]'}`}>
                                                         🏦 Allow Bank Transfer
                                                     </label>
-                                                    <p className="text-xs md:text-sm text-[#454955] mt-1">
-                                                        Customers transfer money directly to your bank account
+                                                    <p className={`text-xs md:text-sm mt-1 ${bankAccounts.length === 0 ? 'text-gray-400' : 'text-[#454955]'}`}>
+                                                        {bankAccounts.length === 0 
+                                                            ? "You need to add at least one bank account to enable bank transfers"
+                                                            : "Customers transfer money directly to your bank account"
+                                                        }
                                                     </p>
+                                                    {bankAccounts.length === 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowBankAccountModal(true)}
+                                                            className="mt-2 px-4 py-2 bg-[#72b01d] hover:bg-[#3f7d20] text-white text-xs md:text-sm font-medium rounded-lg transition-colors"
+                                                        >
+                                                            Add Bank Account
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -933,17 +988,20 @@ export default function EditListing() {
                                 >
                                     ← Back
                                 </button>
-                                <button
+                                <Button
                                     type="submit"
-                                    className="w-full md:w-auto px-6 md:px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    variant="primary"
+                                    loading={submitting}
+                                    className="w-full md:w-auto px-6 md:px-8 py-3"
                                     disabled={
+                                        submitting ||
                                         !deliveryType ||
                                         (deliveryType === "paid" && (!deliveryPerItem || !deliveryAdditional)) ||
                                         (!cashOnDelivery && !bankTransfer)
                                     }
                                 >
                                     Update Listing ✨
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -958,6 +1016,16 @@ export default function EditListing() {
             to { opacity: 1; transform: none; }
           }
         `}</style>
+
+                {/* Add Bank Account Modal */}
+                <AddBankAccountModal
+                    isOpen={showBankAccountModal}
+                    onClose={() => setShowBankAccountModal(false)}
+                    onBankAccountAdded={(updatedAccounts) => {
+                        setBankAccounts(updatedAccounts);
+                        setShowBankAccountModal(false);
+                    }}
+                />
             </div>
             <Footer />
         </>

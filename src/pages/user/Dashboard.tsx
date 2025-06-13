@@ -14,6 +14,8 @@ import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
+import { ConfirmDialog } from "../../components/UI";
+import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 
 // Import separate earnings page
 import EarningsPage from "./dashboard/EarningsPage";
@@ -78,6 +80,9 @@ export default function ProfileDashboard() {
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
+
+    // Custom confirmation dialog hook
+    const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
 
     // Handlers for saving (implement Firestore logic as needed)
     // Helper: upload file to Firebase Storage and return URL
@@ -218,11 +223,51 @@ export default function ProfileDashboard() {
     };
 
     const deleteBankAccount = async (accountId: string) => {
+        console.log(`Deleting bank account with ID: ${accountId}`);
         if (!user) return;
 
         try {
             setSettingsLoading(true);
             setSettingsError(null);
+
+            // Check if there are any active listings with bank transfer enabled
+            const listingsQuery = query(
+                collection(db, "listings"),
+                where("owner", "==", user.uid),
+                where("bankTransfer", "==", true)
+            );
+            
+            const listingsSnapshot = await getDocs(listingsQuery);
+            
+            if (!listingsSnapshot.empty) {
+                const listingNames = listingsSnapshot.docs
+                    .map(doc => doc.data().name || 'Unnamed listing')
+                    .slice(0, 3); // Show first 3 listings
+                
+                const listingText = listingNames.length > 3 
+                    ? `${listingNames.join(', ')} and ${listingsSnapshot.docs.length - 3} more`
+                    : listingNames.join(', ');
+                
+                setSettingsError(
+                    `Cannot delete bank account. The following listing(s) have bank transfer enabled: ${listingText}. Please disable bank transfer on all listings before deleting this account.`
+                );
+                setSettingsLoading(false);
+                return;
+            }
+
+            // Confirm before deletion
+            const confirmed = await showConfirmDialog({
+                title: "Delete Bank Account",
+                message: "Are you sure you want to delete this bank account? This action cannot be undone.",
+                confirmText: "Delete",
+                cancelText: "Cancel",
+                type: "danger"
+            });
+            
+            if (!confirmed) {
+                setSettingsLoading(false);
+                return;
+            }
 
             const updatedAccounts = bankAccounts.filter(account => account.id !== accountId);
             
@@ -243,6 +288,7 @@ export default function ProfileDashboard() {
 
             setSettingsSuccess('Bank account deleted successfully!');
         } catch (e: any) {
+            console.error('Bank account deletion error:', e);
             setSettingsError(e.message || 'Failed to delete bank account');
         } finally {
             setSettingsLoading(false);
@@ -702,8 +748,14 @@ export default function ProfileDashboard() {
     };
 
     const handleDeleteListing = async (listingId: string) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this listing?");
-        if (!confirmDelete) return;
+        const confirmed = await showConfirmDialog({
+            title: "Delete Listing",
+            message: "Are you sure you want to delete this listing?",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger"
+        });
+        if (!confirmed) return;
         try {
             await deleteDoc(doc(db, "listings", listingId));
             setListings(prev => prev.filter(l => l.id !== listingId));
@@ -1096,8 +1148,14 @@ export default function ProfileDashboard() {
                                                         </button>
                                                         <button
                                                             onClick={async () => {
-                                                                const confirmDelete = window.confirm("Are you sure you want to delete this shop? This action cannot be undone.");
-                                                                if (!confirmDelete) return;
+                                                                const confirmed = await showConfirmDialog({
+                                                                    title: "Delete Shop",
+                                                                    message: "Are you sure you want to delete this shop? This action cannot be undone.",
+                                                                    confirmText: "Delete",
+                                                                    cancelText: "Cancel",
+                                                                    type: "danger"
+                                                                });
+                                                                if (!confirmed) return;
                                                                 try {
                                                                     await deleteDoc(doc(db, "shops", shop.id));
                                                                     setShops(prev => prev.filter(s => s.id !== shop.id));
@@ -1608,7 +1666,7 @@ export default function ProfileDashboard() {
                                                                 type="button"
                                                                 onClick={() => deleteBankAccount(account.id)}
                                                                 className={`px-3 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
-                                                                disabled={settingsLoading || bankAccounts.length === 1}
+                                                                disabled={settingsLoading}
                                                             >
                                                                 Delete
                                                             </button>
@@ -1937,6 +1995,16 @@ export default function ProfileDashboard() {
                 </div>
             </div>
             <Footer />
+            <ConfirmDialog
+                isOpen={isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                cancelText={confirmDialog.cancelText}
+                type={confirmDialog.type}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
         </div>
     );
 }
