@@ -1,6 +1,8 @@
 // Payment schedule utilities for seller payments
 // Payments are made every 14 days, holding money for minimum 14 days
 
+import { OrderStatus } from '../types/enums';
+
 export interface PaymentPeriod {
   startDate: Date;
   endDate: Date;
@@ -91,11 +93,11 @@ export function getEligibleOrdersForPayment(
   orders: any[], 
   period: PaymentPeriod
 ): any[] {
-  const validStatuses = ['received', 'shipped', 'pending'];
+  const validStatuses = [OrderStatus.RECEIVED, OrderStatus.SHIPPED, OrderStatus.PENDING];
   
   return orders.filter(order => {
     // Check if order status is valid
-    if (!validStatuses.includes(order.status?.toLowerCase())) {
+    if (!validStatuses.includes(order.status)) {
       return false;
     }
     
@@ -214,10 +216,10 @@ export function debugOrderEligibility(order: any, period: PaymentPeriod): {
   periodStart: Date;
   periodEnd: Date;
 } {
-  const validStatuses = ['received', 'shipped', 'pending'];
+  const validStatuses = [OrderStatus.RECEIVED, OrderStatus.SHIPPED, OrderStatus.PENDING];
   
   // Check status
-  if (!validStatuses.includes(order.status?.toLowerCase())) {
+  if (!validStatuses.includes(order.status)) {
     return {
       isEligible: false,
       reason: `Invalid status: ${order.status}`,

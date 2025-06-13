@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, updateDoc, query, collection, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, query, collection, where, getDocs, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../utils/firebase";
 import Header from "../../components/UI/Header";
@@ -136,35 +136,67 @@ export default function OrderPage() {
     const submitReview = async () => {
         if (!order || !review.trim() || !rating) return;
         setSubmitting(true);
-        await updateDoc(doc(db, "orders", order.id), { review, rating });
-        setOrder({ ...order, review, rating });
-        setReview("");
-        setRating(0);
+        
+        try {
+            // Update the order with review and rating
+            await updateDoc(doc(db, "orders", order.id), { review, rating });
+            setOrder({ ...order, review, rating });
 
-        // Update shop rating
-        if (order.sellerShopId) {
-            await updateShopRating(order.sellerShopId, rating);
-        }
+            // Update shop rating
+            if (order.sellerShopId) {
+                await updateShopRating(order.sellerShopId, rating);
+            }
 
-        // Add review to listing
-        if (order.itemId) {
-            const listingRef = doc(db, "listings", order.itemId);
-            const reviewObj = {
+            // Save review to separate reviews collection
+            const reviewData = {
                 review,
                 rating,
                 buyerEmail: order.buyerEmail || null,
-                reviewedAt: new Date(),
+                buyerId: order.buyerId || null,
+                sellerId: order.sellerId || null,
+                shopId: order.sellerShopId || null,
+                itemId: order.itemId || null,
+                orderId: order.id,
                 itemName: order.itemName || null,
                 itemImage: order.itemImage || null,
                 price: order.price || null,
                 quantity: order.quantity || null,
+                reviewedAt: new Date(),
+                createdAt: new Date(),
+                role: "buyer", // This review is from a buyer about a seller/item
+                reviewedUserId: order.sellerId, // The seller being reviewed
             };
-            const { arrayUnion } = await import("firebase/firestore");
-            await updateDoc(listingRef, {
-                reviews: arrayUnion(reviewObj),
-            });
+
+            // Add to reviews collection
+            await addDoc(collection(db, "reviews"), reviewData);
+
+            // Add review to listing (keeping existing functionality for backwards compatibility)
+            if (order.itemId) {
+                const listingRef = doc(db, "listings", order.itemId);
+                const reviewObj = {
+                    review,
+                    rating,
+                    buyerEmail: order.buyerEmail || null,
+                    reviewedAt: new Date(),
+                    itemName: order.itemName || null,
+                    itemImage: order.itemImage || null,
+                    price: order.price || null,
+                    quantity: order.quantity || null,
+                };
+                const { arrayUnion } = await import("firebase/firestore");
+                await updateDoc(listingRef, {
+                    reviews: arrayUnion(reviewObj),
+                });
+            }
+
+            setReview("");
+            setRating(0);
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            // You might want to show an error message to the user here
+        } finally {
+            setSubmitting(false);
         }
-        setSubmitting(false);
     };
 
     // Upload payment slip and mark order as paid
@@ -185,7 +217,7 @@ export default function OrderPage() {
             await updateDoc(doc(db, "orders", order.id), {
                 paymentSlipUrl: downloadURL,
                 paymentSlipUploadedAt: new Date(),
-                status: 'PENDING'
+                status: OrderStatus.PENDING
             });
             
             // Update local state
@@ -193,7 +225,7 @@ export default function OrderPage() {
                 ...order,
                 paymentSlipUrl: downloadURL,
                 paymentSlipUploadedAt: new Date(),
-                status: 'PENDING'
+                status: OrderStatus.PENDING
             });
             
             // Send notification to seller
@@ -389,7 +421,7 @@ export default function OrderPage() {
                         ) : (
                             <div className="relative flex items-center w-full justify-between px-1 md:px-4">
                                 {/* Handle different status flows based on payment method */}
-                                {order.paymentMethod === 'bankTransfer' && order.status === 'PENDING_PAYMENT' ? (
+                                {order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT ? (
                                     // Special display for bank transfer orders awaiting payment
                                     <div className="w-full text-center py-4 bg-orange-50 border border-orange-200 rounded-lg">
                                         <div className="text-orange-800 font-bold text-lg mb-2">
@@ -451,7 +483,7 @@ export default function OrderPage() {
                         )}
                     </div>
                     {/* Payment Slip Upload for Bank Transfer Orders */}
-                    {isBuyer && order.paymentMethod === 'bankTransfer' && order.status === 'PENDING_PAYMENT' && (
+                    {isBuyer && order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT && (
                         <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                             <div className="text-sm font-semibold text-orange-800 mb-3">
                                 📄 Upload Payment Slip
@@ -547,7 +579,7 @@ export default function OrderPage() {
                     )}
 
                     {/* Only buyer can interact (refund, review) */}
-                    {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && order.status !== 'PENDING_PAYMENT' && (
+                    {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && order.status !== OrderStatus.PENDING_PAYMENT && (
                         <>
                             <button
                                 className="mt-2 w-full py-3 bg-[#72b01d] text-white rounded-2xl font-bold text-lg uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition"

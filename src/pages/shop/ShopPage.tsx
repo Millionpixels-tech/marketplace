@@ -54,6 +54,10 @@ export default function ShopPage() {
     const [totalCount, setTotalCount] = useState(0);
     const [pageCursors, setPageCursors] = useState<Array<QueryDocumentSnapshot<DocumentData> | null>>([null]); // First page starts at null
     const [ip, setIp] = useState<string | null>(null);
+    
+    // Reviews state for rating calculation
+    const [shopRating, setShopRating] = useState<number | null>(null);
+    const [shopRatingCount, setShopRatingCount] = useState<number>(0);
 
     // 1. Fetch user IP and shop info
     useEffect(() => {
@@ -88,6 +92,42 @@ export default function ShopPage() {
             setTotalCount(allListingsSnap.size);
         }
         getTotalCount();
+    }, [shop]);
+
+    // 3. Fetch shop reviews from reviews collection
+    useEffect(() => {
+        if (!shop?.id) return;
+        
+        async function fetchShopReviews() {
+            try {
+                const reviewsQuery = query(
+                    collection(db, "reviews"),
+                    where("shopId", "==", shop!.id) // We know shop is not null here due to the check above
+                );
+                const reviewsSnap = await getDocs(reviewsQuery);
+                const reviews = reviewsSnap.docs.map(doc => ({ 
+                    id: doc.id, 
+                    ...doc.data() 
+                })) as any[];
+                
+                // Calculate average rating and count
+                if (reviews.length > 0) {
+                    const totalRating = reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+                    const averageRating = totalRating / reviews.length;
+                    setShopRating(Math.round(averageRating * 100) / 100); // Round to 2 decimal places
+                    setShopRatingCount(reviews.length);
+                } else {
+                    setShopRating(null);
+                    setShopRatingCount(0);
+                }
+            } catch (error) {
+                console.error("Error fetching shop reviews:", error);
+                setShopRating(null);
+                setShopRatingCount(0);
+            }
+        }
+        
+        fetchShopReviews();
     }, [shop]);
 
     // Refresh listings (after wishlist update)
@@ -178,8 +218,8 @@ export default function ShopPage() {
     const generateShopSEO = () => {
         const shopName = shop.name || 'Shop';
         const description = shop.description || `Discover authentic Sri Lankan products from ${shopName}`;
-        const rating = shop.rating || 0;
-        const ratingCount = shop.ratingCount || 0;
+        const rating = shopRating || 0;
+        const ratingCount = shopRatingCount || 0;
         
         return {
             title: `${shopName} - Authentic Sri Lankan Products & Crafts`,
@@ -417,16 +457,16 @@ export default function ShopPage() {
                     <div className="max-w-3xl w-full flex flex-col items-center text-center">
                         <h1 className={`${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'} font-black mb-1`} style={{ color: '#0d0a0b' }}>{shop.name}</h1>
                         <ShopOwnerName ownerId={shop.owner} username={shop.username} />
-                        {/* Shop Rating */}
-                        {typeof shop.rating === 'number' && typeof shop.ratingCount === 'number' && (
+                        {/* Shop Rating from Reviews Collection */}
+                        {shopRating !== null && shopRatingCount > 0 && (
                             <div className="flex items-center gap-2 mt-2">
-                                <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-extrabold`} style={{ color: '#0d0a0b' }}>{shop.rating.toFixed(1)}</span>
+                                <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-extrabold`} style={{ color: '#0d0a0b' }}>{shopRating.toFixed(1)}</span>
                                 <div className="flex items-center gap-0.5">
                                     {[1, 2, 3, 4, 5].map(i => (
                                         <svg
                                             key={i}
-                                            className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${shop.rating && shop.rating >= i - 0.25 ? "text-yellow-400" : ""}`}
-                                            style={{ color: shop.rating && shop.rating >= i - 0.25 ? "#fbbf24" : "#454955" }}
+                                            className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${shopRating && shopRating >= i - 0.25 ? "text-yellow-400" : ""}`}
+                                            style={{ color: shopRating && shopRating >= i - 0.25 ? "#fbbf24" : "#454955" }}
                                             fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
@@ -449,7 +489,7 @@ export default function ShopPage() {
                                     }}
                                     type="button"
                                 >
-                                    {shop.ratingCount} {shop.ratingCount === 1 ? "review" : "reviews"}
+                                    {shopRatingCount} {shopRatingCount === 1 ? "review" : "reviews"}
                                 </button>
                             </div>
                         )}

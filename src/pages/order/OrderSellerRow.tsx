@@ -216,11 +216,10 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     alt={order.itemName}
                     className="w-16 h-16 object-cover rounded-lg border border-[#45495522] shadow-sm"
                 />
-                <div className="flex-1 min-w-0">
-                    <div className="font-bold text-lg mb-1 truncate text-[#0d0a0b]">{order.itemName}</div>
-                    <div className="text-[#454955] text-sm mb-1">
+                <div className="flex-1 min-w-0">                        <div className="font-bold text-lg mb-1 truncate text-[#0d0a0b]">{order.itemName}</div>
+                        <div className="text-[#454955] text-sm mb-1">
                         Status: <span className="font-semibold">
-                            {order.status === 'PENDING_PAYMENT' && (
+                            {order.status === OrderStatus.PENDING_PAYMENT && (
                                 <span className="text-orange-600">Awaiting Payment</span>
                             )}
                             {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
@@ -271,7 +270,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Total:</span> LKR {order.total?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Status:</span> 
-                            {order.status === 'PENDING_PAYMENT' && (
+                            {order.status === OrderStatus.PENDING_PAYMENT && (
                                 <span className="text-orange-600 font-bold">Awaiting Payment</span>
                             )}
                             {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
@@ -299,7 +298,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 <div className="font-semibold text-blue-800 mb-2 text-sm">
                                     💰 Bank Transfer Order
                                 </div>
-                                {order.status === 'PENDING_PAYMENT' ? (
+                                {order.status === OrderStatus.PENDING_PAYMENT ? (
                                     <div className="text-sm text-blue-700">
                                         <div className="mb-2">
                                             ⏳ Waiting for customer to make bank transfer and upload payment slip.
@@ -380,7 +379,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
                         {order.status === OrderStatus.RECEIVED && 'Order Completed'}
                     </div>
-                ) : order.status === 'PENDING_PAYMENT' ? (
+                ) : order.status === OrderStatus.PENDING_PAYMENT ? (
                     <div className="text-xs text-orange-600 py-2 italic">
                         💰 Awaiting customer payment. Customer needs to upload payment slip.
                     </div>

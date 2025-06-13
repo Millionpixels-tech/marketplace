@@ -14,17 +14,9 @@ import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
-import { 
-    calculatePaymentSchedule, 
-    getEligibleOrdersForPayment, 
-    calculatePeriodEarnings, 
-    formatPaymentDate, 
-    getDaysUntilNextPayment,
-    initializePaymentSystem,
-    debugOrderEligibility,
-    resetPaymentSystem,
-    type PaymentSchedule
-} from "../../utils/paymentSchedule";
+
+// Import separate earnings page
+import EarningsPage from "./dashboard/EarningsPage";
 
 interface VerifyForm {
     fullName: string;
@@ -54,7 +46,7 @@ const TABS = [
     { key: "orders", label: "Orders", icon: <FiList /> },
     { key: "reviews", label: "Reviews", icon: <FiStar /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
-    { key: "payments", label: "Payments", icon: <FiStar /> },
+    { key: "earnings", label: "Earnings", icon: <FiStar /> },
     { key: "settings", label: "Settings", icon: <FiUser /> },
 ];
 
@@ -302,67 +294,7 @@ export default function ProfileDashboard() {
     };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings" | "payments" | "settings">("profile");
-
-    // Payments state
-    const [payments, setPayments] = useState<any[]>([]);
-    const [paymentSchedule, setPaymentSchedule] = useState<PaymentSchedule | null>(null);
-    const [allSellerOrders, setAllSellerOrders] = useState<any[]>([]);
-    // Bank details state
-    // Payments fetching
-    useEffect(() => {
-        if (selectedTab !== "payments" || !profileUid) return;
-        
-        const fetchPaymentsAndSchedule = async () => {
-            try {
-                // Initialize payment system if not already done
-                initializePaymentSystem();
-                
-                // Calculate payment schedule
-                const schedule = calculatePaymentSchedule();
-                setPaymentSchedule(schedule);
-
-                // Fetch all seller orders without date restriction first to ensure we get all orders
-                // We'll filter by payment period in the client-side logic
-                const q = query(
-                    collection(db, "orders"),
-                    where("sellerId", "==", profileUid),
-                    orderBy("createdAt", "desc")
-                );
-                
-                const snap = await getDocs(q);
-                const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setAllSellerOrders(orders);
-
-                // Get eligible orders for current payment period
-                const eligibleOrders = getEligibleOrdersForPayment(orders, schedule.currentPeriod);
-                setPayments(eligibleOrders);
-                
-                console.log("Payment schedule:", schedule);
-                console.log("All seller orders count:", orders.length);
-                console.log("Eligible orders for payment:", eligibleOrders);
-                console.log("Current period:", {
-                    start: schedule.currentPeriod.startDate.toISOString(),
-                    end: schedule.currentPeriod.endDate.toISOString(),
-                    paymentDate: schedule.currentPeriod.paymentDate.toISOString()
-                });
-                
-                // Debug each order
-                console.log("=== Order Eligibility Debug ===");
-                orders.forEach(order => {
-                    const debug = debugOrderEligibility(order, schedule.currentPeriod);
-                    console.log(`Order ${order.id}:`, debug);
-                });
-                console.log("=== End Debug ===");
-            } catch (err) {
-                console.error("Error loading payments:", err);
-                setPayments([]);
-                setAllSellerOrders([]);
-            }
-        };
-
-        fetchPaymentsAndSchedule();
-    }, [selectedTab, profileUid]);
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings" | "earnings" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1065,28 +997,6 @@ export default function ProfileDashboard() {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Quick Stats */}
-                            <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 gap-4'} mb-6`}>
-                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
-                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-600`}>{shops.length}</div>
-                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Shops</div>
-                                </div>
-                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
-                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-blue-600`}>{listings.length}</div>
-                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Listings</div>
-                                </div>
-                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
-                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-600`}>{sellerReviews.length}</div>
-                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Reviews</div>
-                                </div>
-                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
-                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-orange-600`}>
-                                        {verifyForm.isVerified === VerificationStatus.COMPLETED ? '✓' : '○'}
-                                    </div>
-                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Verified</div>
-                                </div>
-                            </div>
                         </div>
                     )}
 
@@ -1137,10 +1047,10 @@ export default function ProfileDashboard() {
                                     {shops.map(shop => (
                                         <div
                                             key={shop.id}
-                                            className="bg-white rounded-2xl border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-lg group overflow-hidden"
+                                            className="bg-white rounded-2xl border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-lg group overflow-hidden flex flex-col"
                                         >
                                             {/* Shop Header */}
-                                            <div className="p-6 pb-4">
+                                            <div className="p-6 pb-4 flex-1 flex flex-col">
                                                 <Link
                                                     to={`/shop/${shop.username}`}
                                                     className="block text-decoration-none"
@@ -1166,16 +1076,17 @@ export default function ProfileDashboard() {
                                                     </div>
                                                 </Link>
                                                 
-                                                {shop.description && (
-                                                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                                                        {shop.description}
+                                                {/* Always reserve space for description (2 lines) */}
+                                                <div className="h-10 mb-4">
+                                                    <p className="text-gray-600 text-sm line-clamp-2 h-full">
+                                                        {shop.description || ""}
                                                     </p>
-                                                )}
+                                                </div>
                                             </div>
 
-                                            {/* Shop Actions */}
+                                            {/* Shop Actions - Always at bottom */}
                                             {isOwner && (
-                                                <div className="px-6 pb-6">
+                                                <div className="px-6 pb-6 mt-auto">
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() => navigate(`/edit-shop/${shop.id}`)}
@@ -1284,7 +1195,7 @@ export default function ProfileDashboard() {
                                                                         <div className={`flex ${isMobile ? 'flex-col gap-1' : 'items-center gap-4'} ${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
                                                                             <span>
                                                                                 Status: <span className={`font-medium ${
-                                                                                    order.status === 'PENDING_PAYMENT' ? 'text-orange-600' :
+                                                                                    order.status === OrderStatus.PENDING_PAYMENT ? 'text-orange-600' :
                                                                                     order.status === OrderStatus.CANCELLED ? 'text-red-600' :
                                                                                     order.status === OrderStatus.REFUND_REQUESTED ? 'text-yellow-600' :
                                                                                     order.status === OrderStatus.REFUNDED ? 'text-red-600' :
@@ -1293,7 +1204,7 @@ export default function ProfileDashboard() {
                                                                                     order.status === OrderStatus.DELIVERED ? 'text-green-600' :
                                                                                     'text-gray-600'
                                                                                 }`}>
-                                                                                    {order.status === 'PENDING_PAYMENT' && 'Awaiting Payment'}
+                                                                                    {order.status === OrderStatus.PENDING_PAYMENT && 'Awaiting Payment'}
                                                                                     {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
                                                                                     {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
                                                                                     {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
@@ -1613,151 +1524,9 @@ export default function ProfileDashboard() {
                             )}
                         </div>
                     )}
-                    {/* PAYMENTS TAB */}
-                    {selectedTab === "payments" && (
-                        <div>
-                            <div className={`flex items-center justify-between mb-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
-                                <h2 className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>Your Payments</h2>
-                                {/* Debug/Test buttons */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            resetPaymentSystem();
-                                            window.location.reload();
-                                        }}
-                                        className={`bg-yellow-500 text-white rounded hover:bg-yellow-600 ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-xs'}`}
-                                    >
-                                        Reset Payment System
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Payment Schedule Information */}
-                            {paymentSchedule && (
-                                <div className={`grid gap-4 mb-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-                                    {/* Next Payment Info */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Date</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#72b01d' }}>
-                                            {formatPaymentDate(paymentSchedule.nextPaymentDate)}
-                                        </div>
-                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
-                                            {getDaysUntilNextPayment(paymentSchedule.nextPaymentDate)} days remaining
-                                        </div>
-                                    </div>
-
-                                    {/* Current Period Earnings */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Pending Payment</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>
-                                            LKR {calculatePeriodEarnings(payments).toLocaleString()}
-                                        </div>
-                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
-                                            From {formatPaymentDate(paymentSchedule.currentPeriod.startDate)} to {formatPaymentDate(paymentSchedule.currentPeriod.endDate)}
-                                        </div>
-                                    </div>
-
-                                    {/* Last Payment Info */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Last Payment Date</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
-                                            {formatPaymentDate(paymentSchedule.lastPaymentDate)}
-                                        </div>
-                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
-                                            {paymentSchedule.previousPeriod ? 
-                                                `LKR ${calculatePeriodEarnings(getEligibleOrdersForPayment(allSellerOrders, paymentSchedule.previousPeriod)).toLocaleString()} paid` 
-                                                : 'No previous payment'
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Payment Period Information */}
-                            {paymentSchedule && (
-                                <div className={`mb-6 rounded-xl ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', border: '1px solid rgba(114, 176, 29, 0.2)' }}>
-                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>Payment System Information</h3>
-                                    <div className={`space-y-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                        <p>• Payments are made every 14 days</p>
-                                        <p>• We hold your earnings for a minimum of 14 days before payment</p>
-                                        <p>• Only orders with payment method "PayNow" are eligible for payment</p>
-                                        <p>• Orders with status "Received", "Shipped", or "Pending" are eligible for payment</p>
-                                        <p>• COD (Cash on Delivery) orders are excluded from automated payments</p>
-                                        <p>• Current payment period: <strong>{formatPaymentDate(paymentSchedule.currentPeriod.startDate)}</strong> to <strong>{formatPaymentDate(paymentSchedule.currentPeriod.endDate)}</strong></p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Payment Summary for Current Period */}
-                            <div className="mb-6">
-                                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Orders Eligible for Next Payment</h3>
-                                {payments.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                            <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                                <tr>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Status</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Payment Method</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {payments
-                                                    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
-                                                    .map(order => (
-                                                        <tr key={order.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                        }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                            }}>
-                                                            <td className={`border-b text-left font-mono ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? order.id.slice(-8) : order.id}</td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                {order.createdAt && new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleDateString()}
-                                                            </td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className={`px-1 py-1 rounded font-semibold ${isMobile ? 'text-xs' : 'text-xs'} ${
-                                                                    order.status === 'received' ? 'bg-green-100 text-green-800' :
-                                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                                                    'bg-yellow-100 text-yellow-800'
-                                                                }`}>
-                                                                    {order.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className={`px-1 py-1 rounded font-semibold bg-green-100 text-green-800 ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                                                                    {order.paymentMethod || 'N/A'}
-                                                                </span>
-                                                            </td>
-                                                            <td className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? (order.itemName || '-').slice(0, 15) + '...' : (order.itemName || '-')}</td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.quantity || 1}</td>
-                                                            <td className={`border-b text-left font-bold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {order.total?.toLocaleString()}</td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                            <tfoot style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)' }}>
-                                                <tr>
-                                                    <td colSpan={6} className={`border-t text-right font-bold ${isMobile ? 'px-2 py-2 text-xs' : 'px-4 py-3'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                                        Total Payment:
-                                                    </td>
-                                                    <td className={`border-t text-left font-bold ${isMobile ? 'px-2 py-2 text-sm' : 'px-4 py-3 text-lg'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                                        LKR {calculatePeriodEarnings(payments).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className={`text-center ${isMobile ? 'py-4' : 'py-6'}`} style={{ color: '#454955', opacity: 0.7 }}>
-                                        No eligible orders for the current payment period.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                    {/* EARNINGS TAB */}
+                    {selectedTab === "earnings" && (
+                        <EarningsPage profileUid={profileUid} />
                     )}
 
                     {/* SETTINGS TAB */}

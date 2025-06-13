@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { useResponsive } from "../../hooks/useResponsive";
 
 type Review = {
@@ -14,6 +14,8 @@ type Review = {
     itemImage?: string;
     price?: number;
     quantity?: number;
+    itemId?: string;
+    shopId?: string;
 };
 
 const REVIEWS_PER_PAGE = 8;
@@ -31,27 +33,21 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
             }
             setLoading(true);
             try {
-                // Query for all orders for this shop
+                // Query the reviews collection for this shop
                 const q = query(
-                    collection(db, "orders"),
-                    where("sellerShopId", "==", shopId),
-                    limit(50) // Limit results for better performance
+                    collection(db, "reviews"),
+                    where("shopId", "==", shopId)
                 );
 
                 const snap = await getDocs(q);
                 
-                const allOrders = snap.docs.map(doc => ({
+                const allReviews = snap.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
                 })) as Review[];
 
-                // Filter client-side for non-empty reviews
-                const filteredReviews = allOrders.filter(order => {
-                    return order.review && typeof order.review === 'string' && order.review.trim() !== "";
-                });
-
-                // Sort by reviewedAt on client side if the field exists, otherwise by createdAt
-                const sortedReviews = filteredReviews.sort((a, b) => {
+                // Sort by reviewedAt or createdAt (most recent first)
+                const sortedReviews = allReviews.sort((a, b) => {
                     const aDate = a.reviewedAt?.seconds || a.createdAt?.seconds || 0;
                     const bDate = b.reviewedAt?.seconds || b.createdAt?.seconds || 0;
                     return bDate - aDate; // Most recent first
@@ -130,9 +126,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                                     ))}
                                 </div>
                                 <div className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>{r.review}</div>
-                                {r.createdAt && (
+                                {(r.reviewedAt || r.createdAt) && (
                                     <div className={`${isMobile ? 'text-xs' : 'text-xs'} mt-1`} style={{ color: '#454955', opacity: 0.7 }}>
-                                        Order date: {new Date(r.createdAt.seconds * 1000).toLocaleDateString()}
+                                        Reviewed on: {new Date((r.reviewedAt?.seconds || r.createdAt?.seconds || 0) * 1000).toLocaleDateString()}
                                     </div>
                                 )}
                             </div>

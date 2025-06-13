@@ -1,6 +1,6 @@
 import { db } from "./firebase";
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
-import { PaymentMethod, PaymentStatus } from "../types/enums";
+import { PaymentMethod, PaymentStatus, OrderStatus } from "../types/enums";
 import type { OrderStatus as OrderStatusType } from "../types/enums";
 import { sendOrderConfirmationEmails } from "./emailServiceFrontend";
 
@@ -53,9 +53,9 @@ async function getSellerEmail(sellerId: string): Promise<string | null> {
 
 export async function createOrder(order: Omit<Order, "createdAt">) {
     // Set initial status based on payment method
-    let initialStatus: string = 'PENDING'; // Default for COD
+    let initialStatus: string = OrderStatus.PENDING; // Default for COD
     if (order.paymentMethod === PaymentMethod.BANK_TRANSFER) {
-        initialStatus = 'PENDING_PAYMENT'; // Bank transfer orders start as pending payment
+        initialStatus = OrderStatus.PENDING_PAYMENT; // Bank transfer orders start as pending payment
     }
     
     const docRef = await addDoc(collection(db, "orders"), {
