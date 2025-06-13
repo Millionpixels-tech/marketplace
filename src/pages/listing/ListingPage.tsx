@@ -526,19 +526,19 @@ export default function ListingSingle() {
           </div>
         </div>
 
-        {/* Money Back Guarantee & Buyer Protection */}
+        {/* Payment Methods & Trust Section */}
         <section className={`w-full max-w-4xl mx-auto mt-8 mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
           <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} flex flex-col md:flex-row items-center gap-4 text-center md:text-left border`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
             <div className="flex-shrink-0 flex items-center justify-center mb-2 md:mb-0">
               <svg width={isMobile ? "32" : "40"} height={isMobile ? "32" : "40"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#72b01d" /><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </div>
             <div>
-              <div className={`${isMobile ? 'text-lg' : 'text-lg md:text-xl'} font-bold mb-1`} style={{ color: '#3f7d20' }}>14 Days Money Back Guarantee</div>
-              <div className={`font-medium mb-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>If your item does not arrive within 14 days of the expected delivery date, you can request a full refund.</div>
-              <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>We guarantee your money back if you do not receive your order. Shop with peace of mind.</div>
+              <div className={`${isMobile ? 'text-lg' : 'text-lg md:text-xl'} font-bold mb-1`} style={{ color: '#3f7d20' }}>Flexible Payment Options</div>
+              <div className={`font-medium mb-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>Choose from Cash on Delivery or Bank Transfer payment methods for your convenience.</div>
+              <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Pay when you receive your order with COD, or use secure bank transfer with payment slip verification.</div>
               <div className={`mt-2 font-semibold flex items-center gap-2 justify-center md:justify-start ${isMobile ? 'text-xs' : ''}`} style={{ color: '#0d0a0b' }}>
                 <svg width={isMobile ? "16" : "20"} height={isMobile ? "16" : "20"} fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#72b01d" /><path d="M7 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                Buyer Protection: Your payment is held securely until you confirm delivery.
+                Secure transactions with verified sellers and trusted payment methods.
               </div>
             </div>
           </div>

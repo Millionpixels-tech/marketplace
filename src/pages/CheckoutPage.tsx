@@ -727,8 +727,8 @@ export default function CheckoutPage() {
     <>
       <SEOHead
         title="Checkout - SinaMarketplace"
-        description="Complete your purchase securely on SinaMarketplace. Multiple payment options and secure checkout process."
-        keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, secure payment"
+        description="Complete your purchase securely on SinaMarketplace. Choose from Cash on Delivery or Bank Transfer payment options."
+        keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, cash on delivery, bank transfer"
         canonicalUrl="https://sinamarketplace.com/checkout"
         noIndex={true}
       />

@@ -144,7 +144,7 @@ export default function ReturnsRefunds() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Get Your Refund</h3>
-                <p className="text-gray-600">Once we receive and process your return, we'll issue a refund to your original payment method within 3-5 business days.</p>
+                <p className="text-gray-600">Once we receive and process your return, we'll issue a refund using the same payment method you used for your order. For Cash on Delivery orders, refunds are processed via bank transfer to your provided account details.</p>
               </div>
             </div>
           </div>

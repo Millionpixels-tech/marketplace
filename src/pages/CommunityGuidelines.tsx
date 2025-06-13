@@ -248,7 +248,7 @@ export default function CommunityGuidelines() {
                 <li>• Read product descriptions and seller policies carefully</li>
                 <li>• Ask questions before purchasing if you need clarification</li>
                 <li>• Respect sellers' processing and shipping timeframes</li>
-                <li>• Use secure payment methods provided by the platform</li>
+                <li>• Use approved payment methods: Cash on Delivery or Bank Transfer</li>
                 <li>• Understand that handmade items may have slight variations</li>
               </ul>
             </div>

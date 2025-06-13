@@ -68,12 +68,12 @@ export default function SellerGuide() {
       description: "Choose how you want to receive payments from customers",
       details: [
         "Cash on Delivery (COD): Customer pays when they receive the product",
-        "Online Payments: Customer pays immediately through PayHere",
+        "Bank Transfer: Customer transfers money to your bank account before shipping",
         "You can offer both options to give customers flexibility",
         "For COD orders, you collect money directly from the customer",
-        "For online payments, money is held safely and released to you after delivery"
+        "For bank transfer orders, customers upload payment slips for verification before you ship"
       ],
-      tips: "💰 Offering both payment methods increases your sales! Many customers prefer COD.",
+      tips: "💰 Offering both payment methods increases your sales! COD is popular for immediate orders, bank transfer for higher-value items.",
       action: null
     },
     {
@@ -98,14 +98,14 @@ export default function SellerGuide() {
       icon: <FiDollarSign className="w-8 h-8" />,
       description: "Understand how and when you receive your money",
       details: [
-        "COD orders: You collect cash directly from customers",
-        "Online orders: Money is held securely by the platform",
-        "Payments are released 14 days after order completion",
-        "This ensures customers receive their products before payment is released",
-        "Track your earnings in the Dashboard",
-        "Payment schedule protects both buyers and sellers"
+        "COD orders: You collect cash directly from customers upon delivery",
+        "Bank transfer orders: Customers transfer money to your account before shipping",
+        "For bank transfers, customers upload payment slips for verification",
+        "You receive payments immediately after customers complete bank transfers",
+        "Track your earnings and order status in the Dashboard",
+        "Clear payment tracking protects both buyers and sellers"
       ],
-      tips: "🕒 Be patient with online payments - the 14-day hold protects everyone and builds customer trust!",
+      tips: "� Bank transfers work great for higher-value items, while COD is perfect for quick local sales!",
       action: null
     }
   ];
@@ -165,8 +165,8 @@ export default function SellerGuide() {
     },
     {
       icon: <FiDollarSign className="w-6 h-6" />,
-      title: "Secure Payments",
-      description: "Safe payment processing with guaranteed payouts for completed orders"
+      title: "Flexible Payments",
+      description: "Multiple payment options: Cash on Delivery and secure Bank Transfer with payment verification"
     }
   ];
 

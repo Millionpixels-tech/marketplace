@@ -57,7 +57,11 @@ export const generateBuyerOrderConfirmationEmail = (order: Order & { id: string 
                         <p class="total"><strong>Total:</strong> LKR ${order.total.toLocaleString()}</p>
                     </div>
 
-                    <p><strong>Payment Method:</strong> ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Cash on Delivery' : 'Online Payment'}</p>
+                    <p><strong>Payment Method:</strong> ${
+                        order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Cash on Delivery' : 
+                        order.paymentMethod === PaymentMethod.BANK_TRANSFER ? 'Bank Transfer' : 
+                        'Other'
+                    }</p>
                     
                     ${order.buyerNotes ? `
                         <div class="info-box">
@@ -139,7 +143,11 @@ export const generateSellerOrderNotificationEmail = (order: Order & { id: string
                         </div>
                     </div>
 
-                    <p><strong>Payment Method:</strong> ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Cash on Delivery' : 'Online Payment'}</p>
+                    <p><strong>Payment Method:</strong> ${
+                        order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Cash on Delivery' : 
+                        order.paymentMethod === PaymentMethod.BANK_TRANSFER ? 'Bank Transfer' : 
+                        'Other'
+                    }</p>
                 </div>
 
                 <div class="customer-info">

@@ -300,7 +300,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* 14 Days Money Back Guarantee Section */}
+        {/* Payment Methods & Trust Section */}
         <section className={`w-full border-t border-b ${isMobile ? 'py-8' : 'py-10'}`}
           style={{
             borderColor: 'rgba(114, 176, 29, 0.15)',
@@ -312,12 +312,12 @@ const Home = () => {
                 Shop With Confidence
               </h2>
               <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                We've got you covered with our buyer protection policies
+                Flexible payment options and trusted seller protection
               </p>
             </div>
 
             <div className={`grid gap-6 mt-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-              {/* Money Back Guarantee */}
+              {/* Cash on Delivery */}
               <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className="relative mb-4">
@@ -327,34 +327,26 @@ const Home = () => {
                       boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                     }}>
                     <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" viewBox="0 0 24 24">
-                      <path d="M8 12.5l2.5 2.5L16 9" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </div>
-                  <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center font-bold ${isMobile ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'}`}
-                    style={{
-                      backgroundColor: '#3f7d20',
-                      color: '#ffffff',
-                      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
-                    }}>
-                    14
                   </div>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Money Back Guarantee
+                  Cash on Delivery
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  Full refund if your order isn't delivered within 14 days of purchase
+                  Pay when you receive your order. No upfront payment required
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
                   }}>
-                  Hassle-free returns
+                  Zero risk
                 </span>
               </div>
 
-              {/* Secure Payment */}
+              {/* Bank Transfer */}
               <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
@@ -363,21 +355,24 @@ const Home = () => {
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
                   <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M3 8h18l-2 8H5L3 8z"/>
+                    <path d="M3 8L1 4h4l2 4"/>
+                    <circle cx="9" cy="20" r="1"/>
+                    <circle cx="20" cy="20" r="1"/>
                   </svg>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Secure Payment
+                  Bank Transfer
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  All transactions are encrypted and processed securely through trusted payment gateways
+                  Direct bank transfer with payment slip verification for secure transactions
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
                   }}>
-                  PCI DSS compliant
+                  Secure & verified
                 </span>
               </div>
 
