@@ -844,272 +844,365 @@ export default function ProfileDashboard() {
     if (!profileUid) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>User not found.</div>;
 
     return (
-        <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <ResponsiveHeader />
-            {/* Full width, no max-w */}
-            <div className={`flex flex-col md:flex-row gap-0 ${isMobile ? 'py-4 px-4' : 'py-8 px-0 md:px-8'} w-full`}>
-                {/* Sidebar */}
-                <aside className={`w-full md:w-64 ${isMobile ? 'min-h-auto' : 'min-h-screen'} border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start ${isMobile ? 'mb-4' : 'mb-6 md:mb-0'} relative transition-all`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                    {/* Burger for mobile */}
-                    <button
-                        className={`md:hidden absolute ${isMobile ? 'top-2 right-2' : 'top-4 right-4'} z-10`}
-                        onClick={() => setSidebarOpen(s => !s)}
-                    >
-                        {sidebarOpen ? <FiX size={isMobile ? 22 : 26} /> : <FiMenu size={isMobile ? 22 : 26} />}
-                    </button>
-                    {/* Sidebar Nav */}
-                    <nav className={`flex-1 w-full flex ${sidebarOpen ? "flex" : "hidden"} md:flex flex-col ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'mt-6' : 'mt-8 md:mt-0'}`}>
-                        {TABS.map(tab => (
-                            <button
-                                key={tab.key}
-                                className={`group flex items-center ${isMobile ? 'gap-2 px-3 py-2' : 'gap-3 px-5 py-3'} rounded-full font-semibold ${isMobile ? 'text-sm' : 'text-base'} transition-all relative overflow-hidden border`}
-                                style={{
-                                    backgroundColor: selectedTab === tab.key ? '#72b01d' : '#ffffff',
-                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
-                                    borderColor: selectedTab === tab.key ? '#72b01d' : 'rgba(114, 176, 29, 0.3)',
-                                    boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(114, 176, 29, 0.3)' : undefined
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (selectedTab !== tab.key) {
-                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                                        e.currentTarget.style.borderColor = '#72b01d';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (selectedTab !== tab.key) {
-                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                    }
-                                }}
-                                onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
-                            >
-                                <span className={`transition-all ${isMobile ? 'text-sm' : ''}`} style={{
-                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
-                                    transform: selectedTab === tab.key ? 'scale(1.1)' : 'scale(1)',
-                                    opacity: selectedTab === tab.key ? 1 : 0.7
-                                }}>{tab.icon}</span>
-                                <span className="truncate">{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
+            
+            {/* Dashboard Container */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Dashboard Header */}
+                <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                            <p className="text-gray-600">Manage your account, shops, orders and more</p>
+                        </div>
+                        <div className="mt-4 sm:mt-0">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Welcome back, {displayName || user?.email?.split('@')[0]}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                {/* Main Content */}
-                <main className={`flex-1 min-w-0 w-full shadow-lg ${isMobile ? 'p-4' : 'p-4 md:p-10'} mx-auto border rounded-2xl`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                {/* Mobile Menu Toggle */}
+                <div className="lg:hidden mb-6">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="w-full flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-gray-300 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-green-600">
+                                {TABS.find(tab => tab.key === selectedTab)?.icon}
+                            </span>
+                            <span className="font-medium text-gray-900">
+                                {TABS.find(tab => tab.key === selectedTab)?.label}
+                            </span>
+                        </div>
+                        {sidebarOpen ? <FiX size={20} className="text-gray-500" /> : <FiMenu size={20} className="text-gray-500" />}
+                    </button>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Sidebar */}
+                    <aside className={`lg:w-72 ${sidebarOpen ? 'block' : 'hidden'} lg:block`}>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+                            {/* Profile Header in Sidebar */}
+                            <div className="p-6 bg-gradient-to-r from-green-600 to-green-700 text-white">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                                        {photoURL ? (
+                                            <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-lg font-bold text-white">
+                                                {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold truncate">{displayName || user?.email?.split('@')[0]}</h3>
+                                        <p className="text-green-100 text-sm truncate">{user?.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Navigation */}
+                            <nav className="p-2">
+                                {TABS.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => { 
+                                            setSelectedTab(tab.key as any); 
+                                            setSidebarOpen(false); 
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg font-medium transition-all duration-200 text-left group ${
+                                            selectedTab === tab.key
+                                                ? 'bg-green-50 text-green-700 shadow-sm border border-green-200'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        <span className={`transition-colors group-hover:scale-110 transform duration-200 ${
+                                            selectedTab === tab.key ? 'text-green-600' : 'text-gray-400'
+                                        }`}>
+                                            {tab.icon}
+                                        </span>
+                                        <span className="text-sm font-medium">{tab.label}</span>
+                                        {selectedTab === tab.key && (
+                                            <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
+                                        )}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 min-w-0">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Tab Header */}
+                            <div className="border-b border-gray-200 px-6 py-5 bg-gray-50/50">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-green-600">
+                                        {TABS.find(tab => tab.key === selectedTab)?.icon}
+                                    </span>
+                                    <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                                        {selectedTab.replace(/([A-Z])/g, ' $1').trim()}
+                                    </h2>
+                                </div>
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="p-6">
                     {/* PROFILE TAB */}
                     {selectedTab === "profile" && (
-                        <div className="flex flex-col items-center w-full">
-                            {/* Profile Picture */}
-                            <div className={`${isMobile ? 'w-20 h-20' : 'w-28 h-28'} rounded-full border-4 shadow flex items-center justify-center overflow-hidden ${isMobile ? 'mb-3' : 'mb-4'} relative group`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: '#72b01d' }}>
-                                {photoURL ? (
-                                    <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
-                                ) : (
-                                    <>
-                                        <span className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold`} style={{ color: '#454955' }}>
-                                            {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
-                                        </span>
-                                    </>
-                                )}
-                                {isOwner && editing && (
-                                    <>
-                                        <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                            <span className={`text-white font-semibold ${isMobile ? 'text-xs' : ''}`}>Change</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
-                                        </label>
-                                        {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">{isMobile ? 'Loading...' : 'Uploading...'}</div>}
-                                    </>
-                                )}
-                            </div>
-                            {/* Name */}
-                            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black ${isMobile ? 'mb-1' : 'mb-2'} text-center flex items-center justify-center gap-2`} style={{ color: '#0d0a0b' }}>
-                                {isOwner && editing ? (
-                                    <input
-                                        className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black text-center border rounded-xl ${isMobile ? 'px-2 py-1' : 'px-3 py-1'} w-full ${isMobile ? 'max-w-xs' : 'max-w-xs'} ${isMobile ? 'mb-1' : 'mb-2'}`}
-                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
-                                        value={displayName}
-                                        onChange={e => setDisplayName(e.target.value)}
-                                        maxLength={40}
-                                    />
-                                ) : (
-                                    <>
-                                        <span>{displayName || profileEmail}</span>
+                        <div className="max-w-4xl mx-auto">
+                            {/* Profile Card */}
+                            <div className={`bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl ${isMobile ? 'p-4' : 'p-8'} mb-6 border border-green-100`}>
+                                <div className="text-center">
+                                    {/* Profile Picture */}
+                                    <div className={`relative inline-block ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                        <div className={`${isMobile ? 'w-20 h-20' : 'w-32 h-32'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative group`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                            {photoURL ? (
+                                                <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
+                                            ) : (
+                                                <span className={`${isMobile ? 'text-2xl' : 'text-5xl'} font-bold text-green-600`}>
+                                                    {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                                </span>
+                                            )}
+                                            {isOwner && editing && (
+                                                <>
+                                                    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+                                                        <span className={`text-white font-semibold ${isMobile ? 'text-xs' : 'text-sm'}`}>Change</span>
+                                                        <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
+                                                    </label>
+                                                    {uploadingPic && (
+                                                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center text-green-600 font-bold rounded-full">
+                                                            <div className={`animate-spin rounded-full ${isMobile ? 'h-5 w-5' : 'h-8 w-8'} border-b-2 border-green-600`}></div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
                                         {verifyForm.isVerified === VerificationStatus.COMPLETED && (
-                                            <span className={`inline-flex items-center justify-center ml-2 rounded-full ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} style={{ backgroundColor: '#72b01d' }}>
+                                            <div className={`absolute ${isMobile ? '-bottom-1 -right-1' : '-bottom-2 -right-2'} bg-green-500 rounded-full ${isMobile ? 'p-1' : 'p-2'} border-4 border-white shadow-lg`}>
                                                 <svg viewBox="0 0 20 20" fill="white" className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`}>
                                                     <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
                                                 </svg>
-                                            </span>
+                                            </div>
                                         )}
-                                    </>
-                                )}
-                            </div>
+                                    </div>
 
-                            {/* Description */}
-                            <div className={`w-full ${isMobile ? 'mb-4' : 'mb-6'} flex flex-col items-center`}>
-                                {isOwner && editing ? (
-                                    <textarea
-                                        className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} border rounded-xl ${isMobile ? 'p-2' : 'p-3'} ${isMobile ? 'text-base' : 'text-lg'} text-center`}
-                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
-                                        rows={isMobile ? 2 : 3}
-                                        value={desc}
-                                        onChange={e => setDesc(e.target.value)}
-                                        placeholder="Write something about yourself..."
-                                        maxLength={300}
-                                    />
-                                ) : (
-                                    <div className={`${isMobile ? 'text-base' : 'text-lg'} min-h-[48px] whitespace-pre-line text-center`} style={{ color: '#454955' }}>{desc || <span style={{ color: '#454955', opacity: 0.6 }}>No description yet.</span>}</div>
-                                )}
-                            </div>
-                            {/* Edit/Save Buttons */}
-                            {isOwner && (
-                                <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
-                                    {editing ? (
-                                        <button
-                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold mr-2 disabled:opacity-50 transition`}
-                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-                                            onMouseEnter={(e) => {
-                                                if (!saving) {
-                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!saving) {
-                                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                                }
-                                            }}
-                                            onClick={handleSave}
-                                            disabled={saving}
-                                        >
-                                            {saving ? "Saving..." : "Save"}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold transition border`}
-                                            style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                                                e.currentTarget.style.borderColor = '#72b01d';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                            }}
-                                            onClick={() => setEditing(true)}
-                                        >
-                                            Edit Info
-                                        </button>
+                                    {/* Name */}
+                                    <div className={`${isMobile ? 'mb-3' : 'mb-4'} px-2`}>
+                                        {isOwner && editing ? (
+                                            <input
+                                                className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-center border-2 border-green-200 rounded-xl ${isMobile ? 'px-3 py-2' : 'px-4 py-2'} w-full max-w-sm mx-auto bg-white/80 backdrop-blur focus:border-green-500 focus:outline-none transition-colors`}
+                                                value={displayName}
+                                                onChange={e => setDisplayName(e.target.value)}
+                                                maxLength={40}
+                                                placeholder="Enter your name"
+                                            />
+                                        ) : (
+                                            <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 flex items-center justify-center gap-3 break-words`}>
+                                                {displayName || profileEmail}
+                                            </h1>
+                                        )}
+                                        <p className={`text-gray-600 mt-2 ${isMobile ? 'text-sm' : ''} break-all`}>{profileEmail}</p>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className={`${isMobile ? 'mb-4' : 'mb-6'} px-2`}>
+                                        {isOwner && editing ? (
+                                            <textarea
+                                                className={`w-full max-w-lg mx-auto border-2 border-green-200 rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-white/80 backdrop-blur focus:border-green-500 focus:outline-none transition-colors resize-none ${isMobile ? 'text-sm' : ''}`}
+                                                rows={isMobile ? 2 : 3}
+                                                value={desc}
+                                                onChange={e => setDesc(e.target.value)}
+                                                placeholder="Write something about yourself..."
+                                                maxLength={300}
+                                            />
+                                        ) : (
+                                            <p className={`text-gray-700 max-w-lg mx-auto leading-relaxed ${isMobile ? 'text-sm' : ''} break-words`}>
+                                                {desc || <span className="text-gray-500 italic">No description yet.</span>}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    {isOwner && (
+                                        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-center gap-3'} px-2`}>
+                                            {editing ? (
+                                                <>
+                                                    <button
+                                                        className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
+                                                        onClick={handleSave}
+                                                        disabled={saving}
+                                                    >
+                                                        {saving ? (
+                                                            <span className="flex items-center justify-center gap-2">
+                                                                <div className={`animate-spin rounded-full ${isMobile ? 'h-3 w-3' : 'h-4 w-4'} border-b-2 border-white`}></div>
+                                                                Saving...
+                                                            </span>
+                                                        ) : (
+                                                            'Save Changes'
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-colors`}
+                                                        onClick={() => setEditing(false)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-white hover:bg-gray-50 text-green-600 font-semibold rounded-xl transition-colors border-2 border-green-200 hover:border-green-300 shadow-lg`}
+                                                    onClick={() => setEditing(true)}
+                                                >
+                                                    Edit Profile
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-                            )}
+                            </div>
+
+                            {/* Quick Stats */}
+                            <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 gap-4'} mb-6`}>
+                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
+                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-600`}>{shops.length}</div>
+                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Shops</div>
+                                </div>
+                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
+                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-blue-600`}>{listings.length}</div>
+                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Listings</div>
+                                </div>
+                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
+                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-600`}>{sellerReviews.length}</div>
+                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Reviews</div>
+                                </div>
+                                <div className={`bg-white rounded-xl ${isMobile ? 'p-3' : 'p-4'} border border-gray-200 text-center hover:shadow-md transition-shadow`}>
+                                    <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-orange-600`}>
+                                        {verifyForm.isVerified === VerificationStatus.COMPLETED ? '✓' : '○'}
+                                    </div>
+                                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Verified</div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
                     {/* SHOPS TAB */}
                     {selectedTab === "shops" && (
                         <div>
-                            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} ${isMobile ? 'mb-3' : 'mb-4'}`}>
-                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>{isOwner ? "Your Shops" : "Shops"}</h2>
+                            {/* Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                        {isOwner ? "Your Shops" : "Shops"}
+                                    </h2>
+                                    <p className="text-gray-600">Manage your online storefronts</p>
+                                </div>
                                 {isOwner && (
                                     <Link
                                         to="/create-shop"
-                                        className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-sm'} rounded-full font-bold uppercase tracking-wide shadow transition`}
-                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#3f7d20';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                        }}
+                                        className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                                     >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
                                         Create New Shop
                                     </Link>
                                 )}
                             </div>
+
                             {shops.length === 0 ? (
-                                <div className="flex flex-col items-center gap-4">
-                                    <div className={`text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>You have not created any shops yet.</div>
+                                <div className="text-center py-16">
+                                    <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                        <FiShoppingBag className="w-12 h-12 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No shops yet</h3>
+                                    <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                                        Create your first shop to start selling products on our marketplace.
+                                    </p>
+                                    {isOwner && (
+                                        <Link
+                                            to="/create-shop"
+                                            className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
+                                        >
+                                            Get Started
+                                        </Link>
+                                    )}
                                 </div>
                             ) : (
-                                <div className={`grid grid-cols-1 ${isMobile ? '' : 'sm:grid-cols-2'} gap-4`}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {shops.map(shop => (
                                         <div
                                             key={shop.id}
-                                            className={`border rounded-xl ${isMobile ? 'p-3' : 'p-4'} flex items-center ${isMobile ? 'gap-3' : 'gap-4'} transition`}
-                                            style={{
-                                                backgroundColor: '#ffffff',
-                                                borderColor: 'rgba(114, 176, 29, 0.3)'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                e.currentTarget.style.borderColor = '#72b01d';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                            }}
+                                            className="bg-white rounded-2xl border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-lg group overflow-hidden"
                                         >
-                                            {/* Shop link and image */}
-                                            <Link
-                                                to={`/shop/${shop.username}`}
-                                                className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'} flex-1`}
-                                                style={{ textDecoration: 'none', color: 'inherit' }}
-                                            >
-                                                {shop.logo ? (
-                                                    <img src={shop.logo} alt={shop.name} className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full object-cover border`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
-                                                ) : (
-                                                    <div className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full flex items-center justify-center ${isMobile ? 'text-lg' : 'text-2xl'} font-bold border`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}>{shop.name[0]}</div>
+                                            {/* Shop Header */}
+                                            <div className="p-6 pb-4">
+                                                <Link
+                                                    to={`/shop/${shop.username}`}
+                                                    className="block text-decoration-none"
+                                                >
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        {shop.logo ? (
+                                                            <img 
+                                                                src={shop.logo} 
+                                                                alt={shop.name} 
+                                                                className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200 group-hover:border-green-300 transition-colors" 
+                                                            />
+                                                        ) : (
+                                                            <div className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold bg-gradient-to-br from-green-100 to-green-200 text-green-700 border-2 border-gray-200 group-hover:border-green-300 transition-colors">
+                                                                {shop.name[0]}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-bold text-lg text-gray-900 group-hover:text-green-600 transition-colors truncate">
+                                                                {shop.name}
+                                                            </h3>
+                                                            <p className="text-sm text-gray-600">@{shop.username}</p>
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                                
+                                                {shop.description && (
+                                                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                                                        {shop.description}
+                                                    </p>
                                                 )}
-                                                <div>
-                                                    <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{shop.name}</div>
-                                                    <div className="text-xs" style={{ color: '#454955' }}>@{shop.username}</div>
-                                                </div>
-                                            </Link>
+                                            </div>
+
+                                            {/* Shop Actions */}
                                             {isOwner && (
-                                                <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-col gap-2'} ml-2`}>
-                                                    <button
-                                                        onClick={() => navigate(`/edit-shop/${shop.id}`)}
-                                                        className={`${isMobile ? 'px-2 py-1' : 'px-3 py-1'} rounded text-xs font-semibold transition border`}
-                                                        style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                                        }}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            const confirmDelete = window.confirm("Are you sure you want to delete this shop? This action cannot be undone.");
-                                                            if (!confirmDelete) return;
-                                                            try {
-                                                                await deleteDoc(doc(db, "shops", shop.id));
-                                                                setShops(prev => prev.filter(s => s.id !== shop.id));
-                                                            } catch (err) {
-                                                                alert("Failed to delete shop. Try again.");
-                                                            }
-                                                        }}
-                                                        className="px-3 py-1 rounded text-xs font-semibold transition border"
-                                                        style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffebee';
-                                                            e.currentTarget.style.color = '#c62828';
-                                                            e.currentTarget.style.borderColor = '#c62828';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                            e.currentTarget.style.color = '#454955';
-                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                        }}
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                <div className="px-6 pb-6">
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => navigate(`/edit-shop/${shop.id}`)}
+                                                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                                        >
+                                                            Edit Shop
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                const confirmDelete = window.confirm("Are you sure you want to delete this shop? This action cannot be undone.");
+                                                                if (!confirmDelete) return;
+                                                                try {
+                                                                    await deleteDoc(doc(db, "shops", shop.id));
+                                                                    setShops(prev => prev.filter(s => s.id !== shop.id));
+                                                                } catch (err) {
+                                                                    alert("Failed to delete shop. Try again.");
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors border border-red-200 hover:border-red-300"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     ))}
-
                                 </div>
                             )}
                         </div>
@@ -1118,97 +1211,125 @@ export default function ProfileDashboard() {
                     {/* ORDERS TAB */}
                     {selectedTab === "orders" && (
                         <div>
-                            <div className={`flex ${isMobile ? 'gap-3' : 'gap-6'} ${isMobile ? 'mb-4' : 'mb-6'} border-b`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                {ORDER_SUBTABS.map(subTab => (
-                                    <button
-                                        key={subTab.key}
-                                        className={`${isMobile ? 'py-2 px-3' : 'py-3 px-6'} font-bold ${isMobile ? 'text-sm' : 'text-base'} border-b-2 transition-all`}
-                                        style={{
-                                            borderBottomColor: orderSubTab === subTab.key ? '#72b01d' : 'transparent',
-                                            color: orderSubTab === subTab.key ? '#0d0a0b' : '#454955'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (orderSubTab !== subTab.key) {
-                                                e.currentTarget.style.color = '#0d0a0b';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (orderSubTab !== subTab.key) {
-                                                e.currentTarget.style.color = '#454955';
-                                            }
-                                        }}
-                                        onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
-                                    >
-                                        {subTab.label}
-                                    </button>
-                                ))}
+                            {/* Header */}
+                            <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-2`}>Orders</h2>
+                                <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Track your buying and selling activities</p>
                             </div>
+
+                            {/* Sub-tabs */}
+                            <div className={`border-b border-gray-200 ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                <nav className={`flex ${isMobile ? 'space-x-4' : 'space-x-8'}`}>
+                                    {ORDER_SUBTABS.map(subTab => (
+                                        <button
+                                            key={subTab.key}
+                                            className={`${isMobile ? 'py-3 px-1' : 'py-4 px-1'} border-b-2 font-medium ${isMobile ? 'text-sm' : 'text-sm'} transition-colors ${
+                                                orderSubTab === subTab.key
+                                                    ? 'border-green-500 text-green-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }`}
+                                            onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
+                                        >
+                                            {subTab.label}
+                                        </button>
+                                    ))}
+                                </nav>
+                            </div>
+
                             {ordersLoading ? (
-                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955' }}>Loading orders...</div>
+                                <div className={`flex items-center justify-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                    <div className={`animate-spin rounded-full ${isMobile ? 'h-8 w-8' : 'h-12 w-12'} border-b-2 border-green-600`}></div>
+                                    <span className={`ml-3 text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Loading orders...</span>
+                                </div>
                             ) : (
                                 <div>
                                     {/* As Buyer */}
                                     {orderSubTab === "buyer" && (
                                         <div>
                                             {buyerOrders.length === 0 ? (
-                                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
+                                                <div className={`text-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                                    <div className={`mx-auto ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} bg-gray-100 rounded-full flex items-center justify-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                                        <FiList className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-gray-400`} />
+                                                    </div>
+                                                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-2`}>No orders yet</h3>
+                                                    <p className={`text-gray-600 ${isMobile ? 'mb-4 max-w-xs text-sm' : 'mb-6 max-w-sm'} mx-auto px-4`}>
+                                                        When you purchase items, they'll appear here.
+                                                    </p>
+                                                    <Link
+                                                        to="/search"
+                                                        className={`inline-flex items-center ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors`}
+                                                    >
+                                                        Start Shopping
+                                                    </Link>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+                                                    <div className={`space-y-${isMobile ? '3' : '4'}`}>
                                                         {buyerOrders.map((order: any) => (
                                                             <Link
                                                                 to={`/order/${order.id}`}
                                                                 key={order.id}
-                                                                className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
-                                                                style={{
-                                                                    backgroundColor: '#ffffff',
-                                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                                    textDecoration: 'none',
-                                                                    color: 'inherit'
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                                    e.currentTarget.style.boxShadow = '';
-                                                                }}
+                                                                className={`block bg-white border border-gray-200 rounded-xl ${isMobile ? 'p-4' : 'p-6'} hover:border-green-300 hover:shadow-md transition-all duration-200 group`}
                                                             >
-                                                                <img
-                                                                    src={order.itemImage || '/placeholder.png'}
-                                                                    alt={order.itemName}
-                                                                    className="w-16 h-16 object-cover rounded-lg border"
-                                                                    style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                                                />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>                                                    <div className="text-sm mb-1" style={{ color: '#454955' }}>
-                                                        Status: <span className="font-semibold">
-                                                            {order.status === 'PENDING_PAYMENT' && (
-                                                                <span className="text-orange-600">Awaiting Payment</span>
-                                                            )}
-                                                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
-                                                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
-                                                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
-                                                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
-                                                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
-                                                            {order.status === OrderStatus.PENDING && 'Order Pending'}
-                                                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
-                                                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
-                                                        </span>
-                                                    </div>
-                                                                    <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
+                                                                <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
+                                                                    <img
+                                                                        src={order.itemImage || '/placeholder.png'}
+                                                                        alt={order.itemName}
+                                                                        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} object-cover rounded-lg border border-gray-200 flex-shrink-0`}
+                                                                    />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'} text-gray-900 group-hover:text-green-600 transition-colors truncate mb-1`}>
+                                                                            {order.itemName}
+                                                                        </h3>
+                                                                        <div className={`flex ${isMobile ? 'flex-col gap-1' : 'items-center gap-4'} ${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
+                                                                            <span>
+                                                                                Status: <span className={`font-medium ${
+                                                                                    order.status === 'PENDING_PAYMENT' ? 'text-orange-600' :
+                                                                                    order.status === OrderStatus.CANCELLED ? 'text-red-600' :
+                                                                                    order.status === OrderStatus.REFUND_REQUESTED ? 'text-yellow-600' :
+                                                                                    order.status === OrderStatus.REFUNDED ? 'text-red-600' :
+                                                                                    order.status === OrderStatus.RECEIVED ? 'text-green-600' :
+                                                                                    order.status === OrderStatus.SHIPPED ? 'text-blue-600' :
+                                                                                    order.status === OrderStatus.DELIVERED ? 'text-green-600' :
+                                                                                    'text-gray-600'
+                                                                                }`}>
+                                                                                    {order.status === 'PENDING_PAYMENT' && 'Awaiting Payment'}
+                                                                                    {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                                                                                    {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                                                                                    {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                                                                                    {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                                                                                    {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                                                                                    {order.status === OrderStatus.PENDING && 'Order Pending'}
+                                                                                    {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                                                                                    {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                                                                                </span>
+                                                                            </span>
+                                                                            {!isMobile && <span>•</span>}
+                                                                            <span className="truncate">Seller: {order.sellerName || order.sellerId}</span>
+                                                                        </div>
+                                                                        {isMobile && (
+                                                                            <div className="mt-2">
+                                                                                <div className="text-lg font-bold text-green-600">
+                                                                                    LKR {order.total?.toLocaleString()}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    {!isMobile && (
+                                                                        <div className="text-right flex-shrink-0">
+                                                                            <div className="text-xl font-bold text-green-600">
+                                                                                LKR {order.total?.toLocaleString()}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
                                                             </Link>
                                                         ))}
                                                     </div>
                                                     
                                                     {/* Buyer Orders Pagination */}
                                                     {totalOrderPages > 1 && (
-                                                        <div className="mt-6 flex justify-center">
+                                                        <div className="mt-8 flex justify-center">
                                                             <Pagination
                                                                 currentPage={buyerOrdersPage}
                                                                 totalPages={totalOrderPages}
@@ -1225,14 +1346,29 @@ export default function ProfileDashboard() {
                                             )}
                                         </div>
                                     )}
+
                                     {/* As Seller */}
                                     {orderSubTab === "seller" && (
                                         <div>
                                             {sellerOrders.length === 0 ? (
-                                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as seller yet.</div>
+                                                <div className={`text-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                                    <div className={`mx-auto ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} bg-gray-100 rounded-full flex items-center justify-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                                        <FiShoppingBag className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-gray-400`} />
+                                                    </div>
+                                                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-2`}>No sales yet</h3>
+                                                    <p className={`text-gray-600 ${isMobile ? 'mb-4 max-w-xs text-sm' : 'mb-6 max-w-sm'} mx-auto px-4`}>
+                                                        When customers purchase your items, orders will appear here.
+                                                    </p>
+                                                    <Link
+                                                        to="/add-listing"
+                                                        className={`inline-flex items-center ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors`}
+                                                    >
+                                                        Create Listing
+                                                    </Link>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <div className="space-y-4">
+                                                    <div className={`space-y-${isMobile ? '3' : '4'}`}>
                                                         {sellerOrders.map((order: any) => (
                                                             <OrderSellerRow key={order.id} order={order} setSellerOrders={setSellerOrders} />
                                                         ))}
@@ -1240,7 +1376,7 @@ export default function ProfileDashboard() {
                                                     
                                                     {/* Seller Orders Pagination */}
                                                     {totalOrderPages > 1 && (
-                                                        <div className="mt-6 flex justify-center">
+                                                        <div className="mt-8 flex justify-center">
                                                             <Pagination
                                                                 currentPage={sellerOrdersPage}
                                                                 totalPages={totalOrderPages}
@@ -2024,10 +2160,12 @@ export default function ProfileDashboard() {
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    )}
+                        </div>                            )}
 
-                </main>
+                            </div>
+                        </div>
+                    </main>
+                </div>
             </div>
             <Footer />
         </div>
