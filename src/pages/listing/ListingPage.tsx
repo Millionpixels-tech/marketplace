@@ -26,8 +26,8 @@ type Shop = {
 
 export default function ListingSingle() {
   const { isMobile } = useResponsive();
-  // Payment method state for COD
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(PaymentMethod.PAY_NOW);
+  // Payment method state - will be set based on available options
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(PaymentMethod.CASH_ON_DELIVERY);
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState<any>(null);
@@ -77,13 +77,17 @@ export default function ListingSingle() {
   }, []);
 
   useEffect(() => {
-    // If item allows COD, default to COD, else Pay Now
-    if (item?.cashOnDelivery) {
+    // Set default payment method based on what's available for this listing
+    if (item?.cashOnDelivery && item?.bankTransfer) {
+      // If both are available, default to COD (customer preference)
       setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
-    } else {
-      setPaymentMethod(PaymentMethod.PAY_NOW);
+    } else if (item?.cashOnDelivery) {
+      setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+    } else if (item?.bankTransfer) {
+      setPaymentMethod(PaymentMethod.BANK_TRANSFER);
     }
-  }, [item?.cashOnDelivery]);
+    // If neither is available, keep the current selection
+  }, [item?.cashOnDelivery, item?.bankTransfer]);
 
   // Fetch listing and shop info with batched IP and data loading
   useEffect(() => {
@@ -425,24 +429,44 @@ export default function ListingSingle() {
                   )}
                 </div>
               )}
-              {/* Payment method selection if COD is available */}
-              {item.cashOnDelivery ? (
+              {/* Payment method selection based on listing's enabled methods */}
+              {(item.cashOnDelivery || item.bankTransfer) && (
                 <div className={`flex flex-col ${isMobile ? 'gap-2 mt-3' : 'gap-3 mt-4'}`}>
-                  <div className="flex items-center gap-3">
-                    <input
-                      id="pay-cod"
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
-                      onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
-                      className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
-                      style={{ accentColor: '#72b01d' }}
-                    />
-                    <label htmlFor="pay-cod" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
-                      Cash on Delivery
-                    </label>
-                  </div>
+                  {item.cashOnDelivery && (
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="pay-cod"
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
+                        onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
+                        className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
+                        style={{ accentColor: '#72b01d' }}
+                      />
+                      <label htmlFor="pay-cod" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
+                        Cash on Delivery
+                      </label>
+                    </div>
+                  )}
+                  {item.bankTransfer && (
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="pay-bank"
+                        type="radio"
+                        name="paymentMethod"
+                        value="bankTransfer"
+                        checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
+                        onChange={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
+                        className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
+                        style={{ accentColor: '#72b01d' }}
+                      />
+                      <label htmlFor="pay-bank" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
+                        Bank Transfer
+                      </label>
+                    </div>
+                  )}
+                  {/* Temporarily disabled online payment - keeping code for future use
                   <div className="flex items-center gap-3">
                     <input
                       id="pay-now"
@@ -458,6 +482,7 @@ export default function ListingSingle() {
                       Pay Now
                     </label>
                   </div>
+                  */}
                   <button
                     className={`${isMobile ? 'mt-1' : 'mt-2'} w-full ${isMobile ? 'py-2.5 text-base' : 'py-3 text-lg'} rounded-xl font-bold uppercase tracking-wide shadow transition disabled:opacity-50`}
                     style={{
@@ -483,36 +508,19 @@ export default function ListingSingle() {
                       navigate(`/checkout?${params.toString()}`);
                     }}
                   >
-                    {paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Order with Cash on Delivery' : 'Pay Now'}
+                    {paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Order with Cash on Delivery' : 
+                     paymentMethod === PaymentMethod.BANK_TRANSFER ? 'Order with Bank Transfer' : 'Order Now'}
                   </button>
                 </div>
-              ) : (
-                <button
-                  className={`${isMobile ? 'mt-3' : 'mt-4'} w-full ${isMobile ? 'py-2.5 text-base' : 'py-3 text-lg'} rounded-xl font-bold uppercase tracking-wide shadow transition disabled:opacity-50`}
-                  style={{
-                    backgroundColor: '#72b01d',
-                    color: '#ffffff'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3f7d20';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#72b01d';
-                  }}
-                  disabled={qty > (item.quantity || 1)}
-                  onClick={() => {
-                    if (!item || !shop || qty > (item.quantity || 1)) return;
-                    
-                    // Navigate to checkout page with parameters
-                    const params = new URLSearchParams({
-                      itemId: id || '',
-                      quantity: qty.toString()
-                    });
-                    navigate(`/checkout?${params.toString()}`);
-                  }}
-                >
-                  Buy Now
-                </button>
+              )} 
+              
+              {/* No payment methods available */}
+              {!item.cashOnDelivery && !item.bankTransfer && (
+                <div className={`${isMobile ? 'mt-3' : 'mt-4'} p-4 bg-red-50 border border-red-200 rounded-xl`}>
+                  <p className={`text-red-700 text-center ${isMobile ? 'text-sm' : 'text-base'}`}>
+                    ⚠️ No payment methods are currently available for this listing.
+                  </p>
+                </div>
               )}
             </div>
           </div>

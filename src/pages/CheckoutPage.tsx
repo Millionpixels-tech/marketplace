@@ -27,6 +27,7 @@ type CheckoutItem = {
   deliveryPerItem?: number;
   deliveryAdditional?: number;
   cashOnDelivery?: boolean;
+  bankTransfer?: boolean;
   owner: string;
   shopId?: string;
   shop?: string;
@@ -125,7 +126,7 @@ export default function CheckoutPage() {
   const paymentMethodParam = searchParams.get("paymentMethod") as PaymentMethodType | null;
   
   // Form state
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.PAY_NOW);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.CASH_ON_DELIVERY);
   const [buyerNotes, setBuyerNotes] = useState<string>('');
   const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
     firstName: '',
@@ -167,9 +168,17 @@ export default function CheckoutPage() {
           }
         }
         
-        // Set payment method based on item COD availability
-        if (itemData.cashOnDelivery && !paymentMethodParam) {
-          setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+        // Set payment method based on item's available payment options
+        if (!paymentMethodParam) {
+          // If no payment method specified, choose based on what's available
+          if (itemData.cashOnDelivery && itemData.bankTransfer) {
+            // If both are available, default to COD (customer preference)
+            setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+          } else if (itemData.cashOnDelivery) {
+            setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+          } else if (itemData.bankTransfer) {
+            setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+          }
         }
         
       } catch (error) {
@@ -405,6 +414,57 @@ export default function CheckoutPage() {
     return `ORDER_${timestamp}_${random}`;
   };
 
+  // Handle Bank Transfer order
+  const handleBankTransferOrder = async () => {
+    if (!item || !shop || !user) {
+      setGeneralError("Missing required data. Please refresh the page and try again.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setGeneralError("");
+
+      // Save buyer information to user profile first
+      await saveBuyerInfo(user.uid, buyerInfo);
+      
+      // Create order with buyer information and get the order ID
+      const orderData: any = {
+        itemId: item.id,
+        itemName: item.name,
+        itemImage: item.images?.[0] || "",
+        buyerId: user.uid,
+        buyerEmail: buyerInfo.email,
+        buyerInfo: buyerInfo,
+        sellerId: item.owner,
+        sellerShopId: item.shopId || item.shop || "",
+        sellerShopName: shop.name,
+        price: Number(item.price || 0),
+        quantity: quantity,
+        shipping: shipping,
+        total: total,
+        paymentMethod: PaymentMethod.BANK_TRANSFER,
+        paymentStatus: PaymentStatus.PENDING,
+      };
+
+      // Only add buyerNotes if it has content
+      if (buyerNotes.trim()) {
+        orderData.buyerNotes = buyerNotes.trim();
+      }
+
+      const orderId = await createOrder(orderData);
+      
+      // Redirect to order summary page
+      navigate('/order/' + orderId);
+      
+    } catch (error) {
+      console.error("Error creating bank transfer order:", error);
+      setGeneralError("Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Handle Cash on Delivery order
   const handleCODOrder = async () => {
     if (!item || !shop || !user) {
@@ -630,7 +690,10 @@ export default function CheckoutPage() {
     // Route to appropriate payment method
     if (paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
       await handleCODOrder();
+    } else if (paymentMethod === PaymentMethod.BANK_TRANSFER) {
+      await handleBankTransferOrder();
     } else {
+      // Temporarily disabled online payment - keeping code for future use
       await handlePayHerePayment();
     }
   };
@@ -1082,6 +1145,50 @@ export default function CheckoutPage() {
                   </label>
                 )}
                 
+                {item.bankTransfer && (
+                  <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
+                    style={{
+                      backgroundColor: paymentMethod === PaymentMethod.BANK_TRANSFER ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
+                      borderColor: paymentMethod === PaymentMethod.BANK_TRANSFER ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
+                    }}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={PaymentMethod.BANK_TRANSFER}
+                      checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
+                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                      className="mr-3"
+                    />
+                    <div className="flex items-center gap-3">
+                      <FiCreditCard size={20} style={{ color: '#72b01d' }} />
+                      <div>
+                        <div className="font-medium" style={{ color: '#0d0a0b' }}>Bank Transfer</div>
+                        <div className="text-sm" style={{ color: '#454955' }}>Direct bank transfer payment</div>
+                        <div className="text-xs mt-1" style={{ color: '#72b01d' }}>
+                          Bank details will be provided after order confirmation
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {/* No payment methods available warning */}
+                {!item.cashOnDelivery && !item.bankTransfer && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="1.5"/>
+                        <path d="M12 8v4m0 4h.01" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                      <div>
+                        <div className="font-medium text-red-800">No Payment Methods Available</div>
+                        <div className="text-sm text-red-600">This listing doesn't have any payment methods enabled.</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Temporarily disabled online payment - keeping code for future use
                 <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
                   style={{
                     backgroundColor: paymentMethod === PaymentMethod.PAY_NOW ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
@@ -1106,6 +1213,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </label>
+                */}
               </div>
             </div>
           </div>

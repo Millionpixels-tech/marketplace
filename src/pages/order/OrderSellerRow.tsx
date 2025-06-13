@@ -167,10 +167,14 @@ const printDeliveryLabel = async (order: any) => {
                         <div class="section">
                             <div class="section-title">Payment</div>
                             <div class="content">
-                                ${order.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery' : 'Online Payment'}
-                                ${order.paymentMethod === 'cash_on_delivery' ? 
+                                ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                                  order.paymentMethod === 'bankTransfer' ? 'Bank Transfer' : 
+                                  'Online Payment'}
+                                ${order.paymentMethod === 'cod' ? 
                                     `<div class="payment-highlight">COLLECT<br>LKR ${order.total?.toLocaleString() || '0'}</div>` : 
-                                    '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">PAID</div>'
+                                    order.paymentMethod === 'bankTransfer' ? 
+                                        '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">BANK TRANSFER<br>VERIFY PAYMENT</div>' :
+                                        '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">PAID</div>'
                                 }
                             </div>
                         </div>
@@ -216,6 +220,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     <div className="font-bold text-lg mb-1 truncate text-[#0d0a0b]">{order.itemName}</div>
                     <div className="text-[#454955] text-sm mb-1">
                         Status: <span className="font-semibold">
+                            {order.status === 'PENDING_PAYMENT' && (
+                                <span className="text-orange-600">Awaiting Payment</span>
+                            )}
                             {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
                             {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
                             {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
@@ -264,6 +271,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Total:</span> LKR {order.total?.toLocaleString()}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Status:</span> 
+                            {order.status === 'PENDING_PAYMENT' && (
+                                <span className="text-orange-600 font-bold">Awaiting Payment</span>
+                            )}
                             {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
                             {order.status === OrderStatus.REFUND_REQUESTED && <span className="text-[#72b01d] font-bold">Refund Requested</span>}
                             {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
@@ -273,7 +283,61 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
                             {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
                         </div>
-                        {order.paymentMethod && <div><span className="font-semibold text-[#3f7d20]">Payment:</span> {order.paymentMethod}</div>}
+                        {order.paymentMethod && (
+                            <div>
+                                <span className="font-semibold text-[#3f7d20]">Payment Method:</span> 
+                                {order.paymentMethod === 'cod' ? 'Cash on Delivery' :
+                                 order.paymentMethod === 'bankTransfer' ? 'Bank Transfer' :
+                                 order.paymentMethod === 'paynow' ? 'Online Payment' :
+                                 order.paymentMethod}
+                            </div>
+                        )}
+                        
+                        {/* Payment Slip Information for Bank Transfer Orders */}
+                        {order.paymentMethod === 'bankTransfer' && (
+                            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="font-semibold text-blue-800 mb-2 text-sm">
+                                    💰 Bank Transfer Order
+                                </div>
+                                {order.status === 'PENDING_PAYMENT' ? (
+                                    <div className="text-sm text-blue-700">
+                                        <div className="mb-2">
+                                            ⏳ Waiting for customer to make bank transfer and upload payment slip.
+                                        </div>
+                                        <div className="text-xs text-blue-600">
+                                            Customer will transfer <strong>LKR {order.total?.toLocaleString()}</strong> to your bank account.
+                                        </div>
+                                    </div>
+                                ) : order.paymentSlipUrl ? (
+                                    <div className="text-sm text-green-700">
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <span>✅ Payment slip uploaded!</span>
+                                            <a
+                                                href={order.paymentSlipUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 transition"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                📄 View Slip
+                                            </a>
+                                        </div>
+                                        {order.paymentSlipUploadedAt && (
+                                            <div className="text-xs text-green-600">
+                                                Uploaded: {new Date(order.paymentSlipUploadedAt.seconds ? order.paymentSlipUploadedAt.toDate() : order.paymentSlipUploadedAt).toLocaleString()}
+                                            </div>
+                                        )}
+                                        <div className="text-xs text-green-600 mt-1">
+                                            Please verify the payment in your bank account before shipping.
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-blue-700">
+                                        Bank transfer payment expected. No payment slip uploaded yet.
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {order.createdAt && <div><span className="font-semibold text-[#3f7d20]">Created:</span> {new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : Date.now()).toLocaleString()}</div>}
                     </div>
                     
@@ -315,6 +379,10 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested - Awaiting your action'}
                         {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
                         {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                    </div>
+                ) : order.status === 'PENDING_PAYMENT' ? (
+                    <div className="text-xs text-orange-600 py-2 italic">
+                        💰 Awaiting customer payment. Customer needs to upload payment slip.
                     </div>
                 ) : order.status === OrderStatus.SHIPPED ? (
                     <div className="text-xs text-[#454955] py-2 italic">Order Shipped. Waiting for buyer response.</div>

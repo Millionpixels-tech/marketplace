@@ -38,6 +38,16 @@ interface VerifyForm {
     isVerified: VerificationStatusType;
 }
 
+interface BankAccount {
+    id: string;
+    accountNumber: string;
+    branch: string;
+    bankName: string;
+    fullName: string;
+    isDefault: boolean;
+    createdAt: Date;
+}
+
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
@@ -69,6 +79,9 @@ export default function ProfileDashboard() {
     const [loading, setLoading] = useState(true);
     // Settings form state
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [isAddingBank, setIsAddingBank] = useState(false);
+    const [editingBankId, setEditingBankId] = useState<string | null>(null);
     const [verifyForm, setVerifyForm] = useState<VerifyForm>({ fullName: '', idFront: null, idBack: null, selfie: null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: VerificationStatus.NO_DATA });
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
@@ -132,6 +145,160 @@ export default function ProfileDashboard() {
         } finally {
             setSettingsLoading(false);
         }
+    };
+
+    // Bank Account Management Functions
+    const generateBankAccountId = () => {
+        return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    };
+
+    const addBankAccount = async () => {
+        if (!user || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName) {
+            setSettingsError('Please fill in all required bank account fields');
+            return;
+        }
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const newAccount: BankAccount = {
+                id: generateBankAccountId(),
+                accountNumber: bankForm.accountNumber,
+                branch: bankForm.branch,
+                bankName: bankForm.bankName,
+                fullName: bankForm.fullName,
+                isDefault: bankAccounts.length === 0, // First account is default
+                createdAt: new Date()
+            };
+
+            const updatedAccounts = [...bankAccounts, newAccount];
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            // Clear form
+            setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+            setIsAddingBank(false);
+            setSettingsSuccess('Bank account added successfully!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to add bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const editBankAccount = async (accountId: string) => {
+        if (!user || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName) {
+            setSettingsError('Please fill in all required bank account fields');
+            return;
+        }
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const updatedAccounts = bankAccounts.map(account => 
+                account.id === accountId 
+                    ? { ...account, accountNumber: bankForm.accountNumber, branch: bankForm.branch, bankName: bankForm.bankName, fullName: bankForm.fullName }
+                    : account
+            );
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            // Clear form
+            setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+            setEditingBankId(null);
+            setSettingsSuccess('Bank account updated successfully!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to update bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const deleteBankAccount = async (accountId: string) => {
+        if (!user) return;
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const updatedAccounts = bankAccounts.filter(account => account.id !== accountId);
+            
+            // If deleted account was default and there are other accounts, make the first one default
+            if (updatedAccounts.length > 0) {
+                const deletedAccount = bankAccounts.find(account => account.id === accountId);
+                if (deletedAccount?.isDefault) {
+                    updatedAccounts[0].isDefault = true;
+                }
+            }
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            setSettingsSuccess('Bank account deleted successfully!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to delete bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const setDefaultBankAccount = async (accountId: string) => {
+        if (!user) return;
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const updatedAccounts = bankAccounts.map(account => ({
+                ...account,
+                isDefault: account.id === accountId
+            }));
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            setSettingsSuccess('Default bank account updated!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to update default bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const startEditingBank = (account: BankAccount) => {
+        setBankForm({
+            accountNumber: account.accountNumber,
+            branch: account.branch,
+            bankName: account.bankName,
+            fullName: account.fullName
+        });
+        setEditingBankId(account.id);
+        setIsAddingBank(false);
+    };
+
+    const cancelBankEdit = () => {
+        setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+        setEditingBankId(null);
+        setIsAddingBank(false);
     };
 
     // Dashboard state
@@ -260,8 +427,21 @@ export default function ProfileDashboard() {
                     setPhotoURL(data.photoURL || "");
                     setDesc(data.description || "");
                     setProfileEmail(data.email || null);
-                    // Load bank details
+                    // Load bank details (legacy single account)
                     if (data.bankDetails) setBankForm(data.bankDetails);
+                    // Load bank accounts (new multiple accounts)
+                    if (data.bankAccounts) {
+                        setBankAccounts(data.bankAccounts);
+                    } else if (data.bankDetails) {
+                        // Migrate legacy single bank account to new format
+                        const legacyAccount: BankAccount = {
+                            id: generateBankAccountId(),
+                            ...data.bankDetails,
+                            isDefault: true,
+                            createdAt: new Date()
+                        };
+                        setBankAccounts([legacyAccount]);
+                    }
                     // Load verification info
                     if (data.verification) setVerifyForm(f => ({
                         ...f,
@@ -1004,19 +1184,21 @@ export default function ProfileDashboard() {
                                                                     style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
                                                                 />
                                                                 <div className="flex-1 min-w-0">
-                                                                    <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
-                                                                    <div className="text-sm mb-1" style={{ color: '#454955' }}>
-                                                                        Status: <span className="font-semibold">
-                                                                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
-                                                                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
-                                                                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
-                                                                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
-                                                                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
-                                                                            {order.status === OrderStatus.PENDING && 'Order Pending'}
-                                                                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
-                                                                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
-                                                                        </span>
-                                                                    </div>
+                                                                    <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>                                                    <div className="text-sm mb-1" style={{ color: '#454955' }}>
+                                                        Status: <span className="font-semibold">
+                                                            {order.status === 'PENDING_PAYMENT' && (
+                                                                <span className="text-orange-600">Awaiting Payment</span>
+                                                            )}
+                                                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                                                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                                                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                                                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                                                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                                                            {order.status === OrderStatus.PENDING && 'Order Pending'}
+                                                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                                                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                                                        </span>
+                                                    </div>
                                                                     <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
                                                                 </div>
                                                                 <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
@@ -1451,95 +1633,228 @@ export default function ProfileDashboard() {
                                 {settingsSuccess && <div style={{ color: '#3f7d20' }}>{settingsSuccess}</div>}
                                 {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
 
-                                {/* Bank Account Details */}
+                                {/* Bank Account Management */}
                                 <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
-                                    <div className={`grid gap-4 w-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Account Number</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.accountNumber}
-                                                onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Branch Name</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.branch}
-                                                onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Name</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.bankName}
-                                                onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Full Name as in Bank</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.fullName}
-                                                onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))}
-                                            />
-                                        </div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Accounts for Payouts</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAddingBank(true);
+                                                setEditingBankId(null);
+                                                setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+                                            }}
+                                            className={`rounded-lg font-semibold transition ${isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'}`}
+                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                            }}
+                                        >
+                                            + Add Bank Account
+                                        </button>
                                     </div>
+
+                                    {/* Bank Accounts List */}
+                                    {bankAccounts.length > 0 && (
+                                        <div className="space-y-3 mb-4">
+                                            {bankAccounts.map((account) => (
+                                                <div key={account.id} className={`p-4 rounded-lg border ${account.isDefault ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <h4 className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                                                                    {account.bankName}
+                                                                </h4>
+                                                                {account.isDefault && (
+                                                                    <span className={`px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                                                        Default
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className={`space-y-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                                <div><span className="font-medium">Account:</span> {account.accountNumber}</div>
+                                                                <div><span className="font-medium">Branch:</span> {account.branch}</div>
+                                                                <div><span className="font-medium">Name:</span> {account.fullName}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2 ml-4">
+                                                            {!account.isDefault && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setDefaultBankAccount(account.id)}
+                                                                    className={`px-3 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                                    disabled={settingsLoading}
+                                                                >
+                                                                    Set Default
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => startEditingBank(account)}
+                                                                className={`px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                                disabled={settingsLoading}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => deleteBankAccount(account.id)}
+                                                                className={`px-3 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                                disabled={settingsLoading || bankAccounts.length === 1}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Add/Edit Bank Account Form */}
+                                    {(isAddingBank || editingBankId) && (
+                                        <div className="p-4 border border-blue-200 rounded-lg bg-blue-50 mb-4">
+                                            <h4 className={`font-semibold mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                                                {editingBankId ? 'Edit Bank Account' : 'Add New Bank Account'}
+                                            </h4>
+                                            <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Bank Account Number *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.accountNumber}
+                                                        onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))}
+                                                        placeholder="Enter account number"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Branch Name
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.branch}
+                                                        onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
+                                                        placeholder="Enter branch name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Bank Name *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.bankName}
+                                                        onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))}
+                                                        placeholder="Enter bank name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Full Name as in Bank *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.fullName}
+                                                        onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))}
+                                                        placeholder="Enter full name as in bank"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 mt-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={editingBankId ? () => editBankAccount(editingBankId) : addBankAccount}
+                                                    disabled={settingsLoading || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName}
+                                                    className={`px-4 py-2 rounded font-semibold transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }
+                                                    }}
+                                                >
+                                                    {settingsLoading ? 'Saving...' : (editingBankId ? 'Update Account' : 'Add Account')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={cancelBankEdit}
+                                                    className={`px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {bankAccounts.length === 0 && !isAddingBank && (
+                                        <div className="text-center py-8" style={{ color: '#454955' }}>
+                                            <div className="mb-2">No bank accounts added yet</div>
+                                            <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>Add a bank account to receive payouts from your sales</div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Seller Verification */}

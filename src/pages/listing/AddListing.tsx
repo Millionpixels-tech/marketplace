@@ -37,6 +37,7 @@ export default function AddListing() {
   const [deliveryPerItem, setDeliveryPerItem] = useState("");
   const [deliveryAdditional, setDeliveryAdditional] = useState("");
   const [cashOnDelivery, setCashOnDelivery] = useState(false);
+  const [bankTransfer, setBankTransfer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -119,6 +120,13 @@ export default function AddListing() {
 
   const handleSubmit = async () => {
     if (!shopId) return;
+    
+    // Validate that at least one payment method is selected
+    if (!cashOnDelivery && !bankTransfer) {
+      showToast('error', 'Please select at least one payment method for this listing.');
+      return;
+    }
+    
     let imageUrls: string[] = [];
     let imageMetadata: any[] = [];
     
@@ -193,6 +201,7 @@ export default function AddListing() {
         imageMetadata: imageMetadata, // Store image metadata for SEO
         createdAt: (await import("firebase/firestore")).Timestamp.now(),
         cashOnDelivery,
+        bankTransfer,
         // SEO fields
         seoTitle: `${name} - ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
         seoDescription: desc.length > 160 ? desc.substring(0, 157) + '...' : desc,
@@ -691,24 +700,62 @@ export default function AddListing() {
                   </div>
                 )}
 
-                {/* Cash on Delivery Option */}
-                <div className="bg-blue-50 p-4 md:p-6 rounded-xl border border-blue-200">
-                  <div className="flex items-start gap-2 md:gap-3">
-                    <input
-                      id="cod"
-                      type="checkbox"
-                      checked={cashOnDelivery}
-                      onChange={e => setCashOnDelivery(e.target.checked)}
-                      className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
-                    />
-                    <div className="flex-1">
-                      <label htmlFor="cod" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
-                        💰 Allow Cash on Delivery (COD)
-                      </label>
-                      <p className="text-xs md:text-sm text-[#454955] mt-1">
-                        Let customers pay when they receive their order
-                      </p>
+                {/* Payment Methods */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-[#0d0a0b] text-sm md:text-base mb-3">
+                    💳 Payment Methods
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Cash on Delivery Option */}
+                    <div className="bg-blue-50 p-4 md:p-6 rounded-xl border border-blue-200">
+                      <div className="flex items-start gap-2 md:gap-3">
+                        <input
+                          id="cod"
+                          type="checkbox"
+                          checked={cashOnDelivery}
+                          onChange={e => setCashOnDelivery(e.target.checked)}
+                          className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="cod" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
+                            💰 Allow Cash on Delivery (COD)
+                          </label>
+                          <p className="text-xs md:text-sm text-[#454955] mt-1">
+                            Let customers pay when they receive their order
+                          </p>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Bank Transfer Option */}
+                    <div className="bg-green-50 p-4 md:p-6 rounded-xl border border-green-200">
+                      <div className="flex items-start gap-2 md:gap-3">
+                        <input
+                          id="bank-transfer"
+                          type="checkbox"
+                          checked={bankTransfer}
+                          onChange={e => setBankTransfer(e.target.checked)}
+                          className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm"
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="bank-transfer" className="font-semibold text-[#0d0a0b] cursor-pointer text-sm md:text-base">
+                            🏦 Allow Bank Transfer
+                          </label>
+                          <p className="text-xs md:text-sm text-[#454955] mt-1">
+                            Customers transfer money directly to your bank account
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Validation message */}
+                    {!cashOnDelivery && !bankTransfer && (
+                      <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                        <p className="text-xs md:text-sm text-red-700">
+                          ⚠️ Please select at least one payment method for this listing.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
