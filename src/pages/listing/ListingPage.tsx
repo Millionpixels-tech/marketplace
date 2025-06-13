@@ -748,17 +748,17 @@ export default function ListingSingle() {
         {item.sellerNotes && (
           <section className={`w-full max-w-4xl mx-auto mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
             <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-3`} style={{ color: '#0d0a0b' }}>
-              {item.itemType === 'Digital' ? 'Download Instructions' : 'Delivery Information'}
+              Delivery Information
             </h2>
             <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-4 text-sm' : 'p-6 text-base md:text-lg'} whitespace-pre-line border`} 
               style={{ 
-                backgroundColor: item.itemType === 'Digital' ? 'rgba(59, 130, 246, 0.05)' : 'rgba(34, 197, 94, 0.05)', 
-                borderColor: item.itemType === 'Digital' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(34, 197, 94, 0.3)', 
+                backgroundColor: 'rgba(34, 197, 94, 0.05)', 
+                borderColor: 'rgba(34, 197, 94, 0.3)', 
                 color: '#454955' 
               }}>
               <div className="flex items-start gap-3">
                 <span className="text-xl">
-                  {item.itemType === 'Digital' ? '💻' : '📦'}
+                  📦
                 </span>
                 <div className="flex-1">
                   {item.sellerNotes}

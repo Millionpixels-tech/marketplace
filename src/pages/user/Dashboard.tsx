@@ -1764,7 +1764,7 @@ export default function ProfileDashboard() {
 
                                 {/* Seller Verification */}
                                 <div className={`rounded-2xl border w-full shadow-sm flex flex-col ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
+                                    <h3 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Verified User Badge</h3>
                                     
                                     {/* Verified Status */}
                                     {verifyForm.isVerified === VerificationStatus.COMPLETED && (
@@ -1772,8 +1772,8 @@ export default function ProfileDashboard() {
                                             <div className={`rounded-full mb-2 ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
                                                 <svg width={isMobile ? "28" : "36"} height={isMobile ? "28" : "36"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>You are a verified seller!</div>
-                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and you can sell on our platform.</div>
+                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>You are a verified user!</div>
+                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and it will cause to gain more trust from buyers and sellers.</div>
                                         </div>
                                     )}
                                     
@@ -1812,8 +1812,8 @@ export default function ProfileDashboard() {
                                             {verifyForm.isVerified === VerificationStatus.NO_DATA && (
                                                 <div className="mb-6">
                                                     <div className={`bg-blue-50 border border-blue-200 rounded-xl mb-4 ${isMobile ? 'p-3' : 'p-4'}`}>
-                                                        <div className={`text-blue-700 font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>📋 Complete your seller verification</div>
-                                                        <div className={`text-blue-600 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>Submit your documents to become a verified seller and gain customer trust.</div>
+                                                        <div className={`text-blue-700 font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>📋 Complete your user verification</div>
+                                                        <div className={`text-blue-600 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>Submit your documents to become a verified user and gain other users trust.</div>
                                                     </div>
                                                 </div>
                                             )}

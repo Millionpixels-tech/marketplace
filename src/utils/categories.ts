@@ -1,612 +1,553 @@
-// Category types for marketplace
+// Category types for marketplace - Etsy.com structure (Physical products only)
 export const ItemType = {
-  PHYSICAL: 'Physical',
-  DIGITAL: 'Digital'
+  PHYSICAL: 'Physical'
 } as const;
 
 export type ItemType = typeof ItemType[keyof typeof ItemType];
 
-// Physical product categories specific to Sri Lankan products
-export const PhysicalCategory = {
-  FOOD_SNACKS: 'Food & Snacks',
-  CLOTHING_ACCESSORIES: 'Clothing & Accessories',
-  ART_CRAFTS: 'Art & Crafts',
+// Main categories based on Etsy.com
+export const EtsyCategory = {
+  ACCESSORIES: 'Accessories',
+  ART_COLLECTIBLES: 'Art & Collectibles',
+  BAGS_PURSES: 'Bags & Purses',
+  BATH_BEAUTY: 'Bath & Beauty',
+  BOOKS_MOVIES_MUSIC: 'Books, Movies & Music',
+  CLOTHING: 'Clothing',
+  CRAFT_SUPPLIES_TOOLS: 'Craft Supplies & Tools',
+  ELECTRONICS_ACCESSORIES: 'Electronics & Accessories',
   HOME_LIVING: 'Home & Living',
-  HEALTH_BEAUTY: 'Health & Beauty',
-  TOYS_BABY: 'Toys & Baby',
-  STATIONERY_GIFTS: 'Stationery & Gifts',
-  WEDDINGS_EVENTS: 'Weddings & Events',
-  PET_SUPPLIES: 'Pet Supplies'
-} as const;
-
-export type PhysicalCategory = typeof PhysicalCategory[keyof typeof PhysicalCategory];
-
-// Digital product categories
-export const DigitalCategory = {
-  EBOOKS_MAGAZINES: 'eBooks & Magazines',
-  MUSIC_AUDIO: 'Music & Audio',
-  SOFTWARE_APPS: 'Software & Apps',
-  COURSES_TUTORIALS: 'Courses & Tutorials',
-  DIGITAL_ART: 'Digital Art & Graphics',
-  PHOTOGRAPHY: 'Photography & Stock Images',
-  TEMPLATES_DESIGNS: 'Templates & Designs',
-  VIDEOS_FILMS: 'Videos & Films',
-  GAMES: 'Games & Entertainment',
-  DOCUMENTS_GUIDES: 'Documents & Guides'
-} as const;
-
-export type DigitalCategory = typeof DigitalCategory[keyof typeof DigitalCategory];
-
-// Combined for backward compatibility
-export const LocalCategory = {
-  ...PhysicalCategory,
-  ...DigitalCategory
-} as const;
-
-export type LocalCategory = typeof LocalCategory[keyof typeof LocalCategory];
-
-// Food & Snacks Subcategories
-export const FoodSnacksSubcategory = {
-  SWEETS: 'Sweets',
-  SHORT_EATS: 'Short Eats',
-  JAMS: 'Jams',
-  PICKLES: 'Pickles',
-  DRINKS: 'Drinks',
-  CHUTNEYS: 'Chutneys',
-  SPICES: 'Spices',
-  SNACKS: 'Snacks',
-  KITHUL_TREACLE: 'Kithul & Treacle',
-  TRADITIONAL_FOODS: 'Traditional Foods',
-  RICE_FLOUR_PRODUCTS: 'Rice & Flour Products'
-} as const;
-
-export type FoodSnacksSubcategory = typeof FoodSnacksSubcategory[keyof typeof FoodSnacksSubcategory];
-
-// Clothing & Accessories Subcategories
-export const ClothingAccessoriesSubcategory = {
-  SAREES: 'Sarees',
-  HANDLOOM: 'Handloom',
   JEWELRY: 'Jewelry',
-  BAGS: 'Bags',
-  SHIRTS_TOPS: 'Shirts & Tops',
-  SARONGS: 'Sarongs',
-  T_SHIRTS: 'T-Shirts',
-  DRESSES: 'Dresses',
-  KIDS_CLOTHING: 'Kids Clothing',
-  HEADWEAR: 'Headwear',
-  FOOTWEAR: 'Footwear',
-  BELTS: 'Belts'
+  PAPER_PARTY_SUPPLIES: 'Paper & Party Supplies',
+  PET_SUPPLIES: 'Pet Supplies',
+  SHOES: 'Shoes',
+  TOYS_GAMES: 'Toys & Games',
+  WEDDINGS: 'Weddings'
 } as const;
 
-export type ClothingAccessoriesSubcategory = typeof ClothingAccessoriesSubcategory[keyof typeof ClothingAccessoriesSubcategory];
+export type EtsyCategory = typeof EtsyCategory[keyof typeof EtsyCategory];
 
-// Art & Crafts Subcategories
-export const ArtCraftsSubcategory = {
-  PAINTINGS: 'Paintings',
-  POTTERY: 'Pottery',
-  WOODWORK: 'Woodwork',
-  BATIK: 'Batik',
-  MASKS: 'Masks',
-  GREETING_CARDS: 'Greeting Cards',
-  HANDMADE_BOOKS: 'Handmade Books',
-  BEADWORK: 'Beadwork',
-  MACRAME: 'Macramé',
-  PAPERCRAFT: 'Papercraft',
-  UPCYCLED_ITEMS: 'Upcycled Items'
+// Subcategories for each main category
+
+// Accessories Subcategories
+export const AccessoriesSubcategory = {
+  BABY_ACCESSORIES: 'Baby Accessories',
+  BELTS_SUSPENDERS: 'Belts & Suspenders',
+  BOUQUETS_CORSAGES: 'Bouquets & Corsages',
+  COSTUME_ACCESSORIES: 'Costume Accessories',
+  GLOVES_MITTENS: 'Gloves & Mittens',
+  HAIR_ACCESSORIES: 'Hair Accessories',
+  HAND_FANS: 'Hand Fans',
+  HATS_CAPS: 'Hats & Caps',
+  KEYCHAINS_LANYARDS: 'Keychains & Lanyards',
+  LATKANS: 'Latkans',
+  PATCHES_PINS: 'Patches & Pins',
+  SCARVES_WRAPS: 'Scarves & Wraps',
+  SUIT_TIE_ACCESSORIES: 'Suit & Tie Accessories',
+  SUNGLASSES_EYEWEAR: 'Sunglasses & Eyewear',
+  UMBRELLAS_RAIN_ACCESSORIES: 'Umbrellas & Rain Accessories'
 } as const;
 
-export type ArtCraftsSubcategory = typeof ArtCraftsSubcategory[keyof typeof ArtCraftsSubcategory];
+export type AccessoriesSubcategory = typeof AccessoriesSubcategory[keyof typeof AccessoriesSubcategory];
+
+// Art & Collectibles Subcategories
+export const ArtCollectiblesSubcategory = {
+  ARTIST_TRADING_CARDS: 'Artist Trading Cards',
+  COLLECTIBLES: 'Collectibles',
+  DOLLS_MINIATURES: 'Dolls & Miniatures',
+  DRAWING_ILLUSTRATION: 'Drawing & Illustration',
+  FIBER_ARTS: 'Fiber Arts',
+  FINE_ART_CERAMICS: 'Fine Art Ceramics',
+  GLASS_ART: 'Glass Art',
+  MIXED_MEDIA_COLLAGE: 'Mixed Media & Collage',
+  PAINTING: 'Painting',
+  PHOTOGRAPHY: 'Photography',
+  PRINTS: 'Prints',
+  SCULPTURE: 'Sculpture'
+} as const;
+
+export type ArtCollectiblesSubcategory = typeof ArtCollectiblesSubcategory[keyof typeof ArtCollectiblesSubcategory];
+
+// Bags & Purses Subcategories
+export const BagsPursesSubcategory = {
+  ACCESSORY_CASES: 'Accessory Cases',
+  BACKPACKS: 'Backpacks',
+  CLOTHING_SHOE_BAGS: 'Clothing & Shoe Bags',
+  COSMETIC_TOILETRY_STORAGE: 'Cosmetic & Toiletry Storage',
+  DIAPER_BAGS: 'Diaper Bags',
+  FANNY_PACKS: 'Fanny Packs',
+  FOOD_INSULATED_BAGS: 'Food/Insulated Bags',
+  HANDBAGS: 'Handbags',
+  LUGGAGE_TRAVEL: 'Luggage & Travel',
+  MARKET_BAGS: 'Market Bags',
+  MESSENGER_BAGS: 'Messenger Bags',
+  POUCHES_COIN_PURSES: 'Pouches & Coin Purses',
+  SPORTS_BAGS: 'Sports Bags',
+  TOTES: 'Totes',
+  WALLETS_MONEY_CLIPS: 'Wallets & Money Clips'
+} as const;
+
+export type BagsPursesSubcategory = typeof BagsPursesSubcategory[keyof typeof BagsPursesSubcategory];
+
+// Bath & Beauty Subcategories
+export const BathBeautySubcategory = {
+  BABY_CHILD_CARE: 'Baby & Child Care',
+  BATH_ACCESSORIES: 'Bath Accessories',
+  ESSENTIAL_OILS: 'Essential Oils',
+  FRAGRANCES: 'Fragrances',
+  HAIR_CARE: 'Hair Care',
+  MAKEUP_COSMETICS: 'Makeup & Cosmetics',
+  PERSONAL_CARE: 'Personal Care',
+  SKIN_CARE: 'Skin Care',
+  SOAPS: 'Soaps',
+  SPA_RELAXATION: 'Spa & Relaxation'
+} as const;
+
+export type BathBeautySubcategory = typeof BathBeautySubcategory[keyof typeof BathBeautySubcategory];
+
+// Books, Movies & Music Subcategories
+export const BooksMoviesMusicSubcategory = {
+  BOOKS: 'Books',
+  MOVIES: 'Movies',
+  MUSIC: 'Music (instruments, media, & accessories)'
+} as const;
+
+export type BooksMoviesMusicSubcategory = typeof BooksMoviesMusicSubcategory[keyof typeof BooksMoviesMusicSubcategory];
+
+// Clothing Subcategories
+export const ClothingSubcategory = {
+  BOYS_CLOTHING: 'Boys\' Clothing',
+  GENDER_NEUTRAL_ADULT_CLOTHING: 'Gender-Neutral Adult Clothing',
+  GENDER_NEUTRAL_KIDS_CLOTHING: 'Gender-Neutral Kids\' Clothing',
+  GIRLS_CLOTHING: 'Girls\' Clothing',
+  MENS_CLOTHING: 'Men\'s Clothing',
+  WOMENS_CLOTHING: 'Women\'s Clothing'
+} as const;
+
+export type ClothingSubcategory = typeof ClothingSubcategory[keyof typeof ClothingSubcategory];
+
+// Craft Supplies & Tools Subcategories
+export const CraftSuppliesToolsSubcategory = {
+  BEADS_GEMS_CABOCHONS: 'Beads, Gems & Cabochons',
+  BEAUTY_SUPPLIES: 'Beauty Supplies',
+  BLANKS: 'Blanks',
+  BRUSHES: 'Brushes',
+  CANVAS_SURFACES: 'Canvas & Surfaces',
+  FABRIC_NOTIONS: 'Fabric & Notions',
+  PATTERNS_HOW_TOS: 'Patterns & How-Tos',
+  STAMPS_INKS_PAINTS: 'Stamps, Inks & Paints',
+  TOOLS_EQUIPMENT: 'Tools & Equipment',
+  YARN_FIBER: 'Yarn & Fiber'
+} as const;
+
+export type CraftSuppliesToolsSubcategory = typeof CraftSuppliesToolsSubcategory[keyof typeof CraftSuppliesToolsSubcategory];
+
+// Electronics & Accessories Subcategories
+export const ElectronicsAccessoriesSubcategory = {
+  AUDIO: 'Audio',
+  BATTERIES_CHARGING: 'Batteries & Charging',
+  CABLES_CORDS: 'Cables & Cords',
+  CAMERAS_EQUIPMENT: 'Cameras & Equipment',
+  CAR_PARTS_ACCESSORIES: 'Car Parts & Accessories',
+  CELL_PHONE_ACCESSORIES: 'Cell-Phone Accessories',
+  COMPUTERS_PERIPHERALS: 'Computers & Peripherals',
+  DECALS_SKINS: 'Decals & Skins',
+  DOCKING_STANDS: 'Docking & Stands',
+  ELECTRONICS_CASES: 'Electronics Cases',
+  GADGETS: 'Gadgets',
+  MAKER_SUPPLIES: 'Maker Supplies',
+  PARTS_ELECTRICAL: 'Parts & Electrical',
+  TV_PROJECTION: 'TV & Projection',
+  TELEPHONES_HANDSETS: 'Telephones & Handsets',
+  VIDEO_GAMES: 'Video Games'
+} as const;
+
+export type ElectronicsAccessoriesSubcategory = typeof ElectronicsAccessoriesSubcategory[keyof typeof ElectronicsAccessoriesSubcategory];
 
 // Home & Living Subcategories
 export const HomeLivingSubcategory = {
-  CUSHIONS: 'Cushions',
-  DECOR: 'Decor',
-  CANDLES: 'Candles',
-  PLANTS: 'Plants',
-  WALL_HANGINGS: 'Wall Hangings',
-  BASKETS: 'Baskets',
-  MATS: 'Mats',
-  TABLEWARE: 'Tableware',
-  CERAMICS: 'Ceramics',
-  STORAGE_BOXES: 'Storage Boxes',
-  PLANTERS: 'Planters'
+  BATHROOM: 'Bathroom',
+  BEDDING: 'Bedding',
+  CLEANING_SUPPLIES: 'Cleaning Supplies',
+  FOOD_DRINK: 'Food & Drink',
+  HOME_DECOR: 'Home Décor',
+  KITCHEN_DINING: 'Kitchen & Dining',
+  LIGHTING: 'Lighting',
+  OFFICE: 'Office',
+  OUTDOOR_GARDENING: 'Outdoor & Gardening',
+  SPIRITUALITY_RELIGION: 'Spirituality & Religion',
+  STORAGE_ORGANIZATION: 'Storage & Organization',
+  WALL_DECOR_FRAMES: 'Wall Décor & Frames',
+  FURNITURE: 'Furniture'
 } as const;
 
 export type HomeLivingSubcategory = typeof HomeLivingSubcategory[keyof typeof HomeLivingSubcategory];
 
-// Health & Beauty Subcategories
-export const HealthBeautyLocalSubcategory = {
-  AYURVEDA: 'Ayurveda',
-  OILS: 'Oils',
-  SOAPS: 'Soaps',
-  CREAMS: 'Creams',
-  BALMS: 'Balms',
-  SCRUBS: 'Scrubs',
-  BATH_BOMBS: 'Bath Bombs',
-  HAIR_CARE: 'Hair Care',
-  FACE_MASKS: 'Face Masks',
-  ESSENTIAL_OILS: 'Essential Oils'
+// Jewelry Subcategories
+export const JewelrySubcategory = {
+  ANKLETS: 'Anklets',
+  BRACELETS: 'Bracelets',
+  BROOCHES: 'Brooches',
+  CUFF_LINKS_TIE_CLIPS: 'Cuff Links & Tie Clips',
+  EARRINGS: 'Earrings',
+  HAIR_JEWELRY: 'Hair Jewelry',
+  JEWELRY_SETS: 'Jewelry Sets',
+  NECKLACES: 'Necklaces',
+  RINGS: 'Rings',
+  WATCHES: 'Watches'
 } as const;
 
-export type HealthBeautyLocalSubcategory = typeof HealthBeautyLocalSubcategory[keyof typeof HealthBeautyLocalSubcategory];
+export type JewelrySubcategory = typeof JewelrySubcategory[keyof typeof JewelrySubcategory];
 
-// Toys & Baby Subcategories
-export const ToysBabySubcategory = {
-  SOFT_TOYS: 'Soft Toys',
-  BABY_CLOTHING: 'Baby Clothing',
-  BABY_CARE: 'Baby Care',
-  EDUCATIONAL_TOYS: 'Educational Toys',
-  WOODEN_TOYS: 'Wooden Toys'
-} as const;
-
-export type ToysBabySubcategory = typeof ToysBabySubcategory[keyof typeof ToysBabySubcategory];
-
-// Stationery & Gifts Subcategories
-export const StationeryGiftsSubcategory = {
-  NOTEBOOKS: 'Notebooks',
-  JOURNALS: 'Journals',
+// Paper & Party Supplies Subcategories
+export const PaperPartySuppliesSubcategory = {
   GREETING_CARDS: 'Greeting Cards',
-  GIFT_PACKS: 'Gift Packs',
-  BOOKMARKS: 'Bookmarks',
-  CALENDARS: 'Calendars'
+  INVITATIONS_ANNOUNCEMENTS: 'Invitations & Announcements',
+  PARTY_DECORATIONS: 'Party Decorations',
+  PARTY_FAVORS_GAMES: 'Party Favors & Games',
+  PARTY_SUPPLIES: 'Party Supplies',
+  STATIONERY: 'Stationery'
 } as const;
 
-export type StationeryGiftsSubcategory = typeof StationeryGiftsSubcategory[keyof typeof StationeryGiftsSubcategory];
-
-// Weddings & Events Subcategories
-export const WeddingsEventsSubcategory = {
-  PARTY_DECOR: 'Party Decor',
-  WEDDING_GIFTS: 'Wedding Gifts',
-  EVENT_FAVORS: 'Event Favors',
-  HANDMADE_BOUQUETS: 'Handmade Bouquets'
-} as const;
-
-export type WeddingsEventsSubcategory = typeof WeddingsEventsSubcategory[keyof typeof WeddingsEventsSubcategory];
+export type PaperPartySuppliesSubcategory = typeof PaperPartySuppliesSubcategory[keyof typeof PaperPartySuppliesSubcategory];
 
 // Pet Supplies Subcategories
 export const PetSuppliesSubcategory = {
-  PET_FOOD: 'Pet Food',
-  PET_CLOTHING: 'Pet Clothing',
-  PET_ACCESSORIES: 'Pet Accessories',
-  PET_TOYS: 'Pet Toys'
+  BIRD_SUPPLIES: 'Bird Supplies',
+  CAT_SUPPLIES: 'Cat Supplies',
+  DOG_SUPPLIES: 'Dog Supplies',
+  FISH_AQUATIC: 'Fish & Aquatic',
+  PET_MEMORIALS_URNS: 'Pet Memorials & Urns',
+  PET_TOYS: 'Pet Toys',
+  REPTILE_AMPHIBIAN: 'Reptile & Amphibian',
+  SMALL_PET_SUPPLIES: 'Small-Pet Supplies'
 } as const;
 
 export type PetSuppliesSubcategory = typeof PetSuppliesSubcategory[keyof typeof PetSuppliesSubcategory];
 
-// Digital Categories Subcategories
-
-// eBooks & Magazines Subcategories
-export const EbooksMagazinesSubcategory = {
-  FICTION: 'Fiction',
-  NON_FICTION: 'Non-Fiction',
-  EDUCATIONAL: 'Educational',
-  SELF_HELP: 'Self-Help',
-  TRAVEL_GUIDES: 'Travel Guides',
-  COOKBOOKS: 'Cookbooks',
-  BUSINESS: 'Business',
-  MAGAZINES: 'Magazines',
-  POETRY: 'Poetry',
-  CHILDRENS_BOOKS: 'Children\'s Books'
+// Shoes Subcategories
+export const ShoesSubcategory = {
+  BABY_SHOES: 'Baby Shoes',
+  BOOTS: 'Boots',
+  FLATS_LOAFERS_OXFORDS: 'Flats, Loafers & Oxfords',
+  HEELS: 'Heels',
+  SANDALS: 'Sandals',
+  SLIPPERS: 'Slippers',
+  SNEAKERS: 'Sneakers',
+  SHOE_CARE_ACCESSORIES: 'Shoe Care & Accessories'
 } as const;
 
-export type EbooksMagazinesSubcategory = typeof EbooksMagazinesSubcategory[keyof typeof EbooksMagazinesSubcategory];
+export type ShoesSubcategory = typeof ShoesSubcategory[keyof typeof ShoesSubcategory];
 
-// Music & Audio Subcategories
-export const MusicAudioSubcategory = {
-  INSTRUMENTAL: 'Instrumental',
-  VOCAL: 'Vocal',
-  TRADITIONAL: 'Traditional Music',
-  MODERN: 'Modern Music',
-  SOUND_EFFECTS: 'Sound Effects',
-  PODCASTS: 'Podcasts',
-  AUDIOBOOKS: 'Audiobooks',
-  MEDITATION: 'Meditation & Relaxation',
-  NATURE_SOUNDS: 'Nature Sounds'
+// Toys & Games Subcategories
+export const ToysGamesSubcategory = {
+  BABY_TODDLER_TOYS: 'Baby & Toddler Toys',
+  DOLLS_ACTION_FIGURES: 'Dolls & Action Figures',
+  GAMES_PUZZLES: 'Games & Puzzles',
+  LEARNING_SCHOOL: 'Learning & School',
+  SPORTS_OUTDOOR_PLAY: 'Sports & Outdoor Play',
+  STUFFED_ANIMALS_PLUSHIES: 'Stuffed Animals & Plushies'
 } as const;
 
-export type MusicAudioSubcategory = typeof MusicAudioSubcategory[keyof typeof MusicAudioSubcategory];
+export type ToysGamesSubcategory = typeof ToysGamesSubcategory[keyof typeof ToysGamesSubcategory];
 
-// Software & Apps Subcategories
-export const SoftwareAppsSubcategory = {
-  MOBILE_APPS: 'Mobile Apps',
-  WEB_APPS: 'Web Applications',
-  PRODUCTIVITY: 'Productivity Tools',
-  EDUCATIONAL_SOFTWARE: 'Educational Software',
-  GAMES: 'Games',
-  UTILITIES: 'Utilities',
-  PLUGINS: 'Plugins & Extensions'
+// Weddings Subcategories
+export const WeddingsSubcategory = {
+  BRIDAL_ACCESSORIES: 'Bridal Accessories',
+  BRIDAL_PARTY_ACCESSORIES: 'Bridal Party Accessories',
+  WEDDING_BOUQUETS_CORSAGES: 'Bouquets & Corsages',
+  CAKE_TOPPERS: 'Cake Toppers',
+  WEDDING_CLOTHING: 'Clothing',
+  WEDDING_DECORATIONS: 'Decorations',
+  WEDDING_FAVORS_GIFTS: 'Favors & Gifts',
+  WEDDING_INVITATIONS_PAPER: 'Invitations & Paper',
+  WEDDING_JEWELRY: 'Jewelry',
+  WEDDING_SHOES: 'Shoes'
 } as const;
 
-export type SoftwareAppsSubcategory = typeof SoftwareAppsSubcategory[keyof typeof SoftwareAppsSubcategory];
+export type WeddingsSubcategory = typeof WeddingsSubcategory[keyof typeof WeddingsSubcategory];
 
-// Courses & Tutorials Subcategories
-export const CoursesTutorialsSubcategory = {
-  COOKING: 'Cooking Classes',
-  ARTS_CRAFTS: 'Arts & Crafts',
-  BUSINESS: 'Business & Entrepreneurship',
-  TECHNOLOGY: 'Technology',
-  LANGUAGES: 'Languages',
-  MUSIC: 'Music Lessons',
-  FITNESS: 'Fitness & Health',
-  PHOTOGRAPHY: 'Photography',
-  PERSONAL_DEVELOPMENT: 'Personal Development'
-} as const;
+// Category interface
+export interface Category {
+  type: ItemType;
+  name: EtsyCategory;
+  subcategories: string[];
+}
 
-export type CoursesTutorialsSubcategory = typeof CoursesTutorialsSubcategory[keyof typeof CoursesTutorialsSubcategory];
-
-// Digital Art & Graphics Subcategories
-export const DigitalArtSubcategory = {
-  ILLUSTRATIONS: 'Illustrations',
-  LOGOS: 'Logos',
-  ICONS: 'Icons',
-  WALLPAPERS: 'Wallpapers',
-  DIGITAL_PAINTINGS: 'Digital Paintings',
-  GRAPHIC_DESIGNS: 'Graphic Designs',
-  PATTERNS: 'Patterns & Textures',
-  CLIPART: 'Clipart'
-} as const;
-
-export type DigitalArtSubcategory = typeof DigitalArtSubcategory[keyof typeof DigitalArtSubcategory];
-
-// Photography & Stock Images Subcategories
-export const PhotographySubcategory = {
-  NATURE: 'Nature Photography',
-  PORTRAITS: 'Portraits',
-  LANDSCAPES: 'Landscapes',
-  ARCHITECTURE: 'Architecture',
-  FOOD: 'Food Photography',
-  BUSINESS: 'Business & Corporate',
-  STOCK_PHOTOS: 'Stock Photos',
-  EVENT_PHOTOGRAPHY: 'Event Photography'
-} as const;
-
-export type PhotographySubcategory = typeof PhotographySubcategory[keyof typeof PhotographySubcategory];
-
-// Templates & Designs Subcategories
-export const TemplatesDesignsSubcategory = {
-  WEBSITE_TEMPLATES: 'Website Templates',
-  PRESENTATION_TEMPLATES: 'Presentation Templates',
-  RESUME_TEMPLATES: 'Resume Templates',
-  INVITATION_TEMPLATES: 'Invitation Templates',
-  BUSINESS_CARDS: 'Business Card Templates',
-  SOCIAL_MEDIA: 'Social Media Templates',
-  PRINT_DESIGNS: 'Print Design Templates'
-} as const;
-
-export type TemplatesDesignsSubcategory = typeof TemplatesDesignsSubcategory[keyof typeof TemplatesDesignsSubcategory];
-
-// Videos & Films Subcategories
-export const VideosFilmsSubcategory = {
-  SHORT_FILMS: 'Short Films',
-  DOCUMENTARIES: 'Documentaries',
-  TUTORIALS: 'Video Tutorials',
-  ANIMATIONS: 'Animations',
-  STOCK_FOOTAGE: 'Stock Footage',
-  MUSIC_VIDEOS: 'Music Videos',
-  PROMOTIONAL: 'Promotional Videos'
-} as const;
-
-export type VideosFilmsSubcategory = typeof VideosFilmsSubcategory[keyof typeof VideosFilmsSubcategory];
-
-// Games Subcategories
-export const GamesSubcategory = {
-  MOBILE_GAMES: 'Mobile Games',
-  PC_GAMES: 'PC Games',
-  BROWSER_GAMES: 'Browser Games',
-  EDUCATIONAL_GAMES: 'Educational Games',
-  PUZZLE_GAMES: 'Puzzle Games',
-  ADVENTURE_GAMES: 'Adventure Games'
-} as const;
-
-export type GamesSubcategory = typeof GamesSubcategory[keyof typeof GamesSubcategory];
-
-// Documents & Guides Subcategories
-export const DocumentsGuidesSubcategory = {
-  BUSINESS_PLANS: 'Business Plans',
-  LEGAL_DOCUMENTS: 'Legal Documents',
-  HOW_TO_GUIDES: 'How-to Guides',
-  CHECKLISTS: 'Checklists',
-  FORMS: 'Forms & Templates',
-  RESEARCH_PAPERS: 'Research Papers',
-  MANUALS: 'Manuals & Instructions'
-} as const;
-
-export type DocumentsGuidesSubcategory = typeof DocumentsGuidesSubcategory[keyof typeof DocumentsGuidesSubcategory];
-
-// Combined categories structure for easier use
-export const categories = [
-  // Physical Products
+// Combined categories structure
+export const categories: Category[] = [
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.FOOD_SNACKS,
-    subcategories: Object.values(FoodSnacksSubcategory)
+    name: EtsyCategory.ACCESSORIES,
+    subcategories: Object.values(AccessoriesSubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.CLOTHING_ACCESSORIES,
-    subcategories: Object.values(ClothingAccessoriesSubcategory)
+    name: EtsyCategory.ART_COLLECTIBLES,
+    subcategories: Object.values(ArtCollectiblesSubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.ART_CRAFTS,
-    subcategories: Object.values(ArtCraftsSubcategory)
+    name: EtsyCategory.BAGS_PURSES,
+    subcategories: Object.values(BagsPursesSubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.HOME_LIVING,
+    name: EtsyCategory.BATH_BEAUTY,
+    subcategories: Object.values(BathBeautySubcategory)
+  },
+  {
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.BOOKS_MOVIES_MUSIC,
+    subcategories: Object.values(BooksMoviesMusicSubcategory)
+  },
+  {
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.CLOTHING,
+    subcategories: Object.values(ClothingSubcategory)
+  },
+  {
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.CRAFT_SUPPLIES_TOOLS,
+    subcategories: Object.values(CraftSuppliesToolsSubcategory)
+  },
+  {
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.ELECTRONICS_ACCESSORIES,
+    subcategories: Object.values(ElectronicsAccessoriesSubcategory)
+  },
+  {
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.HOME_LIVING,
     subcategories: Object.values(HomeLivingSubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.HEALTH_BEAUTY,
-    subcategories: Object.values(HealthBeautyLocalSubcategory)
+    name: EtsyCategory.JEWELRY,
+    subcategories: Object.values(JewelrySubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.TOYS_BABY,
-    subcategories: Object.values(ToysBabySubcategory)
+    name: EtsyCategory.PAPER_PARTY_SUPPLIES,
+    subcategories: Object.values(PaperPartySuppliesSubcategory)
   },
   {
     type: ItemType.PHYSICAL,
-    name: LocalCategory.STATIONERY_GIFTS,
-    subcategories: Object.values(StationeryGiftsSubcategory)
-  },
-  {
-    type: ItemType.PHYSICAL,
-    name: LocalCategory.WEDDINGS_EVENTS,
-    subcategories: Object.values(WeddingsEventsSubcategory)
-  },
-  {
-    type: ItemType.PHYSICAL,
-    name: LocalCategory.PET_SUPPLIES,
+    name: EtsyCategory.PET_SUPPLIES,
     subcategories: Object.values(PetSuppliesSubcategory)
   },
-  // Digital Products
   {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.EBOOKS_MAGAZINES,
-    subcategories: Object.values(EbooksMagazinesSubcategory)
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.SHOES,
+    subcategories: Object.values(ShoesSubcategory)
   },
   {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.MUSIC_AUDIO,
-    subcategories: Object.values(MusicAudioSubcategory)
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.TOYS_GAMES,
+    subcategories: Object.values(ToysGamesSubcategory)
   },
   {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.SOFTWARE_APPS,
-    subcategories: Object.values(SoftwareAppsSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.COURSES_TUTORIALS,
-    subcategories: Object.values(CoursesTutorialsSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.DIGITAL_ART,
-    subcategories: Object.values(DigitalArtSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.PHOTOGRAPHY,
-    subcategories: Object.values(PhotographySubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.TEMPLATES_DESIGNS,
-    subcategories: Object.values(TemplatesDesignsSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.VIDEOS_FILMS,
-    subcategories: Object.values(VideosFilmsSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.GAMES,
-    subcategories: Object.values(GamesSubcategory)
-  },
-  {
-    type: ItemType.DIGITAL,
-    name: LocalCategory.DOCUMENTS_GUIDES,
-    subcategories: Object.values(DocumentsGuidesSubcategory)
+    type: ItemType.PHYSICAL,
+    name: EtsyCategory.WEDDINGS,
+    subcategories: Object.values(WeddingsSubcategory)
   }
-] as const;
+];
 
-export const categoryIcons: Record<LocalCategory, string> = {
-  [LocalCategory.FOOD_SNACKS]: "🍱",
-  [LocalCategory.CLOTHING_ACCESSORIES]: "🧣",
-  [LocalCategory.ART_CRAFTS]: "🎨",
-  [LocalCategory.HOME_LIVING]: "🏡",
-  [LocalCategory.HEALTH_BEAUTY]: "💅",
-  [LocalCategory.TOYS_BABY]: "🧸",
-  [LocalCategory.STATIONERY_GIFTS]: "📒",
-  [LocalCategory.WEDDINGS_EVENTS]: "🎁",
-  [LocalCategory.PET_SUPPLIES]: "🐾",
-  [LocalCategory.EBOOKS_MAGAZINES]: "📚",
-  [LocalCategory.MUSIC_AUDIO]: "🎶",
-  [LocalCategory.SOFTWARE_APPS]: "💻",
-  [LocalCategory.COURSES_TUTORIALS]: "🎓",
-  [LocalCategory.DIGITAL_ART]: "🖌️",
-  [LocalCategory.PHOTOGRAPHY]: "📸",
-  [LocalCategory.TEMPLATES_DESIGNS]: "🖥️",
-  [LocalCategory.VIDEOS_FILMS]: "🎬",
-  [LocalCategory.GAMES]: "🎮",
-  [LocalCategory.DOCUMENTS_GUIDES]: "📄"
+// Category icons mapping
+export const categoryIcons: Record<EtsyCategory, string> = {
+  [EtsyCategory.ACCESSORIES]: "👜",
+  [EtsyCategory.ART_COLLECTIBLES]: "🎨",
+  [EtsyCategory.BAGS_PURSES]: "👛",
+  [EtsyCategory.BATH_BEAUTY]: "🧴",
+  [EtsyCategory.BOOKS_MOVIES_MUSIC]: "📚",
+  [EtsyCategory.CLOTHING]: "👕",
+  [EtsyCategory.CRAFT_SUPPLIES_TOOLS]: "✂️",
+  [EtsyCategory.ELECTRONICS_ACCESSORIES]: "📱",
+  [EtsyCategory.HOME_LIVING]: "🏠",
+  [EtsyCategory.JEWELRY]: "💍",
+  [EtsyCategory.PAPER_PARTY_SUPPLIES]: "🎉",
+  [EtsyCategory.PET_SUPPLIES]: "🐾",
+  [EtsyCategory.SHOES]: "👟",
+  [EtsyCategory.TOYS_GAMES]: "🧸",
+  [EtsyCategory.WEDDINGS]: "💒"
 };
 
+// Subcategory icons mapping
 export const subCategoryIcons: Record<string, string> = {
-  // Food & Snacks
-  [FoodSnacksSubcategory.SWEETS]: "🍬",
-  [FoodSnacksSubcategory.SHORT_EATS]: "🥟",
-  [FoodSnacksSubcategory.JAMS]: "🍯",
-  [FoodSnacksSubcategory.PICKLES]: "🥒",
-  [FoodSnacksSubcategory.DRINKS]: "🥤",
-  [FoodSnacksSubcategory.CHUTNEYS]: "🍲",
-  [FoodSnacksSubcategory.SPICES]: "🌶️",
-  [FoodSnacksSubcategory.SNACKS]: "🍘",
-  [FoodSnacksSubcategory.KITHUL_TREACLE]: "🍯",
-  [FoodSnacksSubcategory.TRADITIONAL_FOODS]: "🍛",
-  [FoodSnacksSubcategory.RICE_FLOUR_PRODUCTS]: "🍚",
-  // Clothing & Accessories
-  [ClothingAccessoriesSubcategory.SAREES]: "👗",
-  [ClothingAccessoriesSubcategory.HANDLOOM]: "🧵",
-  [ClothingAccessoriesSubcategory.JEWELRY]: "💍",
-  [ClothingAccessoriesSubcategory.BAGS]: "👜",
-  [ClothingAccessoriesSubcategory.SHIRTS_TOPS]: "👕",
-  [ClothingAccessoriesSubcategory.SARONGS]: "🩳",
-  [ClothingAccessoriesSubcategory.T_SHIRTS]: "👔",
-  [ClothingAccessoriesSubcategory.DRESSES]: "👗",
-  [ClothingAccessoriesSubcategory.KIDS_CLOTHING]: "🧒",
-  [ClothingAccessoriesSubcategory.HEADWEAR]: "🎩",
-  [ClothingAccessoriesSubcategory.FOOTWEAR]: "👡",
-  [ClothingAccessoriesSubcategory.BELTS]: "🪢",
-  // Art & Crafts
-  [ArtCraftsSubcategory.PAINTINGS]: "🖼️",
-  [ArtCraftsSubcategory.POTTERY]: "🏺",
-  [ArtCraftsSubcategory.WOODWORK]: "🪵",
-  [ArtCraftsSubcategory.BATIK]: "🖌️",
-  [ArtCraftsSubcategory.MASKS]: "🎭",
-  [ArtCraftsSubcategory.GREETING_CARDS]: "💌",
-  [ArtCraftsSubcategory.HANDMADE_BOOKS]: "📚",
-  [ArtCraftsSubcategory.BEADWORK]: "📿",
-  [ArtCraftsSubcategory.MACRAME]: "🪢",
-  [ArtCraftsSubcategory.PAPERCRAFT]: "📄",
-  [ArtCraftsSubcategory.UPCYCLED_ITEMS]: "♻️",
+  // Accessories
+  [AccessoriesSubcategory.BABY_ACCESSORIES]: "👶",
+  [AccessoriesSubcategory.BELTS_SUSPENDERS]: "🎗️",
+  [AccessoriesSubcategory.BOUQUETS_CORSAGES]: "💐",
+  [AccessoriesSubcategory.COSTUME_ACCESSORIES]: "🎭",
+  [AccessoriesSubcategory.GLOVES_MITTENS]: "🧤",
+  [AccessoriesSubcategory.HAIR_ACCESSORIES]: "🎀",
+  [AccessoriesSubcategory.HAND_FANS]: "🪭",
+  [AccessoriesSubcategory.HATS_CAPS]: "🎩",
+  [AccessoriesSubcategory.KEYCHAINS_LANYARDS]: "🔑",
+  [AccessoriesSubcategory.LATKANS]: "🪅",
+  [AccessoriesSubcategory.PATCHES_PINS]: "📌",
+  [AccessoriesSubcategory.SCARVES_WRAPS]: "🧣",
+  [AccessoriesSubcategory.SUIT_TIE_ACCESSORIES]: "👔",
+  [AccessoriesSubcategory.SUNGLASSES_EYEWEAR]: "🕶️",
+  [AccessoriesSubcategory.UMBRELLAS_RAIN_ACCESSORIES]: "☂️",
+  
+  // Art & Collectibles
+  [ArtCollectiblesSubcategory.ARTIST_TRADING_CARDS]: "🃏",
+  [ArtCollectiblesSubcategory.COLLECTIBLES]: "🏺",
+  [ArtCollectiblesSubcategory.DOLLS_MINIATURES]: "🪆",
+  [ArtCollectiblesSubcategory.DRAWING_ILLUSTRATION]: "✏️",
+  [ArtCollectiblesSubcategory.FIBER_ARTS]: "🧵",
+  [ArtCollectiblesSubcategory.FINE_ART_CERAMICS]: "🏺",
+  [ArtCollectiblesSubcategory.GLASS_ART]: "🍷",
+  [ArtCollectiblesSubcategory.MIXED_MEDIA_COLLAGE]: "🎨",
+  [ArtCollectiblesSubcategory.PAINTING]: "🖼️",
+  [ArtCollectiblesSubcategory.PHOTOGRAPHY]: "📸",
+  [ArtCollectiblesSubcategory.PRINTS]: "🖨️",
+  [ArtCollectiblesSubcategory.SCULPTURE]: "🗿",
+  
+  // Bags & Purses
+  [BagsPursesSubcategory.ACCESSORY_CASES]: "💼",
+  [BagsPursesSubcategory.BACKPACKS]: "🎒",
+  [BagsPursesSubcategory.CLOTHING_SHOE_BAGS]: "👗",
+  [BagsPursesSubcategory.COSMETIC_TOILETRY_STORAGE]: "💄",
+  [BagsPursesSubcategory.DIAPER_BAGS]: "👶",
+  [BagsPursesSubcategory.FANNY_PACKS]: "🎪",
+  [BagsPursesSubcategory.FOOD_INSULATED_BAGS]: "🧊",
+  [BagsPursesSubcategory.HANDBAGS]: "👜",
+  [BagsPursesSubcategory.LUGGAGE_TRAVEL]: "🧳",
+  [BagsPursesSubcategory.MARKET_BAGS]: "🛍️",
+  [BagsPursesSubcategory.MESSENGER_BAGS]: "📫",
+  [BagsPursesSubcategory.POUCHES_COIN_PURSES]: "👛",
+  [BagsPursesSubcategory.SPORTS_BAGS]: "⚽",
+  [BagsPursesSubcategory.TOTES]: "🛒",
+  [BagsPursesSubcategory.WALLETS_MONEY_CLIPS]: "💰",
+  
+  // Bath & Beauty
+  [BathBeautySubcategory.BABY_CHILD_CARE]: "👶",
+  [BathBeautySubcategory.BATH_ACCESSORIES]: "🛁",
+  [BathBeautySubcategory.ESSENTIAL_OILS]: "🧴",
+  [BathBeautySubcategory.FRAGRANCES]: "🌸",
+  [BathBeautySubcategory.HAIR_CARE]: "💇‍♀️",
+  [BathBeautySubcategory.MAKEUP_COSMETICS]: "💄",
+  [BathBeautySubcategory.PERSONAL_CARE]: "🧼",
+  [BathBeautySubcategory.SKIN_CARE]: "🧴",
+  [BathBeautySubcategory.SOAPS]: "🧼",
+  [BathBeautySubcategory.SPA_RELAXATION]: "🧘‍♀️",
+  
+  // Books, Movies & Music
+  [BooksMoviesMusicSubcategory.BOOKS]: "📖",
+  [BooksMoviesMusicSubcategory.MOVIES]: "🎬",
+  [BooksMoviesMusicSubcategory.MUSIC]: "🎵",
+  
+  // Clothing
+  [ClothingSubcategory.BOYS_CLOTHING]: "👦",
+  [ClothingSubcategory.GENDER_NEUTRAL_ADULT_CLOTHING]: "👤",
+  [ClothingSubcategory.GENDER_NEUTRAL_KIDS_CLOTHING]: "🧒",
+  [ClothingSubcategory.GIRLS_CLOTHING]: "👧",
+  [ClothingSubcategory.MENS_CLOTHING]: "👨",
+  [ClothingSubcategory.WOMENS_CLOTHING]: "👩",
+  
+  // Craft Supplies & Tools
+  [CraftSuppliesToolsSubcategory.BEADS_GEMS_CABOCHONS]: "📿",
+  [CraftSuppliesToolsSubcategory.BEAUTY_SUPPLIES]: "💄",
+  [CraftSuppliesToolsSubcategory.BLANKS]: "⬜",
+  [CraftSuppliesToolsSubcategory.BRUSHES]: "🖌️",
+  [CraftSuppliesToolsSubcategory.CANVAS_SURFACES]: "🖼️",
+  [CraftSuppliesToolsSubcategory.FABRIC_NOTIONS]: "🧵",
+  [CraftSuppliesToolsSubcategory.PATTERNS_HOW_TOS]: "📝",
+  [CraftSuppliesToolsSubcategory.STAMPS_INKS_PAINTS]: "🎨",
+  [CraftSuppliesToolsSubcategory.TOOLS_EQUIPMENT]: "🔧",
+  [CraftSuppliesToolsSubcategory.YARN_FIBER]: "🧶",
+  
+  // Electronics & Accessories
+  [ElectronicsAccessoriesSubcategory.AUDIO]: "🔊",
+  [ElectronicsAccessoriesSubcategory.BATTERIES_CHARGING]: "🔋",
+  [ElectronicsAccessoriesSubcategory.CABLES_CORDS]: "🔌",
+  [ElectronicsAccessoriesSubcategory.CAMERAS_EQUIPMENT]: "📷",
+  [ElectronicsAccessoriesSubcategory.CAR_PARTS_ACCESSORIES]: "🚗",
+  [ElectronicsAccessoriesSubcategory.CELL_PHONE_ACCESSORIES]: "📱",
+  [ElectronicsAccessoriesSubcategory.COMPUTERS_PERIPHERALS]: "💻",
+  [ElectronicsAccessoriesSubcategory.DECALS_SKINS]: "🏷️",
+  [ElectronicsAccessoriesSubcategory.DOCKING_STANDS]: "📱",
+  [ElectronicsAccessoriesSubcategory.ELECTRONICS_CASES]: "📦",
+  [ElectronicsAccessoriesSubcategory.GADGETS]: "🔧",
+  [ElectronicsAccessoriesSubcategory.MAKER_SUPPLIES]: "🛠️",
+  [ElectronicsAccessoriesSubcategory.PARTS_ELECTRICAL]: "⚡",
+  [ElectronicsAccessoriesSubcategory.TV_PROJECTION]: "📺",
+  [ElectronicsAccessoriesSubcategory.TELEPHONES_HANDSETS]: "☎️",
+  [ElectronicsAccessoriesSubcategory.VIDEO_GAMES]: "🎮",
+  
   // Home & Living
-  [HomeLivingSubcategory.CUSHIONS]: "🛋️",
-  [HomeLivingSubcategory.DECOR]: "🖼️",
-  [HomeLivingSubcategory.CANDLES]: "🕯️",
-  [HomeLivingSubcategory.PLANTS]: "🪴",
-  [HomeLivingSubcategory.WALL_HANGINGS]: "🪆",
-  [HomeLivingSubcategory.BASKETS]: "🧺",
-  [HomeLivingSubcategory.MATS]: "🧻",
-  [HomeLivingSubcategory.TABLEWARE]: "🥢",
-  [HomeLivingSubcategory.CERAMICS]: "🍶",
-  [HomeLivingSubcategory.STORAGE_BOXES]: "📦",
-  [HomeLivingSubcategory.PLANTERS]: "🪴",
-  // Health & Beauty
-  [HealthBeautyLocalSubcategory.AYURVEDA]: "🌿",
-  [HealthBeautyLocalSubcategory.OILS]: "🧴",
-  [HealthBeautyLocalSubcategory.SOAPS]: "🧼",
-  [HealthBeautyLocalSubcategory.CREAMS]: "🥛",
-  [HealthBeautyLocalSubcategory.BALMS]: "💧",
-  [HealthBeautyLocalSubcategory.SCRUBS]: "🛁",
-  [HealthBeautyLocalSubcategory.BATH_BOMBS]: "🛀",
-  [HealthBeautyLocalSubcategory.HAIR_CARE]: "💇‍♀️",
-  [HealthBeautyLocalSubcategory.FACE_MASKS]: "😷",
-  [HealthBeautyLocalSubcategory.ESSENTIAL_OILS]: "🧪",
-  // Toys & Baby
-  [ToysBabySubcategory.SOFT_TOYS]: "🧸",
-  [ToysBabySubcategory.BABY_CLOTHING]: "🍼",
-  [ToysBabySubcategory.BABY_CARE]: "👶",
-  [ToysBabySubcategory.EDUCATIONAL_TOYS]: "🎲",
-  [ToysBabySubcategory.WOODEN_TOYS]: "🪆",
-  // Stationery & Gifts
-  [StationeryGiftsSubcategory.NOTEBOOKS]: "📒",
-  [StationeryGiftsSubcategory.JOURNALS]: "📓",
-  [StationeryGiftsSubcategory.GIFT_PACKS]: "🎁",
-  [StationeryGiftsSubcategory.BOOKMARKS]: "🔖",
-  [StationeryGiftsSubcategory.CALENDARS]: "📆",
-  // Weddings & Events
-  [WeddingsEventsSubcategory.PARTY_DECOR]: "🎉",
-  [WeddingsEventsSubcategory.WEDDING_GIFTS]: "💝",
-  [WeddingsEventsSubcategory.EVENT_FAVORS]: "🎊",
-  [WeddingsEventsSubcategory.HANDMADE_BOUQUETS]: "💐",
+  [HomeLivingSubcategory.BATHROOM]: "🚿",
+  [HomeLivingSubcategory.BEDDING]: "🛏️",
+  [HomeLivingSubcategory.CLEANING_SUPPLIES]: "🧽",
+  [HomeLivingSubcategory.FOOD_DRINK]: "🍽️",
+  [HomeLivingSubcategory.HOME_DECOR]: "🏠",
+  [HomeLivingSubcategory.KITCHEN_DINING]: "🍴",
+  [HomeLivingSubcategory.LIGHTING]: "💡",
+  [HomeLivingSubcategory.OFFICE]: "🏢",
+  [HomeLivingSubcategory.OUTDOOR_GARDENING]: "🌱",
+  [HomeLivingSubcategory.SPIRITUALITY_RELIGION]: "🕯️",
+  [HomeLivingSubcategory.STORAGE_ORGANIZATION]: "📦",
+  [HomeLivingSubcategory.WALL_DECOR_FRAMES]: "🖼️",
+  [HomeLivingSubcategory.FURNITURE]: "🪑",
+  
+  // Jewelry
+  [JewelrySubcategory.ANKLETS]: "👣",
+  [JewelrySubcategory.BRACELETS]: "📿",
+  [JewelrySubcategory.BROOCHES]: "📌",
+  [JewelrySubcategory.CUFF_LINKS_TIE_CLIPS]: "👔",
+  [JewelrySubcategory.EARRINGS]: "👂",
+  [JewelrySubcategory.HAIR_JEWELRY]: "💎",
+  [JewelrySubcategory.JEWELRY_SETS]: "💍",
+  [JewelrySubcategory.NECKLACES]: "📿",
+  [JewelrySubcategory.RINGS]: "💍",
+  [JewelrySubcategory.WATCHES]: "⌚",
+  
+  // Paper & Party Supplies
+  [PaperPartySuppliesSubcategory.GREETING_CARDS]: "💌",
+  [PaperPartySuppliesSubcategory.INVITATIONS_ANNOUNCEMENTS]: "💌",
+  [PaperPartySuppliesSubcategory.PARTY_DECORATIONS]: "🎊",
+  [PaperPartySuppliesSubcategory.PARTY_FAVORS_GAMES]: "🎁",
+  [PaperPartySuppliesSubcategory.PARTY_SUPPLIES]: "🎉",
+  [PaperPartySuppliesSubcategory.STATIONERY]: "📝",
+  
   // Pet Supplies
-  [PetSuppliesSubcategory.PET_FOOD]: "🥩",
-  [PetSuppliesSubcategory.PET_CLOTHING]: "🐕",
-  [PetSuppliesSubcategory.PET_ACCESSORIES]: "🦴",
-  [PetSuppliesSubcategory.PET_TOYS]: "🧶",
-  // eBooks & Magazines
-  [EbooksMagazinesSubcategory.FICTION]: "📖",
-  [EbooksMagazinesSubcategory.NON_FICTION]: "📚",
-  [EbooksMagazinesSubcategory.EDUCATIONAL]: "🎓",
-  [EbooksMagazinesSubcategory.SELF_HELP]: "💡",
-  [EbooksMagazinesSubcategory.TRAVEL_GUIDES]: "🗺️",
-  [EbooksMagazinesSubcategory.COOKBOOKS]: "🍳",
-  [EbooksMagazinesSubcategory.BUSINESS]: "💼",
-  [EbooksMagazinesSubcategory.MAGAZINES]: "📰",
-  [EbooksMagazinesSubcategory.POETRY]: "📜",
-  [EbooksMagazinesSubcategory.CHILDRENS_BOOKS]: "📚",
-  // Music & Audio
-  [MusicAudioSubcategory.INSTRUMENTAL]: "🎻",
-  [MusicAudioSubcategory.VOCAL]: "🎤",
-  [MusicAudioSubcategory.TRADITIONAL]: "🎶",
-  [MusicAudioSubcategory.MODERN]: "🎵",
-  [MusicAudioSubcategory.SOUND_EFFECTS]: "🔊",
-  [MusicAudioSubcategory.PODCASTS]: "🎧",
-  [MusicAudioSubcategory.AUDIOBOOKS]: "📚",
-  [MusicAudioSubcategory.MEDITATION]: "🧘‍♀️",
-  [MusicAudioSubcategory.NATURE_SOUNDS]: "🌳",
-  // Software & Apps
-  [SoftwareAppsSubcategory.MOBILE_APPS]: "📱",
-  [SoftwareAppsSubcategory.WEB_APPS]: "💻",
-  [SoftwareAppsSubcategory.PRODUCTIVITY]: "📈",
-  [SoftwareAppsSubcategory.EDUCATIONAL_SOFTWARE]: "🎓",
-  [SoftwareAppsSubcategory.GAMES]: "🎮",
-  [SoftwareAppsSubcategory.UTILITIES]: "🛠️",
-  [SoftwareAppsSubcategory.PLUGINS]: "🔌",
-  // Courses & Tutorials
-  [CoursesTutorialsSubcategory.COOKING]: "🍳",
-  [CoursesTutorialsSubcategory.ARTS_CRAFTS]: "🎨",
-  [CoursesTutorialsSubcategory.BUSINESS]: "💼",
-  [CoursesTutorialsSubcategory.TECHNOLOGY]: "💻",
-  [CoursesTutorialsSubcategory.LANGUAGES]: "🗣️",
-  [CoursesTutorialsSubcategory.MUSIC]: "🎶",
-  [CoursesTutorialsSubcategory.FITNESS]: "🏋️‍♀️",
-  [CoursesTutorialsSubcategory.PHOTOGRAPHY]: "📸",
-  [CoursesTutorialsSubcategory.PERSONAL_DEVELOPMENT]: "🌱",
-  // Digital Art & Graphics
-  [DigitalArtSubcategory.ILLUSTRATIONS]: "🖌️",
-  [DigitalArtSubcategory.LOGOS]: "🔤",
-  [DigitalArtSubcategory.ICONS]: "🖼️",
-  [DigitalArtSubcategory.WALLPAPERS]: "🖥️",
-  [DigitalArtSubcategory.DIGITAL_PAINTINGS]: "🎨",
-  [DigitalArtSubcategory.GRAPHIC_DESIGNS]: "🖌️",
-  [DigitalArtSubcategory.PATTERNS]: "🧵",
-  [DigitalArtSubcategory.CLIPART]: "🖼️",
-  // Photography & Stock Images
-  [PhotographySubcategory.NATURE]: "🌳",
-  [PhotographySubcategory.PORTRAITS]: "👤",
-  [PhotographySubcategory.LANDSCAPES]: "🏞️",
-  [PhotographySubcategory.ARCHITECTURE]: "🏛️",
-  [PhotographySubcategory.FOOD]: "🍽️",
-  [PhotographySubcategory.BUSINESS]: "💼",
-  [PhotographySubcategory.STOCK_PHOTOS]: "🖼️",
-  [PhotographySubcategory.EVENT_PHOTOGRAPHY]: "📸",
-  // Templates & Designs
-  [TemplatesDesignsSubcategory.WEBSITE_TEMPLATES]: "🖥️",
-  [TemplatesDesignsSubcategory.PRESENTATION_TEMPLATES]: "📊",
-  [TemplatesDesignsSubcategory.RESUME_TEMPLATES]: "📄",
-  [TemplatesDesignsSubcategory.INVITATION_TEMPLATES]: "✉️",
-  [TemplatesDesignsSubcategory.BUSINESS_CARDS]: "💳",
-  [TemplatesDesignsSubcategory.SOCIAL_MEDIA]: "📱",
-  [TemplatesDesignsSubcategory.PRINT_DESIGNS]: "🖨️",
-  // Videos & Films
-  [VideosFilmsSubcategory.SHORT_FILMS]: "🎥",
-  [VideosFilmsSubcategory.DOCUMENTARIES]: "📽️",
-  [VideosFilmsSubcategory.TUTORIALS]: "📹",
-  [VideosFilmsSubcategory.ANIMATIONS]: "🌀",
-  [VideosFilmsSubcategory.STOCK_FOOTAGE]: "🎞️",
-  [VideosFilmsSubcategory.MUSIC_VIDEOS]: "🎶",
-  [VideosFilmsSubcategory.PROMOTIONAL]: "📢",
-  // Games
-  [GamesSubcategory.MOBILE_GAMES]: "📱",
-  [GamesSubcategory.PC_GAMES]: "💻",
-  [GamesSubcategory.BROWSER_GAMES]: "🌐",
-  [GamesSubcategory.EDUCATIONAL_GAMES]: "🎓",
-  [GamesSubcategory.PUZZLE_GAMES]: "🧩",
-  [GamesSubcategory.ADVENTURE_GAMES]: "🗺️",
-  // Documents & Guides
-  [DocumentsGuidesSubcategory.BUSINESS_PLANS]: "📊",
-  [DocumentsGuidesSubcategory.LEGAL_DOCUMENTS]: "⚖️",
-  [DocumentsGuidesSubcategory.HOW_TO_GUIDES]: "📝",
-  [DocumentsGuidesSubcategory.CHECKLISTS]: "☑️",
-  [DocumentsGuidesSubcategory.FORMS]: "📄",
-  [DocumentsGuidesSubcategory.RESEARCH_PAPERS]: "📚",
-  [DocumentsGuidesSubcategory.MANUALS]: "📖"
+  [PetSuppliesSubcategory.BIRD_SUPPLIES]: "🐦",
+  [PetSuppliesSubcategory.CAT_SUPPLIES]: "🐱",
+  [PetSuppliesSubcategory.DOG_SUPPLIES]: "🐶",
+  [PetSuppliesSubcategory.FISH_AQUATIC]: "🐠",
+  [PetSuppliesSubcategory.PET_MEMORIALS_URNS]: "⚱️",
+  [PetSuppliesSubcategory.PET_TOYS]: "🧸",
+  [PetSuppliesSubcategory.REPTILE_AMPHIBIAN]: "🦎",
+  [PetSuppliesSubcategory.SMALL_PET_SUPPLIES]: "🐹",
+  
+  // Shoes
+  [ShoesSubcategory.BABY_SHOES]: "👶",
+  [ShoesSubcategory.BOOTS]: "🥾",
+  [ShoesSubcategory.FLATS_LOAFERS_OXFORDS]: "🥿",
+  [ShoesSubcategory.HEELS]: "👠",
+  [ShoesSubcategory.SANDALS]: "👡",
+  [ShoesSubcategory.SLIPPERS]: "🩴",
+  [ShoesSubcategory.SNEAKERS]: "👟",
+  [ShoesSubcategory.SHOE_CARE_ACCESSORIES]: "🧽",
+  
+  // Toys & Games
+  [ToysGamesSubcategory.BABY_TODDLER_TOYS]: "👶",
+  [ToysGamesSubcategory.DOLLS_ACTION_FIGURES]: "🪆",
+  [ToysGamesSubcategory.GAMES_PUZZLES]: "🧩",
+  [ToysGamesSubcategory.LEARNING_SCHOOL]: "📚",
+  [ToysGamesSubcategory.SPORTS_OUTDOOR_PLAY]: "⚽",
+  [ToysGamesSubcategory.STUFFED_ANIMALS_PLUSHIES]: "🧸",
+  
+  // Weddings
+  [WeddingsSubcategory.BRIDAL_ACCESSORIES]: "👰",
+  [WeddingsSubcategory.BRIDAL_PARTY_ACCESSORIES]: "💒",
+  "Bouquets & Corsages (Wedding)": "💐",
+  [WeddingsSubcategory.CAKE_TOPPERS]: "🎂",
+  [WeddingsSubcategory.WEDDING_CLOTHING]: "👗",
+  [WeddingsSubcategory.WEDDING_DECORATIONS]: "🎊",
+  [WeddingsSubcategory.WEDDING_FAVORS_GIFTS]: "🎁",
+  [WeddingsSubcategory.WEDDING_INVITATIONS_PAPER]: "💌",
+  [WeddingsSubcategory.WEDDING_JEWELRY]: "💍",
+  [WeddingsSubcategory.WEDDING_SHOES]: "👠"
 };
-
-

@@ -1253,16 +1253,16 @@ export default function CheckoutPage() {
               {/* Seller Notes */}
               {item.sellerNotes && (
                 <div className="mb-6 p-4 rounded-xl border" style={{ 
-                  backgroundColor: item.itemType === 'Digital' ? 'rgba(59, 130, 246, 0.05)' : 'rgba(34, 197, 94, 0.05)', 
-                  borderColor: item.itemType === 'Digital' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(34, 197, 94, 0.2)' 
+                  backgroundColor: 'rgba(34, 197, 94, 0.05)', 
+                  borderColor: 'rgba(34, 197, 94, 0.2)' 
                 }}>
                   <div className="flex items-start gap-3">
                     <span className="text-xl">
-                      {item.itemType === 'Digital' ? '💻' : '📦'}
+                      
                     </span>
                     <div className="flex-1">
                       <h5 className="font-semibold text-sm mb-2" style={{ color: '#0d0a0b' }}>
-                        {item.itemType === 'Digital' ? 'Download Instructions' : 'Delivery Information'}
+                        Delivery Information
                       </h5>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#454955' }}>
                         {item.sellerNotes}
