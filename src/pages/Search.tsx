@@ -6,6 +6,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button, Input, Pagination, BackToTop } from "../components/UI";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../components/HOC/WithReviewStats";
 import Footer from "../components/UI/Footer";
 import { useResponsive } from "../hooks/useResponsive";
 import { SEOHead } from "../components/SEO/SEOHead";
@@ -699,21 +700,25 @@ const Search: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
-                {paginatedItems.map((item: Listing) => (
-                  <ResponsiveListingTile 
-                    key={item.id}
-                    listing={item}
-                    onRefresh={refreshListings}
-                    compact={true}
-                  />
-                ))}
-                {paginatedItems.length === 0 && !searching && (
-                  <div className="col-span-full text-center text-gray-400 text-lg py-20">
-                    No products found.
+              <WithReviewStats listings={paginatedItems}>
+                {(listingsWithStats) => (
+                  <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
+                    {listingsWithStats.map((item: any) => (
+                      <ResponsiveListingTile 
+                        key={item.id}
+                        listing={item}
+                        onRefresh={refreshListings}
+                        compact={true}
+                      />
+                    ))}
+                    {paginatedItems.length === 0 && !searching && (
+                      <div className="col-span-full text-center text-gray-400 text-lg py-20">
+                        No products found.
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </WithReviewStats>
             )}
 
             {/* Pagination Controls */}

@@ -7,6 +7,7 @@ import { categories, categoryIcons } from "../utils/categories";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../components/HOC/WithReviewStats";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
@@ -470,15 +471,19 @@ const Home = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-7 w-full">
-                  {latestListings.map(item => (
-                    <ResponsiveListingTile 
-                      key={item.id}
-                      listing={item}
-                      onRefresh={refreshListings}
-                    />
-                  ))}
-                </div>
+                <WithReviewStats listings={latestListings}>
+                  {(listingsWithStats) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-7 w-full">
+                      {listingsWithStats.map(item => (
+                        <ResponsiveListingTile 
+                          key={item.id}
+                          listing={item}
+                          onRefresh={refreshListings}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </WithReviewStats>
               )}
             </div>
           </div>

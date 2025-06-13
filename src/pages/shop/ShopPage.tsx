@@ -9,6 +9,7 @@ import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import ShopReviews from "../../components/UI/ShopReviews";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getUserIP } from "../../utils/ipUtils";
@@ -530,33 +531,37 @@ export default function ShopPage() {
                         {listings.length === 0 ? (
                             <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>No products yet.</div>
                         ) : (
-                            <>
-                                {isMobile ? (
-                                    <div className="w-full overflow-x-auto pb-2">
-                                        <div className="flex gap-4 min-w-max">
-                                            {listings.map((item) => (
-                                                <div key={item.id} className="w-48 flex-shrink-0">
+                            <WithReviewStats listings={listings}>
+                                {(listingsWithStats) => (
+                                    <>
+                                        {isMobile ? (
+                                            <div className="w-full overflow-x-auto pb-2">
+                                                <div className="flex gap-4 min-w-max">
+                                                    {listingsWithStats.map((item) => (
+                                                        <div key={item.id} className="w-48 flex-shrink-0">
+                                                            <ResponsiveListingTile 
+                                                                listing={item}
+                                                                onRefresh={refreshListings}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+                                                {listingsWithStats.map((item) => (
                                                     <ResponsiveListingTile 
+                                                        key={item.id}
                                                         listing={item}
                                                         onRefresh={refreshListings}
                                                     />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
-                                        {listings.map((item) => (
-                                            <ResponsiveListingTile 
-                                                key={item.id}
-                                                listing={item}
-                                                onRefresh={refreshListings}
-                                            />
-                                        ))}
-                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <Pagination />
+                                    </>
                                 )}
-                                <Pagination />
-                            </>
+                            </WithReviewStats>
                         )}
                     </div>
                 </section>

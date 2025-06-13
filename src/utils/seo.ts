@@ -62,26 +62,43 @@ export const getProductStructuredData = (product: {
   condition?: string;
   availability?: 'InStock' | 'OutOfStock' | 'PreOrder';
   seller?: string;
-}) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: product.name,
-  description: product.description,
-  image: product.image,
-  brand: product.brand || 'Sri Lankan Marketplace',
-  category: product.category,
-  offers: {
-    '@type': 'Offer',
-    price: product.price.toString(),
-    priceCurrency: product.currency,
-    availability: `https://schema.org/${product.availability || 'InStock'}`,
-    condition: `https://schema.org/${product.condition || 'NewCondition'}`,
-    seller: {
-      '@type': 'Organization',
-      name: product.seller || SEO_CONFIG.siteName
+  rating?: number;
+  reviewCount?: number;
+}) => {
+  const baseStructuredData: any = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.image,
+    brand: product.brand || 'Sri Lankan Marketplace',
+    category: product.category,
+    offers: {
+      '@type': 'Offer',
+      price: product.price.toString(),
+      priceCurrency: product.currency,
+      availability: `https://schema.org/${product.availability || 'InStock'}`,
+      condition: `https://schema.org/${product.condition || 'NewCondition'}`,
+      seller: {
+        '@type': 'Organization',
+        name: product.seller || SEO_CONFIG.siteName
+      }
     }
+  };
+
+  // Add aggregateRating if we have review data
+  if (product.rating && product.reviewCount && product.reviewCount > 0) {
+    baseStructuredData.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+      bestRating: 5,
+      worstRating: 1
+    };
   }
-});
+
+  return baseStructuredData;
+};
 
 // Generate breadcrumb structured data
 export const getBreadcrumbStructuredData = (breadcrumbs: Array<{ name: string; url: string }>) => ({

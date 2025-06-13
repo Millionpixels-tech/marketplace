@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 import { getUserIP } from "../../utils/ipUtils";
 import { db } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import WishlistButton from "../../components/UI/WishlistButton";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import ShopOwnerName from "../shop/ShopOwnerName";
@@ -37,6 +38,10 @@ export default function ListingSingle() {
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
   const [latestItems, setLatestItems] = useState<any[]>([]);
+  
+  // Reviews state - fetch from reviews collection for optimal performance
+  const [listingReviewCount, setListingReviewCount] = useState(0);
+  const [listingAvgRating, setListingAvgRating] = useState<number | null>(null);
 
   // Function to fetch latest items with improved performance
   const fetchLatestItems = async () => {
@@ -129,6 +134,44 @@ export default function ListingSingle() {
     }
   }, [id]);
 
+  // Optimized reviews fetch from reviews collection
+  useEffect(() => {
+    const fetchListingReviews = async () => {
+      if (!id) return;
+      
+      try {
+        // Query reviews collection for this specific item
+        const reviewsQuery = query(
+          collection(db, "reviews"),
+          where("itemId", "==", id)
+        );
+        
+        const reviewsSnap = await getDocs(reviewsQuery);
+        const reviews = reviewsSnap.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        })) as any[];
+        
+        // Calculate average rating and count for optimal performance
+        if (reviews.length > 0) {
+          const totalRating = reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+          const averageRating = totalRating / reviews.length;
+          setListingAvgRating(Math.round(averageRating * 100) / 100); // Round to 2 decimal places
+          setListingReviewCount(reviews.length);
+        } else {
+          setListingAvgRating(null);
+          setListingReviewCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching listing reviews:", error);
+        setListingAvgRating(null);
+        setListingReviewCount(0);
+      }
+    };
+    
+    fetchListingReviews();
+  }, [id]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -145,12 +188,7 @@ export default function ListingSingle() {
   }
 
   // Calculate review summary for this listing (after item is loaded)
-  const reviews = Array.isArray(item.reviews) ? item.reviews : [];
-  const reviewCount = reviews.length;
-  const avgRating =
-    reviewCount > 0
-      ? (reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviewCount)
-      : null;
+  // Reviews are now fetched separately from the reviews collection via state
 
   const price = Number(item.price || 0);
   const deliveryType = item.deliveryType;
@@ -200,7 +238,9 @@ export default function ListingSingle() {
         image,
         category: item.category,
         brand: shop?.name || 'Sri Lankan Marketplace',
-        seller: shop?.name || 'Local Artisan'
+        seller: shop?.name || 'Local Artisan',
+        rating: listingAvgRating || undefined,
+        reviewCount: listingReviewCount || undefined
       }),
       breadcrumbData: getBreadcrumbStructuredData([
         { name: 'Home', url: getCanonicalUrl('/') },
@@ -325,13 +365,13 @@ export default function ListingSingle() {
             <div>
               <h1 className={`${isMobile ? 'text-xl' : 'text-2xl sm:text-3xl'} font-black mb-2`} style={{ color: '#0d0a0b' }}>{item.name}</h1>
               {/* Listing review summary */}
-              {reviewCount > 0 && (
+              {listingReviewCount > 0 && (
                 <div className={`flex items-center gap-1 mb-2 ${isMobile ? 'text-xs' : 'text-sm'} font-semibold`} style={{ color: '#72b01d' }}>
                   <span className="flex items-center">
                     <svg className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} mr-0.5`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-                    {avgRating?.toFixed(1)}
+                    {listingAvgRating?.toFixed(1)}
                   </span>
-                  <span className="font-normal" style={{ color: '#454955' }}>({reviewCount} Review{reviewCount > 1 ? 's' : ''})</span>
+                  <span className="font-normal" style={{ color: '#454955' }}>({listingReviewCount} Review{listingReviewCount > 1 ? 's' : ''})</span>
                 </div>
               )}
               {/* SHOP INFO under title */}
@@ -361,7 +401,7 @@ export default function ListingSingle() {
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
                         <span className={`font-semibold group-hover:underline ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{shop.name}</span>
-                        <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} />
+                        <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={true} />
                       </div>
                     </div>
                   </Link>
@@ -559,30 +599,36 @@ export default function ListingSingle() {
         {latestItems.length > 0 && (
           <section className={`w-full mb-12 ${isMobile ? 'px-4' : 'px-6 md:px-12 lg:px-16 xl:px-20'}`}>
             <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6`} style={{ color: '#0d0a0b' }}>Latest Items You Might Like</h2>
-            {isMobile ? (
-              <div className="w-full overflow-x-auto">
-                <div className="flex gap-4 pb-4" style={{ width: 'max-content' }}>
-                  {latestItems.map((item) => (
-                    <div key={item.id} className="flex-shrink-0" style={{ width: '160px' }}>
-                      <ResponsiveListingTile 
-                        listing={item}
-                        onRefresh={refreshListings}
-                      />
+            <WithReviewStats listings={latestItems}>
+              {(listingsWithStats) => (
+                <>
+                  {isMobile ? (
+                    <div className="w-full overflow-x-auto">
+                      <div className="flex gap-4 pb-4" style={{ width: 'max-content' }}>
+                        {listingsWithStats.map((item) => (
+                          <div key={item.id} className="flex-shrink-0" style={{ width: '160px' }}>
+                            <ResponsiveListingTile 
+                              listing={item}
+                              onRefresh={refreshListings}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                {latestItems.map((item) => (
-                  <ResponsiveListingTile 
-                    key={item.id}
-                    listing={item}
-                    onRefresh={refreshListings}
-                  />
-                ))}
-              </div>
-            )}
+                  ) : (
+                    <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                      {listingsWithStats.map((item) => (
+                        <ResponsiveListingTile 
+                          key={item.id}
+                          listing={item}
+                          onRefresh={refreshListings}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </WithReviewStats>
           </section>
         )}
 
