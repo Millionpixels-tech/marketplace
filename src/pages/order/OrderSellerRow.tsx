@@ -160,6 +160,8 @@ const printDeliveryLabel = async (order: any) => {
                             <div class="section-title">Item Details</div>
                             <div class="content">
                                 <strong>${order.itemName || ''}</strong><br>
+                                ${order.variationName ? `Variation: ${order.variationName}<br>` : ''}
+                                ${order.sellerNotes ? `Seller Notes: ${order.sellerNotes}<br>` : ''}
                                 Qty: ${order.quantity || 1} | Total: LKR ${order.total?.toLocaleString() || '0'}
                             </div>
                         </div>
@@ -257,6 +259,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     <div className="flex flex-col gap-1 text-[#454955]">
                         <div><span className="font-semibold text-[#3f7d20]">Order ID:</span> {order.id}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Item:</span> {order.itemName}</div>
+                        {order.variationName && (
+                            <div><span className="font-semibold text-[#3f7d20]">Variation:</span> {order.variationName}</div>
+                        )}
                         <div><span className="font-semibold text-[#3f7d20]">Buyer:</span> {order.buyerName || order.buyerId}</div>
                         {order.buyerInfo && (
                             <>
@@ -269,6 +274,14 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 <span className="font-semibold text-[#3f7d20]">Buyer Notes:</span> 
                                 <div className="mt-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
                                     {order.buyerNotes}
+                                </div>
+                            </div>
+                        )}
+                        {order.sellerNotes && (
+                            <div className="mt-2">
+                                <span className="font-semibold text-[#3f7d20]">Seller Notes:</span> 
+                                <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                                    {order.sellerNotes}
                                 </div>
                             </div>
                         )}

@@ -5,18 +5,27 @@ import { useToast } from "../../context/ToastContext";
 import { collection, addDoc, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
-import { FiX } from "react-icons/fi";
+import { FiX, FiPlus } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { Button, Input, AddBankAccountModal } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
 
+// Simple variation interface
+interface SimpleVariation {
+  id: string;
+  name: string; // e.g., "Small Blue", "Large Black"
+  priceChange: number; // How much to add to base price (always >= 0)
+  quantity: number; // Stock quantity for this variation
+}
+
 const steps = [
   { label: "Shop" },
   { label: "Category" },
   { label: "Subcategory" },
   { label: "Details" },
+  { label: "Variations" },
   { label: "Images" },
   { label: "Delivery" },
 ];
@@ -43,6 +52,13 @@ export default function AddListing() {
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [showBankAccountModal, setShowBankAccountModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Simple variations state
+  const [hasVariations, setHasVariations] = useState(false);
+  const [variations, setVariations] = useState<SimpleVariation[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingVariation, setEditingVariation] = useState<SimpleVariation | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -54,6 +70,190 @@ export default function AddListing() {
   const goToStep = (newStep: number) => {
     setStep(newStep);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Simple variation management functions
+  const addVariation = () => {
+    const newVariation: SimpleVariation = {
+      id: Date.now().toString(),
+      name: "",
+      priceChange: 0,
+      quantity: 0
+    };
+    setVariations(prev => [...prev, newVariation]);
+    setShowAddForm(true); // Show form when adding new variation
+  };
+
+  const removeVariation = (variationId: string) => {
+    setVariations(prev => prev.filter(v => v.id !== variationId));
+  };
+
+  const updateVariation = (variationId: string, field: keyof SimpleVariation, value: any) => {
+    setVariations(prev => prev.map(v => 
+      v.id === variationId ? { ...v, [field]: value } : v
+    ));
+  };
+
+  const saveVariation = (variationData: SimpleVariation) => {
+    if (variationData.name.trim()) {
+      updateVariation(variationData.id, 'name', variationData.name.trim());
+      updateVariation(variationData.id, 'priceChange', variationData.priceChange);
+      updateVariation(variationData.id, 'quantity', variationData.quantity);
+      setShowAddForm(false);
+      setEditingVariation(null);
+    }
+  };
+
+  const cancelVariation = () => {
+    if (editingVariation) {
+      // If editing, just close the form
+      setShowAddForm(false);
+      setEditingVariation(null);
+    } else {
+      // If adding new, remove the empty variation
+      setVariations(prev => prev.slice(0, -1));
+      setShowAddForm(false);
+    }
+  };
+
+  const startEditVariation = (variation: SimpleVariation) => {
+    setEditingVariation(variation);
+    setShowAddForm(true);
+  };
+
+  // Calculate total stock from variations
+  const getTotalVariationStock = () => {
+    return variations.reduce((total, variation) => total + (variation.quantity || 0), 0);
+  };
+
+  // Variation Form Component
+  const VariationForm = ({ 
+    variation, 
+    basePrice, 
+    onSave, 
+    onCancel 
+  }: { 
+    variation: SimpleVariation; 
+    basePrice: number; 
+    onSave: (variation: SimpleVariation) => void; 
+    onCancel: () => void; 
+  }) => {
+    const [formData, setFormData] = useState<SimpleVariation>(variation);
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Variation Name */}
+          <div className="md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Variation Name *
+            </label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Small Blue, Large Black, Medium Red"
+              className="w-full text-base"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Give a clear name that describes this specific variation
+            </p>
+          </div>
+
+          {/* Price Change */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Additional Price (Optional)
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <span className="text-gray-500 text-sm">Rs.</span>
+              </div>
+              <Input
+                type="number"
+                value={formData.priceChange}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value) || 0;
+                  // Ensure price adjustment is never negative
+                  const priceChange = Math.max(0, value);
+                  setFormData({ ...formData, priceChange });
+                }}
+                placeholder="0.00"
+                className="pl-10"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Amount to add to base price. Final price: Rs.{(basePrice + formData.priceChange).toFixed(2)}
+            </p>
+          </div>
+
+          {/* Quantity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Stock Quantity *
+            </label>
+            <Input
+              type="number"
+              value={formData.quantity}
+              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+              placeholder="0"
+              className="w-full"
+              min="0"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Available units for this variation
+            </p>
+          </div>
+
+          {/* Price Preview */}
+          <div className="flex items-center">
+            <div className="bg-green-50 rounded-lg p-3 w-full">
+              <div className="text-sm font-medium text-green-800">Final Price</div>
+              <div className="text-lg font-bold text-green-900">
+                Rs.{(basePrice + formData.priceChange).toFixed(2)}
+              </div>
+              {formData.priceChange > 0 && (
+                <div className="text-xs text-green-600">
+                  +Rs.{formData.priceChange.toFixed(2)} from base
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={!formData.name.trim() || formData.quantity < 0}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (formData.name.trim()) {
+                onSave(formData);
+              }
+            }}
+            className="px-4 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#3f7d20] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {editingVariation ? 'Update Variation' : 'Add Variation'}
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // Fetch shops when user is ready
@@ -227,7 +427,8 @@ export default function AddListing() {
     }
     
     try {
-      await addDoc(collection(db, "listings"), {
+      // Prepare listing data
+      const listingData: any = {
         owner: auth.currentUser?.uid,
         shopId,
         itemType,
@@ -236,8 +437,6 @@ export default function AddListing() {
         name,
         description: desc,
         sellerNotes,
-        price: parseFloat(price),
-        quantity: parseInt(quantity, 10),
         deliveryType,
         deliveryPerItem: deliveryType === "paid" ? parseFloat(deliveryPerItem) : 0,
         deliveryAdditional: deliveryType === "paid" ? parseFloat(deliveryAdditional) : 0,
@@ -250,7 +449,23 @@ export default function AddListing() {
         seoTitle: `${name} - ${itemType} ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
         seoDescription: desc.length > 160 ? desc.substring(0, 157) + '...' : desc,
         keywords: [name, itemType, cat, sub, 'Sri Lanka', 'marketplace', shops.find(s => s.id === shopId)?.name].filter(Boolean)
-      });
+      };
+
+      // Handle variations
+      if (hasVariations && variations.length > 0) {
+        listingData.hasVariations = true;
+        listingData.variations = variations;
+        // Calculate total stock from variations
+        listingData.quantity = getTotalVariationStock();
+        // Set base price (variations will have their own pricing)
+        listingData.price = parseFloat(price);
+      } else {
+        listingData.hasVariations = false;
+        listingData.price = parseFloat(price);
+        listingData.quantity = parseInt(quantity, 10);
+      }
+
+      await addDoc(collection(db, "listings"), listingData);
       
       showToast('success', 'Listing added successfully!');
       navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);
@@ -295,8 +510,9 @@ export default function AddListing() {
                     {step === 2 && "Pick a main category"}
                     {step === 3 && "Pick a specific subcategory"}
                     {step === 4 && "Add item details, price, and quantity"}
-                    {step === 5 && "Upload photos of your item"}
-                    {step === 6 && "Set delivery options and pricing"}
+                    {step === 5 && "Add product variations (optional)"}
+                    {step === 6 && "Upload photos of your item"}
+                    {step === 7 && "Set delivery options and pricing"}
                   </p>
                 </div>
               </div>
@@ -624,12 +840,207 @@ Delivery & Important Notes
                   Next →
                 </button>
               </div>
+            </div>          )}
+
+          {/* Step 5: Product Variations */}
+          {step === 5 && (
+            <div className="animate-fade-in">
+              <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">
+                Product Variations (Optional)
+              </h2>
+              
+              <div className="bg-gray-50 rounded-xl p-4 md:p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#0d0a0b] mb-1">Enable Variations</h3>
+                    <p className="text-sm text-[#454955]">
+                      Add different product options like "Small Blue", "Large Black" with their own pricing and stock.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasVariations}
+                      onChange={(e) => {
+                        setHasVariations(e.target.checked);
+                        if (!e.target.checked) {
+                          // Only reset form states when disabled, preserve variations data
+                          setShowAddForm(false);
+                          setEditingVariation(null);
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#72b01d]"></div>
+                  </label>
+                </div>
+
+                {hasVariations && (
+                  <div className="space-y-6">
+                    {/* Add Variation Button or Empty State */}
+                    {!showAddForm && (
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-md font-semibold text-[#0d0a0b]">Product Variations</h4>
+                        <button
+                          type="button"
+                          onClick={addVariation}
+                          className="flex items-center gap-2 px-4 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#3f7d20] transition-colors text-sm font-medium"
+                        >
+                          <FiPlus size={16} />
+                          Add Variation
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!showAddForm && variations.filter(v => v.name.trim()).length === 0 && (
+                      <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                        <div className="max-w-sm mx-auto">
+                          <div className="text-4xl mb-3">📦</div>
+                          <h6 className="text-lg font-medium text-gray-700 mb-2">No variations yet</h6>
+                          <p className="text-sm text-gray-500 mb-4">
+                            Add variations like "Small Blue", "Large Red" to offer different options to your customers.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={addVariation}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#3f7d20] transition-colors text-sm font-medium"
+                          >
+                            <FiPlus size={16} />
+                            Add Your First Variation
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Add/Edit Variation Form */}
+                    {showAddForm && (
+                      <div className="bg-white rounded-xl p-6 border-2 border-[#72b01d] shadow-lg">
+                        <h5 className="text-lg font-semibold text-[#0d0a0b] mb-4">
+                          {editingVariation ? 'Edit Variation' : 'Add New Variation'}
+                        </h5>
+                        <VariationForm
+                          variation={editingVariation || variations[variations.length - 1]}
+                          basePrice={parseFloat(price) || 0}
+                          onSave={saveVariation}
+                          onCancel={cancelVariation}
+                        />
+                      </div>
+                    )}
+
+                    {/* Variations Table */}
+                    {variations.filter(v => v.name.trim()).length > 0 && (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                          <h5 className="font-semibold text-gray-800">Added Variations</h5>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Variation Name
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Final Price
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Price Change
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Quantity
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {variations.filter(v => v.name.trim()).map((variation) => (
+                                <tr key={variation.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm font-medium text-gray-900">{variation.name}</div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-900 font-semibold">
+                                      Rs.{((parseFloat(price) || 0) + variation.priceChange).toFixed(2)}
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    {variation.priceChange > 0 && (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        +Rs.{variation.priceChange.toFixed(2)}
+                                      </span>
+                                    )}
+                                    {variation.priceChange === 0 && (
+                                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Base price
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-900">{variation.quantity} units</div>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditVariation(variation)}
+                                      className="text-[#72b01d] hover:text-[#3f7d20] mr-3"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeVariation(variation.id)}
+                                      className="text-red-600 hover:text-red-900"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Summary */}
+                    {variations.filter(v => v.name.trim()).length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <h5 className="font-semibold text-blue-800 mb-2">Summary</h5>
+                        <div className="text-sm text-blue-700">
+                          <p>• {variations.filter(v => v.name.trim()).length} variation{variations.filter(v => v.name.trim()).length !== 1 ? 's' : ''} created</p>
+                          <p>• Total stock: {getTotalVariationStock()} units</p>
+                          <p>• Price range: Rs.{Math.min(...variations.filter(v => v.name.trim()).map(v => (parseFloat(price) || 0) + v.priceChange)).toFixed(2)} - Rs.{Math.max(...variations.filter(v => v.name.trim()).map(v => (parseFloat(price) || 0) + v.priceChange)).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-10">
+                <button
+                  type="button"
+                  className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
+                  onClick={() => goToStep(4)}
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  className="w-full md:w-auto px-6 md:px-8 py-3 bg-[#72b01d] text-white rounded-xl font-semibold transition-all duration-200 hover:bg-[#3f7d20]"
+                  onClick={() => goToStep(6)}
+                >
+                  Next →
+                </button>
+              </div>
             </div>
           )}
 
-
-          {/* Step 5: Images */}
-          {step === 5 && (
+          {/* Step 6: Images */}
+          {step === 6 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-4 md:mb-6 text-[#0d0a0b]">Add images</h2>
               
@@ -683,7 +1094,7 @@ Delivery & Important Notes
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                  onClick={() => goToStep(4)}
+                  onClick={() => goToStep(5)}
                 >
                   ← Back
                 </button>
@@ -691,7 +1102,7 @@ Delivery & Important Notes
                   type="button"
                   className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
                   disabled={images.length === 0}
-                  onClick={() => goToStep(6)}
+                  onClick={() => goToStep(7)}
                 >
                   Next →
                 </button>
@@ -699,8 +1110,8 @@ Delivery & Important Notes
             </div>
           )}
 
-          {/* Step 6: Delivery */}
-          {step === 6 && (
+          {/* Step 7: Delivery */}
+          {step === 7 && (
             <div className="animate-fade-in">
               <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">
                 Delivery options
@@ -855,7 +1266,7 @@ Delivery & Important Notes
                 <button
                   type="button"
                   className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                  onClick={() => goToStep(5)}
+                  onClick={() => goToStep(6)}
                 >
                   ← Back
                 </button>

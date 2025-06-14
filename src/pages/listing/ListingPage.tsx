@@ -18,6 +18,14 @@ import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
 import type { UserProfile } from "../../utils/userProfile";
 
+// Simple variation interface (matching AddListing)
+interface SimpleVariation {
+  id: string;
+  name: string;
+  priceChange: number;
+  quantity: number;
+}
+
 type Shop = {
   name: string;
   username: string;
@@ -38,6 +46,7 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
+  const [selectedVariation, setSelectedVariation] = useState<SimpleVariation | null>(null);
   const [latestItems, setLatestItems] = useState<any[]>([]);
   
   // Reviews state - fetch from reviews collection for optimal performance
@@ -89,6 +98,11 @@ export default function ListingSingle() {
       document.documentElement.style.backgroundColor = originalHtmlStyle;
     };
   }, []);
+
+  // Reset quantity when variation changes
+  useEffect(() => {
+    setQty(1);
+  }, [selectedVariation]);
 
   useEffect(() => {
     // Set default payment method based on what's available for this listing
@@ -356,7 +370,14 @@ export default function ListingSingle() {
   // Calculate review summary for this listing (after item is loaded)
   // Reviews are now fetched separately from the reviews collection via state
 
-  const price = Number(item.price || 0);
+  // Calculate price including any selected variation
+  const basePrice = Number(item?.price || 0);
+  const variationPriceChange = selectedVariation?.priceChange || 0;
+  const price = basePrice + variationPriceChange;
+  
+  // Calculate available quantity based on selected variation or total quantity
+  const availableQuantity = selectedVariation ? selectedVariation.quantity : (item?.quantity || 1);
+  
   const deliveryType = item.deliveryType;
   const deliveryPerItem = Number(item.deliveryPerItem || 0);
   const deliveryAdditional = Number(item.deliveryAdditional || 0);
@@ -432,14 +453,13 @@ export default function ListingSingle() {
       <ResponsiveHeader />
 
       {/* Breadcrumb */}
-      <nav className={`w-full max-w-4xl mx-auto mt-4 px-2 md:px-0 text-sm ${isMobile ? 'px-4' : ''}`} aria-label="Breadcrumb">
-        <ol className="flex items-center gap-2" style={{ color: '#454955' }}>
+      <nav className={`max-w-6xl mx-auto mt-4 mb-2 ${isMobile ? 'px-4' : 'px-4'}`} aria-label="Breadcrumb">
+        <ol className="flex items-center gap-2 text-sm text-gray-500">
           {item?.category && (
             <li>
               <Link
                 to={`/search?cat=${encodeURIComponent(item.category)}`}
-                className="hover:underline font-semibold transition-colors duration-300"
-                style={{ color: '#72b01d' }}
+                className="hover:text-green-600 font-medium transition-colors"
               >
                 {item.category}
               </Link>
@@ -451,8 +471,7 @@ export default function ListingSingle() {
               <li>
                 <Link
                   to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
-                  className="hover:underline font-semibold transition-colors duration-300"
-                  style={{ color: '#72b01d' }}
+                  className="hover:text-green-600 font-medium transition-colors"
                 >
                   {item.subcategory}
                 </Link>
@@ -460,503 +479,566 @@ export default function ListingSingle() {
             </>
           )}
           <span className="mx-1">/</span>
-          <li className={`font-bold truncate ${isMobile ? 'max-w-[120px]' : 'max-w-[180px] md:max-w-xs'}`} title={item.name} style={{ color: '#0d0a0b' }}>{item.name}</li>
+          <li className={`font-semibold text-gray-900 truncate ${isMobile ? 'max-w-[150px]' : 'max-w-[200px]'}`} title={item.name}>
+            {item.name}
+          </li>
         </ol>
       </nav>
 
-      <main className={`w-full max-w-4xl mx-auto mt-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
-        <div className={`flex flex-col md:flex-row gap-8 rounded-3xl shadow-xl ${isMobile ? 'p-4' : 'p-4 md:p-10'} border`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-          {/* Image Gallery */}
-          <div className="flex-1 flex flex-col items-center">
-            <div className={`relative w-full ${isMobile ? 'max-w-full' : 'max-w-xs sm:max-w-md'} aspect-square rounded-2xl flex items-center justify-center overflow-hidden border`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-              {item.images && item.images.length > 0 && (
-                <img
-                  src={item.images[imgIdx]}
-                  alt={`Item image ${imgIdx + 1}`}
-                  className="object-contain w-full h-full cursor-pointer transition-transform duration-200 hover:scale-105"
-                  onClick={() => setEnlarge(true)}
-                />
-              )}
-              {item.images && item.images.length > 1 && (
-                <>
-                  <button
-                    className={`absolute left-2 top-1/2 -translate-y-1/2 rounded-full ${isMobile ? 'p-1.5' : 'p-2'} shadow z-10 transition-all duration-300`}
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
-                    onClick={() => setImgIdx((imgIdx - 1 + item.images.length) % item.images.length)}
-                    aria-label="Previous image"
-                  >
-                    <FiChevronLeft size={isMobile ? 20 : 24} />
-                  </button>
-                  <button
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full ${isMobile ? 'p-1.5' : 'p-2'} shadow z-10 transition-all duration-300`}
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
-                    onClick={() => setImgIdx((imgIdx + 1) % item.images.length)}
-                    aria-label="Next image"
-                  >
-                    <FiChevronRight size={isMobile ? 20 : 24} />
-                  </button>
-                </>
-              )}
-              {item.images && item.images.length > 0 && (
+      <main className={`w-full max-w-6xl mx-auto mt-6 ${isMobile ? 'px-4' : 'px-4'}`}>
+        {/* Main Product Section */}
+        <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${isMobile ? 'mb-6' : 'mb-8'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-2'} gap-0`}>
+            
+            {/* Left: Image Gallery */}
+            <div className={`${isMobile ? 'p-4' : 'p-8'} border-r border-gray-100`}>
+              <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                {item.images && item.images.length > 0 && (
+                  <img
+                    src={item.images[imgIdx]}
+                    alt={`${item.name} - Image ${imgIdx + 1}`}
+                    className="object-contain w-full h-full cursor-pointer transition-transform duration-200 hover:scale-105"
+                    onClick={() => setEnlarge(true)}
+                  />
+                )}
+                
+                {/* Navigation Arrows */}
+                {item.images && item.images.length > 1 && (
+                  <>
+                    <button
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-green-600 transition-all"
+                      onClick={() => setImgIdx((imgIdx - 1 + item.images.length) % item.images.length)}
+                      aria-label="Previous image"
+                    >
+                      <FiChevronLeft size={20} />
+                    </button>
+                    <button
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-green-600 transition-all"
+                      onClick={() => setImgIdx((imgIdx + 1) % item.images.length)}
+                      aria-label="Next image"
+                    >
+                      <FiChevronRight size={20} />
+                    </button>
+                  </>
+                )}
+                
+                {/* Enlarge Button */}
                 <button
-                  className={`absolute bottom-2 right-2 rounded-full ${isMobile ? 'p-1.5' : 'p-2'} shadow z-10 transition-all duration-300`}
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#72b01d' }}
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-600 hover:bg-white hover:text-green-600 transition-all"
                   onClick={() => setEnlarge(true)}
                   aria-label="Enlarge image"
                 >
-                  <FiMaximize2 size={isMobile ? 16 : 18} />
+                  <FiMaximize2 size={16} />
                 </button>
-              )}
-            </div>
-            {/* Thumbnails */}
-            {item.images && item.images.length > 1 && (
-              <div className={`flex gap-2 mt-4 ${isMobile ? 'overflow-x-auto pb-2' : ''}`}>
-                {item.images.map((img: string, idx: number) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt={`thumb-${idx + 1}`}
-                    className={`${isMobile ? 'w-10 h-10 flex-shrink-0' : 'w-12 h-12'} object-cover rounded-lg border-2 cursor-pointer transition-all duration-300 ${imgIdx === idx ? "shadow-lg" : ""}`}
-                    style={{
-                      borderColor: imgIdx === idx ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
-                    }}
-                    onClick={() => setImgIdx(idx)}
-                  />
-                ))}
               </div>
-            )}
-          </div>
-          {/* Item Details */}
-          <div className="flex-1 flex flex-col justify-between gap-8 min-w-0">
-            <div>
-              <h1 className={`${isMobile ? 'text-xl' : 'text-2xl sm:text-3xl'} font-black mb-2`} style={{ color: '#0d0a0b' }}>{item.name}</h1>
-              {/* Listing review summary */}
-              {listingReviewCount > 0 && (
-                <div className={`flex items-center gap-1 mb-2 ${isMobile ? 'text-xs' : 'text-sm'} font-semibold`} style={{ color: '#72b01d' }}>
-                  <span className="flex items-center">
-                    <svg className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} mr-0.5`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-                    {listingAvgRating?.toFixed(1)}
-                  </span>
-                  <span className="font-normal" style={{ color: '#454955' }}>({listingReviewCount} Review{listingReviewCount > 1 ? 's' : ''})</span>
+              
+              {/* Thumbnails */}
+              {item.images && item.images.length > 1 && (
+                <div className={`flex gap-2 mt-4 ${isMobile ? 'overflow-x-auto pb-2' : 'justify-center'}`}>
+                  {item.images.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setImgIdx(idx)}
+                      className={`flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all ${
+                        imgIdx === idx ? 'border-green-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={img}
+                        alt={`Thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
-              {/* SHOP INFO under title */}
-              {shop && (
-                <div className="mb-4 py-4">
+            </div>
+
+            {/* Right: Product Details */}
+            <div className={`${isMobile ? 'p-4' : 'p-8'} flex flex-col`}>
+              
+              {/* Header Section */}
+              <div className="mb-6">
+                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900 mb-3 leading-tight`}>
+                  {item.name}
+                </h1>
+                
+                {/* Reviews */}
+                {listingReviewCount > 0 && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center text-yellow-500">
+                      <FiStar className="w-4 h-4 fill-current" />
+                      <span className="ml-1 text-sm font-medium text-gray-900">
+                        {listingAvgRating?.toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      ({listingReviewCount} review{listingReviewCount > 1 ? 's' : ''})
+                    </span>
+                  </div>
+                )}
+
+                {/* Shop Info */}
+                {shop && (
                   <Link
                     to={`/shop/${shop.username}`}
-                    className={`flex items-center gap-2 rounded-xl transition group w-max ${isMobile ? 'px-2 py-1.5 -mx-2' : 'px-3 py-2 -mx-3'} border`}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderColor: 'rgba(114, 176, 29, 0.3)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8f9fa';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#ffffff';
-                    }}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"
                   >
-                    <div className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} rounded-full border overflow-hidden flex items-center justify-center`} style={{ borderColor: 'rgba(114, 176, 29, 0.4)', backgroundColor: '#ffffff' }}>
+                    <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50">
                       {shop.logo ? (
                         <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className={`${isMobile ? 'text-sm' : 'text-lg'}`} style={{ color: '#72b01d' }}>🛍️</span>
+                        <span className="text-sm">🛍️</span>
                       )}
                     </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-semibold group-hover:underline ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{shop.name}</span>
-                        <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={true} />
-                      </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-green-600">
+                        {shop.name}
+                      </span>
+                      <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={true} />
                     </div>
                   </Link>
-                </div>
-              )}
-            </div>
-            <div className={`flex flex-col ${isMobile ? 'gap-4' : 'gap-5'}`}>
-              <div className="flex items-center gap-2 mb-1">
-                {/* Wishlist icon */}
-                <WishlistButton listing={{ ...item, id }} refresh={refreshItem} displayText={true} />
-              </div>
-              {/* Wishlist count display under the button */}
-              {Array.isArray(item.wishlist) && item.wishlist.length > 0 && (
-                <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium mt-1`} style={{ color: '#454955' }}>
-                  {item.wishlist.length} {item.wishlist.length === 1 ? "person has" : "people have"} added this item to their wishlist
-                </p>
-              )}
-              <div className="flex items-center gap-4">
-                <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>LKR {price.toLocaleString()}</span>
-                {deliveryType === "paid" && (
-                  <span className={`${isMobile ? 'text-xs' : 'text-xs'} rounded-full px-2 py-1 font-semibold border`} style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(69, 73, 85, 0.2)' }}>+ Shipping</span>
-                )}
-                {deliveryType === "free" && (
-                  <span className={`${isMobile ? 'text-xs' : 'text-xs'} rounded-full px-2 py-1 font-semibold border`} style={{ backgroundColor: '#ffffff', color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Free Delivery</span>
                 )}
               </div>
-              <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center gap-3'}`}>
-                <div className="flex items-center gap-3">
-                  <label htmlFor="qty" className={`font-medium ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955' }}>Qty:</label>
-                  <input
-                    id="qty"
-                    type="number"
-                    min={1}
-                    max={item.quantity || 1}
-                    value={qty}
-                    onChange={e => {
-                      let val = Math.max(1, Number(e.target.value));
-                      if (item.quantity && val > item.quantity) val = item.quantity;
-                      setQty(val);
-                    }}
-                    className={`${isMobile ? 'w-16 px-2 py-1.5 text-base' : 'w-20 px-3 py-2 text-lg'} border rounded-lg focus:outline-none focus:ring-2 transition-all duration-300`}
-                    style={{
-                      borderColor: 'rgba(114, 176, 29, 0.3)',
-                      backgroundColor: '#ffffff',
-                      color: '#0d0a0b'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = '#72b01d';
-                      e.target.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                      e.target.style.boxShadow = 'none';
-                    }}
-                  />
-                  <span className={`${isMobile ? 'text-xs' : 'text-xs'} ml-1`} style={{ color: '#454955' }}>Available: {item.quantity ?? 1}</span>
+
+              {/* Price Section */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-2xl font-bold text-gray-900">
+                    LKR {price.toLocaleString()}
+                  </span>
+                  {deliveryType === "free" && (
+                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                      Free Delivery
+                    </span>
+                  )}
+                  {deliveryType === "paid" && (
+                    <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+                      + Shipping
+                    </span>
+                  )}
                 </div>
-                <span className={`${isMobile ? 'text-sm' : 'ml-3 text-base'} font-semibold`} style={{ color: '#0d0a0b' }}>Total: LKR {total.toLocaleString()}</span>
+                
+                {/* Wishlist */}
+                <div className="flex items-center justify-between">
+                  <WishlistButton listing={{ ...item, id }} refresh={refreshItem} displayText={true} />
+                  {Array.isArray(item.wishlist) && item.wishlist.length > 0 && (
+                    <span className="text-xs text-gray-500">
+                      {item.wishlist.length} in wishlists
+                    </span>
+                  )}
+                </div>
               </div>
-              {deliveryType === "paid" && (
-                <div className={`${isMobile ? 'text-xs' : 'text-sm'} mt-1`} style={{ color: '#454955' }}>
-                  Shipping: LKR {shipping.toLocaleString()}
-                  {qty > 1 && (
-                    <span> ({deliveryPerItem} + {deliveryAdditional} x {qty - 1})</span>
-                  )}
-                </div>
-              )}
-              {/* Payment method selection based on listing's enabled methods */}
-              {(item.cashOnDelivery || item.bankTransfer) && (
-                <div className={`flex flex-col ${isMobile ? 'gap-2 mt-3' : 'gap-3 mt-4'}`}>
-                  {item.cashOnDelivery && (
-                    <div className="flex items-center gap-3">
-                      <input
-                        id="pay-cod"
-                        type="radio"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
-                        onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
-                        className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
-                        style={{ accentColor: '#72b01d' }}
-                      />
-                      <label htmlFor="pay-cod" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
-                        Cash on Delivery
-                      </label>
-                    </div>
-                  )}
-                  {item.bankTransfer && (
-                    <div className="flex items-center gap-3">
-                      <input
-                        id="pay-bank"
-                        type="radio"
-                        name="paymentMethod"
-                        value="bankTransfer"
-                        checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
-                        onChange={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
-                        className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
-                        style={{ accentColor: '#72b01d' }}
-                      />
-                      <label htmlFor="pay-bank" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
-                        Bank Transfer
-                      </label>
-                    </div>
-                  )}
-                  {/* Temporarily disabled online payment - keeping code for future use
-                  <div className="flex items-center gap-3">
-                    <input
-                      id="pay-now"
-                      type="radio"
-                      name="paymentMethod"
-                      value="paynow"
-                      checked={paymentMethod === PaymentMethod.PAY_NOW}
-                      onChange={() => setPaymentMethod(PaymentMethod.PAY_NOW)}
-                      className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
-                      style={{ accentColor: '#72b01d' }}
-                    />
-                    <label htmlFor="pay-now" className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold select-none cursor-pointer`} style={{ color: '#454955' }}>
-                      Pay Now
-                    </label>
-                  </div>
-                  */}
-                  <button
-                    className={`${isMobile ? 'mt-1' : 'mt-2'} w-full ${isMobile ? 'py-2.5 text-base' : 'py-3 text-lg'} rounded-xl font-bold uppercase tracking-wide shadow transition disabled:opacity-50`}
+
+              {/* Variations Section */}
+              {item?.hasVariations && item?.variations && item.variations.length > 0 && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    Select Variation
+                  </label>
+                  <select
+                    value={selectedVariation?.id || ''}
+                    onChange={(e) => {
+                      if (e.target.value === '') {
+                        setSelectedVariation(null);
+                      } else {
+                        const variation = item.variations?.find((v: SimpleVariation) => v.id === e.target.value);
+                        if (variation && variation.quantity > 0) {
+                          setSelectedVariation(variation);
+                        }
+                      }
+                    }}
+                    className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white appearance-none"
                     style={{
-                      backgroundColor: '#72b01d',
-                      color: '#ffffff'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#3f7d20';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#72b01d';
-                    }}
-                    disabled={qty > (item.quantity || 1)}
-                    onClick={() => {
-                      if (!item || !shop || qty > (item.quantity || 1)) return;
-                      
-                      // Navigate to checkout page with parameters
-                      const params = new URLSearchParams({
-                        itemId: id || '',
-                        quantity: qty.toString(),
-                        paymentMethod: paymentMethod
-                      });
-                      navigate(`/checkout?${params.toString()}`);
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em'
                     }}
                   >
-                    {paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Order with Cash on Delivery' : 
-                     paymentMethod === PaymentMethod.BANK_TRANSFER ? 'Order with Bank Transfer' : 'Order Now'}
-                  </button>
-                </div>
-              )} 
-              
-              {/* No payment methods available */}
-              {!item.cashOnDelivery && !item.bankTransfer && (
-                <div className={`${isMobile ? 'mt-3' : 'mt-4'} p-4 bg-red-50 border border-red-200 rounded-xl`}>
-                  <p className={`text-red-700 text-center ${isMobile ? 'text-sm' : 'text-base'}`}>
-                    ⚠️ No payment methods are currently available for this listing.
-                  </p>
+                    <option value="">Choose a variation...</option>
+                    {item.variations.filter((v: SimpleVariation) => v.name && v.name.trim()).map((variation: SimpleVariation) => {
+                      const variationPrice = basePrice + variation.priceChange;
+                      const isOutOfStock = variation.quantity <= 0;
+                      
+                      return (
+                        <option 
+                          key={variation.id} 
+                          value={variation.id}
+                          disabled={isOutOfStock}
+                        >
+                          {variation.name} - LKR {variationPrice.toLocaleString()}
+                          {isOutOfStock ? ' (Out of Stock)' : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  
+                  {/* Selected Variation Info */}
+                  {selectedVariation && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-gray-900">
+                          {selectedVariation.name}
+                        </span>
+                        <span className="text-sm font-semibold text-green-600">
+                          LKR {(basePrice + selectedVariation.priceChange).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {selectedVariation.quantity} available
+                        {selectedVariation.priceChange !== 0 && (
+                          <span className="ml-2">
+                            ({selectedVariation.priceChange > 0 ? '+' : ''}LKR {selectedVariation.priceChange.toFixed(2)} from base)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* Warning for Variations */}
+              {item?.hasVariations && item?.variations && item.variations.length > 0 && !selectedVariation && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm font-medium">Please select a variation to continue</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity and Purchase Section */}
+              <div className="space-y-4">
+                {/* Quantity */}
+                <div className="flex items-center gap-4">
+                  <label className="text-sm font-medium text-gray-700">Quantity:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={availableQuantity}
+                      value={qty}
+                      onChange={e => {
+                        let val = Math.max(1, Number(e.target.value));
+                        if (val > availableQuantity) val = availableQuantity;
+                        setQty(val);
+                      }}
+                      disabled={item?.hasVariations && !selectedVariation}
+                      className={`w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                        (item?.hasVariations && !selectedVariation) ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                      }`}
+                    />
+                    <span className="text-xs text-gray-500">
+                      of {availableQuantity} available
+                    </span>
+                  </div>
+                </div>
+
+                {/* Total Price */}
+                <div className="flex items-center justify-between py-3 border-t border-gray-200">
+                  <span className="text-sm font-medium text-gray-700">Total:</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    LKR {total.toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Shipping Info */}
+                {deliveryType === "paid" && (
+                  <div className="text-xs text-gray-500">
+                    Includes shipping: LKR {shipping.toLocaleString()}
+                    {qty > 1 && ` (${deliveryPerItem} + ${deliveryAdditional} × ${qty - 1})`}
+                  </div>
+                )}
+
+                {/* Payment Methods */}
+                {(item.cashOnDelivery || item.bankTransfer) ? (
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-gray-700">Payment Method:</div>
+                    <div className="space-y-2">
+                      {item.cashOnDelivery && (
+                        <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="cod"
+                            checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
+                            onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
+                            className="text-green-600"
+                          />
+                          <span className="text-sm font-medium text-gray-900">Cash on Delivery</span>
+                        </label>
+                      )}
+                      {item.bankTransfer && (
+                        <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="bankTransfer"
+                            checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
+                            onChange={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
+                            className="text-green-600"
+                          />
+                          <span className="text-sm font-medium text-gray-900">Bank Transfer</span>
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Order Button */}
+                    <button
+                      className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors shadow-sm"
+                      disabled={qty > availableQuantity || (item?.hasVariations && !selectedVariation)}
+                      onClick={() => {
+                        if (!item || !shop || qty > availableQuantity) return;
+                        if (item?.hasVariations && !selectedVariation) return;
+                        
+                        const params = new URLSearchParams({
+                          itemId: id || '',
+                          quantity: qty.toString(),
+                          paymentMethod: paymentMethod
+                        });
+                        
+                        if (selectedVariation) {
+                          params.append('variationId', selectedVariation.id);
+                          params.append('variationName', selectedVariation.name);
+                        }
+                        
+                        navigate(`/checkout?${params.toString()}`);
+                      }}
+                    >
+                      {paymentMethod === PaymentMethod.CASH_ON_DELIVERY 
+                        ? 'Order with Cash on Delivery' 
+                        : 'Order with Bank Transfer'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700 text-center">
+                      ⚠️ No payment methods are currently available for this listing.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Payment Methods & Trust Section */}
-        <section className={`w-full max-w-4xl mx-auto mt-8 mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
-          <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} flex flex-col md:flex-row items-center gap-4 text-center md:text-left border`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-            <div className="flex-shrink-0 flex items-center justify-center mb-2 md:mb-0">
-              <svg width={isMobile ? "32" : "40"} height={isMobile ? "32" : "40"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#72b01d" /><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-            <div>
-              <div className={`${isMobile ? 'text-lg' : 'text-lg md:text-xl'} font-bold mb-1`} style={{ color: '#3f7d20' }}>Flexible Payment Options</div>
-              <div className={`font-medium mb-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>Choose from Cash on Delivery or Bank Transfer payment methods for your convenience.</div>
-              <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Pay when you receive your order with COD, or use secure bank transfer with payment slip verification.</div>
-              <div className={`mt-2 font-semibold flex items-center gap-2 justify-center md:justify-start ${isMobile ? 'text-xs' : ''}`} style={{ color: '#0d0a0b' }}>
-                <svg width={isMobile ? "16" : "20"} height={isMobile ? "16" : "20"} fill="none" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="#72b01d" /><path d="M7 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                Secure transactions with verified sellers and trusted payment methods.
+        {/* Product Information Tabs */}
+        <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${isMobile ? 'mb-6' : 'mb-8'}`}>
+          <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Product Details</h2>
+            
+            {/* Description */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
+                {item.description}
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* Description at the bottom */}
-        <section className={`w-full max-w-4xl mx-auto mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
-          <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-3`} style={{ color: '#0d0a0b' }}>Description</h2>
-          <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-4 text-sm' : 'p-6 text-base md:text-lg'} whitespace-pre-line border`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}>
-            {item.description}
-          </div>
-        </section>
-
-        {/* Seller Notes */}
-        {item.sellerNotes && (
-          <section className={`w-full max-w-4xl mx-auto mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
-            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-3`} style={{ color: '#0d0a0b' }}>
-              Delivery Information
-            </h2>
-            <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-4 text-sm' : 'p-6 text-base md:text-lg'} whitespace-pre-line border`} 
-              style={{ 
-                backgroundColor: 'rgba(34, 197, 94, 0.05)', 
-                borderColor: 'rgba(34, 197, 94, 0.3)', 
-                color: '#454955' 
-              }}>
-              <div className="flex items-start gap-3">
-                <span className="text-xl">
-                  📦
-                </span>
-                <div className="flex-1">
-                  {item.sellerNotes}
+            {/* Delivery Information */}
+            {item.sellerNotes && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Delivery Information</h3>
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">📦</span>
+                    <div className="flex-1 text-gray-700 leading-relaxed whitespace-pre-line">
+                      {item.sellerNotes}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Reviews Section */}
-        <section id="reviews-section" className={`w-full max-w-4xl mx-auto mb-8 ${isMobile ? 'px-4' : 'px-2 md:px-0'}`}>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>
-              Customer Reviews
-              {listingReviewCount > 0 && (
-                <span className={`ml-2 ${isMobile ? 'text-sm' : 'text-base'} font-normal`} style={{ color: '#454955' }}>
-                  ({listingReviewCount} {listingReviewCount === 1 ? 'review' : 'reviews'})
-                </span>
-              )}
-            </h2>
-            {listingAvgRating && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <FiStar
-                      key={star}
-                      className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} ${
-                        star <= Math.round(listingAvgRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
-                  {listingAvgRating}
-                </span>
               </div>
             )}
-          </div>
 
-          {listingReviewCount === 0 ? (
-            <div className={`rounded-2xl shadow-lg ${isMobile ? 'p-6' : 'p-8'} text-center border`} 
-              style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className="flex flex-col items-center gap-3">
-                <FiStar className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-gray-300`} />
-                <p className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`} style={{ color: '#454955' }}>
-                  No reviews yet
-                </p>
-                <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  Be the first to review this product!
-                </p>
+            {/* Payment & Delivery Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-semibold text-blue-900">Payment Options</span>
+                </div>
+                <div className="text-sm text-blue-800">
+                  {item.cashOnDelivery && item.bankTransfer ? (
+                    "Cash on Delivery & Bank Transfer available"
+                  ) : item.cashOnDelivery ? (
+                    "Cash on Delivery available"
+                  ) : item.bankTransfer ? (
+                    "Bank Transfer available"
+                  ) : (
+                    "Contact seller for payment options"
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                    <path d="M3 4a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zM3 10a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM3 16a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM6 4a1 1 0 000 2h8a1 1 0 100-2H6zM6 10a1 1 0 000 2h8a1 1 0 100-2H6zM6 16a1 1 0 000 2h8a1 1 0 100-2H6z" />
+                  </svg>
+                  <span className="font-semibold text-green-900">Delivery</span>
+                </div>
+                <div className="text-sm text-green-800">
+                  {deliveryType === "free" ? "Free delivery included" : "Delivery charges apply"}
+                </div>
               </div>
             </div>
-          ) : (
-            <>
-              {/* Reviews List */}
-              <div className="space-y-4 mb-6">
-                {reviewsLoading ? (
-                  // Loading skeleton
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} border animate-pulse`} 
-                      style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                      <div className="flex items-start gap-3">
-                        <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} bg-gray-200 rounded-full`}></div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`h-4 bg-gray-200 rounded ${isMobile ? 'w-20' : 'w-24'}`}></div>
-                            <div className="flex gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <div key={star} className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} bg-gray-200 rounded`}></div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-gray-200 rounded w-full"></div>
-                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  reviews.map((review) => (
-                    <div key={review.id} className={`rounded-2xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} border`} 
-                      style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                      <div className="flex items-start gap-3">
-                        <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-full flex items-center justify-center text-white font-semibold`}
-                          style={{ backgroundColor: '#72b01d' }}>
-                          {review.reviewerName ? review.reviewerName.charAt(0).toUpperCase() : 'U'}
-                        </div>
-                        <div className="flex-1">
-                          <div className="mb-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
-                                {review.reviewerName || 'Anonymous User'}
-                              </span>
-                              <div className="flex items-center">
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden ${isMobile ? 'mb-6' : 'mb-8'}`}>
+          <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                Customer Reviews
+                {listingReviewCount > 0 && (
+                  <span className="ml-2 text-base font-normal text-gray-500">
+                    ({listingReviewCount})
+                  </span>
+                )}
+              </h2>
+              {listingAvgRating && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FiStar
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= Math.round(listingAvgRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    {listingAvgRating.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {listingReviewCount === 0 ? (
+              <div className="text-center py-8">
+                <FiStar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-lg font-medium text-gray-500 mb-1">No reviews yet</p>
+                <p className="text-gray-400">Be the first to review this product!</p>
+              </div>
+            ) : (
+              <>
+                {/* Reviews List */}
+                <div className="space-y-4 mb-6">
+                  {reviewsLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="p-4 border border-gray-100 rounded-lg animate-pulse">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="h-4 bg-gray-200 rounded w-20"></div>
+                              <div className="flex gap-1">
                                 {[1, 2, 3, 4, 5].map((star) => (
-                                  <FiStar
-                                    key={star}
-                                    className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} ${
-                                      star <= (review.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                    }`}
-                                  />
+                                  <div key={star} className="w-3 h-3 bg-gray-200 rounded"></div>
                                 ))}
                               </div>
                             </div>
-                            {review.createdAt && (
-                              <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                {new Date(review.createdAt.seconds * 1000).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                            )}
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-full"></div>
+                              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            </div>
                           </div>
-                          {review.comment && (
-                            <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed`} style={{ color: '#454955' }}>
-                              {review.comment}
-                            </p>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Pagination for Reviews */}
-              {totalReviewPages > 1 && (
-                <div className="flex justify-center">
-                  <Pagination
-                    currentPage={currentReviewPage}
-                    totalPages={totalReviewPages}
-                    onPageChange={handleReviewPageChange}
-                    totalItems={listingReviewCount}
-                    showInfo={false}
-                    showJumpTo={false}
-                  />
+                    ))
+                  ) : (
+                    reviews.map((review) => (
+                      <div key={review.id} className="p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-semibold">
+                            {review.reviewerName ? review.reviewerName.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-gray-900">
+                                {review.reviewerName || 'Anonymous User'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <FiStar
+                                      key={star}
+                                      className={`w-3 h-3 ${
+                                        star <= (review.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                {review.createdAt && (
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(review.createdAt.seconds * 1000).toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {review.comment && (
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                {review.comment}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              )}
-            </>
-          )}
-        </section>
 
-        
+                {/* Pagination for Reviews */}
+                {totalReviewPages > 1 && (
+                  <div className="flex justify-center">
+                    <Pagination
+                      currentPage={currentReviewPage}
+                      totalPages={totalReviewPages}
+                      onPageChange={handleReviewPageChange}
+                      totalItems={listingReviewCount}
+                      showInfo={false}
+                      showJumpTo={false}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
       </main>
 
       {/* Latest Items Section */}
-        {latestItems.length > 0 && (
-          <section className={`w-full mb-12 ${isMobile ? 'px-4' : 'px-6 md:px-12 lg:px-16 xl:px-20'}`}>
-            <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6`} style={{ color: '#0d0a0b' }}>Latest Items You Might Like</h2>
-            <WithReviewStats listings={latestItems}>
-              {(listingsWithStats) => (
-                <>
-                  {isMobile ? (
-                    <div className="w-full overflow-x-auto">
-                      <div className="flex gap-4 pb-4" style={{ width: 'max-content' }}>
-                        {listingsWithStats.map((item) => (
-                          <div key={item.id} className="flex-shrink-0" style={{ width: '160px' }}>
-                            <ResponsiveListingTile 
-                              listing={item}
-                              onRefresh={refreshListings}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
-                      {listingsWithStats.map((item) => (
-                        <ResponsiveListingTile 
-                          key={item.id}
-                          listing={item}
-                          onRefresh={refreshListings}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </WithReviewStats>
-          </section>
-        )}
+      {latestItems.length > 0 && (
+        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 mb-8' : 'px-4 mb-12'}`}>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">You Might Also Like</h2>
+              <WithReviewStats listings={latestItems}>
+                {(listingsWithStats) => (
+                  <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'}`}>
+                    {listingsWithStats.map((item) => (
+                      <ResponsiveListingTile 
+                        key={item.id}
+                        listing={item}
+                        onRefresh={refreshListings}
+                      />
+                    ))}
+                  </div>
+                )}
+              </WithReviewStats>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enlarge Modal */}
       {enlarge && item.images && (

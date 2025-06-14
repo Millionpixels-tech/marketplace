@@ -34,6 +34,13 @@ type CheckoutItem = {
   shopId?: string;
   shop?: string;
   quantity?: number;
+  hasVariations?: boolean;
+  variations?: Array<{
+    id: string;
+    name: string;
+    priceChange: number;
+    quantity: number;
+  }>;
 };
 
 type Shop = {
@@ -91,6 +98,7 @@ export default function CheckoutPage() {
   
   const [item, setItem] = useState<CheckoutItem | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<{id: string; name: string; priceChange: number; quantity: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
@@ -126,6 +134,7 @@ export default function CheckoutPage() {
   const itemId = searchParams.get("itemId");
   const quantity = parseInt(searchParams.get("quantity") || "1");
   const paymentMethodParam = searchParams.get("paymentMethod") as PaymentMethodType | null;
+  const variationId = searchParams.get("variationId");
   
   // Form state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.CASH_ON_DELIVERY);
@@ -159,6 +168,14 @@ export default function CheckoutPage() {
         
         const itemData = { id: itemDoc.id, ...itemDoc.data() } as CheckoutItem;
         setItem(itemData);
+        
+        // Set selected variation if variationId is provided
+        if (variationId && itemData.hasVariations && itemData.variations) {
+          const variation = itemData.variations.find(v => v.id === variationId);
+          if (variation) {
+            setSelectedVariation(variation);
+          }
+        }
         
         // Batch shop fetch if shopId exists
         const shopId = itemData.shopId || itemData.shop;
@@ -339,7 +356,9 @@ export default function CheckoutPage() {
   const calculateTotals = () => {
     if (!item) return { subtotal: 0, shipping: 0, total: 0 };
     
-    const price = Number(item.price || 0);
+    const basePrice = Number(item.price || 0);
+    const variationPriceChange = selectedVariation?.priceChange || 0;
+    const price = basePrice + variationPriceChange;
     const subtotal = price * quantity;
     
     let shipping = 0;
@@ -350,10 +369,10 @@ export default function CheckoutPage() {
     }
     
     const total = subtotal + shipping;
-    return { subtotal, shipping, total };
+    return { subtotal, shipping, total, price };
   };
 
-  const { subtotal, shipping, total } = calculateTotals();
+  const { subtotal, shipping, total, price } = calculateTotals();
 
   // Validation functions
   const validateForm = (): boolean => {
@@ -441,12 +460,20 @@ export default function CheckoutPage() {
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
-        price: Number(item.price || 0),
+        price: price, // Use calculated price including variation
         quantity: quantity,
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.BANK_TRANSFER,
         paymentStatus: PaymentStatus.PENDING,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
       };
 
       // Only add buyerNotes if it has content
@@ -492,11 +519,19 @@ export default function CheckoutPage() {
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
-        price: Number(item.price || 0),
+        price: price, // Use calculated price including variation
         quantity: quantity,
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
       };
 
       // Only add buyerNotes if it has content
@@ -567,13 +602,21 @@ export default function CheckoutPage() {
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
-        price: Number(item.price || 0),
+        price: price, // Use calculated price including variation
         quantity: quantity,
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.PAY_NOW,
         paymentStatus: PaymentStatus.PENDING,
-        orderId: orderId
+        orderId: orderId,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
       };
 
       // Only add buyerNotes if it has content
@@ -593,7 +636,7 @@ export default function CheckoutPage() {
         cancel_url: undefined,
         notify_url: `${window.location.origin}/api/payhere/notify`, // You'll need to implement this endpoint
         order_id: orderId,
-        items: `${item.name} (Qty: ${quantity})`,
+        items: `${item.name}${selectedVariation ? ` - ${selectedVariation.name}` : ''} (Qty: ${quantity})`,
         amount: total.toFixed(2),
         currency: 'LKR',
         hash: hashResult.hash,
@@ -1242,11 +1285,23 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-lg mb-1 leading-tight" style={{ color: '#0d0a0b' }}>{item.name}</h4>
+                  {selectedVariation && (
+                    <p className="text-sm mb-1 font-medium" style={{ color: '#72b01d' }}>
+                      Variation: {selectedVariation.name}
+                    </p>
+                  )}
                   {shop && (
                     <p className="text-sm mb-1" style={{ color: '#454955' }}>From {shop.name}</p>
                   )}
                   <p className="text-sm" style={{ color: '#454955' }}>Quantity: {quantity}</p>
-                  {/* <p className="font-semibold" style={{ color: '#0d0a0b' }}>LKR {item.price?.toLocaleString()}</p> */}
+                  <p className="font-semibold" style={{ color: '#0d0a0b' }}>
+                    LKR {(price || 0).toLocaleString()}
+                    {selectedVariation && selectedVariation.priceChange !== 0 && (
+                      <span className="text-xs ml-1" style={{ color: '#6b7280' }}>
+                        (Base: LKR {item.price?.toLocaleString()}{selectedVariation.priceChange > 0 ? ' +' : ' '}LKR {selectedVariation.priceChange.toFixed(2)})
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
 

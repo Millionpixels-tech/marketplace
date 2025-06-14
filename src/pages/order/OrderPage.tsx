@@ -308,6 +308,17 @@ export default function OrderPage() {
                             <img src={order.itemImage} alt="item" className="w-20 h-20 object-cover rounded-2xl border border-[#45495522] shadow-sm" />
                             <div>
                                 <div className="font-bold text-lg text-[#0d0a0b]">{order.itemName}</div>
+                                {order.variationName && (
+                                    <div className="text-sm font-medium text-[#72b01d] mt-1">
+                                        Variation: {order.variationName}
+                                    </div>
+                                )}
+                                {order.sellerNotes && (
+                                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div className="text-sm font-semibold text-yellow-800 mb-1">Seller Notes:</div>
+                                        <div className="text-sm text-yellow-700">{order.sellerNotes}</div>
+                                    </div>
+                                )}
                                 <div className="text-sm text-[#454955]">Order ID: {order.id}</div>
                             </div>
                         </div>
