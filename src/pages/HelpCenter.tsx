@@ -1,12 +1,10 @@
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
-import { useResponsive } from "../hooks/useResponsive";
 import { FiSearch, FiMessageCircle, FiShoppingBag, FiTruck, FiCreditCard, FiUser, FiHelpCircle, FiMail } from "react-icons/fi";
 import { getFAQStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 
 export default function HelpCenter() {
-  const { isMobile } = useResponsive();
   const faqCategories = [
     {
       title: "Getting Started",
