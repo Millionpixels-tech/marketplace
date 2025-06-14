@@ -1,35 +1,48 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
-import { getOrganizationStructuredData } from '../utils/seo';
+import { useResponsive } from '../hooks/useResponsive';
+import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 import { FiTruck, FiClock, FiMapPin, FiPackage, FiGlobe } from 'react-icons/fi';
 
 export default function ShippingInfo() {
+  const { isMobile } = useResponsive();
+  
   return (
     <>
       <SEOHead
         title="Shipping Information - SinaMarketplace"
         description="Learn about shipping options, delivery times, and policies for Sri Lanka and international orders. Standard and express delivery available."
-        keywords="shipping information, delivery, Sri Lanka shipping, international shipping, delivery times, shipping costs"
-        canonicalUrl="https://sinamarketplace.com/shipping"
+        keywords={generateKeywords([
+          'shipping information',
+          'delivery',
+          'Sri Lanka shipping',
+          'international shipping',
+          'delivery times',
+          'shipping costs'
+        ])}
+        canonicalUrl={getCanonicalUrl('/shipping-info')}
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
-      <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <FiTruck className="text-[#72b01d] text-3xl" />
-            <h1 className="text-3xl font-bold text-gray-900">Shipping Information</h1>
+      <ResponsiveHeader />
+      
+      {/* Hero Section */}
+      <div className={`bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+          <div className="flex items-center justify-center mb-6">
+            <FiTruck className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-white`} />
           </div>
-          <p className="text-gray-600 text-lg">
-            Learn about our shipping options, delivery times, and policies for both local and international orders.
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Shipping Information</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
+            Fast, reliable delivery options for Sri Lanka and worldwide.
           </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Main Content */}
+        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-12'}`}>
         <div className="bg-white rounded-lg shadow-sm p-8 space-y-8">
           
           {/* Domestic Shipping */}

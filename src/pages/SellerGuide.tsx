@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Header from '../components/UI/Header';
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
+import { useResponsive } from '../hooks/useResponsive';
 import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiPhone, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
 import { getArticleStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 
 export default function SellerGuide() {
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
   const [activeStep, setActiveStep] = useState(1);
 
   const steps = [
@@ -193,15 +195,15 @@ export default function SellerGuide() {
           url: getCanonicalUrl('/seller-guide')
         })}
       />
-      <Header />
+      <ResponsiveHeader />
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[#72b01d] to-[#3f7d20] text-white py-16">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Start Selling on sina.lk
+        <div className={`bg-gradient-to-r from-[#72b01d] to-[#3f7d20] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+            <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>
+              Start Selling on SinaMarketplace
             </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
+            <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} mb-8 opacity-90`}>
               Turn your Sri Lankan crafts and products into a thriving online business
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -7,7 +7,7 @@ import { useResponsive } from "../hooks/useResponsive";
 
 export default function PrivacyPolicy() {
   const { isMobile } = useResponsive();
-  const lastUpdated = "June 8, 2025";
+  const lastUpdated = "June 14, 2025";
 
   const sections = [
     {

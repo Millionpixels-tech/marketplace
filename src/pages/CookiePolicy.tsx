@@ -1,9 +1,13 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
+import { useResponsive } from '../hooks/useResponsive';
 import { getOrganizationStructuredData } from '../utils/seo';
 import { FiShield, FiEye, FiLock, FiDatabase, FiGlobe, FiMail } from 'react-icons/fi';
 
 export default function CookiePolicy() {
+  const { isMobile } = useResponsive();
+  const lastUpdated = "June 14, 2025";
   return (
     <>
       <SEOHead
@@ -14,19 +18,20 @@ export default function CookiePolicy() {
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
+      <ResponsiveHeader />
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-8'}`}>
           <div className="flex items-center space-x-3 mb-4">
-            <FiShield className="text-[#72b01d] text-3xl" />
-            <h1 className="text-3xl font-bold text-gray-900">Cookie Policy</h1>
+            <FiShield className={`text-[#72b01d] ${isMobile ? 'text-2xl' : 'text-3xl'}`} />
+            <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900`}>Cookie Policy</h1>
           </div>
-          <p className="text-gray-600 text-lg">
+          <p className={`text-gray-600 ${isMobile ? 'text-base' : 'text-lg'}`}>
             Learn how SinaMarketplace uses cookies and similar technologies to enhance your browsing experience.
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Last updated: December 15, 2024
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-2`}>
+            Last updated: {lastUpdated}
           </p>
         </div>
       </div>

@@ -1,32 +1,48 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
-import { getOrganizationStructuredData } from '../utils/seo';
-import { FiTruck, FiRefreshCw, FiCheckCircle, FiClock, FiDollarSign, FiAlertCircle } from 'react-icons/fi';
+import { useResponsive } from '../hooks/useResponsive';
+import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
+import { FiTruck, FiRefreshCw, FiCheckCircle, FiClock, FiDollarSign, FiAlertCircle, FiShield } from 'react-icons/fi';
 
 export default function ReturnsRefunds() {
+  const { isMobile } = useResponsive();
+
   return (
     <>
       <SEOHead
         title="Returns & Refunds Policy - SinaMarketplace"
         description="Learn about our comprehensive returns and refunds policy. 30-day return window, easy process, and full refunds for eligible items in Sri Lanka."
-        keywords="returns policy, refunds, return items, 30 day returns, Sri Lanka marketplace, customer protection"
-        canonicalUrl="https://sinamarketplace.com/returns"
+        keywords={generateKeywords([
+          'returns policy',
+          'refunds',
+          'return items',
+          '30 day returns',
+          'Sri Lanka marketplace',
+          'customer protection'
+        ])}
+        canonicalUrl={getCanonicalUrl('/returns-refunds')}
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
-      <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Returns & Refunds</h1>
-          <p className="text-gray-600">
-            Learn about our return policy and how to get refunds for your purchases.
+      <ResponsiveHeader />
+      
+      {/* Hero Section */}
+      <div className={`bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+          <div className="flex items-center justify-center mb-6">
+            <FiShield className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-white`} />
+          </div>
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Returns & Refunds</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
+            Shop with confidence - learn about our return policy and refund process.
           </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Main Content */}
+        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-12'}`}>
         {/* Quick Overview */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Return Policy Overview</h2>
