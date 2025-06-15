@@ -104,6 +104,20 @@ export default function ListingSingle() {
     setQty(1);
   }, [selectedVariation]);
 
+  // Auto-select first available variation when item loads
+  useEffect(() => {
+    if (item?.hasVariations && item?.variations && item.variations.length > 0 && !selectedVariation) {
+      // Find the first variation that has stock
+      const firstAvailableVariation = item.variations.find((v: SimpleVariation) => 
+        v.name && v.name.trim() && v.quantity > 0
+      );
+      
+      if (firstAvailableVariation) {
+        setSelectedVariation(firstAvailableVariation);
+      }
+    }
+  }, [item, selectedVariation]);
+
   useEffect(() => {
     // Set default payment method based on what's available for this listing
     if (item?.cashOnDelivery && item?.bankTransfer) {
@@ -132,8 +146,8 @@ export default function ListingSingle() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // Attach client IP for wishlist logic
-          setItem({ ...data, __client_ip: ip });
+          // Attach client IP and document ID for wishlist logic
+          setItem({ ...data, id, __client_ip: ip });
 
           // Fetch shop info if available
           if (data.shop || data.shopId) {
@@ -396,7 +410,7 @@ export default function ListingSingle() {
     try {
       ip = await getUserIP();
     } catch { }
-    if (docSnap.exists()) setItem({ ...docSnap.data(), __client_ip: ip });
+    if (docSnap.exists()) setItem({ ...docSnap.data(), id, __client_ip: ip });
   };
 
   // Generate SEO data
@@ -580,54 +594,42 @@ export default function ListingSingle() {
 
                 {/* Shop Info */}
                 {shop && (
-                  <Link
-                    to={`/shop/${shop.username}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all group"
-                  >
-                    <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50">
+                  <div className={`inline-flex items-center ${isMobile ? 'gap-1.5 px-2 py-1.5' : 'gap-2 px-3 py-2'} rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all`}>
+                    {/* Shop Logo */}
+                    <div className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} rounded-full overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50`}>
                       {shop.logo ? (
                         <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm">🛍️</span>
+                        <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>🛍️</span>
                       )}
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-green-600">
-                        {shop.name}
-                      </span>
-                      <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={true} />
-                    </div>
-                  </Link>
+                    
+                    {/* Shop Name (clickable) */}
+                    <Link
+                      to={`/shop/${shop.username}`}
+                      className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-900 hover:text-green-600 transition-colors`}
+                    >
+                      {shop.name}
+                    </Link>
+                    
+                    {/* Separator */}
+                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-400`}>•</span>
+                    
+                    {/* Owner Name (clickable) */}
+                    <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={false} />
+                  </div>
                 )}
-              </div>
 
-              {/* Price Section */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl font-bold text-gray-900">
-                    LKR {price.toLocaleString()}
-                  </span>
-                  {deliveryType === "free" && (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
-                      Free Delivery
-                    </span>
-                  )}
-                  {deliveryType === "paid" && (
-                    <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
-                      + Shipping
-                    </span>
-                  )}
-                </div>
-                
-                {/* Wishlist */}
-                <div className="flex items-center justify-between">
-                  <WishlistButton listing={{ ...item, id }} refresh={refreshItem} displayText={true} />
-                  {Array.isArray(item.wishlist) && item.wishlist.length > 0 && (
-                    <span className="text-xs text-gray-500">
-                      {item.wishlist.length} in wishlists
-                    </span>
-                  )}
-                </div>
+                {/* Wishlist Button - Left aligned */}
+                {item && (
+                  <div className={`${isMobile ? 'mt-3' : 'mt-4'} flex justify-start`}>
+                    <WishlistButton 
+                      listing={item} 
+                      refresh={refreshItem}
+                      displayText={true}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Variations Section */}
@@ -639,9 +641,7 @@ export default function ListingSingle() {
                   <select
                     value={selectedVariation?.id || ''}
                     onChange={(e) => {
-                      if (e.target.value === '') {
-                        setSelectedVariation(null);
-                      } else {
+                      if (e.target.value !== '') {
                         const variation = item.variations?.find((v: SimpleVariation) => v.id === e.target.value);
                         if (variation && variation.quantity > 0) {
                           setSelectedVariation(variation);
@@ -656,7 +656,6 @@ export default function ListingSingle() {
                       backgroundSize: '1.5em 1.5em'
                     }}
                   >
-                    <option value="">Choose a variation...</option>
                     {item.variations.filter((v: SimpleVariation) => v.name && v.name.trim()).map((variation: SimpleVariation) => {
                       const variationPrice = basePrice + variation.priceChange;
                       const isOutOfStock = variation.quantity <= 0;
@@ -698,20 +697,8 @@ export default function ListingSingle() {
                 </div>
               )}
 
-              {/* Warning for Variations */}
-              {item?.hasVariations && item?.variations && item.variations.length > 0 && !selectedVariation && (
-                <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-600">
-                    <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-sm font-medium">Please select a variation to continue</span>
-                  </div>
-                </div>
-              )}
-
               {/* Quantity and Purchase Section */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Quantity */}
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium text-gray-700">Quantity:</label>
@@ -726,10 +713,8 @@ export default function ListingSingle() {
                         if (val > availableQuantity) val = availableQuantity;
                         setQty(val);
                       }}
-                      disabled={item?.hasVariations && !selectedVariation}
-                      className={`w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                        (item?.hasVariations && !selectedVariation) ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                      }`}
+                      disabled={false}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
                     />
                     <span className="text-xs text-gray-500">
                       of {availableQuantity} available
@@ -737,21 +722,41 @@ export default function ListingSingle() {
                   </div>
                 </div>
 
-                {/* Total Price */}
-                <div className="flex items-center justify-between py-3 border-t border-gray-200">
-                  <span className="text-sm font-medium text-gray-700">Total:</span>
-                  <span className="text-lg font-bold text-gray-900">
-                    LKR {total.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Shipping Info */}
-                {deliveryType === "paid" && (
-                  <div className="text-xs text-gray-500">
-                    Includes shipping: LKR {shipping.toLocaleString()}
-                    {qty > 1 && ` (${deliveryPerItem} + ${deliveryAdditional} × ${qty - 1})`}
+                {/* Price Breakdown Section */}
+                <div className={`bg-gray-50 border border-gray-200 rounded-lg ${isMobile ? 'p-3' : 'p-4'} space-y-3`}>
+                  {/* Item Price */}
+                  <div className="flex items-center justify-between">
+                    <span className={`${isMobile ? 'text-sm' : 'text-sm'} text-gray-600`}>
+                      Item price {qty > 1 ? `(${qty} × LKR ${price.toLocaleString()})` : ''}
+                    </span>
+                    <span className={`${isMobile ? 'text-sm' : 'text-base'} font-medium text-gray-900`}>
+                      LKR {(price * qty).toLocaleString()}
+                    </span>
                   </div>
-                )}
+
+                  {/* Delivery Fee */}
+                  <div className="flex items-center justify-between">
+                    <span className={`${isMobile ? 'text-sm' : 'text-sm'} text-gray-600`}>
+                      {deliveryType === "free" ? "Delivery" : "Delivery fee"}
+                      {deliveryType === "paid" && qty > 1 && (
+                        <span className={`block ${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 mt-0.5`}>
+                          LKR {deliveryPerItem} + LKR {deliveryAdditional} × {qty - 1}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`${isMobile ? 'text-sm' : 'text-base'} font-medium ${deliveryType === "free" ? "text-green-600" : "text-gray-900"}`}>
+                      {deliveryType === "free" ? "Free" : `LKR ${shipping.toLocaleString()}`}
+                    </span>
+                  </div>
+
+                  {/* Total */}
+                  <div className={`flex items-center justify-between ${isMobile ? 'pt-2' : 'pt-2'} border-t border-gray-300`}>
+                    <span className={`${isMobile ? 'text-base' : 'text-base'} font-semibold text-gray-900`}>Total</span>
+                    <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-900`}>
+                      LKR {total.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Payment Methods */}
                 {(item.cashOnDelivery || item.bankTransfer) ? (
@@ -766,7 +771,7 @@ export default function ListingSingle() {
                             value="cod"
                             checked={paymentMethod === PaymentMethod.CASH_ON_DELIVERY}
                             onChange={() => setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY)}
-                            className="text-green-600"
+                            className="accent-[#72b01d]"
                           />
                           <span className="text-sm font-medium text-gray-900">Cash on Delivery</span>
                         </label>
@@ -779,7 +784,7 @@ export default function ListingSingle() {
                             value="bankTransfer"
                             checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
                             onChange={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
-                            className="text-green-600"
+                            className="accent-[#72b01d]"
                           />
                           <span className="text-sm font-medium text-gray-900">Bank Transfer</span>
                         </label>
@@ -788,7 +793,22 @@ export default function ListingSingle() {
 
                     {/* Order Button */}
                     <button
-                      className="w-full py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors shadow-sm"
+                      className="w-full py-4 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors shadow-sm"
+                      style={{
+                        backgroundColor: qty > availableQuantity || (item?.hasVariations && !selectedVariation) 
+                          ? undefined 
+                          : '#72b01d'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!(qty > availableQuantity || (item?.hasVariations && !selectedVariation))) {
+                          e.currentTarget.style.backgroundColor = '#5a8f17';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!(qty > availableQuantity || (item?.hasVariations && !selectedVariation))) {
+                          e.currentTarget.style.backgroundColor = '#72b01d';
+                        }
+                      }}
                       disabled={qty > availableQuantity || (item?.hasVariations && !selectedVariation)}
                       onClick={() => {
                         if (!item || !shop || qty > availableQuantity) return;
@@ -984,9 +1004,9 @@ export default function ListingSingle() {
                                 )}
                               </div>
                             </div>
-                            {review.comment && (
+                            {review.review && (
                               <p className="text-sm text-gray-700 leading-relaxed">
-                                {review.comment}
+                                {review.review}
                               </p>
                             )}
                           </div>

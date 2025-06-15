@@ -1193,15 +1193,15 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-gray-50"
-                                    onClick={() => goToStep(4)}
+                                    onClick={() => goToStep(5)}
                                 >
                                     ← Back
                                 </button>
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-7 py-3 bg-[#72b01d] text-white rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] disabled:opacity-30"
-                                    disabled={imagePreviews.length === 0}
-                                    onClick={() => goToStep(6)}
+                                    disabled={imagePreviews.length === 0 && existingImageUrls.length === 0}
+                                    onClick={() => goToStep(7)}
                                 >
                                     Next →
                                 </button>
@@ -1209,8 +1209,8 @@ export default function EditListing() {
                         </div>
                     )}
 
-                    {/* Step 6: Delivery */}
-                    {step === 6 && (
+                    {/* Step 7: Delivery */}
+                    {step === 7 && (
                         <div className="animate-fade-in">
                             <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-center text-[#0d0a0b]">
                                 Delivery options
@@ -1411,7 +1411,7 @@ export default function EditListing() {
                                 <button
                                     type="button"
                                     className="w-full md:w-auto px-6 md:px-8 py-3 bg-white text-[#454955] border border-[#45495522] rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-[#454955]/30"
-                                    onClick={() => goToStep(5)}
+                                    onClick={() => goToStep(6)}
                                 >
                                     ← Back
                                 </button>
