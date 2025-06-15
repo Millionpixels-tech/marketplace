@@ -93,7 +93,10 @@ export default function AddBankAccountModal({ isOpen, onClose, onBankAccountAdde
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
         >
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200">
+            <div 
+                className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200"
+                style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+            >
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-bold text-[#0d0a0b]">

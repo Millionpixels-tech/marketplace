@@ -142,8 +142,14 @@ export default function ContactSellerButton({
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className={`bg-white rounded-2xl shadow-xl w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} max-h-[90vh] overflow-hidden`}>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+        >
+          <div 
+            className={`bg-white rounded-2xl shadow-2xl w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} max-h-[90vh] overflow-hidden border border-gray-200`}
+            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+          >
             {/* Header */}
             <div className={`flex items-center justify-between p-4 border-b border-gray-200`}>
               <div>

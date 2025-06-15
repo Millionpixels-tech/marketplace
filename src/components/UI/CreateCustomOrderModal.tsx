@@ -1,11 +1,23 @@
 // src/components/UI/CreateCustomOrderModalWizard.tsx
 import { useState, useEffect } from "react";
-import { FiX, FiMinus, FiSend, FiPackage, FiEdit3, FiShoppingCart, FiTruck, FiCreditCard } from "react-icons/fi";
+import { FiX, FiMinus, FiSend, FiPackage, FiEdit3, FiShoppingCart, FiTruck, FiCreditCard, FiPlus } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { createCustomOrder, getSellerActiveListingsCount, getSellerActiveListings } from "../../utils/customOrders";
 import { sendMessage } from "../../utils/messaging";
 import { useResponsive } from "../../hooks/useResponsive";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../utils/firebase";
 import type { CustomOrderItem, SellerListing } from "../../utils/customOrders";
+
+interface BankAccount {
+  id: string;
+  accountNumber: string;
+  branch: string;
+  bankName: string;
+  fullName: string;
+  isDefault: boolean;
+  createdAt: Date;
+}
 
 interface CreateCustomOrderModalProps {
   isOpen: boolean;
@@ -30,6 +42,18 @@ export default function CreateCustomOrderModal({
   const [hasActiveListings, setHasActiveListings] = useState(false);
   const [checkingListings, setCheckingListings] = useState(true);
   const [sellerListings, setSellerListings] = useState<SellerListing[]>([]);
+  
+  // Bank account state
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [showAddBankAccount, setShowAddBankAccount] = useState(false);
+  const [bankAccountForm, setBankAccountForm] = useState({
+    accountNumber: '',
+    branch: '',
+    bankName: '',
+    fullName: ''
+  });
+  const [bankAccountLoading, setBankAccountLoading] = useState(false);
+  const [bankAccountError, setBankAccountError] = useState<string | null>(null);
   
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
@@ -67,6 +91,29 @@ export default function CreateCustomOrderModal({
     checkActiveListings();
   }, [user, isOpen]);
 
+  // Check if seller has bank accounts
+  useEffect(() => {
+    const checkBankAccounts = async () => {
+      if (!user || !isOpen) return;
+      
+      try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.bankAccounts && Array.isArray(userData.bankAccounts)) {
+            setBankAccounts(userData.bankAccounts);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking bank accounts:", error);
+        setBankAccounts([]);
+      }
+    };
+
+    checkBankAccounts();
+  }, [user, isOpen]);
+
   // Reset wizard when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -77,8 +124,85 @@ export default function CreateCustomOrderModal({
       setPaymentMethod('COD');
       setNotes('');
       setCreatedOrderId(null);
+      setShowAddBankAccount(false);
+      setBankAccountForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+      setBankAccountError(null);
     }
   }, [isOpen]);
+
+  // Bank account management functions
+  const generateBankAccountId = () => {
+    return `bank_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  const handleAddBankAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.uid) return;
+
+    setBankAccountLoading(true);
+    setBankAccountError(null);
+
+    try {
+      // Get current user data
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      const currentBankAccounts = userData.bankAccounts || [];
+
+      // Create new bank account
+      const newAccount: BankAccount = {
+        id: generateBankAccountId(),
+        accountNumber: bankAccountForm.accountNumber,
+        branch: bankAccountForm.branch,
+        bankName: bankAccountForm.bankName,
+        fullName: bankAccountForm.fullName,
+        isDefault: currentBankAccounts.length === 0, // First account is default
+        createdAt: new Date(),
+      };
+
+      const updatedAccounts = [...currentBankAccounts, newAccount];
+
+      // Update user document
+      await updateDoc(userDocRef, {
+        bankAccounts: updatedAccounts
+      });
+
+      // Update local state
+      setBankAccounts(updatedAccounts);
+
+      // Reset form and close add bank account section
+      setBankAccountForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+      setShowAddBankAccount(false);
+
+      // Auto-select bank transfer now that we have an account
+      setPaymentMethod('BANK_TRANSFER');
+
+      // Show success message
+      const successDiv = document.createElement('div');
+      successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      successDiv.textContent = 'Bank account added successfully! Bank transfer is now available.';
+      document.body.appendChild(successDiv);
+      
+      setTimeout(() => {
+        document.body.removeChild(successDiv);
+      }, 3000);
+
+    } catch (err) {
+      console.error('Error adding bank account:', err);
+      setBankAccountError('Failed to add bank account. Please try again.');
+    } finally {
+      setBankAccountLoading(false);
+    }
+  };
+
+  const handlePaymentMethodChange = (method: 'COD' | 'BANK_TRANSFER') => {
+    if (method === 'BANK_TRANSFER' && bankAccounts.length === 0) {
+      // Show the add bank account form
+      setShowAddBankAccount(true);
+      return;
+    }
+    setPaymentMethod(method);
+  };
 
   const removeItem = (id: string) => {
     if (items.length > 1) {
@@ -208,8 +332,14 @@ export default function CreateCustomOrderModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-2xl shadow-xl w-full ${isMobile ? 'max-w-sm max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} overflow-hidden flex flex-col`}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+    >
+      <div 
+        className={`bg-white rounded-2xl shadow-2xl w-full ${isMobile ? 'max-w-sm max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} overflow-hidden flex flex-col border border-gray-200`}
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
@@ -479,7 +609,7 @@ export default function CreateCustomOrderModal({
                               name="paymentMethod"
                               value="COD"
                               checked={paymentMethod === 'COD'}
-                              onChange={(e) => setPaymentMethod(e.target.value as 'COD')}
+                              onChange={() => handlePaymentMethodChange('COD')}
                               className="mr-3"
                               style={{ accentColor: '#72b01d' }}
                             />
@@ -488,27 +618,189 @@ export default function CreateCustomOrderModal({
                               <div className="text-xs text-gray-600">Pay when received</div>
                             </div>
                           </label>
-                          <label className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                            paymentMethod === 'BANK_TRANSFER' 
-                              ? 'border-[#72b01d] bg-[#72b01d]/5' 
-                              : 'border-gray-300 hover:border-gray-400'
+                          <label className={`flex items-center p-3 border-2 rounded-lg transition-all ${
+                            bankAccounts.length === 0 
+                              ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60' 
+                              : paymentMethod === 'BANK_TRANSFER' 
+                                ? 'border-[#72b01d] bg-[#72b01d]/5 cursor-pointer' 
+                                : 'border-gray-300 hover:border-gray-400 cursor-pointer'
                           }`}>
                             <input
                               type="radio"
                               name="paymentMethod"
                               value="BANK_TRANSFER"
                               checked={paymentMethod === 'BANK_TRANSFER'}
-                              onChange={(e) => setPaymentMethod(e.target.value as 'BANK_TRANSFER')}
+                              onChange={() => handlePaymentMethodChange('BANK_TRANSFER')}
+                              disabled={bankAccounts.length === 0}
                               className="mr-3"
                               style={{ accentColor: '#72b01d' }}
                             />
                             <div>
                               <div className="text-sm font-medium text-gray-900">Bank Transfer</div>
-                              <div className="text-xs text-gray-600">Pay via bank</div>
+                              <div className="text-xs text-gray-600">
+                                {bankAccounts.length === 0 ? 'Requires bank account' : 'Pay via bank'}
+                              </div>
                             </div>
                           </label>
                         </div>
+
+                        {/* Bank Account Required Message */}
+                        {bankAccounts.length === 0 && (
+                          <div className="mt-3 p-3 rounded-lg border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                            <div className="flex items-start gap-2">
+                              <div className="flex-shrink-0 mt-0.5">
+                                <svg className="w-4 h-4" style={{ color: '#72b01d' }} fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="text-sm" style={{ color: '#454955' }}>
+                                <div className="font-medium mb-1" style={{ color: '#0d0a0b' }}>Bank account required for bank transfer</div>
+                                <div style={{ color: '#454955' }}>
+                                  To offer bank transfer as a payment option, you need to add at least one bank account. 
+                                  This allows customers to transfer money directly to you.
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAddBankAccount(true)}
+                                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium hover:underline transition-colors"
+                                  style={{ color: '#72b01d' }}
+                                >
+                                  <FiPlus className="w-4 h-4" />
+                                  Add Bank Account
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Inline Add Bank Account Form */}
+                      {showAddBankAccount && (
+                        <div className="mt-4 p-4 rounded-xl border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                          <div className="flex items-center gap-2 mb-4">
+                            <FiPlus className="w-5 h-5" style={{ color: '#72b01d' }} />
+                            <h4 className="text-lg font-medium" style={{ color: '#0d0a0b' }}>Add Bank Account</h4>
+                            <button
+                              type="button"
+                              onClick={() => setShowAddBankAccount(false)}
+                              className="ml-auto p-1 hover:bg-gray-100 rounded transition-colors"
+                            >
+                              <FiX className="w-4 h-4" style={{ color: '#454955' }} />
+                            </button>
+                          </div>
+                          
+                          <form onSubmit={handleAddBankAccount} className="space-y-4">
+                            {bankAccountError && (
+                              <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(211, 47, 47, 0.05)', borderColor: 'rgba(211, 47, 47, 0.2)' }}>
+                                <div className="text-sm" style={{ color: '#d32f2f' }}>{bankAccountError}</div>
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                                  Bank Name *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={bankAccountForm.bankName}
+                                  onChange={(e) => setBankAccountForm({ ...bankAccountForm, bankName: e.target.value })}
+                                  placeholder="e.g., Commercial Bank"
+                                  required
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-opacity-100 text-sm transition-colors"
+                                  style={{ 
+                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                    color: '#0d0a0b'
+                                  }}
+                                  onFocus={(e) => e.target.style.borderColor = '#72b01d'}
+                                  onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                                  Branch (optional)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={bankAccountForm.branch}
+                                  onChange={(e) => setBankAccountForm({ ...bankAccountForm, branch: e.target.value })}
+                                  placeholder="e.g., Colombo"
+                                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-opacity-100 text-sm transition-colors"
+                                  style={{ 
+                                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                                    color: '#0d0a0b'
+                                  }}
+                                  onFocus={(e) => e.target.style.borderColor = '#72b01d'}
+                                  onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                                Account Number *
+                              </label>
+                              <input
+                                type="text"
+                                value={bankAccountForm.accountNumber}
+                                onChange={(e) => setBankAccountForm({ ...bankAccountForm, accountNumber: e.target.value })}
+                                placeholder="Your bank account number"
+                                required
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-opacity-100 text-sm transition-colors"
+                                style={{ 
+                                  borderColor: 'rgba(114, 176, 29, 0.3)',
+                                  color: '#0d0a0b'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#72b01d'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                                Account Holder Full Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={bankAccountForm.fullName}
+                                onChange={(e) => setBankAccountForm({ ...bankAccountForm, fullName: e.target.value })}
+                                placeholder="Full name as per bank records"
+                                required
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-opacity-100 text-sm transition-colors"
+                                style={{ 
+                                  borderColor: 'rgba(114, 176, 29, 0.3)',
+                                  color: '#0d0a0b'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#72b01d'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                              />
+                            </div>
+                            
+                            <div className="flex gap-3 pt-2">
+                              <button
+                                type="submit"
+                                disabled={bankAccountLoading || !bankAccountForm.bankName || !bankAccountForm.accountNumber || !bankAccountForm.fullName}
+                                className="flex-1 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                                style={{ backgroundColor: '#72b01d' }}
+                              >
+                                {bankAccountLoading ? 'Adding...' : 'Add Bank Account'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowAddBankAccount(false)}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                                style={{ 
+                                  borderColor: 'rgba(114, 176, 29, 0.3)',
+                                  color: '#454955'
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
 
                       {/* Notes */}
                       <div>
