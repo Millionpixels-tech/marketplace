@@ -10,9 +10,10 @@ import type { CustomOrderItem, SellerListing } from "../../utils/customOrders";
 interface CreateCustomOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  conversationId: string;
-  buyerId: string;
-  buyerName: string;
+  conversationId?: string;
+  buyerId?: string;
+  buyerName?: string;
+  source?: 'messages' | 'dashboard';
 }
 
 export default function CreateCustomOrderModal({
@@ -20,7 +21,8 @@ export default function CreateCustomOrderModal({
   onClose,
   conversationId,
   buyerId,
-  buyerName
+  buyerName,
+  source = 'messages'
 }: CreateCustomOrderModalProps) {
   const { isMobile } = useResponsive();
   const { user } = useAuth();
@@ -32,6 +34,7 @@ export default function CreateCustomOrderModal({
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedListings, setSelectedListings] = useState<string[]>([]);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   
   // Form state
   const [items, setItems] = useState<CustomOrderItem[]>([]);
@@ -73,6 +76,7 @@ export default function CreateCustomOrderModal({
       setShippingCost(0);
       setPaymentMethod('COD');
       setNotes('');
+      setCreatedOrderId(null);
     }
   }, [isOpen]);
 
@@ -145,39 +149,45 @@ export default function CreateCustomOrderModal({
       const orderId = await createCustomOrder(
         user.uid,
         user.displayName || "Seller",
-        buyerId,
-        buyerName,
-        conversationId,
+        buyerId || 'manual-entry',
+        buyerName || 'Manual Order',
+        conversationId || '',
         items,
         shippingCost,
         paymentMethod,
         notes.trim() || undefined
       );
 
-      // Send message with custom order link
-      const orderLink = `${window.location.origin}/custom-order/${orderId}`;
-      const messageText = `🛒 Custom Order Created!\n\nI've prepared a special order just for you with ${items.length} item${items.length > 1 ? 's' : ''} totaling LKR ${calculateTotal().toLocaleString()}.\n\nClick the link below to review and checkout:\n${orderLink}`;
-      
-      await sendMessage(
-        conversationId,
-        user.uid,
-        user.displayName || "Seller",
-        messageText,
-        buyerId
-      );
+      if (source === 'messages' && conversationId && buyerId) {
+        // Send message with custom order link (original behavior)
+        const orderLink = `${window.location.origin}/custom-order/${orderId}`;
+        const messageText = `🛒 Custom Order Created!\n\nI've prepared a special order just for you with ${items.length} item${items.length > 1 ? 's' : ''} totaling LKR ${calculateTotal().toLocaleString()}.\n\nClick the link below to review and checkout:\n${orderLink}`;
+        
+        await sendMessage(
+          conversationId,
+          user.uid,
+          user.displayName || "Seller",
+          messageText,
+          buyerId
+        );
 
-      // Show success message
-      const successDiv = document.createElement('div');
-      successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      successDiv.textContent = 'Custom order sent successfully! Message delivered to buyer.';
-      document.body.appendChild(successDiv);
-      
-      setTimeout(() => {
-        document.body.removeChild(successDiv);
-      }, 3000);
+        // Show success message
+        const successDiv = document.createElement('div');
+        successDiv.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        successDiv.textContent = 'Custom order sent successfully! Message delivered to buyer.';
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+          document.body.removeChild(successDiv);
+        }, 3000);
 
-      // Close modal
-      onClose();
+        // Close modal
+        onClose();
+      } else {
+        // From dashboard - show step 4 with order link
+        setCreatedOrderId(orderId);
+        setCurrentStep(4);
+      }
     } catch (error) {
       console.error("Error creating custom order:", error);
       
@@ -674,14 +684,99 @@ export default function CreateCustomOrderModal({
                   </div>
                   
                   {/* Action Notice */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <FiSend className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h6 className="font-medium text-blue-900">Ready to Send</h6>
-                        <p className="text-sm text-blue-700 mt-1">
-                          Once you submit this custom order, {buyerName} will receive a message with a link to review and checkout this order.
+                  {source === 'messages' ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <FiSend className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <h6 className="font-medium text-blue-900">Ready to Send</h6>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Once you submit this custom order, {buyerName} will receive a message with a link to review and checkout this order.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <FiSend className="w-5 h-5 text-green-600 mt-0.5" />
+                        <div>
+                          <h6 className="font-medium text-green-900">Ready to Create</h6>
+                          <p className="text-sm text-green-700 mt-1">
+                            Once you create this custom order, you'll get a link that you can share with any buyer through your preferred method.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentStep === 4 && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-lg font-medium text-gray-900">Step 4: Custom Order Created!</h4>
+                  </div>
+                  <p className="text-sm text-gray-600">Your custom order has been created successfully. Copy the link below and share it with your buyer.</p>
+                  
+                  {/* Success Message */}
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-green-900 mb-2">Custom Order Created Successfully!</h5>
+                        <p className="text-green-700 text-sm mb-4">
+                          Your custom order with {items.length} item{items.length > 1 ? 's' : ''} totaling LKR {calculateTotal().toLocaleString()} has been created.
                         </p>
+                        
+                        {/* Order Link */}
+                        <div className="space-y-3">
+                          <label className="block text-sm font-medium text-green-900">Custom Order Link:</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={createdOrderId ? `${window.location.origin}/custom-order/${createdOrderId}` : ''}
+                              readOnly
+                              className="flex-1 px-3 py-2 bg-white border border-green-300 rounded-lg text-sm font-mono"
+                              id="orderLinkInput"
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById('orderLinkInput') as HTMLInputElement;
+                                input.select();
+                                document.execCommand('copy');
+                                
+                                // Show copied feedback
+                                const button = event?.target as HTMLButtonElement;
+                                const originalText = button.textContent;
+                                button.textContent = 'Copied!';
+                                button.className = button.className.replace('bg-green-600', 'bg-green-700');
+                                
+                                setTimeout(() => {
+                                  button.textContent = originalText;
+                                  button.className = button.className.replace('bg-green-700', 'bg-green-600');
+                                }, 2000);
+                              }}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+                            >
+                              Copy Link
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Instructions */}
+                        <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                          <h6 className="font-medium text-green-900 text-sm mb-2">How to share this order:</h6>
+                          <ul className="text-green-700 text-sm space-y-1">
+                            <li>• Copy the link above and send it to your buyer via WhatsApp, email, or any messaging app</li>
+                            <li>• The buyer can click the link to view and purchase the custom order</li>
+                            <li>• You'll receive notifications when the buyer views or purchases the order</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -749,7 +844,18 @@ export default function CreateCustomOrderModal({
                     ) : (
                       <FiSend className="w-4 h-4" />
                     )}
-                    Send Custom Order
+                    {source === 'messages' ? 'Send Custom Order' : 'Create Custom Order'}
+                  </button>
+                </>
+              )}
+              
+              {currentStep === 4 && (
+                <>
+                  <button
+                    onClick={onClose}
+                    className="flex-1 px-4 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#5a8c17] transition-colors"
+                  >
+                    Done
                   </button>
                 </>
               )}

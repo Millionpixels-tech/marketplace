@@ -3,6 +3,7 @@ import { db } from "../../../utils/firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { useResponsive } from "../../../hooks/useResponsive";
 import { OrderStatus } from "../../../types/enums";
+import { formatPrice } from "../../../utils/formatters";
 
 interface EarningsPageProps {
     profileUid: string | null;
@@ -140,7 +141,7 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
                         <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                             <div className="text-sm mb-2 font-medium" style={{ color: '#454955', opacity: 0.8 }}>Total Earnings</div>
                             <div className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`} style={{ color: '#3f7d20' }}>
-                                LKR {calculateTotalEarnings(earnings).toLocaleString()}
+                                {formatPrice(calculateTotalEarnings(earnings))}
                             </div>
                             <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
                                 From {formatDate(startDate)} to {formatDate(endDate)}
@@ -162,7 +163,7 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
                         <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                             <div className="text-sm mb-2 font-medium" style={{ color: '#454955', opacity: 0.8 }}>Average Order Value</div>
                             <div className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`} style={{ color: '#454955' }}>
-                                LKR {earnings.length > 0 ? Math.round(calculateTotalEarnings(earnings) / earnings.length).toLocaleString() : '0'}
+                                {earnings.length > 0 ? formatPrice(calculateTotalEarnings(earnings) / earnings.length) : formatPrice(0)}
                             </div>
                             <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
                                 Per completed order
@@ -230,7 +231,7 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
                                                         {order.quantity || 1}
                                                     </td>
                                                     <td className={`border-b text-left font-bold ${isMobile ? 'px-2 py-2 text-sm' : 'px-4 py-3 text-base'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                        LKR {order.total?.toLocaleString()}
+                                                        {formatPrice(order.total)}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -241,7 +242,7 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
                                                 Total Earnings:
                                             </td>
                                             <td className={`border-t text-left font-bold ${isMobile ? 'px-2 py-3 text-base' : 'px-4 py-4 text-lg'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                                LKR {calculateTotalEarnings(earnings).toLocaleString()}
+                                                {formatPrice(calculateTotalEarnings(earnings))}
                                             </td>
                                         </tr>
                                     </tfoot>

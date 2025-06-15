@@ -22,6 +22,7 @@ import { useUnreadMessages } from "../../hooks/useUnreadMessages";
 import EarningsPage from "./dashboard/EarningsPage";
 import StockManagement from "./dashboard/StockManagement";
 import MessagesPage from "./dashboard/MessagesPage";
+import CreateCustomOrderModal from "../../components/UI/CreateCustomOrderModal";
 
 interface VerifyForm {
     fullName: string;
@@ -67,11 +68,8 @@ export default function ProfileDashboard() {
     const { id } = useParams();
     const [shops, setShops] = useState<any[]>([]);
     const [desc, setDesc] = useState("");
-    const [editing, setEditing] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [displayName, setDisplayName] = useState("");
     const [photoURL, setPhotoURL] = useState("");
-    const [uploadingPic, setUploadingPic] = useState(false);
     const [profileUid, setProfileUid] = useState<string | null>(null);
     const [profileEmail, setProfileEmail] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -91,6 +89,9 @@ export default function ProfileDashboard() {
     // Unread messages count
     const unreadMessagesCount = useUnreadMessages();
 
+    // Custom Order Modal state
+    const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
+
     // Handlers for saving (implement Firestore logic as needed)
     // Helper: upload file to Firebase Storage and return URL
     const uploadFile = async (file: File, path: string) => {
@@ -101,16 +102,11 @@ export default function ProfileDashboard() {
     };
 
     // Save all settings at once
-    const handleSaveAllSettings = async () => {
+    // Save verification settings
+    const handleSaveVerification = async () => {
         setSettingsLoading(true); setSettingsSuccess(null); setSettingsError(null);
         try {
-
-
-            // Bank Details
             if (!user?.uid) throw new Error('No user');
-            await updateDoc(doc(db, 'users', user.uid), {
-                bankDetails: { ...bankForm }
-            });
 
             // Verification Info
             let idFrontUrl = verifyForm.idFrontUrl;
@@ -143,9 +139,9 @@ export default function ProfileDashboard() {
             });
             setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl, isVerified: verificationStatus }));
 
-            setSettingsSuccess('All settings saved!');
+            setSettingsSuccess('Verification documents submitted for review!');
         } catch (e: any) {
-            setSettingsError(e.message || 'Failed to save settings');
+            setSettingsError(e.message || 'Failed to submit verification');
         } finally {
             setSettingsLoading(false);
         }
@@ -766,44 +762,6 @@ export default function ProfileDashboard() {
         }
     };
 
-    const handleSave = async () => {
-        if (!user) return;
-        setSaving(true);
-        const auth = getAuth();
-        if (auth.currentUser) {
-            await updateProfile(auth.currentUser, {
-                displayName: displayName,
-                photoURL: photoURL,
-            });
-        }
-        const userDocSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-        if (!userDocSnap.empty) {
-            await updateDoc(doc(db, "users", userDocSnap.docs[0].id), { description: desc, displayName, photoURL });
-        } else {
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                email: user.email,
-                displayName,
-                photoURL,
-                description: desc,
-            });
-        }
-        setEditing(false);
-        setSaving(false);
-    };
-
-    const handlePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!user || !e.target.files || e.target.files.length === 0) return;
-        setUploadingPic(true);
-        const file = e.target.files[0];
-        const storage = getStorage();
-        const fileRef = storageRef(storage, `profile_pics/${user.uid}_${Date.now()}`);
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-        setPhotoURL(url);
-        setUploadingPic(false);
-    };
-
     // Pagination logic for listings - server-side pagination
     const totalPages = Math.ceil(listingsTotalCount / LISTINGS_PER_PAGE);
     const paginatedListings = listings; // Already paginated from server
@@ -952,26 +910,13 @@ export default function ProfileDashboard() {
                                 <div className="text-center">
                                     {/* Profile Picture */}
                                     <div className={`relative inline-block ${isMobile ? 'mb-4' : 'mb-6'}`}>
-                                        <div className={`${isMobile ? 'w-20 h-20' : 'w-32 h-32'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative group`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                        <div className={`${isMobile ? 'w-20 h-20' : 'w-32 h-32'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
                                             {photoURL ? (
                                                 <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
                                             ) : (
                                                 <span className={`${isMobile ? 'text-2xl' : 'text-5xl'} font-bold text-green-600`}>
                                                     {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
                                                 </span>
-                                            )}
-                                            {isOwner && editing && (
-                                                <>
-                                                    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
-                                                        <span className={`text-white font-semibold ${isMobile ? 'text-xs' : 'text-sm'}`}>Change</span>
-                                                        <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
-                                                    </label>
-                                                    {uploadingPic && (
-                                                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center text-green-600 font-bold rounded-full">
-                                                            <div className={`animate-spin rounded-full ${isMobile ? 'h-5 w-5' : 'h-8 w-8'} border-b-2 border-green-600`}></div>
-                                                        </div>
-                                                    )}
-                                                </>
                                             )}
                                         </div>
                                         {verifyForm.isVerified === VerificationStatus.COMPLETED && (
@@ -985,76 +930,18 @@ export default function ProfileDashboard() {
 
                                     {/* Name */}
                                     <div className={`${isMobile ? 'mb-3' : 'mb-4'} px-2`}>
-                                        {isOwner && editing ? (
-                                            <input
-                                                className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-center border-2 border-green-200 rounded-xl ${isMobile ? 'px-3 py-2' : 'px-4 py-2'} w-full max-w-sm mx-auto bg-white/80 backdrop-blur focus:border-green-500 focus:outline-none transition-colors`}
-                                                value={displayName}
-                                                onChange={e => setDisplayName(e.target.value)}
-                                                maxLength={40}
-                                                placeholder="Enter your name"
-                                            />
-                                        ) : (
-                                            <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 flex items-center justify-center gap-3 break-words`}>
-                                                {displayName || profileEmail}
-                                            </h1>
-                                        )}
+                                        <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 flex items-center justify-center gap-3 break-words`}>
+                                            {displayName || profileEmail}
+                                        </h1>
                                         <p className={`text-gray-600 mt-2 ${isMobile ? 'text-sm' : ''} break-all`}>{profileEmail}</p>
                                     </div>
 
                                     {/* Description */}
                                     <div className={`${isMobile ? 'mb-4' : 'mb-6'} px-2`}>
-                                        {isOwner && editing ? (
-                                            <textarea
-                                                className={`w-full max-w-lg mx-auto border-2 border-green-200 rounded-xl ${isMobile ? 'p-3' : 'p-4'} bg-white/80 backdrop-blur focus:border-green-500 focus:outline-none transition-colors resize-none ${isMobile ? 'text-sm' : ''}`}
-                                                rows={isMobile ? 2 : 3}
-                                                value={desc}
-                                                onChange={e => setDesc(e.target.value)}
-                                                placeholder="Write something about yourself..."
-                                                maxLength={300}
-                                            />
-                                        ) : (
-                                            <p className={`text-gray-700 max-w-lg mx-auto leading-relaxed ${isMobile ? 'text-sm' : ''} break-words`}>
-                                                {desc || <span className="text-gray-500 italic">No description yet.</span>}
-                                            </p>
-                                        )}
+                                        <p className={`text-gray-700 max-w-lg mx-auto leading-relaxed ${isMobile ? 'text-sm' : ''} break-words`}>
+                                            {desc || <span className="text-gray-500 italic">No description yet.</span>}
+                                        </p>
                                     </div>
-
-                                    {/* Action Buttons */}
-                                    {isOwner && (
-                                        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-center gap-3'} px-2`}>
-                                            {editing ? (
-                                                <>
-                                                    <button
-                                                        className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
-                                                        onClick={handleSave}
-                                                        disabled={saving}
-                                                    >
-                                                        {saving ? (
-                                                            <span className="flex items-center justify-center gap-2">
-                                                                <div className={`animate-spin rounded-full ${isMobile ? 'h-3 w-3' : 'h-4 w-4'} border-b-2 border-white`}></div>
-                                                                Saving...
-                                                            </span>
-                                                        ) : (
-                                                            'Save Changes'
-                                                        )}
-                                                    </button>
-                                                    <button
-                                                        className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-colors`}
-                                                        onClick={() => setEditing(false)}
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <button
-                                                    className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-white hover:bg-gray-50 text-green-600 font-semibold rounded-xl transition-colors border-2 border-green-200 hover:border-green-300 shadow-lg`}
-                                                    onClick={() => setEditing(true)}
-                                                >
-                                                    Edit Profile
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1189,9 +1076,24 @@ export default function ProfileDashboard() {
                     {selectedTab === "orders" && (
                         <div>
                             {/* Header */}
-                            <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
-                                <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-2`}>Orders</h2>
-                                <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Track your buying and selling activities</p>
+                            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                <div>
+                                    <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-2`}>Orders</h2>
+                                    <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Track your buying and selling activities</p>
+                                </div>
+                                
+                                {/* Create Custom Order Button - Only show for seller tab */}
+                                {orderSubTab === "seller" && (
+                                    <button
+                                        onClick={() => setShowCustomOrderModal(true)}
+                                        className={`${isMobile ? 'mt-4 self-start px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2`}
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Create Custom Order
+                                    </button>
+                                )}
                             </div>
 
                             {/* Sub-tabs */}
@@ -1576,11 +1478,372 @@ export default function ProfileDashboard() {
                     {/* SETTINGS TAB */}
                     {selectedTab === "settings" && (
                         <div>
-                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Settings</h2>
+                            <h2 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Settings</h2>
                             <form className="w-full space-y-8" onSubmit={e => { e.preventDefault(); }}>
                                 {settingsLoading && <div style={{ color: '#72b01d' }}>Saving...</div>}
                                 {settingsSuccess && <div style={{ color: '#3f7d20' }}>{settingsSuccess}</div>}
                                 {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
+
+                                {/* Profile Information Section */}
+                                <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className={`font-bold mb-4 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Profile Information</h3>
+                                    
+                                    {/* Profile Picture */}
+                                    <div className={`flex ${isMobile ? 'flex-col items-center' : 'items-center'} mb-6`}>
+                                        <div className={`relative ${isMobile ? 'mb-4' : 'mr-6'}`}>
+                                            <div className={`${isMobile ? 'w-20 h-20' : 'w-24 h-24'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative group cursor-pointer`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                                {photoURL ? (
+                                                    <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
+                                                ) : (
+                                                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-600`}>
+                                                        {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                                    </span>
+                                                )}
+                                                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+                                                    <span className={`text-white font-semibold ${isMobile ? 'text-xs' : 'text-sm'}`}>Change</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={async (e) => {
+                                                            if (!user || !e.target.files || e.target.files.length === 0) return;
+                                                            const file = e.target.files[0];
+                                                            const storage = getStorage();
+                                                            const fileRef = storageRef(storage, `profile_pics/${user.uid}_${Date.now()}`);
+                                                            await uploadBytes(fileRef, file);
+                                                            const url = await getDownloadURL(fileRef);
+                                                            setPhotoURL(url);
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className={`${isMobile ? 'text-sm text-center' : 'text-base'} text-gray-600 mb-2`}>
+                                                Click on your profile picture to change it
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Name Field */}
+                                    <div className="mb-4">
+                                        <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                            Display Name
+                                        </label>
+                                        <input
+                                            className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                color: '#0d0a0b'
+                                            }}
+                                            onFocus={(e) => {
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                            }}
+                                            onBlur={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                            value={displayName}
+                                            onChange={e => setDisplayName(e.target.value)}
+                                            placeholder="Enter your display name"
+                                            maxLength={40}
+                                        />
+                                    </div>
+
+                                    {/* Description Field */}
+                                    <div className="mb-4">
+                                        <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                            Bio/Description
+                                        </label>
+                                        <textarea
+                                            className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 resize-none ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                color: '#0d0a0b'
+                                            }}
+                                            onFocus={(e) => {
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                            }}
+                                            onBlur={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                            rows={3}
+                                            value={desc}
+                                            onChange={e => setDesc(e.target.value)}
+                                            placeholder="Write something about yourself..."
+                                            maxLength={300}
+                                        />
+                                        <div className={`text-right mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-gray-500`}>
+                                            {desc.length}/300
+                                        </div>
+                                    </div>
+
+                                    {/* Save Profile Button */}
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!user) return;
+                                                setSettingsLoading(true);
+                                                setSettingsError(null);
+                                                try {
+                                                    const auth = getAuth();
+                                                    if (auth.currentUser) {
+                                                        await updateProfile(auth.currentUser, {
+                                                            displayName: displayName,
+                                                            photoURL: photoURL,
+                                                        });
+                                                    }
+                                                    const userDocSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+                                                    if (!userDocSnap.empty) {
+                                                        await updateDoc(doc(db, "users", userDocSnap.docs[0].id), { description: desc, displayName, photoURL });
+                                                    } else {
+                                                        await setDoc(doc(db, "users", user.uid), {
+                                                            uid: user.uid,
+                                                            email: user.email,
+                                                            displayName,
+                                                            photoURL,
+                                                            description: desc,
+                                                        });
+                                                    }
+                                                    setSettingsSuccess('Profile updated successfully!');
+                                                } catch (e: any) {
+                                                    setSettingsError(e.message || 'Failed to update profile');
+                                                } finally {
+                                                    setSettingsLoading(false);
+                                                }
+                                            }}
+                                            disabled={settingsLoading}
+                                            className={`rounded-lg font-semibold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2 text-base'}`}
+                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                            onMouseEnter={(e) => {
+                                                if (!settingsLoading) {
+                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!settingsLoading) {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                }
+                                            }}
+                                        >
+                                            {settingsLoading ? 'Saving...' : 'Save Profile'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Password Change Section */}
+                                <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className={`font-bold mb-4 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Account Security</h3>
+                                    
+                                    {user && user.providerData && user.providerData.some(provider => provider.providerId === 'google.com') ? (
+                                        // Google user - cannot change password
+                                        <div className="rounded-lg border p-4" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                            <div className="flex items-start gap-3">
+                                                <div className="flex-shrink-0">
+                                                    <svg className="w-5 h-5 mt-0.5" style={{ color: '#72b01d' }} fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h4 className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#3f7d20' }}>
+                                                        Google Account Sign-In
+                                                    </h4>
+                                                    <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        You're signed in with Google. To change your password, please visit your Google Account settings.
+                                                    </p>
+                                                    <div className="mt-3">
+                                                        <a
+                                                            href="https://myaccount.google.com/security"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                                            }}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                            Manage Google Account
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // Email/password user - can change password
+                                        <>
+                                            <div className={`grid gap-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Current Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Enter current password"
+                                                        id="currentPassword"
+                                                    />
+                                                </div>
+                                                <div></div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Enter new password"
+                                                        minLength={6}
+                                                        id="newPassword"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Confirm New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Confirm new password"
+                                                        minLength={6}
+                                                        id="confirmPassword"
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement)?.value;
+                                                        const newPassword = (document.getElementById('newPassword') as HTMLInputElement)?.value;
+                                                        const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
+                                                        
+                                                        // Validation
+                                                        if (!currentPassword || !newPassword || !confirmPassword) {
+                                                            setSettingsError('Please fill in all password fields');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (newPassword !== confirmPassword) {
+                                                            setSettingsError('New passwords do not match');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (newPassword.length < 6) {
+                                                            setSettingsError('New password must be at least 6 characters long');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (currentPassword === newPassword) {
+                                                            setSettingsError('New password must be different from current password');
+                                                            return;
+                                                        }
+                                                        
+                                                        setSettingsLoading(true);
+                                                        setSettingsError(null);
+                                                        
+                                                        try {
+                                                            const auth = getAuth();
+                                                            if (auth.currentUser && user?.email) {
+                                                                // Re-authenticate user first
+                                                                const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import('firebase/auth');
+                                                                const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                                                                
+                                                                await reauthenticateWithCredential(auth.currentUser, credential);
+                                                                await updatePassword(auth.currentUser, newPassword);
+                                                                
+                                                                setSettingsSuccess('Password updated successfully!');
+                                                                // Clear password fields
+                                                                (document.getElementById('currentPassword') as HTMLInputElement).value = '';
+                                                                (document.getElementById('newPassword') as HTMLInputElement).value = '';
+                                                                (document.getElementById('confirmPassword') as HTMLInputElement).value = '';
+                                                            }
+                                                        } catch (e: any) {
+                                                            console.error('Password change error:', e);
+                                                            if (e.code === 'auth/wrong-password') {
+                                                                setSettingsError('Current password is incorrect');
+                                                            } else if (e.code === 'auth/weak-password') {
+                                                                setSettingsError('New password is too weak');
+                                                            } else if (e.code === 'auth/requires-recent-login') {
+                                                                setSettingsError('Please log out and log back in before changing your password');
+                                                            } else {
+                                                                setSettingsError(e.message || 'Failed to update password');
+                                                            }
+                                                        } finally {
+                                                            setSettingsLoading(false);
+                                                        }
+                                                    }}
+                                                    disabled={settingsLoading}
+                                                    className={`rounded-lg font-semibold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2 text-base'}`}
+                                                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }
+                                                    }}
+                                                >
+                                                    {settingsLoading ? 'Updating...' : 'Change Password'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
 
                                 {/* Bank Account Management */}
                                 <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
@@ -1970,7 +2233,7 @@ export default function ProfileDashboard() {
                                                 e.currentTarget.style.backgroundColor = '#72b01d';
                                             }
                                         }}
-                                        onClick={handleSaveAllSettings}
+                                        onClick={handleSaveVerification}
                                         disabled={settingsLoading}
                                     >
                                         {settingsLoading ? 'Saving...' : 'Submit for Review'}
@@ -1995,6 +2258,13 @@ export default function ProfileDashboard() {
                 type={confirmDialog.type}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
+            />
+            
+            {/* Custom Order Modal */}
+            <CreateCustomOrderModal
+                isOpen={showCustomOrderModal}
+                onClose={() => setShowCustomOrderModal(false)}
+                source="dashboard"
             />
         </div>
     );
