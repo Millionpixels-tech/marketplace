@@ -342,7 +342,7 @@ export default function CustomOrderSummaryPage() {
     <div className="min-h-screen bg-white">
       <ResponsiveHeader />
       
-      <div className={`${isMobile ? 'max-w-sm px-3 py-4' : 'max-w-6xl px-4 py-6'} mx-auto`}>
+      <div className={`${isMobile ? 'max-w-full px-4 py-4' : 'max-w-6xl px-4 py-6'} mx-auto`}>
         {/* Back button */}
         <button
           onClick={() => navigate('/dashboard?tab=orders')}
@@ -353,19 +353,19 @@ export default function CustomOrderSummaryPage() {
         </button>
 
         {/* Success Header */}
-        <div className={`rounded-lg border border-green-200 ${isMobile ? 'p-3' : 'p-4'} bg-green-50 mb-4`}>
+        <div className={`rounded-lg border border-green-200 ${isMobile ? 'p-4' : 'p-4'} bg-green-50 mb-4`}>
           <div className="flex items-center gap-3 mb-3">
-            <FiCheckCircle className="w-6 h-6 text-green-600" />
+            <FiCheckCircle className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-green-600`} />
             <div>
-              <h1 className="text-xl font-bold text-green-900">Order Created Successfully!</h1>
-              <p className="text-sm text-green-700">Custom Order ID: {customOrder.id}</p>
+              <h1 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-green-900`}>Order Created Successfully!</h1>
+              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700`}>Custom Order ID: {customOrder.id}</p>
             </div>
           </div>
-          <div className="mt-3 p-3 bg-white rounded-lg border border-green-200">
-            <p className="text-sm text-green-800 mb-2 font-medium">
+          <div className={`mt-3 ${isMobile ? 'p-3' : 'p-3'} bg-white rounded-lg border border-green-200`}>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-800 mb-2 font-medium`}>
               What happens next?
             </p>
-            <ul className="text-sm text-green-700 space-y-1 leading-relaxed">
+            <ul className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 space-y-1 leading-relaxed`}>
               <li>• Order split into {orders.length} individual item{orders.length > 1 ? 's' : ''} for processing</li>
               <li>• Email updates for each order status change</li>
               <li>• Payment: {customOrder.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Bank Transfer'}</li>
@@ -376,14 +376,14 @@ export default function CustomOrderSummaryPage() {
 
         {/* Payment Section - Collapsible Bank Transfer Details and Payment Slip Upload */}
         {customOrder.paymentMethod === 'BANK_TRANSFER' && (
-          <div className={`rounded-lg border border-blue-200 ${isMobile ? 'p-3 mb-4' : 'p-4 mb-5'} bg-blue-50`}>
+          <div className={`rounded-lg border border-blue-200 ${isMobile ? 'p-4 mb-4' : 'p-4 mb-5'} bg-blue-50`}>
             {/* Collapsible Header */}
             <button
               onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
               className="w-full flex items-center justify-between text-left focus:outline-none rounded p-1 -m-1"
             >
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <FiCreditCard className="w-5 h-5 text-blue-600" />
+              <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold flex items-center gap-2`}>
+                <FiCreditCard className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-blue-600`} />
                 Payment Instructions & Upload
               </h3>
               <div className="flex items-center gap-2">
@@ -405,21 +405,21 @@ export default function CustomOrderSummaryPage() {
               <div className="mt-3 space-y-4">
                 {/* Bank Transfer Details */}
                 <div>
-                  <h4 className="text-base font-semibold text-blue-800 mb-2">
+                  <h4 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-blue-800 mb-2`}>
                     Step 1: Make Bank Transfer
                   </h4>
                   {sellerBankAccounts.length > 0 ? (
                     <div className="space-y-3">
-                      <div className="text-sm text-blue-700 mb-2">
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 mb-2`}>
                         Transfer to one of the seller's bank accounts:
                       </div>
                       
                       {/* Display all available bank accounts */}
                       <div className="space-y-2">
                         {sellerBankAccounts.map((account) => (
-                          <div key={account.id} className="bg-white p-3 rounded border border-blue-300">
+                          <div key={account.id} className={`bg-white ${isMobile ? 'p-3' : 'p-3'} rounded border border-blue-300`}>
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="font-semibold text-gray-900 text-sm">
+                              <h5 className={`font-semibold text-gray-900 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                                 {account.bankName}
                               </h5>
                               {account.isDefault && (
@@ -429,10 +429,10 @@ export default function CustomOrderSummaryPage() {
                               )}
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-3'} text-xs`}>
                               <div>
                                 <span className="text-gray-600">Account:</span>
-                                <div className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">
+                                <div className={`text-gray-900 font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50 px-2 py-1 rounded`}>
                                   {account.accountNumber}
                                 </div>
                               </div>
@@ -441,7 +441,7 @@ export default function CustomOrderSummaryPage() {
                                 <div className="text-gray-900 font-medium">{account.fullName}</div>
                               </div>
                               {account.branch && (
-                                <div className="col-span-2">
+                                <div className={`${isMobile ? 'col-span-1' : 'col-span-2'}`}>
                                   <span className="text-gray-600">Branch:</span>
                                   <span className="text-gray-900 ml-1">{account.branch}</span>
                                 </div>
@@ -451,8 +451,8 @@ export default function CustomOrderSummaryPage() {
                         ))}
                       </div>
                       
-                      <div className="bg-green-50 p-3 rounded border border-green-200">
-                        <div className="text-sm font-bold text-green-800">
+                      <div className={`bg-green-50 ${isMobile ? 'p-3' : 'p-3'} rounded border border-green-200`}>
+                        <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-green-800`}>
                           Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
                         </div>
                         <div className="text-xs text-green-700 mt-1">
@@ -460,8 +460,8 @@ export default function CustomOrderSummaryPage() {
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-sm text-blue-700 space-y-2">
+                ) : (
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 space-y-2`}>
                       <div>Contact seller for bank transfer details.</div>
                       <div className="font-medium">
                         Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
@@ -473,14 +473,14 @@ export default function CustomOrderSummaryPage() {
                 {/* Payment Slip Upload - Show only if user is buyer */}
                 {customOrder.buyerId === user?.uid && (
                   <div className="border-t border-blue-200 pt-3">
-                    <h4 className="text-base font-semibold text-orange-800 mb-2">
+                    <h4 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-orange-800 mb-2`}>
                       Step 2: Upload Payment Slip
                     </h4>
                     
                     {/* Check if any order already has a payment slip */}
                     {orders.length > 0 && orders.some(order => order.paymentSlipUrl) ? (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded">
-                        <div className="text-sm font-bold text-green-800 mb-1">
+                      <div className={`${isMobile ? 'p-3' : 'p-3'} bg-green-50 border border-green-200 rounded`}>
+                        <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-green-800 mb-1`}>
                           Payment Slip Uploaded Successfully!
                         </div>
                         <div className="text-xs text-green-700 mb-2">
@@ -497,8 +497,8 @@ export default function CustomOrderSummaryPage() {
                         </a>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <div className="text-xs text-orange-700 mb-2">
+                        <div className="space-y-3">
+                        <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-orange-700 mb-2`}>
                           Upload your payment slip or screenshot as proof of payment. This will update all your orders automatically.
                         </div>
                         
@@ -577,38 +577,38 @@ export default function CustomOrderSummaryPage() {
           </div>
         )}
 
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'lg:grid-cols-3 gap-5'}`}>
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-5'}`}>
           {/* Left Column - Order Details */}
-          <div className={`${isMobile ? '' : 'lg:col-span-2'} space-y-3`}>
+          <div className={`${isMobile ? '' : 'lg:col-span-2'} space-y-4`}>
             {/* Individual Orders */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-3' : 'p-4'} bg-white`}>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-gray-900">
+            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
+              <div className={`flex items-center justify-between ${isMobile ? 'mb-3' : 'mb-3'}`}>
+                <h2 className={`${isMobile ? 'text-base' : 'text-base'} font-semibold text-gray-900`}>
                   Your Orders ({orders.length})
                 </h2>
                 {orders.length > 0 && (
                   <div className="text-right">
                     <div className="text-xs text-gray-500">Total</div>
-                    <div className="font-semibold text-gray-900 text-sm">LKR {formatCurrency(getTotalOrderValue())}</div>
+                    <div className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>LKR {formatCurrency(getTotalOrderValue())}</div>
                   </div>
                 )}
               </div>
               
-              <div className="space-y-2">
+              <div className={`space-y-${isMobile ? '3' : '2'}`}>
                 {orders.length > 0 ? (
                   orders.map((order) => (
-                  <div key={order.id} className="border border-gray-100 rounded p-3 bg-gray-50/30">
-                    <div className="flex items-start gap-3">
+                  <div key={order.id} className={`border border-gray-100 rounded ${isMobile ? 'p-3' : 'p-3'} bg-gray-50/30`}>
+                    <div className={`flex items-start ${isMobile ? 'gap-3' : 'gap-3'}`}>
                       {/* Item Image */}
                       <div className="flex-shrink-0">
                         {order.itemImage ? (
                           <img
                             src={order.itemImage}
                             alt={order.itemName}
-                            className="w-12 h-12 object-cover rounded border border-gray-200"
+                            className={`${isMobile ? 'w-12 h-12' : 'w-12 h-12'} object-cover rounded border border-gray-200`}
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                          <div className={`${isMobile ? 'w-12 h-12' : 'w-12 h-12'} bg-gray-100 rounded border border-gray-200 flex items-center justify-center`}>
                             <FiPackage className="w-4 h-4 text-gray-400" />
                           </div>
                         )}
@@ -616,20 +616,20 @@ export default function CustomOrderSummaryPage() {
 
                       {/* Order Details */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2 mb-2">
+                        <div className={`flex items-start ${isMobile ? 'gap-2' : 'gap-2'} mb-2`}>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 text-sm line-clamp-2 pr-2">{order.itemName}</h3>
+                            <h3 className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'} line-clamp-2 pr-2`}>{order.itemName}</h3>
                             <div className="text-xs text-gray-500">#{order.id.slice(-8)}</div>
                           </div>
                           <div className="flex-shrink-0">
-                            <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
+                            <span className={`px-2 py-1 rounded ${isMobile ? 'text-xs' : 'text-xs'} font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
                               {order.status.replace('_', ' ').toUpperCase()}
                             </span>
                           </div>
                         </div>
                         
                         {/* Order details */}
-                        <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-2'} text-xs mb-2`}>
                           <div>
                             <span className="text-gray-500">Qty:</span>
                             <span className="ml-1 font-medium">{order.quantity}</span>
@@ -650,7 +650,7 @@ export default function CustomOrderSummaryPage() {
 
                         {/* Payment status */}
                         {customOrder.paymentMethod === 'BANK_TRANSFER' && (
-                          <div className="mb-2">
+                          <div className={`${isMobile ? 'mb-2' : 'mb-2'}`}>
                             {order.paymentSlipUrl ? (
                               <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
                                 Payment uploaded
@@ -667,7 +667,7 @@ export default function CustomOrderSummaryPage() {
                         <div className="text-right">
                           <button
                             onClick={() => navigate(`/order/${order.id}`)}
-                            className="text-xs text-gray-600 hover:text-[#72b01d] transition-colors"
+                            className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-600 hover:text-[#72b01d] transition-colors`}
                           >
                             View Details →
                           </button>
@@ -677,8 +677,8 @@ export default function CustomOrderSummaryPage() {
                   </div>
                 ))
                 ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <div className="mb-1 text-sm">Orders Processing</div>
+                  <div className={`text-center ${isMobile ? 'py-6' : 'py-6'} text-gray-500`}>
+                    <div className={`${isMobile ? 'mb-1 text-sm' : 'mb-1 text-sm'}`}>Orders Processing</div>
                     <div className="text-xs">Your orders will appear here shortly</div>
                   </div>
                 )}
@@ -687,38 +687,38 @@ export default function CustomOrderSummaryPage() {
           </div>
 
           {/* Right Column - Summary */}
-          <div className="space-y-3">
+          <div className={`space-y-${isMobile ? '4' : '3'}`}>
             {/* Order Summary */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-3' : 'p-4'} bg-white`}>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Order Summary</h3>
+            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
+              <h3 className={`font-semibold text-gray-900 ${isMobile ? 'mb-3' : 'mb-3'} ${isMobile ? 'text-base' : 'text-sm'}`}>Order Summary</h3>
               
               {orders.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
+                <div className={`space-y-${isMobile ? '2' : '2'}`}>
+                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
                     <span className="text-gray-600">Total Items:</span>
                     <span className="font-medium">{getTotalItems()}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
+                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
                     <span className="text-gray-600">Items Subtotal:</span>
                     <span className="font-medium">LKR {formatCurrency(getTotalOrderValue() - getTotalShipping())}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
+                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
                     <span className="text-gray-600">Total Shipping:</span>
                     <span className="font-medium">LKR {formatCurrency(getTotalShipping())}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-2">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-gray-900 text-sm">Grand Total:</span>
-                      <span className="font-semibold text-gray-900 text-sm">
+                      <span className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>Grand Total:</span>
+                      <span className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>
                         LKR {formatCurrency(getTotalOrderValue())}
                       </span>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-3 text-gray-500">
+                <div className={`text-center ${isMobile ? 'py-3' : 'py-3'} text-gray-500`}>
                   <div className="text-xs mb-1">Processing order details...</div>
-                  <div className="font-medium text-sm">
+                  <div className={`font-medium ${isMobile ? 'text-sm' : 'text-sm'}`}>
                     Expected: LKR {formatCurrency(customOrder.totalAmount + customOrder.shippingCost)}
                   </div>
                 </div>
@@ -726,10 +726,10 @@ export default function CustomOrderSummaryPage() {
             </div>
 
             {/* Payment & Delivery Info */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-3' : 'p-4'} bg-white`}>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Payment & Delivery</h3>
+            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
+              <h3 className={`font-semibold text-gray-900 ${isMobile ? 'mb-3' : 'mb-3'} ${isMobile ? 'text-base' : 'text-sm'}`}>Payment & Delivery</h3>
               
-              <div className="space-y-2 text-xs">
+              <div className={`space-y-${isMobile ? '2' : '2'} text-xs`}>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Payment:</span>
                   <span className="font-medium">

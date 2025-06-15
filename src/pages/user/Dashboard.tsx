@@ -1847,7 +1847,7 @@ export default function ProfileDashboard() {
 
                                 {/* Bank Account Management */}
                                 <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <div className="flex justify-between items-center mb-4">
+                                    <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4`}>
                                         <h3 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Accounts for Payouts</h3>
                                         <button
                                             type="button"
@@ -1856,7 +1856,7 @@ export default function ProfileDashboard() {
                                                 setEditingBankId(null);
                                                 setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
                                             }}
-                                            className={`rounded-lg font-semibold transition ${isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'}`}
+                                            className={`rounded-lg font-semibold transition ${isMobile ? 'w-full px-4 py-3 text-sm' : 'px-4 py-2 text-sm'}`}
                                             style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                             onMouseEnter={(e) => {
                                                 e.currentTarget.style.backgroundColor = '#3f7d20';
@@ -1871,60 +1871,134 @@ export default function ProfileDashboard() {
 
                                     {/* Bank Accounts List */}
                                     {bankAccounts.length > 0 && (
-                                        <div className="space-y-3 mb-4">
+                                        <div className={`${isMobile ? 'space-y-4' : 'space-y-3'} mb-4`}>
                                             {bankAccounts.map((account) => (
-                                                <div key={account.id} className={`p-4 rounded-lg border ${account.isDefault ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <h4 className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                                                <div key={account.id} className={`${isMobile ? 'p-4' : 'p-4'} rounded-lg border ${account.isDefault ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                                                    {isMobile ? (
+                                                        /* Mobile Layout - Stacked */
+                                                        <div className="space-y-3">
+                                                            {/* Header with bank name and default badge */}
+                                                            <div className="flex items-center justify-between">
+                                                                <h4 className="font-semibold text-sm" style={{ color: '#0d0a0b' }}>
                                                                     {account.bankName}
                                                                 </h4>
                                                                 {account.isDefault && (
-                                                                    <span className={`px-2 py-1 rounded text-green-700 bg-green-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                                                                    <span className="px-2 py-1 rounded text-green-700 bg-green-100 text-xs font-medium">
                                                                         Default
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                                                Account: {account.accountNumber}
-                                                            </p>
-                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                                                Branch: {account.branch}
-                                                            </p>
-                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                                                Name: {account.fullName}
-                                                            </p>
+                                                            
+                                                            {/* Account Details */}
+                                                            <div className="space-y-1">
+                                                                <div className="flex justify-between">
+                                                                    <span className="text-xs text-gray-600">Account:</span>
+                                                                    <span className="text-xs font-medium" style={{ color: '#454955' }}>
+                                                                        {account.accountNumber}
+                                                                    </span>
+                                                                </div>
+                                                                {account.branch && (
+                                                                    <div className="flex justify-between">
+                                                                        <span className="text-xs text-gray-600">Branch:</span>
+                                                                        <span className="text-xs" style={{ color: '#454955' }}>
+                                                                            {account.branch}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex justify-between">
+                                                                    <span className="text-xs text-gray-600">Name:</span>
+                                                                    <span className="text-xs" style={{ color: '#454955' }}>
+                                                                        {account.fullName}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Action Buttons - Stacked on Mobile */}
+                                                            <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+                                                                {!account.isDefault && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setDefaultBankAccount(account.id)}
+                                                                        className="w-full px-3 py-2 rounded-lg border border-green-300 text-green-700 bg-white hover:bg-green-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Set as Default
+                                                                    </button>
+                                                                )}
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => startEditingBank(account)}
+                                                                        className="flex-1 px-3 py-2 rounded-lg border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => deleteBankAccount(account.id)}
+                                                                        className="flex-1 px-3 py-2 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex gap-2 ml-4">
-                                                            {!account.isDefault && (
+                                                    ) : (
+                                                        /* Desktop Layout - Side by Side */
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <h4 className="font-semibold text-base" style={{ color: '#0d0a0b' }}>
+                                                                        {account.bankName}
+                                                                    </h4>
+                                                                    {account.isDefault && (
+                                                                        <span className="px-2 py-1 rounded text-green-700 bg-green-100 text-sm">
+                                                                            Default
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Account: {account.accountNumber}
+                                                                </p>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Branch: {account.branch}
+                                                                </p>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Name: {account.fullName}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex gap-2 ml-4">
+                                                                {!account.isDefault && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setDefaultBankAccount(account.id)}
+                                                                        className="px-3 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition text-sm"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Set Default
+                                                                    </button>
+                                                                )}
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => setDefaultBankAccount(account.id)}
-                                                                    className={`px-3 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                                    onClick={() => startEditingBank(account)}
+                                                                    className="px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition text-sm"
                                                                     disabled={settingsLoading}
                                                                 >
-                                                                    Set Default
+                                                                    Edit
                                                                 </button>
-                                                            )}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => startEditingBank(account)}
-                                                                className={`px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
-                                                                disabled={settingsLoading}
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => deleteBankAccount(account.id)}
-                                                                className={`px-3 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
-                                                                disabled={settingsLoading}
-                                                            >
-                                                                Delete
-                                                            </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => deleteBankAccount(account.id)}
+                                                                    className="px-3 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition text-sm"
+                                                                    disabled={settingsLoading}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -2034,12 +2108,12 @@ export default function ProfileDashboard() {
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 mt-4">
+                                            <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'} mt-4`}>
                                                 <button
                                                     type="button"
                                                     onClick={editingBankId ? () => editBankAccount(editingBankId) : addBankAccount}
                                                     disabled={settingsLoading || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName}
-                                                    className={`px-4 py-2 rounded font-semibold transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                    className={`${isMobile ? 'w-full py-3' : ''} px-4 py-2 rounded font-semibold transition ${isMobile ? 'text-sm' : 'text-sm'}`}
                                                     style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
                                                     onMouseEnter={(e) => {
                                                         if (!settingsLoading) {
@@ -2057,7 +2131,7 @@ export default function ProfileDashboard() {
                                                 <button
                                                     type="button"
                                                     onClick={cancelBankEdit}
-                                                    className={`px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                    className={`${isMobile ? 'w-full py-3' : ''} px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition ${isMobile ? 'text-sm' : 'text-sm'}`}
                                                 >
                                                     Cancel
                                                 </button>
