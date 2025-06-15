@@ -6,7 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter, getDoc } from "firebase/firestore";
 import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
@@ -1599,11 +1599,13 @@ export default function ProfileDashboard() {
                                                             photoURL: photoURL,
                                                         });
                                                     }
-                                                    const userDocSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-                                                    if (!userDocSnap.empty) {
-                                                        await updateDoc(doc(db, "users", userDocSnap.docs[0].id), { description: desc, displayName, photoURL });
+                                                    // FIXED: Use direct document access instead of query
+                                                    const userDocRef = doc(db, "users", user.uid);
+                                                    const userDoc = await getDoc(userDocRef);
+                                                    if (userDoc.exists()) {
+                                                        await updateDoc(userDocRef, { description: desc, displayName, photoURL });
                                                     } else {
-                                                        await setDoc(doc(db, "users", user.uid), {
+                                                        await setDoc(userDocRef, {
                                                             uid: user.uid,
                                                             email: user.email,
                                                             displayName,

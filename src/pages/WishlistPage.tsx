@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { db } from "../utils/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
@@ -55,18 +55,41 @@ export default function WishlistPage() {
         // Clear cache when refreshing to ensure fresh data
         cacheRef.current = null;
         
-        const snap = await getDocs(collection(db, "listings"));
-        const results: Listing[] = [];
-        snap.docs.forEach(doc => {
-            const listing = { id: doc.id, ...doc.data(), __client_ip: ip } as Listing;
-            if (Array.isArray(listing.wishlist)) {
-                const hasOwner = user && listing.wishlist.some(w => w.ownerId === user.uid);
-                const hasIp = ip && listing.wishlist.some(w => w.ip === ip);
-                if (hasOwner || hasIp) {
-                    results.push(listing);
+        if (!user?.uid && !ip) {
+            setItems([]);
+            return;
+        }
+        
+        let results: Listing[] = [];
+        
+        try {
+            // Since wishlist objects have varying structures (with timestamps),
+            // we need to use a more targeted approach rather than exact array-contains matching
+            
+            // Get all listings with any wishlist items and filter client-side
+            // This is more efficient than full collection scan but handles the complex wishlist structure
+            const allListingsQuery = query(
+                collection(db, "listings"),
+                where("wishlist", "!=", null), // Only get listings that have wishlist arrays
+                limit(500) // Reasonable limit to prevent excessive reads
+            );
+            
+            const snap = await getDocs(allListingsQuery);
+            
+            snap.docs.forEach(doc => {
+                const listing = { id: doc.id, ...doc.data(), __client_ip: ip } as Listing;
+                if (Array.isArray(listing.wishlist)) {
+                    const hasOwner = user?.uid && listing.wishlist.some((w: any) => w.ownerId === user.uid);
+                    const hasIp = ip && listing.wishlist.some((w: any) => w.ip === ip);
+                    if (hasOwner || hasIp) {
+                        results.push(listing);
+                    }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            results = [];
+        }
         
         // Update cache
         cacheRef.current = { data: results, timestamp: Date.now() };
@@ -93,25 +116,34 @@ export default function WishlistPage() {
         }
 
         try {
-            // Fetch all listings, then filter client-side by wishlist
-            // Note: Firestore doesn't support efficient queries for array contains with OR conditions
-            // across different user identifiers, so client-side filtering is necessary here
-            const snap = await getDocs(collection(db, "listings"));
-            const results: Listing[] = [];
-            snap.docs.forEach(doc => {
-                const listing = { id: doc.id, ...doc.data() } as Listing;
-                // Add client IP to each listing for WishlistButton to use
-                if (userIp) {
-                    (listing as any).__client_ip = userIp;
-                }
-                if (Array.isArray(listing.wishlist)) {
-                    const hasOwner = user && listing.wishlist.some(w => w.ownerId === user.uid);
-                    const hasIp = userIp && listing.wishlist.some(w => w.ip === userIp);
-                    if (hasOwner || hasIp) {
-                        results.push(listing);
+            // Optimized wishlist fetch with filtering
+            let results: Listing[] = [];
+            
+            if (user?.uid || userIp) {
+                // Get listings that have wishlist items and filter appropriately
+                const wishlistQuery = query(
+                    collection(db, "listings"),
+                    where("wishlist", "!=", null), // Only get listings with wishlist arrays
+                    limit(500) // Reasonable limit to prevent excessive reads
+                );
+                
+                const snap = await getDocs(wishlistQuery);
+                
+                snap.docs.forEach(doc => {
+                    const listing = { id: doc.id, ...doc.data() } as Listing;
+                    // Add client IP to each listing for WishlistButton to use
+                    if (userIp) {
+                        (listing as any).__client_ip = userIp;
                     }
-                }
-            });
+                    if (Array.isArray(listing.wishlist)) {
+                        const hasOwner = user?.uid && listing.wishlist.some((w: any) => w.ownerId === user.uid);
+                        const hasIp = userIp && listing.wishlist.some((w: any) => w.ip === userIp);
+                        if (hasOwner || hasIp) {
+                            results.push(listing);
+                        }
+                    }
+                });
+            }
             
             // Cache the results
             cacheRef.current = { data: results, timestamp: Date.now() };

@@ -89,9 +89,25 @@ export default function ShopPage() {
         if (!shop) return;
         console.log("ShopPage: Shop loaded with ID:", shop.id);
         async function getTotalCount() {
-            // Count listings by shopId (shopId)
-            const allListingsSnap = await getDocs(query(collection(db, "listings"), where("shopId", "==", shop?.id)));
-            setTotalCount(allListingsSnap.size);
+            // FIXED: Use getCountFromServer for efficient counting (if available)
+            // Or use aggregation count query instead of fetching all documents
+            try {
+                // Use getCountFromServer if available (Firebase v9.8+)
+                const { getCountFromServer } = await import('firebase/firestore');
+                const countQuery = query(collection(db, "listings"), where("shopId", "==", shop?.id));
+                const snapshot = await getCountFromServer(countQuery);
+                setTotalCount(snapshot.data().count);
+            } catch (error) {
+                // Fallback to regular query with limit for older Firebase versions
+                console.log("Using fallback count method");
+                const countQuery = query(
+                    collection(db, "listings"), 
+                    where("shopId", "==", shop?.id),
+                    limit(1000) // Add limit to prevent excessive reads
+                );
+                const allListingsSnap = await getDocs(countQuery);
+                setTotalCount(allListingsSnap.size);
+            }
         }
         getTotalCount();
     }, [shop]);
