@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import OrderSellerRow from "../order/OrderSellerRow";
 import { useAuth } from "../../context/AuthContext";
@@ -7,7 +6,7 @@ import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
-import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
@@ -16,10 +15,12 @@ import type { VerificationStatus as VerificationStatusType } from "../../types/e
 import { useResponsive } from "../../hooks/useResponsive";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
+import { useUnreadMessages } from "../../hooks/useUnreadMessages";
 
 // Import separate earnings page
 import EarningsPage from "./dashboard/EarningsPage";
 import StockManagement from "./dashboard/StockManagement";
+import MessagesPage from "./dashboard/MessagesPage";
 
 interface VerifyForm {
     fullName: string;
@@ -48,6 +49,7 @@ const TABS = [
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
     { key: "orders", label: "Orders", icon: <FiPackage /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
+    { key: "messages", label: "Messages", icon: <FiMessageSquare /> },
     { key: "earnings", label: "Earnings", icon: <FiStar /> },
     { key: "stock", label: "Stock", icon: <FiBox /> },
     { key: "settings", label: "Settings", icon: <FiUser /> },
@@ -84,6 +86,9 @@ export default function ProfileDashboard() {
 
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+
+    // Unread messages count
+    const unreadMessagesCount = useUnreadMessages();
 
     // Handlers for saving (implement Firestore logic as needed)
     // Helper: upload file to Firebase Storage and return URL
@@ -341,7 +346,7 @@ export default function ProfileDashboard() {
     };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "earnings" | "stock" | "settings">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "messages" | "earnings" | "stock" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -853,6 +858,11 @@ export default function ProfileDashboard() {
                             <span className="font-medium text-gray-900">
                                 {TABS.find(tab => tab.key === selectedTab)?.label}
                             </span>
+                            {selectedTab === "messages" && unreadMessagesCount > 0 && (
+                                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                                </span>
+                            )}
                         </div>
                         {sidebarOpen ? <FiX size={20} className="text-gray-500" /> : <FiMenu size={20} className="text-gray-500" />}
                     </button>
@@ -902,6 +912,11 @@ export default function ProfileDashboard() {
                                             {tab.icon}
                                         </span>
                                         <span className="text-sm font-medium">{tab.label}</span>
+                                        {tab.key === "messages" && unreadMessagesCount > 0 && (
+                                            <span className="ml-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                                                {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                                            </span>
+                                        )}
                                         {selectedTab === tab.key && (
                                             <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
                                         )}
@@ -1536,6 +1551,17 @@ export default function ProfileDashboard() {
                             )}
                         </div>
                     )}
+
+                    {/* MESSAGES TAB */}
+                    {selectedTab === "messages" && (
+                        <div className="space-y-6">
+                            <div className={`flex justify-between items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                <h2 className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`} style={{ color: '#0d0a0b' }}>Messages</h2>
+                            </div>
+                            <MessagesPage />
+                        </div>
+                    )}
+                    
                     {/* EARNINGS TAB */}
                     {selectedTab === "earnings" && (
                         <EarningsPage profileUid={profileUid} />
@@ -1591,16 +1617,20 @@ export default function ProfileDashboard() {
                                                                     {account.bankName}
                                                                 </h4>
                                                                 {account.isDefault && (
-                                                                    <span className={`px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                                                    <span className={`px-2 py-1 rounded text-green-700 bg-green-100 ${isMobile ? 'text-xs' : 'text-sm'}`}>
                                                                         Default
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div className={`space-y-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                                                <div><span className="font-medium">Account:</span> {account.accountNumber}</div>
-                                                                <div><span className="font-medium">Branch:</span> {account.branch}</div>
-                                                                <div><span className="font-medium">Name:</span> {account.fullName}</div>
-                                                            </div>
+                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                                Account: {account.accountNumber}
+                                                            </p>
+                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                                Branch: {account.branch}
+                                                            </p>
+                                                            <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                                Name: {account.fullName}
+                                                            </p>
                                                         </div>
                                                         <div className="flex gap-2 ml-4">
                                                             {!account.isDefault && (
@@ -1946,9 +1976,10 @@ export default function ProfileDashboard() {
                                     </button>
                                 </div>
                             </form>
-                        </div>                            )}
+                        </div>
+                    )}
 
-                            </div>
+                </div>
                         </div>
                     </main>
                 </div>

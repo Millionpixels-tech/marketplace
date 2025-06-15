@@ -7,6 +7,7 @@ import { FiBox } from "react-icons/fi";
 import ShopOwnerName from "./ShopOwnerName";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
+import ContactSellerButton from "../../components/UI/ContactSellerButton";
 import ShopReviews from "../../components/UI/ShopReviews";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../../components/HOC/WithReviewStats";
@@ -498,6 +499,22 @@ export default function ShopPage() {
                     <div className="max-w-3xl w-full mb-10 flex flex-col items-center">
                         <div className={`${isMobile ? 'text-sm' : 'text-base md:text-lg'} whitespace-pre-line min-h-[64px] rounded-xl ${isMobile ? 'p-4' : 'p-6'} text-center`} style={{ color: '#454955' }}>
                             {shop.description}
+                        </div>
+                        
+                        {/* Contact Seller Button */}
+                        <div className="mt-4">
+                            <ContactSellerButton
+                                sellerId={shop.owner}
+                                sellerName={shop.name}
+                                context={{
+                                    type: 'shop',
+                                    id: shop.username,
+                                    title: shop.name
+                                }}
+                                buttonText="Contact Shop"
+                                buttonStyle="primary"
+                                size="md"
+                            />
                         </div>
                     </div>
                 </div>

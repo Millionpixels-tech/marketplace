@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
+import { FiChevronDown, FiChevronUp, FiCreditCard } from "react-icons/fi";
 
 interface BankAccount {
     id: string;
@@ -33,6 +34,7 @@ export default function OrderPage() {
     const [sellerBankAccounts, setSellerBankAccounts] = useState<BankAccount[]>([]);
     const [paymentSlip, setPaymentSlip] = useState<File | null>(null);
     const [uploadingPayment, setUploadingPayment] = useState(false);
+    const [isPaymentSectionExpanded, setIsPaymentSectionExpanded] = useState(true); // Expanded by default
 
     // Role determination
     const [isBuyer, setIsBuyer] = useState(false);
@@ -40,6 +42,22 @@ export default function OrderPage() {
 
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+
+    // Format currency with proper decimal places
+    const formatCurrency = (amount: number) => {
+        // Show 2 decimal places if the amount has decimals, otherwise show whole number
+        if (amount % 1 === 0) {
+            return amount.toLocaleString();
+        } else {
+            // Format with 2 decimal places, then remove trailing zeros
+            const formatted = amount.toFixed(2);
+            const withoutTrailingZeros = formatted.replace(/\.?0+$/, '');
+            // Add thousand separators
+            const parts = withoutTrailingZeros.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts.join('.');
+        }
+    };
 
     // Fetch order and determine role
     useEffect(() => {
@@ -324,7 +342,7 @@ export default function OrderPage() {
                         </div>
                         <div className="flex justify-between mt-2">
                             <span>Price:</span>
-                            <span>LKR {order.price.toLocaleString()}</span>
+                            <span>LKR {formatCurrency(order.price)}</span>
                         </div>
                         <div className="flex justify-between">
                             <span>Quantity:</span>
@@ -332,11 +350,11 @@ export default function OrderPage() {
                         </div>
                         <div className="flex justify-between">
                             <span>Shipping:</span>
-                            <span>LKR {order.shipping.toLocaleString()}</span>
+                            <span>LKR {formatCurrency(order.shipping)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg mt-2 text-[#0d0a0b]">
                             <span>Total:</span>
-                            <span>LKR {order.total.toLocaleString()}</span>
+                            <span>LKR {formatCurrency(order.total)}</span>
                         </div>
                         <div className="flex justify-between mt-2 pt-2 border-t border-gray-200">
                             <span>Payment Method:</span>
@@ -348,8 +366,38 @@ export default function OrderPage() {
                             </span>
                         </div>
                         {order.paymentMethod === 'bankTransfer' && (
-                            <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <div className="text-sm font-semibold text-blue-800 mb-3">Bank Transfer Instructions:</div>
+                            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                {/* Collapsible Header */}
+                                <button
+                                    onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
+                                    className="w-full flex items-center justify-between text-left focus:outline-none rounded p-1 -m-1"
+                                >
+                                    <h3 className="text-base font-bold flex items-center gap-2">
+                                        <FiCreditCard className="w-4 h-4 text-blue-600" />
+                                        Payment Instructions & Upload
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        {order.paymentSlipUrl && (
+                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                                Payment Uploaded
+                                            </span>
+                                        )}
+                                        {isPaymentSectionExpanded ? (
+                                            <FiChevronUp className="w-4 h-4 text-blue-600" />
+                                        ) : (
+                                            <FiChevronDown className="w-4 h-4 text-blue-600" />
+                                        )}
+                                    </div>
+                                </button>
+
+                                {/* Collapsible Content */}
+                                {isPaymentSectionExpanded && (
+                                    <div className="mt-3 space-y-4">
+                                        {/* Bank Transfer Details */}
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                                                Step 1: Make Bank Transfer
+                                            </h4>
                                 {sellerBankAccounts.length > 0 ? (
                                     <div className="space-y-4">
                                         <div className="text-sm text-blue-700 mb-3">
@@ -397,7 +445,7 @@ export default function OrderPage() {
                                         
                                         <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                                             <div className="text-sm font-semibold text-green-800 mb-1">
-                                                Amount to Transfer: <span className="text-lg">LKR {order.total.toLocaleString()}</span>
+                                                Amount to Transfer: <span className="text-lg">LKR {formatCurrency(order.total)}</span>
                                             </div>
                                             <div className="text-xs text-green-700">
                                                 Please include your order ID ({order.id}) in the transfer reference.
@@ -420,7 +468,83 @@ export default function OrderPage() {
                                     <div className="text-sm text-blue-700 space-y-1">
                                         <div>Please contact the seller for bank transfer details.</div>
                                         <div>The seller will provide bank account information via email or phone.</div>
-                                        <div className="font-medium mt-2">Total to transfer: LKR {order.total.toLocaleString()}</div>
+                                        <div className="font-medium mt-2">Total to transfer: LKR {formatCurrency(order.total)}</div>
+                                    </div>
+                                )}
+                                        </div>
+
+                                        {/* Payment Slip Upload - Show only if user is buyer */}
+                                        {isBuyer && order.status === OrderStatus.PENDING_PAYMENT && (
+                                            <div className="border-t border-blue-200 pt-3">
+                                                <h4 className="text-sm font-semibold text-orange-800 mb-2">
+                                                    Step 2: Upload Payment Slip
+                                                </h4>
+                                                
+                                                {order.paymentSlipUrl ? (
+                                                    <div className="p-3 bg-green-50 border border-green-200 rounded">
+                                                        <div className="text-sm font-bold text-green-800 mb-1">
+                                                            Payment Slip Uploaded Successfully!
+                                                        </div>
+                                                        <div className="text-xs text-green-700 mb-2">
+                                                            Your payment slip is being reviewed by the seller.
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <div className="text-xs text-orange-700 mb-2">
+                                                            Upload your payment slip or screenshot as proof of payment.
+                                                        </div>
+                                                        
+                                                        {!paymentSlip ? (
+                                                            <div className="space-y-2">
+                                                                <label className="block">
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*,.pdf"
+                                                                        onChange={handlePaymentSlipUpload}
+                                                                        className="block w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 file:cursor-pointer cursor-pointer"
+                                                                    />
+                                                                </label>
+                                                                <div className="text-xs text-orange-600">
+                                                                    JPG, PNG, PDF (max 10MB)
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="space-y-2">
+                                                                <div className="flex items-center gap-2 p-2 bg-white rounded border border-orange-300">
+                                                                    <div className="text-orange-600 text-sm">📄</div>
+                                                                    <div className="flex-1">
+                                                                        <div className="text-xs font-medium text-gray-900">
+                                                                            {paymentSlip.name}
+                                                                        </div>
+                                                                        <div className="text-xs text-gray-500">
+                                                                            {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => setPaymentSlip(null)}
+                                                                        className="text-red-500 hover:text-red-700 text-xs"
+                                                                        disabled={uploadingPayment}
+                                                                    >
+                                                                        Remove
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={confirmPaymentSlipUpload}
+                                                                        disabled={uploadingPayment}
+                                                                        className="flex-1 py-2 px-3 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    >
+                                                                        {uploadingPayment ? 'Uploading...' : 'Upload'}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -518,79 +642,9 @@ export default function OrderPage() {
                             </div>
                         )}
                     </div>
-                    {/* Payment Slip Upload for Bank Transfer Orders */}
-                    {isBuyer && order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT && (
-                        <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                            <div className="text-sm font-semibold text-orange-800 mb-3">
-                                📄 Upload Payment Slip
-                            </div>
-                            <div className="text-sm text-orange-700 mb-4">
-                                After making the bank transfer, please upload your payment slip or screenshot as proof of payment.
-                            </div>
-                            
-                            {!paymentSlip ? (
-                                <div className="space-y-3">
-                                    <label className="block">
-                                        <input
-                                            type="file"
-                                            accept="image/*,.pdf"
-                                            onChange={handlePaymentSlipUpload}
-                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 file:cursor-pointer cursor-pointer"
-                                        />
-                                    </label>
-                                    <div className="text-xs text-orange-600">
-                                        Accepted formats: JPG, PNG, PDF (max 10MB)
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-orange-300">
-                                        <div className="text-orange-600">
-                                            📄
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {paymentSlip.name}
-                                            </div>
-                                            <div className="text-xs text-gray-500">
-                                                {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setPaymentSlip(null)}
-                                            className="text-red-500 hover:text-red-700 text-sm"
-                                            disabled={uploadingPayment}
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                    
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={confirmPaymentSlipUpload}
-                                            disabled={uploadingPayment}
-                                            className="flex-1 py-2 px-4 bg-orange-600 text-white rounded-lg font-semibold text-sm hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {uploadingPayment ? 'Uploading...' : 'Upload Payment Slip'}
-                                        </button>
-                                        <label className="py-2 px-4 bg-gray-100 text-gray-700 rounded-lg font-semibold text-sm hover:bg-gray-200 transition cursor-pointer">
-                                            Change File
-                                            <input
-                                                type="file"
-                                                accept="image/*,.pdf"
-                                                onChange={handlePaymentSlipUpload}
-                                                className="hidden"
-                                                disabled={uploadingPayment}
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
                     
-                    {/* Show payment slip if already uploaded */}
-                    {order.paymentSlipUrl && (
+                    {/* Show payment slip if already uploaded (for sellers and completed orders) */}
+                    {order.paymentSlipUrl && (order.status !== OrderStatus.PENDING_PAYMENT || !isBuyer) && (
                         <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                             <div className="text-sm font-semibold text-green-800 mb-2">
                                 ✅ Payment Slip Uploaded

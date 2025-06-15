@@ -12,6 +12,8 @@ import ShopPage from "../pages/shop/ShopPage";
 import Profile from "../pages/user/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import OrderPage from "../pages/order/OrderPage";
+import CustomOrderPage from "../pages/order/CustomOrderPage";
+import CustomOrderSummaryPage from "../pages/order/CustomOrderSummaryPage";
 import WishlistPage from "../pages/WishlistPage";
 import EditShop from "../pages/shop/EditShop";
 import PublicProfile from "../pages/user/PublicProfile";
@@ -45,6 +47,8 @@ const AppRoutes = () => (
     <Route path="/wishlist" element={<WishlistPage />} />
     <Route path="/search" element={<Search />} />
     <Route path="/order/:id" element={<OrderPage />} />
+    <Route path="/custom-order/:orderId" element={<CustomOrderPage />} />
+    <Route path="/custom-order-summary/:customOrderId" element={<CustomOrderSummaryPage />} />
     <Route path="/cart" element={<Cart />} />
     <Route path="/shop/:username" element={<ShopPage />} />
     <Route path="/dashboard/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

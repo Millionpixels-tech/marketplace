@@ -6,6 +6,7 @@ import { db } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import WishlistButton from "../../components/UI/WishlistButton";
+import ContactSellerButton from "../../components/UI/ContactSellerButton";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner, Pagination } from "../../components/UI";
@@ -620,13 +621,32 @@ export default function ListingSingle() {
                   </div>
                 )}
 
-                {/* Wishlist Button - Left aligned */}
-                {item && (
-                  <div className={`${isMobile ? 'mt-3' : 'mt-4'} flex justify-start`}>
+                {/* Action Buttons - Left aligned */}
+                {item && shop && (
+                  <div className={`${isMobile ? 'mt-3' : 'mt-4'} flex gap-3 justify-start`}>
                     <WishlistButton 
                       listing={item} 
                       refresh={refreshItem}
                       displayText={true}
+                    />
+                    <ContactSellerButton
+                      sellerId={shop.owner}
+                      sellerName={shop.name}
+                      context={{
+                        type: 'listing',
+                        id: item.id,
+                        title: item.name,
+                        listingDetails: {
+                          id: item.id,
+                          name: item.name,
+                          price: basePrice,
+                          image: item.images?.[0],
+                          shopName: shop.name
+                        }
+                      }}
+                      buttonText="Contact Seller"
+                      buttonStyle="outline"
+                      size="md"
                     />
                   </div>
                 )}
