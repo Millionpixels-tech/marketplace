@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import OrderSellerRow from "../order/OrderSellerRow";
 import { useAuth } from "../../context/AuthContext";
+import { formatPrice } from "../../utils/formatters";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -1286,7 +1287,7 @@ export default function ProfileDashboard() {
                                                                         {isMobile && (
                                                                             <div className="mt-2">
                                                                                 <div className="text-lg font-bold text-green-600">
-                                                                                    LKR {order.total?.toLocaleString()}
+                                                                                    {formatPrice(order.total)}
                                                                                 </div>
                                                                             </div>
                                                                         )}
@@ -1294,7 +1295,7 @@ export default function ProfileDashboard() {
                                                                     {!isMobile && (
                                                                         <div className="text-right flex-shrink-0">
                                                                             <div className="text-xl font-bold text-green-600">
-                                                                                LKR {order.total?.toLocaleString()}
+                                                                                {formatPrice(order.total)}
                                                                             </div>
                                                                         </div>
                                                                     )}
@@ -1427,7 +1428,7 @@ export default function ProfileDashboard() {
                                                             <h3 className={`font-bold truncate ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{listing.name}</h3>
                                                             <p className="text-xs truncate mb-1" style={{ color: '#454955', opacity: 0.8 }}>{shop ? shop.name : ''}</p>
                                                             <p className={`truncate ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>{listing.description}</p>
-                                                            <p className={`font-bold mt-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#3f7d20' }}>LKR {listing.price?.toLocaleString()}</p>
+                                                            <p className={`font-bold mt-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#3f7d20' }}>{formatPrice(listing.price)}</p>
                                                         </div>
                                                     </div>
                                                     <div className={`mt-${isMobile ? '3' : '4'} flex justify-end gap-2`}>

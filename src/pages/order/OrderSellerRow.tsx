@@ -4,6 +4,7 @@ import { db } from "../../utils/firebase";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
+import { formatPrice } from "../../utils/formatters";
 
 // Function to print delivery label
 const printDeliveryLabel = async (order: any) => {
@@ -162,7 +163,7 @@ const printDeliveryLabel = async (order: any) => {
                                 <strong>${order.itemName || ''}</strong><br>
                                 ${order.variationName ? `Variation: ${order.variationName}<br>` : ''}
                                 ${order.sellerNotes ? `Seller Notes: ${order.sellerNotes}<br>` : ''}
-                                Qty: ${order.quantity || 1} | Total: LKR ${order.total?.toLocaleString() || '0'}
+                                Qty: ${order.quantity || 1} | Total: ${formatPrice(order.total)}
                             </div>
                         </div>
                     </div>
@@ -175,7 +176,7 @@ const printDeliveryLabel = async (order: any) => {
                                   order.paymentMethod === 'bankTransfer' ? 'Bank Transfer' : 
                                   'Online Payment'}
                                 ${order.paymentMethod === 'cod' ? 
-                                    `<div class="payment-highlight">COLLECT<br>LKR ${order.total?.toLocaleString() || '0'}</div>` : 
+                                    `<div class="payment-highlight">COLLECT<br>${formatPrice(order.total)}</div>` : 
                                     order.paymentMethod === 'bankTransfer' ? 
                                         '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">BANK TRANSFER<br>VERIFY PAYMENT</div>' :
                                         '<div style="font-weight: bold; margin-top: 4px; font-size: 8px;">PAID</div>'
@@ -244,7 +245,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     <div className="text-[#454955] text-xs truncate">Buyer: {order.buyerName || order.buyerId}</div>
                 </div>
                 <div className="ml-2 flex flex-col items-end">
-                    <span className="text-lg font-bold text-[#0d0a0b] whitespace-nowrap">LKR {order.total?.toLocaleString()}</span>
+                    <span className="text-lg font-bold text-[#0d0a0b] whitespace-nowrap">{formatPrice(order.total)}</span>
                     <button
                         className="text-xs text-[#3f7d20] hover:text-[#72b01d] mt-1"
                         onClick={e => { e.stopPropagation(); setExpanded(exp => !exp); }}
@@ -286,9 +287,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             </div>
                         )}
                         <div><span className="font-semibold text-[#3f7d20]">Quantity:</span> {order.quantity}</div>
-                        <div><span className="font-semibold text-[#3f7d20]">Price:</span> LKR {order.price?.toLocaleString()}</div>
-                        <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> LKR {order.shipping?.toLocaleString()}</div>
-                        <div><span className="font-semibold text-[#3f7d20]">Total:</span> LKR {order.total?.toLocaleString()}</div>
+                        <div><span className="font-semibold text-[#3f7d20]">Price:</span> {formatPrice(order.price)}</div>
+                        <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> {formatPrice(order.shipping)}</div>
+                        <div><span className="font-semibold text-[#3f7d20]">Total:</span> {formatPrice(order.total)}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Status:</span> 
                             {order.status === OrderStatus.PENDING_PAYMENT && (
                                 <span className="text-orange-600 font-bold">Awaiting Payment</span>
@@ -324,7 +325,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                             ⏳ Waiting for customer to make bank transfer and upload payment slip.
                                         </div>
                                         <div className="text-xs text-blue-600">
-                                            Customer will transfer <strong>LKR {order.total?.toLocaleString()}</strong> to your bank account.
+                                            Customer will transfer <strong>{formatPrice(order.total)}</strong> to your bank account.
                                         </div>
                                     </div>
                                 ) : order.paymentSlipUrl ? (
