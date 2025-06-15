@@ -39,6 +39,9 @@ export default function OrderPage() {
     // Role determination
     const [isBuyer, setIsBuyer] = useState(false);
     const [isSeller, setIsSeller] = useState(false);
+    
+    // Custom Order Detection - Simple approach using customOrderId field
+    const [customOrderId, setCustomOrderId] = useState<string | null>(null);
 
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
@@ -68,6 +71,11 @@ export default function OrderPage() {
             if (docSnap.exists()) {
                 const orderData: any = { ...docSnap.data(), id: docSnap.id };
                 setOrder(orderData);
+
+                // Set custom order ID if this order came from a custom order
+                if (orderData.customOrderId) {
+                    setCustomOrderId(orderData.customOrderId);
+                }
 
                 // Only after setting order and user, check roles
                 if (user && user.email) {
@@ -550,6 +558,38 @@ export default function OrderPage() {
                             </div>
                         )}
                     </div>
+
+                    {/* Custom Order Link */}
+                    {customOrderId && (
+                        <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="text-sm font-semibold text-purple-800 mb-1">
+                                        📋 Custom Order Detected
+                                    </div>
+                                    <div className="text-sm text-purple-700 mb-2">
+                                        This order originated from a custom order request. View the full custom order details for more information.
+                                    </div>
+                                    <button
+                                        onClick={() => navigate(`/custom-order-summary/${customOrderId}`)}
+                                        className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        View Custom Order Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Buyer Notes - Show to both buyers and sellers */}
                     {order.buyerNotes && (

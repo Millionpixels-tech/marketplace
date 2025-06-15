@@ -33,6 +33,7 @@ export interface Order {
     paymentStatus?: PaymentStatus;
     status?: OrderStatusType;
     orderId?: string; // PayHere order ID
+    customOrderId?: string; // Reference to custom order if created from one
     createdAt: any;
 }
 

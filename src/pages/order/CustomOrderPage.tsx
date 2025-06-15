@@ -229,7 +229,8 @@ export default function CustomOrderPage() {
         quantity: item.quantity,
         shipping: order.shippingCost / order.items.length, // Distribute shipping cost
         total: (item.unitPrice * item.quantity) + (order.shippingCost / order.items.length),
-        paymentMethod: order.paymentMethod === 'COD' ? 'cod' : 'bankTransfer'
+        paymentMethod: order.paymentMethod === 'COD' ? 'cod' : 'bankTransfer',
+        customOrderId: order.id // Add reference to the custom order
       }));
 
       const createdOrderIds = await Promise.all(promises);

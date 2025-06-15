@@ -37,6 +37,7 @@ interface Order {
   total: number;
   paymentMethod: string;
   status: string;
+  customOrderId?: string; // Reference to custom order if created from one
   createdAt: any;
   buyerInfo: {
     firstName: string;
@@ -142,61 +143,19 @@ export default function CustomOrderSummaryPage() {
         }
 
         // Fetch all related orders created from this custom order
-        // We'll match orders by buyer, seller, timing, and precise item matching
+        // Now we can simply query by customOrderId field
         const ordersQuery = query(
           collection(db, "orders"),
-          where("buyerId", "==", customOrderData.buyerId),
-          where("sellerId", "==", customOrderData.sellerId)
+          where("customOrderId", "==", customOrderId)
         );
         
         const ordersSnapshot = await getDocs(ordersQuery);
-        const relatedOrders: Order[] = [];
-        
-        // Create a map of custom order items for precise matching
-        const customOrderItemsMap = new Map(
-          customOrderData.items.map(item => [
-            `${item.name.toLowerCase()}_${item.unitPrice}_${item.quantity}`,
-            item
-          ])
-        );
-
-        for (const orderDoc of ordersSnapshot.docs) {
-          const orderData = orderDoc.data();
-          
-          // Check if this order was created very recently (within 2 minutes) of custom order acceptance
-          const orderCreatedAt = orderData.createdAt?.toDate();
-          const customOrderAcceptedAt = customOrderData.updatedAt?.toDate() || customOrderData.createdAt?.toDate();
-          
-          if (orderCreatedAt && customOrderAcceptedAt) {
-            const timeDiff = Math.abs(orderCreatedAt.getTime() - customOrderAcceptedAt.getTime());
-            
-            // Create a key for this order to match against custom order items
-            const orderKey = `${orderData.itemName?.toLowerCase() || ''}_${orderData.price || 0}_${orderData.quantity || 0}`;
-            const hasMatchingItem = customOrderItemsMap.has(orderKey);
-            
-            // Only include orders that:
-            // 1. Were created within 2 minutes of custom order acceptance
-            // 2. Have exactly matching item name, price, and quantity
-            // 3. Have the same payment method
-            const paymentMethodMatches = 
-              (customOrderData.paymentMethod === 'COD' && orderData.paymentMethod === 'cod') ||
-              (customOrderData.paymentMethod === 'BANK_TRANSFER' && orderData.paymentMethod === 'bankTransfer');
-            
-            if (timeDiff <= 2 * 60 * 1000 && hasMatchingItem && paymentMethodMatches) {
-              relatedOrders.push({
-                id: orderDoc.id,
-                ...orderData
-              } as Order);
-            }
-          }
-        }
+        const relatedOrders: Order[] = ordersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Order));
 
         setOrders(relatedOrders);
-        
-        // If no orders found, they might still be processing
-        if (relatedOrders.length === 0) {
-          console.log("No related orders found yet, they might still be processing");
-        }
       } catch (error) {
         console.error("Error fetching order data:", error);
         setError("Failed to load order information");
