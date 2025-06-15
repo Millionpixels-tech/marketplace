@@ -1,11 +1,10 @@
 // src/pages/user/dashboard/MessagesPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { subscribeToConversations, subscribeToMessages, markMessagesAsRead, sendMessage } from "../../../utils/messaging";
+import { subscribeToMessages, markMessagesAsRead, sendMessage, getConversationsPaginated, getRecentMessages, getMessagesPaginated } from "../../../utils/messaging";
 import type { ChatConversation, Message } from "../../../utils/messaging";
-import { FiMessageCircle, FiSend, FiUser, FiPackage, FiShoppingBag, FiExternalLink, FiPlus } from "react-icons/fi";
+import { FiMessageCircle, FiSend, FiUser, FiPackage, FiShoppingBag, FiPlus } from "react-icons/fi";
 import { useResponsive } from "../../../hooks/useResponsive";
-import { Link } from "react-router-dom";
 import CreateCustomOrderModal from "../../../components/UI/CreateCustomOrderModal";
 
 function MessagesPageContent() {
@@ -20,60 +19,259 @@ function MessagesPageContent() {
   const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination state
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const CONVERSATIONS_PER_PAGE = 10;
+
+  // Message pagination state
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [messagesLastDoc, setMessagesLastDoc] = useState<any>(null);
+  const [realtimeUnsubscribe, setRealtimeUnsubscribe] = useState<(() => void) | null>(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
+  const MESSAGES_PER_PAGE = 10;
+  
+  // Ref for auto-scrolling to bottom
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
   console.log("MessagesPage render - conversations:", conversations.length, "messages:", messages.length);
 
-  useEffect(() => {
-    if (!user) return;
-
-    // Subscribe to conversations
+  // Handle conversation selection and mark messages as read
+  const handleConversationSelect = async (conversation: ChatConversation) => {
+    setSelectedConversation(conversation);
+    
+    // Immediately update the unread count to 0 for this conversation in the local state
+    setConversations(prev => prev.map(conv => 
+      conv.id === conversation.id 
+        ? { ...conv, unreadCount: { ...conv.unreadCount, [user!.uid]: 0 } }
+        : conv
+    ));
+    
+    // Mark messages as read in the database
     try {
-      const unsubscribe = subscribeToConversations(user.uid, (convs) => {
-        console.log("Conversations updated:", convs.length);
-        setConversations(convs);
-        setLoading(false);
-        
-        // Auto-select first conversation if none selected
-        if (!selectedConversation && convs.length > 0) {
-          setSelectedConversation(convs[0]);
-        }
-      });
-
-      return unsubscribe;
+      await markMessagesAsRead(conversation.id, user!.uid);
+      // Dispatch event to update global unread count
+      window.dispatchEvent(new Event("message-updated"));
     } catch (error) {
-      console.error("Error subscribing to conversations:", error);
+      console.error("Error marking messages as read:", error);
+    }
+  };
+
+  // Load initial conversations
+  const loadConversations = async (isLoadMore = false) => {
+    if (!user) return;
+    
+    try {
+      if (!isLoadMore) {
+        setLoading(true);
+        setConversations([]);
+        setLastDoc(null);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const result = await getConversationsPaginated(
+        user.uid, 
+        CONVERSATIONS_PER_PAGE, 
+        isLoadMore ? lastDoc : null
+      );
+
+      if (isLoadMore) {
+        setConversations(prev => [...prev, ...result.conversations]);
+      } else {
+        setConversations(result.conversations);
+        // Auto-select first conversation if none selected
+        if (!selectedConversation && result.conversations.length > 0) {
+          handleConversationSelect(result.conversations[0]);
+        }
+      }
+
+      setLastDoc(result.lastDoc);
+      setHasMore(result.hasMore);
+      setLoading(false);
+      setLoadingMore(false);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
       setError("Failed to load conversations");
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [user]);
+  };
+
+  // Load more conversations when scrolling
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      loadConversations(true);
+    }
+  };
+
+  // Scroll event handler for conversations list
+  const handleConversationsScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+    
+    // Load more when user scrolls to 80% of the list
+    if (scrollPercentage > 0.8 && hasMore && !loadingMore) {
+      handleLoadMore();
+    }
+  };
 
   useEffect(() => {
+    loadConversations();
+  }, [user]);
+
+  // Auto-scroll to bottom for new messages
+  const scrollToBottom = (smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: smooth ? "smooth" : "auto",
+        block: "end"
+      });
+    } else if (messagesContainerRef.current) {
+      // Fallback: scroll the container to the bottom
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Load recent messages for selected conversation
+  const loadRecentMessages = async (conversationId: string) => {
+    try {
+      setMessagesLoading(true);
+      setMessages([]);
+      setMessagesLastDoc(null);
+      setHasMoreMessages(true);
+      setShouldScrollToBottom(true); // Flag to scroll after loading
+
+      const result = await getRecentMessages(conversationId, MESSAGES_PER_PAGE);
+      setMessages(result.messages);
+      setMessagesLastDoc(result.lastDoc);
+      
+      // Check if there are more messages by trying to load one more batch
+      if (result.messages.length < MESSAGES_PER_PAGE) {
+        setHasMoreMessages(false);
+      }
+
+      // Mark messages as read
+      if (result.messages.length > 0) {
+        try {
+          markMessagesAsRead(conversationId, user!.uid);
+          // Dispatch event to update global unread count
+          window.dispatchEvent(new Event("message-updated"));
+        } catch (error) {
+          console.error("Error marking messages as read:", error);
+        }
+      }
+
+      setMessagesLoading(false);
+      
+      // Scroll to bottom after loading recent messages - use immediate scroll
+      setTimeout(() => scrollToBottom(false), 50);
+      // Then smooth scroll after content is rendered
+      setTimeout(() => scrollToBottom(true), 200);
+    } catch (error) {
+      console.error("Error loading recent messages:", error);
+      setError("Failed to load messages");
+      setMessagesLoading(false);
+    }
+  };
+
+  // Load older messages (when scrolling up)
+  const loadOlderMessages = async () => {
+    if (!selectedConversation || !hasMoreMessages || loadingOlderMessages) return;
+
+    try {
+      setLoadingOlderMessages(true);
+      
+      const result = await getMessagesPaginated(
+        selectedConversation.id,
+        MESSAGES_PER_PAGE,
+        messagesLastDoc
+      );
+
+      if (result.messages.length > 0) {
+        setMessages(prev => [...result.messages, ...prev]);
+        setMessagesLastDoc(result.lastDoc);
+      }
+      
+      setHasMoreMessages(result.hasMore);
+      setLoadingOlderMessages(false);
+    } catch (error) {
+      console.error("Error loading older messages:", error);
+      setLoadingOlderMessages(false);
+    }
+  };
+
+  // Handle scroll in messages area
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop } = e.currentTarget;
+    
+    // Load older messages when user scrolls near the top
+    if (scrollTop < 100 && hasMoreMessages && !loadingOlderMessages) {
+      loadOlderMessages();
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup previous realtime subscription
+    if (realtimeUnsubscribe) {
+      realtimeUnsubscribe();
+      setRealtimeUnsubscribe(null);
+    }
+
     if (!selectedConversation) {
       setMessages([]);
       return;
     }
 
-    // Subscribe to messages for selected conversation
+    // Load initial messages
+    loadRecentMessages(selectedConversation.id);
+
+    // Set up realtime subscription for new messages only
     try {
       const unsubscribe = subscribeToMessages(selectedConversation.id, (msgs) => {
-        console.log("Messages updated:", msgs.length);
-        setMessages(msgs);
-        
-        // Mark messages as read
-        if (msgs.length > 0) {
-          try {
-            markMessagesAsRead(selectedConversation.id, user!.uid);
-          } catch (error) {
-            console.error("Error marking messages as read:", error);
+        // Only update if we get new messages (more than current)
+        if (msgs.length > messages.length) {
+          const newMessages = msgs.slice(messages.length);
+          setMessages(prev => [...prev, ...newMessages]);
+          
+          // Mark new messages as read
+          if (newMessages.length > 0) {
+            try {
+              markMessagesAsRead(selectedConversation.id, user!.uid);
+              // Dispatch event to update global unread count
+              window.dispatchEvent(new Event("message-updated"));
+            } catch (error) {
+              console.error("Error marking messages as read:", error);
+            }
           }
+          
+          // Scroll to bottom for new messages
+          setShouldScrollToBottom(true);
+          setTimeout(() => scrollToBottom(true), 100);
         }
       });
 
-      return unsubscribe;
+      setRealtimeUnsubscribe(() => unsubscribe);
     } catch (error) {
-      console.error("Error subscribing to messages:", error);
-      setError("Failed to load messages");
+      console.error("Error subscribing to new messages:", error);
+      setError("Failed to subscribe to messages");
     }
   }, [selectedConversation, user]);
+
+  // Ensure scroll to bottom when conversation changes
+  useEffect(() => {
+    if (selectedConversation && messages.length > 0 && !messagesLoading && shouldScrollToBottom) {
+      const timer = setTimeout(() => {
+        scrollToBottom(false);
+        setShouldScrollToBottom(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedConversation?.id, messages.length > 0 && !messagesLoading, shouldScrollToBottom]);
 
   const handleSendMessage = async () => {
     if (!user || !selectedConversation || !newMessage.trim() || sendingMessage) return;
@@ -101,6 +299,10 @@ function MessagesPageContent() {
       
       console.log("Message sent successfully");
       setNewMessage("");
+      
+      // Scroll to bottom after sending message
+      setShouldScrollToBottom(true);
+      setTimeout(() => scrollToBottom(true), 100);
       
       // Dispatch event to update message counts
       window.dispatchEvent(new Event("message-updated"));
@@ -251,7 +453,7 @@ function MessagesPageContent() {
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Messages</h3>
           </div>
-          <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto h-full" onScroll={handleConversationsScroll}>
             {conversations.map((conversation) => {
               const unreadCount = conversation.unreadCount?.[user!.uid] || 0;
               const isSelected = selectedConversation?.id === conversation.id;
@@ -259,7 +461,7 @@ function MessagesPageContent() {
               return (
                 <div
                   key={conversation.id}
-                  onClick={() => setSelectedConversation(conversation)}
+                  onClick={() => handleConversationSelect(conversation)}
                   className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                     isSelected ? 'bg-[#72b01d]/10 border-l-4 border-l-[#72b01d]' : ''
                   }`}
@@ -287,30 +489,6 @@ function MessagesPageContent() {
                           </span>
                         </div>
                       )}
-                      {conversation.listingDetails && (
-                        <Link 
-                          to={`/listing/${conversation.listingDetails.id}`}
-                          className="flex items-center gap-2 mb-1 p-1 rounded bg-gray-50 hover:bg-gray-100 transition-colors group"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {conversation.listingDetails.image && (
-                            <img 
-                              src={conversation.listingDetails.image} 
-                              alt={conversation.listingDetails.name}
-                              className="w-6 h-6 rounded object-cover"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-700 truncate">
-                              {conversation.listingDetails.name}
-                            </p>
-                            <p className="text-xs text-[#72b01d] font-semibold">
-                              LKR {conversation.listingDetails.price.toLocaleString()}
-                            </p>
-                          </div>
-                          <FiExternalLink className="w-3 h-3 text-gray-400 group-hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </Link>
-                      )}
                       <p className="text-sm text-gray-600 truncate">
                         {conversation.lastMessage || "No messages yet"}
                       </p>
@@ -322,6 +500,21 @@ function MessagesPageContent() {
                 </div>
               );
             })}
+            
+            {/* Loading more indicator */}
+            {loadingMore && (
+              <div className="p-4 text-center">
+                <div className="w-6 h-6 border-2 border-[#72b01d] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Loading more conversations...</p>
+              </div>
+            )}
+            
+            {/* End of conversations indicator */}
+            {!hasMore && conversations.length > 0 && (
+              <div className="p-4 text-center">
+                <p className="text-sm text-gray-500">No more conversations</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -354,35 +547,41 @@ function MessagesPageContent() {
                       </span>
                     </div>
                   )}
-                  {selectedConversation.listingDetails && (
-                    <Link 
-                      to={`/listing/${selectedConversation.listingDetails.id}`}
-                      className="flex items-center gap-2 mt-1 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group"
-                    >
-                      {selectedConversation.listingDetails.image && (
-                        <img 
-                          src={selectedConversation.listingDetails.image} 
-                          alt={selectedConversation.listingDetails.name}
-                          className="w-8 h-8 rounded object-cover"
-                        />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-gray-700">
-                          {selectedConversation.listingDetails.name}
-                        </p>
-                        <p className="text-xs text-[#72b01d] font-semibold">
-                          LKR {selectedConversation.listingDetails.price.toLocaleString()}
-                        </p>
-                      </div>
-                      <FiExternalLink className="w-3 h-3 text-gray-400 group-hover:text-gray-600" />
-                    </Link>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-4" 
+              onScroll={handleMessagesScroll}
+            >
+              {/* Loading initial messages */}
+              {messagesLoading && messages.length === 0 && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="w-6 h-6 border-2 border-[#72b01d] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading messages...</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Loading older messages indicator */}
+              {loadingOlderMessages && (
+                <div className="text-center py-2">
+                  <div className="w-4 h-4 border-2 border-[#72b01d] border-t-transparent rounded-full animate-spin mx-auto mb-1"></div>
+                  <p className="text-xs text-gray-600">Loading older messages...</p>
+                </div>
+              )}
+              
+              {/* End of messages indicator */}
+              {!hasMoreMessages && messages.length > MESSAGES_PER_PAGE && (
+                <div className="text-center py-2">
+                  <p className="text-xs text-gray-500">Beginning of conversation</p>
+                </div>
+              )}
+              
               {messages.map((message) => {
                 // Safety check for message data
                 if (!message || !message.id) {
@@ -411,6 +610,9 @@ function MessagesPageContent() {
                   </div>
                 );
               }).filter(Boolean)}
+              
+              {/* Invisible element for auto-scrolling to bottom */}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}

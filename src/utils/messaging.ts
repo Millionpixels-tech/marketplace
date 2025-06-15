@@ -11,7 +11,9 @@ import {
   updateDoc, 
   serverTimestamp, 
   getDocs,
-  Timestamp
+  Timestamp,
+  limit,
+  startAfter
 } from "firebase/firestore";
 
 export interface Message {
@@ -207,6 +209,82 @@ export function subscribeToConversations(
   });
 }
 
+// Paginated version for loading conversations with limit
+export function subscribeToConversationsPaginated(
+  userId: string,
+  limitCount: number,
+  lastDoc: any = null,
+  callback: (conversations: ChatConversation[], hasMore: boolean) => void
+) {
+  const conversationsRef = collection(db, "conversations");
+  let q = query(
+    conversationsRef,
+    where("participants", "array-contains", userId),
+    orderBy("lastMessageTime", "desc"),
+    limit(limitCount)
+  );
+  
+  if (lastDoc) {
+    q = query(
+      conversationsRef,
+      where("participants", "array-contains", userId),
+      orderBy("lastMessageTime", "desc"),
+      startAfter(lastDoc),
+      limit(limitCount)
+    );
+  }
+  
+  return onSnapshot(q, (snapshot) => {
+    const conversations: ChatConversation[] = [];
+    snapshot.forEach(doc => {
+      conversations.push({ id: doc.id, ...doc.data() } as ChatConversation);
+    });
+    
+    // Check if there are more conversations by trying to get one more
+    const hasMore = snapshot.docs.length === limitCount;
+    callback(conversations, hasMore);
+  });
+}
+
+// Get conversations for pagination (non-realtime)
+export async function getConversationsPaginated(
+  userId: string,
+  limitCount: number,
+  lastDoc: any = null
+): Promise<{ conversations: ChatConversation[], lastDoc: any, hasMore: boolean }> {
+  const conversationsRef = collection(db, "conversations");
+  let q = query(
+    conversationsRef,
+    where("participants", "array-contains", userId),
+    orderBy("lastMessageTime", "desc"),
+    limit(limitCount + 1) // Get one extra to check if there are more
+  );
+  
+  if (lastDoc) {
+    q = query(
+      conversationsRef,
+      where("participants", "array-contains", userId),
+      orderBy("lastMessageTime", "desc"),
+      startAfter(lastDoc),
+      limit(limitCount + 1)
+    );
+  }
+  
+  const snapshot = await getDocs(q);
+  const conversations: ChatConversation[] = [];
+  
+  const docs = snapshot.docs;
+  for (let index = 0; index < docs.length && index < limitCount; index++) {
+    const doc = docs[index];
+    conversations.push({ id: doc.id, ...doc.data() } as ChatConversation);
+  }
+  
+  const hasMore = snapshot.docs.length > limitCount;
+  const newLastDoc = conversations.length > 0 ? snapshot.docs[conversations.length - 1] : null;
+  
+  return { conversations, lastDoc: newLastDoc, hasMore };
+}
+
 // Subscribe to messages in a conversation
 export function subscribeToMessages(
   conversationId: string,
@@ -222,6 +300,73 @@ export function subscribeToMessages(
     });
     callback(messages);
   });
+}
+
+// Get messages with pagination (for loading older messages)
+export async function getMessagesPaginated(
+  conversationId: string,
+  limitCount: number,
+  lastDoc: any = null
+): Promise<{ messages: Message[], lastDoc: any, hasMore: boolean }> {
+  const messagesRef = collection(db, "conversations", conversationId, "messages");
+  let q = query(
+    messagesRef,
+    orderBy("timestamp", "desc"), // Get newest first for pagination
+    limit(limitCount + 1) // Get one extra to check if there are more
+  );
+  
+  if (lastDoc) {
+    q = query(
+      messagesRef,
+      orderBy("timestamp", "desc"),
+      startAfter(lastDoc),
+      limit(limitCount + 1)
+    );
+  }
+  
+  const snapshot = await getDocs(q);
+  const messages: Message[] = [];
+  
+  const docs = snapshot.docs;
+  for (let index = 0; index < docs.length && index < limitCount; index++) {
+    const doc = docs[index];
+    messages.push({ id: doc.id, ...doc.data() } as Message);
+  }
+  
+  // Reverse to show oldest first (normal chat order)
+  messages.reverse();
+  
+  const hasMore = snapshot.docs.length > limitCount;
+  const newLastDoc = snapshot.docs.length > 0 ? snapshot.docs[Math.min(limitCount - 1, snapshot.docs.length - 1)] : null;
+  
+  return { messages, lastDoc: newLastDoc, hasMore };
+}
+
+// Get recent messages (for initial load - newest messages)
+export async function getRecentMessages(
+  conversationId: string,
+  limitCount: number
+): Promise<{ messages: Message[], lastDoc: any }> {
+  const messagesRef = collection(db, "conversations", conversationId, "messages");
+  const q = query(
+    messagesRef,
+    orderBy("timestamp", "desc"),
+    limit(limitCount)
+  );
+  
+  const snapshot = await getDocs(q);
+  const messages: Message[] = [];
+  
+  snapshot.forEach(doc => {
+    messages.push({ id: doc.id, ...doc.data() } as Message);
+  });
+  
+  // Reverse to show oldest first (normal chat order)
+  messages.reverse();
+  
+  const lastDoc = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null;
+  
+  return { messages, lastDoc };
 }
 
 // Get total unread count for a user
