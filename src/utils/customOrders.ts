@@ -143,6 +143,18 @@ export async function markCustomOrderPaid(orderId: string): Promise<void> {
   await updateCustomOrderStatus(orderId, 'PAID');
 }
 
+// Update buyer ID for custom order (when a different user accepts the order)
+export async function updateCustomOrderBuyer(
+  orderId: string, 
+  newBuyerId: string,
+  buyerName: string
+): Promise<void> {
+  await updateCustomOrderStatus(orderId, 'PENDING', {
+    buyerId: newBuyerId,
+    buyerName: buyerName
+  });
+}
+
 // Get seller's active listings count
 export async function getSellerActiveListingsCount(sellerId: string): Promise<number> {
   try {

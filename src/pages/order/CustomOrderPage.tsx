@@ -2,15 +2,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getCustomOrder, acceptCustomOrder, isCustomOrderExpired } from "../../utils/customOrders";
+import { getCustomOrder, acceptCustomOrder, isCustomOrderExpired, updateCustomOrderBuyer } from "../../utils/customOrders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../../utils/userProfile";
 import { createOrder } from "../../utils/orders";
+import { auth } from "../../utils/firebase";
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Input } from "../../components/UI";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useToast } from "../../context/ToastContext";
-import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiAlertCircle, FiArrowLeft, FiShoppingBag } from "react-icons/fi";
+import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiAlertCircle, FiArrowLeft, FiShoppingBag, FiLock } from "react-icons/fi";
 import type { CustomOrder } from "../../utils/customOrders";
 
 export default function CustomOrderPage() {
@@ -23,6 +25,14 @@ export default function CustomOrderPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Authentication state for guest users
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authLoadingState, setAuthLoadingState] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
   
   // Form validation state
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -80,6 +90,13 @@ export default function CustomOrderPage() {
     fetchOrder();
   }, [orderId, user]);
 
+  // Update buyer info email when user signs in
+  useEffect(() => {
+    if (user?.email && !buyerInfo.email) {
+      setBuyerInfo(prev => ({ ...prev, email: user.email || '' }));
+    }
+  }, [user?.email, buyerInfo.email]);
+
   // Clear specific field error
   const clearFieldError = (field: string) => {
     if (validationErrors[field]) {
@@ -122,6 +139,39 @@ export default function CustomOrderPage() {
     return Object.keys(errors).length === 0;
   };
 
+  // Authentication functions for guest users
+  const handleEmailAuth = async () => {
+    setAuthError('');
+    setAuthLoadingState(true);
+    try {
+      if (authMode === 'login') {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      } else {
+        await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+      }
+      // User will be automatically updated through useAuth hook
+      setShowAuth(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      setAuthError(errorMessage);
+    }
+    setAuthLoadingState(false);
+  };
+
+  const handleGoogleAuth = async () => {
+    setAuthError('');
+    setAuthLoadingState(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setShowAuth(false);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Google sign in failed';
+      setAuthError(errorMessage);
+    }
+    setAuthLoadingState(false);
+  };
+
   const handlePlaceOrder = async () => {
     await handleOrderSubmit();
   };
@@ -129,11 +179,13 @@ export default function CustomOrderPage() {
   const handleOrderSubmit = async () => {
     if (!user || !order) {
       setGeneralError('Please sign in to complete your order.');
+      setShowAuth(true);
       return;
     }
 
     // Clear previous errors
     setGeneralError('');
+    setShowAuth(false);
     
     // Validate form
     if (!validateForm()) {
@@ -143,6 +195,20 @@ export default function CustomOrderPage() {
 
     setSubmitting(true);
     try {
+      // Check if current user is different from original buyer and update if needed
+      if (order.buyerId !== user.uid) {
+        // Get user's display name or construct one from buyer info
+        const buyerName = buyerInfo.firstName && buyerInfo.lastName 
+          ? `${buyerInfo.firstName} ${buyerInfo.lastName}`
+          : user.displayName || buyerInfo.email;
+        
+        // Update the custom order to reflect the new buyer
+        await updateCustomOrderBuyer(order.id, user.uid, buyerName);
+        
+        // Update the local order state to reflect the change
+        setOrder(prev => prev ? { ...prev, buyerId: user.uid, buyerName } : null);
+      }
+
       // Save buyer information to user profile
       await saveBuyerInfo(user.uid, buyerInfo);
 
@@ -202,7 +268,7 @@ export default function CustomOrderPage() {
   };
 
   const isExpired = order ? isCustomOrderExpired(order) : false;
-  const canAccept = user && order && order.buyerId === user.uid && order.status === 'PENDING' && !isExpired;
+  const canView = order && order.status === 'PENDING' && !isExpired; // Allow anyone to view pending, non-expired orders
 
   if (loading) {
     return (
@@ -242,6 +308,107 @@ export default function CustomOrderPage() {
       <ResponsiveHeader />
       
       <div className={`${isMobile ? 'max-w-sm px-3 py-6' : 'max-w-6xl px-4 py-8'} mx-auto`}>
+        {/* Authentication Section for Guest Users */}
+        {!user && (
+          <div className={`${isMobile ? 'mb-4 p-3' : 'mb-6 p-4'} rounded-xl border`} style={{ 
+            backgroundColor: 'rgba(114, 176, 29, 0.05)', 
+            borderColor: 'rgba(114, 176, 29, 0.2)' 
+          }}>
+            <div className={`flex items-center gap-2 ${isMobile ? 'mb-2' : 'mb-3'}`}>
+              <FiUser size={isMobile ? 16 : 18} style={{ color: '#72b01d' }} />
+              <span className={`${isMobile ? 'text-sm' : 'text-base'} font-medium`} style={{ color: '#454955' }}>
+                Sign in to accept this custom order
+              </span>
+            </div>
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 mb-3`}>
+              To accept and place this custom order, please sign in to your account or create a new one.
+            </p>
+            
+            {!showAuth ? (
+              <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row gap-2'}`}>
+                <button
+                  type="button"
+                  onClick={() => setShowAuth(true)}
+                  className={`flex items-center justify-center gap-2 ${isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-medium transition flex-1`}
+                  style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3f7d20'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#72b01d'}
+                >
+                  <FiLock size={16} />
+                  Sign in / Create Account
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoogleAuth}
+                  disabled={authLoadingState}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition flex-1"
+                  style={{ 
+                    backgroundColor: '#ffffff', 
+                    borderColor: 'rgba(114, 176, 29, 0.3)',
+                    color: '#454955'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#72b01d'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 48 48">
+                    <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.6 33.1 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6.5-6.5C34.4 6.2 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 18.7-7.2 19.8-17H44.5z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {authError && (
+                  <div className="text-red-500 text-sm font-medium">{authError}</div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    required
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={handleEmailAuth}
+                    disabled={authLoadingState}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition flex-1"
+                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                  >
+                    {authLoadingState ? 'Processing...' : (authMode === 'login' ? 'Sign In' : 'Create Account')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                    className="px-4 py-2 text-sm font-medium transition"
+                    style={{ color: '#72b01d' }}
+                  >
+                    {authMode === 'login' ? 'Create account instead' : 'Sign in instead'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAuth(false)}
+                    className="px-4 py-2 text-sm font-medium transition"
+                    style={{ color: '#454955' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
@@ -276,7 +443,7 @@ export default function CustomOrderPage() {
               </div>
             </div>
 
-            {canAccept && (
+            {canView && (
               <>
                 {/* Buyer Information Form */}
                 <div className={`rounded-2xl border border-gray-200 ${isMobile ? 'p-4' : 'p-6'} bg-white`}>
@@ -500,7 +667,7 @@ export default function CustomOrderPage() {
             )}
 
             {/* Seller Information for non-buyers */}
-            {!canAccept && (
+            {!canView && (
               <div className={`rounded-2xl border border-gray-200 ${isMobile ? 'p-4' : 'p-6'} bg-white`}>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <FiUser className="w-5 h-5 text-[#72b01d]" />
@@ -528,7 +695,7 @@ export default function CustomOrderPage() {
 
 
             {/* Status Messages for non-pending orders */}
-            {!canAccept && (
+            {!canView && (
               <div className="rounded-2xl border border-gray-200 p-6 bg-white">
                 {order.status === 'PENDING' && isExpired && (
                   <div className="text-center">
@@ -652,7 +819,7 @@ export default function CustomOrderPage() {
             </div>
 
             {/* Place Order Section */}
-            {canAccept && (
+            {canView && (
               <div className={`rounded-2xl border border-gray-200 ${isMobile ? 'p-4' : 'p-6'} bg-white`}>
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <FiPackage className="w-5 h-5 text-[#72b01d]" />
@@ -681,13 +848,16 @@ export default function CustomOrderPage() {
                     ) : (
                       <>
                         <FiPackage className="w-4 h-4" />
-                        Place Order
+                        {user ? 'Place Order' : 'Sign In & Place Order'}
                       </>
                     )}
                   </button>
                   
                   <p className="text-xs text-gray-500 text-center">
-                    By placing this order, you agree to the custom order terms set by the seller.
+                    {user 
+                      ? 'By placing this order, you agree to the custom order terms set by the seller.'
+                      : 'You will be prompted to sign in before placing the order.'
+                    }
                   </p>
                 </div>
               </div>
