@@ -42,9 +42,27 @@ export default function OrderPage() {
     
     // Custom Order Detection - Simple approach using customOrderId field
     const [customOrderId, setCustomOrderId] = useState<string | null>(null);
+    const [customOrderData, setCustomOrderData] = useState<any>(null);
+    const [customOrderLoading, setCustomOrderLoading] = useState(false);
 
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+
+    // Get the correct transfer amount (custom order total if from custom order, otherwise single order total)
+    const getTransferAmount = () => {
+        if (customOrderData && customOrderData.totalAmount) {
+            return customOrderData.totalAmount;
+        }
+        return order?.total || 0;
+    };
+
+    // Get transfer amount description
+    const getTransferAmountDescription = () => {
+        if (customOrderData && customOrderData.totalAmount) {
+            return `Total amount for complete custom order (${customOrderData.items?.length || 1} items)`;
+        }
+        return `Amount for this single item order`;
+    };
 
     // Format currency with proper decimal places
     const formatCurrency = (amount: number) => {
@@ -62,6 +80,24 @@ export default function OrderPage() {
         }
     };
 
+    // Function to fetch custom order data
+    const fetchCustomOrderData = async (customOrderId: string) => {
+        setCustomOrderLoading(true);
+        try {
+            const customOrderRef = doc(db, "customOrders", customOrderId);
+            const customOrderSnap = await getDoc(customOrderRef);
+            
+            if (customOrderSnap.exists()) {
+                const customOrder = { ...customOrderSnap.data(), id: customOrderSnap.id };
+                setCustomOrderData(customOrder);
+            }
+        } catch (error) {
+            console.error("Error fetching custom order data:", error);
+        } finally {
+            setCustomOrderLoading(false);
+        }
+    };
+
     // Fetch order and determine role
     useEffect(() => {
         const fetchOrder = async () => {
@@ -75,6 +111,8 @@ export default function OrderPage() {
                 // Set custom order ID if this order came from a custom order
                 if (orderData.customOrderId) {
                     setCustomOrderId(orderData.customOrderId);
+                    // Fetch the custom order data to get the full order details
+                    await fetchCustomOrderData(orderData.customOrderId);
                 }
 
                 // Only after setting order and user, check roles
@@ -340,9 +378,9 @@ export default function OrderPage() {
                                     </div>
                                 )}
                                 {order.sellerNotes && (
-                                    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <div className="text-sm font-semibold text-yellow-800 mb-1">Seller Notes:</div>
-                                        <div className="text-sm text-yellow-700">{order.sellerNotes}</div>
+                                    <div className="mt-2 p-3 bg-[#ff9900]/10 border border-[#ff9900]/30 rounded-2xl">
+                                        <div className="text-sm font-semibold text-[#ff9900] mb-1">Seller Notes:</div>
+                                        <div className="text-sm text-[#454955]">{order.sellerNotes}</div>
                                     </div>
                                 )}
                                 <div className="text-sm text-[#454955]">Order ID: {order.id}</div>
@@ -364,6 +402,13 @@ export default function OrderPage() {
                             <span>Total:</span>
                             <span>LKR {formatCurrency(order.total)}</span>
                         </div>
+                        {customOrderData && customOrderData.totalAmount !== order.total && (
+                            <div className="mt-2 p-2 bg-[#72b01d08] border border-[#72b01d33] rounded-xl">
+                                <div className="text-xs text-[#72b01d] font-medium">
+                                    📦 Part of custom order - Complete order total: <span className="font-bold">LKR {formatCurrency(customOrderData.totalAmount)}</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex justify-between mt-2 pt-2 border-t border-gray-200">
                             <span>Payment Method:</span>
                             <span className="font-medium text-[#72b01d]">
@@ -374,26 +419,26 @@ export default function OrderPage() {
                             </span>
                         </div>
                         {order.paymentMethod === 'bankTransfer' && (
-                            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="mt-2 p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
                                 {/* Collapsible Header */}
                                 <button
                                     onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
                                     className="w-full flex items-center justify-between text-left focus:outline-none rounded p-1 -m-1"
                                 >
-                                    <h3 className="text-base font-bold flex items-center gap-2">
-                                        <FiCreditCard className="w-4 h-4 text-blue-600" />
+                                    <h3 className="text-base font-bold flex items-center gap-2 text-[#0d0a0b]">
+                                        <FiCreditCard className="w-4 h-4 text-[#72b01d]" />
                                         Payment Instructions & Upload
                                     </h3>
                                     <div className="flex items-center gap-2">
                                         {order.paymentSlipUrl && (
-                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                            <span className="px-2 py-1 bg-[#72b01d15] text-[#72b01d] text-xs font-medium rounded-xl">
                                                 Payment Uploaded
                                             </span>
                                         )}
                                         {isPaymentSectionExpanded ? (
-                                            <FiChevronUp className="w-4 h-4 text-blue-600" />
+                                            <FiChevronUp className="w-4 h-4 text-[#72b01d]" />
                                         ) : (
-                                            <FiChevronDown className="w-4 h-4 text-blue-600" />
+                                            <FiChevronDown className="w-4 h-4 text-[#72b01d]" />
                                         )}
                                     </div>
                                 </button>
@@ -403,25 +448,25 @@ export default function OrderPage() {
                                     <div className="mt-3 space-y-4">
                                         {/* Bank Transfer Details */}
                                         <div>
-                                            <h4 className="text-sm font-semibold text-blue-800 mb-2">
+                                            <h4 className="text-sm font-semibold text-[#0d0a0b] mb-2">
                                                 Step 1: Make Bank Transfer
                                             </h4>
                                 {sellerBankAccounts.length > 0 ? (
                                     <div className="space-y-4">
-                                        <div className="text-sm text-blue-700 mb-3">
+                                        <div className="text-sm text-[#454955] mb-3">
                                             Please transfer the total amount to one of the seller's bank accounts below. Choose the bank that's most convenient for you:
                                         </div>
                                         
                                         {/* Display all available bank accounts */}
                                         <div className="space-y-3">
                                             {sellerBankAccounts.map((account, index) => (
-                                                <div key={account.id} className="bg-white p-4 rounded-lg border border-blue-300">
+                                                <div key={account.id} className="bg-white p-4 rounded-2xl border border-[#45495522] shadow-sm">
                                                     <div className="flex items-center justify-between mb-3">
-                                                        <h4 className="font-semibold text-gray-900 text-base">
+                                                        <h4 className="font-semibold text-[#0d0a0b] text-base">
                                                             Option {index + 1}: {account.bankName}
                                                         </h4>
                                                         {account.isDefault && (
-                                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                                            <span className="px-2 py-1 bg-[#72b01d15] text-[#72b01d] text-xs font-medium rounded-xl">
                                                                 Preferred
                                                             </span>
                                                         )}
@@ -429,21 +474,21 @@ export default function OrderPage() {
                                                     
                                                     <div className="grid grid-cols-2 gap-4 text-sm">
                                                         <div>
-                                                            <span className="font-semibold text-gray-700">Bank Name:</span>
-                                                            <div className="text-gray-900 font-medium">{account.bankName}</div>
+                                                            <span className="font-semibold text-[#454955]">Bank Name:</span>
+                                                            <div className="text-[#0d0a0b] font-medium">{account.bankName}</div>
                                                         </div>
                                                         <div>
-                                                            <span className="font-semibold text-gray-700">Account Number:</span>
-                                                            <div className="text-gray-900 font-medium font-mono text-lg">{account.accountNumber}</div>
+                                                            <span className="font-semibold text-[#454955]">Account Number:</span>
+                                                            <div className="text-[#0d0a0b] font-medium font-mono text-lg">{account.accountNumber}</div>
                                                         </div>
                                                         <div>
-                                                            <span className="font-semibold text-gray-700">Account Holder:</span>
-                                                            <div className="text-gray-900 font-medium">{account.fullName}</div>
+                                                            <span className="font-semibold text-[#454955]">Account Holder:</span>
+                                                            <div className="text-[#0d0a0b] font-medium">{account.fullName}</div>
                                                         </div>
                                                         {account.branch && (
                                                             <div>
-                                                                <span className="font-semibold text-gray-700">Branch:</span>
-                                                                <div className="text-gray-900 font-medium">{account.branch}</div>
+                                                                <span className="font-semibold text-[#454955]">Branch:</span>
+                                                                <div className="text-[#0d0a0b] font-medium">{account.branch}</div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -451,55 +496,68 @@ export default function OrderPage() {
                                             ))}
                                         </div>
                                         
-                                        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                                            <div className="text-sm font-semibold text-green-800 mb-1">
-                                                Amount to Transfer: <span className="text-lg">LKR {formatCurrency(order.total)}</span>
+                                        <div className="bg-[#72b01d08] p-3 rounded-2xl border border-[#72b01d33]">
+                                            <div className="text-sm font-semibold text-[#72b01d] mb-1">
+                                                Amount to Transfer: <span className="text-lg">LKR {formatCurrency(getTransferAmount())}</span>
                                             </div>
-                                            <div className="text-xs text-green-700">
+                                            <div className="text-xs text-[#454955] mb-1">
                                                 Please include your order ID ({order.id}) in the transfer reference.
                                             </div>
+                                            {customOrderData && (
+                                                <div className="text-xs text-[#72b01d] mt-1 font-medium">
+                                                    💡 {getTransferAmountDescription()}
+                                                </div>
+                                            )}
                                         </div>
                                         
-                                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                                            <div className="text-sm text-yellow-800">
-                                                <div className="font-semibold mb-1">💡 Transfer Tips:</div>
-                                                <ul className="text-xs space-y-1 ml-4 list-disc">
+                                        <div className="bg-[#ff9900]/10 p-3 rounded-2xl border border-[#ff9900]/30">
+                                            <div className="text-sm text-[#454955]">
+                                                <div className="font-semibold mb-1 text-[#0d0a0b]">💡 Transfer Tips:</div>
+                                                <ul className="text-xs space-y-1 ml-4 list-disc text-[#454955]">
                                                     <li>Choose the bank account that matches your own bank for faster transfers</li>
                                                     <li>Always include the order ID ({order.id}) as reference</li>
                                                     <li>Contact the seller after making the transfer to confirm payment</li>
                                                     <li>Keep your transfer receipt for your records</li>
+                                                    {customOrderData && (
+                                                        <li className="text-[#72b01d] font-medium">This transfer covers the entire custom order amount</li>
+                                                    )}
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-blue-700 space-y-1">
+                                    <div className="text-sm text-[#454955] space-y-1">
                                         <div>Please contact the seller for bank transfer details.</div>
                                         <div>The seller will provide bank account information via email or phone.</div>
-                                        <div className="font-medium mt-2">Total to transfer: LKR {formatCurrency(order.total)}</div>
+                                        <div className="font-medium mt-2 text-[#0d0a0b]">Total to transfer: LKR {formatCurrency(getTransferAmount())}</div>
+                                        {customOrderData && (
+                                            <div className="text-xs text-[#72b01d] mt-1 font-medium">
+                                                {getTransferAmountDescription()}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                         </div>
 
                                         {/* Payment Slip Upload - Show only if user is buyer */}
                                         {isBuyer && order.status === OrderStatus.PENDING_PAYMENT && (
-                                            <div className="border-t border-blue-200 pt-3">
-                                                <h4 className="text-sm font-semibold text-orange-800 mb-2">
+                                            <div className="border-t border-[#45495522] pt-3">
+                                                <h4 className="text-sm font-semibold text-[#0d0a0b] mb-2">
                                                     Step 2: Upload Payment Slip
                                                 </h4>
                                                 
                                                 {order.paymentSlipUrl ? (
-                                                    <div className="p-3 bg-green-50 border border-green-200 rounded">
-                                                        <div className="text-sm font-bold text-green-800 mb-1">
+                                                    <div className="p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
+                                                        <div className="text-sm font-bold text-[#72b01d] mb-1">
                                                             Payment Slip Uploaded Successfully!
                                                         </div>
-                                                        <div className="text-xs text-green-700 mb-2">
+                                                        <div className="text-xs text-[#454955] mb-2">
                                                             Your payment slip is being reviewed by the seller.
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-3">
-                                                        <div className="text-xs text-orange-700 mb-2">
+                                                        <div className="text-xs text-[#454955] mb-2">
                                                             Upload your payment slip or screenshot as proof of payment.
                                                         </div>
                                                         
@@ -510,28 +568,28 @@ export default function OrderPage() {
                                                                         type="file"
                                                                         accept="image/*,.pdf"
                                                                         onChange={handlePaymentSlipUpload}
-                                                                        className="block w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 file:cursor-pointer cursor-pointer"
+                                                                        className="block w-full text-xs text-[#454955] file:mr-2 file:py-2 file:px-3 file:rounded-2xl file:border-0 file:text-xs file:font-semibold file:bg-[#72b01d15] file:text-[#72b01d] hover:file:bg-[#72b01d25] file:cursor-pointer cursor-pointer"
                                                                     />
                                                                 </label>
-                                                                <div className="text-xs text-orange-600">
+                                                                <div className="text-xs text-[#454955]">
                                                                     JPG, PNG, PDF (max 10MB)
                                                                 </div>
                                                             </div>
                                                         ) : (
                                                             <div className="space-y-2">
-                                                                <div className="flex items-center gap-2 p-2 bg-white rounded border border-orange-300">
-                                                                    <div className="text-orange-600 text-sm">📄</div>
+                                                                <div className="flex items-center gap-2 p-2 bg-white rounded-2xl border border-[#45495522]">
+                                                                    <div className="text-[#72b01d] text-sm">📄</div>
                                                                     <div className="flex-1">
-                                                                        <div className="text-xs font-medium text-gray-900">
+                                                                        <div className="text-xs font-medium text-[#0d0a0b]">
                                                                             {paymentSlip.name}
                                                                         </div>
-                                                                        <div className="text-xs text-gray-500">
+                                                                        <div className="text-xs text-[#454955]">
                                                                             {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
                                                                         </div>
                                                                     </div>
                                                                     <button
                                                                         onClick={() => setPaymentSlip(null)}
-                                                                        className="text-red-500 hover:text-red-700 text-xs"
+                                                                        className="text-red-500 hover:text-red-700 text-xs transition"
                                                                         disabled={uploadingPayment}
                                                                     >
                                                                         Remove
@@ -542,7 +600,7 @@ export default function OrderPage() {
                                                                     <button
                                                                         onClick={confirmPaymentSlipUpload}
                                                                         disabled={uploadingPayment}
-                                                                        className="flex-1 py-2 px-3 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                        className="flex-1 py-2 px-3 bg-[#72b01d] text-white rounded-2xl text-xs font-bold hover:bg-[#3f7d20] transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     >
                                                                         {uploadingPayment ? 'Uploading...' : 'Upload'}
                                                                     </button>
@@ -561,30 +619,40 @@ export default function OrderPage() {
 
                     {/* Custom Order Link */}
                     {customOrderId && (
-                        <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div className="mt-4 p-4 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
                             <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-10 h-10 bg-[#72b01d15] rounded-full flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-[#72b01d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-sm font-semibold text-purple-800 mb-1">
+                                    <div className="text-sm font-semibold text-[#72b01d] mb-1">
                                         📋 Custom Order Detected
                                     </div>
-                                    <div className="text-sm text-purple-700 mb-2">
-                                        This order originated from a custom order request. View the full custom order details for more information.
+                                    <div className="text-sm text-[#454955] mb-2">
+                                        {customOrderData ? (
+                                            <>
+                                                This order is part of a custom order with {customOrderData.items?.length || 1} items. 
+                                                Total custom order value: <span className="font-semibold text-[#72b01d]">LKR {formatCurrency(customOrderData.totalAmount || 0)}</span>
+                                            </>
+                                        ) : customOrderLoading ? (
+                                            "Loading custom order details..."
+                                        ) : (
+                                            "This order originated from a custom order request. View the full custom order details for more information."
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => navigate(`/custom-order-summary/${customOrderId}`)}
-                                        className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                                        className="inline-flex items-center gap-2 px-3 py-2 bg-[#72b01d] text-white rounded-2xl text-sm font-medium hover:bg-[#3f7d20] transition-colors shadow-sm"
+                                        disabled={customOrderLoading}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
-                                        View Custom Order Details
+                                        {customOrderLoading ? 'Loading...' : 'View Custom Order Details'}
                                     </button>
                                 </div>
                             </div>
@@ -593,11 +661,11 @@ export default function OrderPage() {
 
                     {/* Buyer Notes - Show to both buyers and sellers */}
                     {order.buyerNotes && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="text-sm font-semibold text-blue-800 mb-1">
+                        <div className="mt-4 p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
+                            <div className="text-sm font-semibold text-[#72b01d] mb-1">
                                 {isBuyer ? 'Your Notes:' : 'Buyer Notes:'}
                             </div>
-                            <div className="text-sm text-blue-700">
+                            <div className="text-sm text-[#454955]">
                                 {order.buyerNotes}
                             </div>
                         </div>
@@ -623,11 +691,11 @@ export default function OrderPage() {
                                 {/* Handle different status flows based on payment method */}
                                 {order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT ? (
                                     // Special display for bank transfer orders awaiting payment
-                                    <div className="w-full text-center py-4 bg-orange-50 border border-orange-200 rounded-lg">
-                                        <div className="text-orange-800 font-bold text-lg mb-2">
+                                    <div className="w-full text-center py-4 bg-[#ff9900]/10 border border-[#ff9900]/30 rounded-2xl">
+                                        <div className="text-[#ff9900] font-bold text-lg mb-2">
                                             💰 Awaiting Payment
                                         </div>
-                                        <div className="text-orange-700 text-sm">
+                                        <div className="text-[#454955] text-sm">
                                             Please complete the bank transfer and upload your payment slip to proceed.
                                         </div>
                                     </div>
@@ -685,23 +753,23 @@ export default function OrderPage() {
                     
                     {/* Show payment slip if already uploaded (for sellers and completed orders) */}
                     {order.paymentSlipUrl && (order.status !== OrderStatus.PENDING_PAYMENT || !isBuyer) && (
-                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="text-sm font-semibold text-green-800 mb-2">
+                        <div className="mt-4 p-4 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
+                            <div className="text-sm font-semibold text-[#72b01d] mb-2">
                                 ✅ Payment Slip Uploaded
                             </div>
-                            <div className="text-sm text-green-700 mb-3">
+                            <div className="text-sm text-[#454955] mb-3">
                                 {isBuyer ? 'Your payment slip has been uploaded successfully.' : 'The buyer has uploaded their payment slip.'}
                             </div>
                             <a
                                 href={order.paymentSlipUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-[#72b01d] text-white rounded-2xl text-sm font-medium hover:bg-[#3f7d20] transition shadow-sm"
                             >
                                 📄 View Payment Slip
                             </a>
                             {order.paymentSlipUploadedAt && (
-                                <div className="text-xs text-green-600 mt-2">
+                                <div className="text-xs text-[#454955] mt-2">
                                     Uploaded: {new Date(order.paymentSlipUploadedAt.seconds ? order.paymentSlipUploadedAt.toDate() : order.paymentSlipUploadedAt).toLocaleString()}
                                 </div>
                             )}
