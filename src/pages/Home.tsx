@@ -106,6 +106,7 @@ const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [ip, setIp] = useState<string | null>(null);
+  const [activeFeatureTab, setActiveFeatureTab] = useState<'buyers' | 'sellers'>('buyers');
   const { isMobile } = useResponsive();
 
   // Scroll to top when component mounts
@@ -485,6 +486,399 @@ const Home = () => {
                   )}
                 </WithReviewStats>
               )}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
+          style={{
+            borderColor: 'rgba(114, 176, 29, 0.15)',
+            backgroundColor: '#ffffff'
+          }}>
+          {/* Features Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob1 absolute top-20 right-10 w-64 h-64 opacity-12"
+              style={{ backgroundColor: '#72b01d', animationDelay: '1s' }}></div>
+            <div className="blob blob3 absolute bottom-20 left-20 w-72 h-72 opacity-15"
+              style={{ backgroundColor: '#3f7d20', animationDelay: '3s' }}></div>
+            <div className="blob blob2 absolute top-1/2 right-1/3 w-48 h-48 opacity-10"
+              style={{ backgroundColor: '#8bc34a', animationDelay: '5s' }}></div>
+          </div>
+
+          <div className={`relative z-10 max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            {/* Header */}
+            <div className={`text-center ${isMobile ? 'mb-10' : 'mb-16'}`}>
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
+                  style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
+                  <span className={`${isMobile ? 'text-lg' : 'text-2xl'}`}>✨</span>
+                </div>
+                <span className={`font-bold uppercase tracking-wider px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
+                  style={{
+                    backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                    color: '#3f7d20'
+                  }}>
+                  SINA.LK FEATURES
+                </span>
+              </div>
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
+                style={{ color: '#0d0a0b' }}>
+                Everything You Need to 
+                <span className="relative ml-2">
+                  <span style={{
+                    background: `linear-gradient(to right, #72b01d, #3f7d20)`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    Succeed
+                  </span>
+                </span>
+              </h2>
+              <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
+                style={{ color: '#454955' }}>
+                Discover powerful features designed for both buyers and sellers in Sri Lanka's premier marketplace
+              </p>
+            </div>
+
+            {/* Features Tabs */}
+            <div className={`flex justify-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
+              <div className={`inline-flex rounded-xl border-2 ${isMobile ? 'p-1' : 'p-2'}`}
+                style={{
+                  backgroundColor: 'rgba(114, 176, 29, 0.05)',
+                  borderColor: 'rgba(114, 176, 29, 0.2)'
+                }}>
+                <button
+                  className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: activeFeatureTab === 'buyers' ? '#72b01d' : 'transparent',
+                    color: activeFeatureTab === 'buyers' ? '#ffffff' : '#72b01d'
+                  }}
+                  onClick={() => setActiveFeatureTab('buyers')}
+                >
+                  🛍️ For Buyers
+                </button>
+                <button
+                  className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: activeFeatureTab === 'sellers' ? '#72b01d' : 'transparent',
+                    color: activeFeatureTab === 'sellers' ? '#ffffff' : '#72b01d'
+                  }}
+                  onClick={() => setActiveFeatureTab('sellers')}
+                >
+                  🚀 For Sellers
+                </button>
+              </div>
+            </div>
+
+            {/* Buyers Features */}
+            {activeFeatureTab === 'buyers' && (
+              <div className={`gap-6 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+                {/* Cash on Delivery */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💳</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Cash on Delivery (COD)
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Buy items risk-free and pay upon delivery. No upfront payment required for maximum security.
+                  </p>
+                </div>
+
+                {/* Bank Transfer */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #3f7d20, #72b01d)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏦</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Bank Transfer
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Upload your payment slip and track order status directly from your account with real-time updates.
+                  </p>
+                </div>
+
+                {/* Order Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📋</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Easy Order Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Say goodbye to WhatsApp orders. Manage and track all your purchases with comprehensive order details.
+                  </p>
+                </div>
+
+                {/* Wishlist */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>❤️</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Wishlist System
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Add items to your wishlist for future purchases and never lose track of products you love.
+                  </p>
+                </div>
+
+                {/* Direct Chat */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Direct Chat with Sellers
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Chat with sellers directly on the platform. No need for external messaging apps.
+                  </p>
+                </div>
+
+                {/* Custom Orders */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Custom Orders
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Request custom orders from sellers to meet your specific needs and preferences.
+                  </p>
+                </div>
+
+                {/* Reviews & Ratings */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ffc107, #ff8f00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⭐</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Reviews & Ratings
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Browse ratings and reviews for shops and products. Compare sellers to find the best deals.
+                  </p>
+                </div>
+
+                {/* Email Notifications */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📧</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Email Notifications
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Receive emails when order statuses change and for other valuable events. Stay updated always.
+                  </p>
+                </div>
+
+                {/* Verified Buyer */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>✅</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Verified Buyer Status
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Become a verified buyer to build trust with sellers and enjoy a smoother buying experience.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Sellers Features */}
+            {activeFeatureTab === 'sellers' && (
+              <div className={`gap-6 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+                {/* Free Listings */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🆓</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Free Shop Creation
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Create and manage unlimited shops and product listings—all for free, with no hidden charges.
+                  </p>
+                </div>
+
+                {/* Real-time Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚡</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Real-time Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Edit product details and manage stock in real-time from your dashboard. Add product variations easily.
+                  </p>
+                </div>
+
+                {/* Payment Methods */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💰</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Multiple Payment Options
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Offer both COD and bank transfer payment methods. Insert bank details once for automatic instructions.
+                  </p>
+                </div>
+
+                {/* Shipping Labels */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏷️</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Shipping Labels
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Generate and print shipping labels directly from the platform. Update order statuses instantly.
+                  </p>
+                </div>
+
+                {/* Professional Shop */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏪</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Professional Shop Profile
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Add logo and cover image to create a professional shop profile. Receive verified seller badges.
+                  </p>
+                </div>
+
+                {/* Analytics */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📊</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Detailed Analytics
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Access detailed earnings reports filtered by any date range. View and manage orders with powerful tools.
+                  </p>
+                </div>
+
+                {/* Customer Communication */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #00bcd4, #0097a7)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Customer Communication
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Exchange real-time messages with buyers. Send custom order links even to unregistered users.
+                  </p>
+                </div>
+
+                {/* Custom Order Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Custom Order Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Send and receive custom order links—even to buyers not yet registered on sina.lk. Handle special requests easily.
+                  </p>
+                </div>
+
+                {/* Email Notifications for Sellers */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #607d8b, #455a64)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Smart Notifications
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Receive email notifications for buyer actions. You will never miss buyers or important updates.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Call to Action */}
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
+              <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
+                <p className={`${isMobile ? 'text-base' : 'text-lg'} font-medium`} style={{ color: '#454955' }}>
+                  Ready to experience all these amazing features?
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  to="/search"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold border transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#3f7d20',
+                    borderColor: '#3f7d20'
+                  }}
+                >
+                  <span>🛍️ Start Shopping</span>
+                </Link>
+                <Link
+                  to="/create-shop"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
+                  style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
+                >
+                  <span>🚀 Start Selling</span>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
