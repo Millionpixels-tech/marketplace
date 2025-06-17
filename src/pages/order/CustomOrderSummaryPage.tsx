@@ -8,7 +8,6 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
-import { useResponsive } from "../../hooks/useResponsive";
 import { FiPackage, FiCreditCard, FiAlertCircle, FiArrowLeft, FiCheckCircle, FiEye, FiUpload, FiX, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import type { CustomOrder } from "../../utils/customOrders";
 
@@ -37,7 +36,7 @@ interface Order {
   total: number;
   paymentMethod: string;
   status: string;
-  customOrderId?: string; // Reference to custom order if created from one
+  customOrderId?: string;
   createdAt: any;
   buyerInfo: {
     firstName: string;
@@ -54,7 +53,6 @@ interface Order {
 }
 
 export default function CustomOrderSummaryPage() {
-  const { isMobile } = useResponsive();
   const { customOrderId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -65,11 +63,10 @@ export default function CustomOrderSummaryPage() {
   const [sellerBankAccounts, setSellerBankAccounts] = useState<BankAccount[]>([]);
   const [paymentSlip, setPaymentSlip] = useState<File | null>(null);
   const [uploadingPayment, setUploadingPayment] = useState(false);
-  const [isPaymentSectionExpanded, setIsPaymentSectionExpanded] = useState(true); // Expanded by default
+  const [isPaymentSectionExpanded, setIsPaymentSectionExpanded] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      // Wait for authentication to complete
       if (authLoading) {
         return;
       }
@@ -90,7 +87,6 @@ export default function CustomOrderSummaryPage() {
         setLoading(true);
         setError(null);
         
-        // Fetch the custom order
         const customOrderData = await getCustomOrder(customOrderId);
         if (!customOrderData) {
           setError("Custom order not found");
@@ -98,7 +94,6 @@ export default function CustomOrderSummaryPage() {
           return;
         }
 
-        // Verify the user has access to this order
         if (customOrderData.buyerId !== user.uid && customOrderData.sellerId !== user.uid) {
           setError("You don't have permission to view this order");
           setLoading(false);
@@ -107,7 +102,6 @@ export default function CustomOrderSummaryPage() {
 
         setCustomOrder(customOrderData);
 
-        // Fetch seller's bank account information if this is a bank transfer order
         if (customOrderData.paymentMethod === 'BANK_TRANSFER' && customOrderData.sellerId) {
           try {
             const sellerQuery = query(
@@ -119,11 +113,9 @@ export default function CustomOrderSummaryPage() {
             if (!sellerSnap.empty) {
               const sellerData = sellerSnap.docs[0].data();
               
-              // Get all bank accounts from new format
               if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
                 setSellerBankAccounts(sellerData.bankAccounts);
               } 
-              // Fallback to legacy single bank account format
               else if (sellerData.bankDetails) {
                 const legacyAccount: BankAccount = {
                   id: 'legacy',
@@ -142,8 +134,6 @@ export default function CustomOrderSummaryPage() {
           }
         }
 
-        // Fetch all related orders created from this custom order
-        // Now we can simply query by customOrderId field
         const ordersQuery = query(
           collection(db, "orders"),
           where("customOrderId", "==", customOrderId)
@@ -193,27 +183,22 @@ export default function CustomOrderSummaryPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    // Show 2 decimal places if the amount has decimals, otherwise show whole number
     if (amount % 1 === 0) {
       return amount.toLocaleString();
     } else {
-      // Format with 2 decimal places, then remove trailing zeros
       const formatted = amount.toFixed(2);
       const withoutTrailingZeros = formatted.replace(/\.?0+$/, '');
-      // Add thousand separators
       const parts = withoutTrailingZeros.split('.');
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       return parts.join('.');
     }
   };
 
-  // Upload payment slip for all related orders
   const uploadPaymentSlip = async (file: File) => {
     if (!customOrder || !user || orders.length === 0) return;
     setUploadingPayment(true);
     
     try {
-      // Upload payment slip to Firebase Storage
       const timestamp = Date.now();
       const fileName = `payment-slips/custom-order-${customOrder.id}/${timestamp}-${file.name}`;
       const storageRef = ref(storage, fileName);
@@ -221,18 +206,16 @@ export default function CustomOrderSummaryPage() {
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       
-      // Update all related orders with payment slip URL
       const updatePromises = orders.map(order => 
         updateDoc(doc(db, "orders", order.id), {
           paymentSlipUrl: downloadURL,
           paymentSlipUploadedAt: new Date(),
-          status: 'pending' // Change from pending_payment to pending
+          status: 'pending'
         })
       );
       
       await Promise.all(updatePromises);
       
-      // Update local state for all orders
       const updatedOrders = orders.map(order => ({
         ...order,
         paymentSlipUrl: downloadURL,
@@ -264,7 +247,7 @@ export default function CustomOrderSummaryPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-[#72b01d] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <span className="text-xl text-gray-600">
@@ -277,7 +260,7 @@ export default function CustomOrderSummaryPage() {
 
   if (error || !customOrder) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gray-50">
         <ResponsiveHeader />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
@@ -298,335 +281,359 @@ export default function CustomOrderSummaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="bg-gray-50 min-h-screen w-full">
       <ResponsiveHeader />
       
-      <div className={`${isMobile ? 'max-w-full px-4 py-4' : 'max-w-6xl px-4 py-6'} mx-auto`}>
-        {/* Back button */}
-        <button
-          onClick={() => navigate('/dashboard?tab=orders')}
-          className={`flex items-center gap-2 ${isMobile ? 'mb-3 text-xs' : 'mb-4 text-sm'} font-medium text-gray-600 hover:text-[#72b01d] transition-colors`}
-        >
-          <FiArrowLeft size={isMobile ? 16 : 18} />
-          Back to Orders
-        </button>
-
-        {/* Success Header */}
-        <div className={`rounded-lg border border-green-200 ${isMobile ? 'p-4' : 'p-4'} bg-green-50 mb-4`}>
-          <div className="flex items-center gap-3 mb-3">
-            <FiCheckCircle className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} text-green-600`} />
+      <main className="max-w-4xl mx-auto py-8 px-4 md:px-6">
+        {/* Header Section */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/dashboard?tab=orders')}
+            className="flex items-center gap-2 mb-4 text-sm font-medium text-gray-600 hover:text-[#72b01d] transition-colors"
+          >
+            <FiArrowLeft size={18} />
+            Back to Orders
+          </button>
+          
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-green-900`}>Order Created Successfully!</h1>
-              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700`}>Custom Order ID: {customOrder.id}</p>
+              <h1 className="text-3xl font-bold text-gray-900">Custom Order Summary</h1>
+              <p className="text-gray-600 mt-1">Order #{customOrder.id}</p>
             </div>
-          </div>
-          <div className={`mt-3 ${isMobile ? 'p-3' : 'p-3'} bg-white rounded-lg border border-green-200`}>
-            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-800 mb-2 font-medium`}>
-              What happens next?
-            </p>
-            <ul className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 space-y-1 leading-relaxed`}>
-              <li>• Order split into {orders.length} individual item{orders.length > 1 ? 's' : ''} for processing</li>
-              <li>• Email updates for each order status change</li>
-              <li>• Payment: {customOrder.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Bank Transfer'}</li>
-              <li>• Total: LKR {formatCurrency(getTotalOrderValue())}</li>
-            </ul>
+            <div className="text-right">
+              <div className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                Order Created
+              </div>
+              <div className="text-sm text-gray-500 mt-1">
+                {new Date(customOrder.createdAt.seconds * 1000).toLocaleDateString()}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Payment Section - Collapsible Bank Transfer Details and Payment Slip Upload */}
-        {customOrder.paymentMethod === 'BANK_TRANSFER' && (
-          <div className={`rounded-lg border border-blue-200 ${isMobile ? 'p-4 mb-4' : 'p-4 mb-5'} bg-blue-50`}>
-            {/* Collapsible Header */}
-            <button
-              onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
-              className="w-full flex items-center justify-between text-left focus:outline-none rounded p-1 -m-1"
-            >
-              <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold flex items-center gap-2`}>
-                <FiCreditCard className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-blue-600`} />
-                Payment Instructions & Upload
-              </h3>
-              <div className="flex items-center gap-2">
-                {orders.length > 0 && orders.some(order => order.paymentSlipUrl) && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                    Payment Uploaded
-                  </span>
-                )}
-                {isPaymentSectionExpanded ? (
-                  <FiChevronUp className="w-4 h-4 text-blue-600" />
-                ) : (
-                  <FiChevronDown className="w-4 h-4 text-blue-600" />
-                )}
+        <div className="space-y-6">
+          {/* Success Header */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                <FiCheckCircle className="w-6 h-6 text-green-600" />
               </div>
-            </button>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-900">Order Created Successfully!</h2>
+                <p className="text-sm text-gray-600">Your custom order has been split into {orders.length} individual item{orders.length !== 1 ? 's' : ''} for processing</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <div className="text-sm text-gray-600">Total Items</div>
+                <div className="text-lg font-semibold text-gray-900">{getTotalItems()}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-600">Payment Method</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {customOrder.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Bank Transfer'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-gray-600">Total Amount</div>
+                <div className="text-lg font-semibold text-green-600">
+                  LKR {formatCurrency(getTotalOrderValue() || (customOrder.totalAmount + customOrder.shippingCost))}
+                </div>
+              </div>
+            </div>
+          </div>
 
-            {/* Collapsible Content */}
-            {isPaymentSectionExpanded && (
-              <div className="mt-3 space-y-4">
-                {/* Bank Transfer Details */}
-                <div>
-                  <h4 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-blue-800 mb-2`}>
-                    Step 1: Make Bank Transfer
-                  </h4>
-                  {sellerBankAccounts.length > 0 ? (
-                    <div className="space-y-3">
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 mb-2`}>
-                        Transfer to one of the seller's bank accounts:
-                      </div>
-                      
-                      {/* Display all available bank accounts */}
-                      <div className="space-y-2">
-                        {sellerBankAccounts.map((account) => (
-                          <div key={account.id} className={`bg-white ${isMobile ? 'p-3' : 'p-3'} rounded border border-blue-300`}>
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className={`font-semibold text-gray-900 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                                {account.bankName}
-                              </h5>
-                              {account.isDefault && (
-                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
-                                  Preferred
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-3'} text-xs`}>
-                              <div>
-                                <span className="text-gray-600">Account:</span>
-                                <div className={`text-gray-900 font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50 px-2 py-1 rounded`}>
-                                  {account.accountNumber}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="text-gray-600">Name:</span>
-                                <div className="text-gray-900 font-medium">{account.fullName}</div>
-                              </div>
-                              {account.branch && (
-                                <div className={`${isMobile ? 'col-span-1' : 'col-span-2'}`}>
-                                  <span className="text-gray-600">Branch:</span>
-                                  <span className="text-gray-900 ml-1">{account.branch}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className={`bg-green-50 ${isMobile ? 'p-3' : 'p-3'} rounded border border-green-200`}>
-                        <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-green-800`}>
-                          Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
-                        </div>
-                        <div className="text-xs text-green-700 mt-1">
-                          Include order ID in reference: {customOrder.id}
-                        </div>
-                      </div>
-                    </div>
-                ) : (
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 space-y-2`}>
-                      <div>Contact seller for bank transfer details.</div>
-                      <div className="font-medium">
-                        Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
-                      </div>
-                    </div>
+          {/* Payment Information Section */}
+          {customOrder.paymentMethod === 'BANK_TRANSFER' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <FiCreditCard className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Payment Instructions</h3>
+              </div>
+
+              <button
+                onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
+                className="w-full flex items-center justify-between text-left focus:outline-none group mb-4 p-2 hover:bg-gray-50 rounded-lg transition"
+              >
+                <span className="text-sm font-medium text-gray-700">
+                  {isPaymentSectionExpanded ? 'Hide' : 'Show'} Payment Details
+                </span>
+                <div className="flex items-center gap-2">
+                  {orders.length > 0 && orders.some(order => order.paymentSlipUrl) && (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                      Payment Uploaded
+                    </span>
+                  )}
+                  {isPaymentSectionExpanded ? (
+                    <FiChevronUp className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                  ) : (
+                    <FiChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                   )}
                 </div>
+              </button>
 
-                {/* Payment Slip Upload - Show only if user is buyer */}
-                {customOrder.buyerId === user?.uid && (
-                  <div className="border-t border-blue-200 pt-3">
-                    <h4 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold text-orange-800 mb-2`}>
-                      Step 2: Upload Payment Slip
+              {isPaymentSectionExpanded && (
+                <div className="space-y-6">
+                  {/* Bank Transfer Details */}
+                  <div>
+                    <h4 className="text-base font-semibold text-gray-900 mb-3">
+                      Step 1: Make Bank Transfer
                     </h4>
-                    
-                    {/* Check if any order already has a payment slip */}
-                    {orders.length > 0 && orders.some(order => order.paymentSlipUrl) ? (
-                      <div className={`${isMobile ? 'p-3' : 'p-3'} bg-green-50 border border-green-200 rounded`}>
-                        <div className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-green-800 mb-1`}>
-                          Payment Slip Uploaded Successfully!
-                        </div>
-                        <div className="text-xs text-green-700 mb-2">
-                          Your payment slip is being reviewed. All orders will be updated automatically.
-                        </div>
-                        <a
-                          href={orders.find(order => order.paymentSlipUrl)?.paymentSlipUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 hover:underline font-medium"
-                        >
-                          <FiEye className="w-3 h-3" />
-                          View Payment Slip
-                        </a>
-                      </div>
-                    ) : (
+                    {sellerBankAccounts.length > 0 ? (
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                          Transfer to one of the seller's bank accounts:
+                        </p>
+                        
                         <div className="space-y-3">
-                        <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-orange-700 mb-2`}>
-                          Upload your payment slip or screenshot as proof of payment. This will update all your orders automatically.
+                          {sellerBankAccounts.map((account) => (
+                            <div key={account.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                              <div className="flex items-center justify-between mb-3">
+                                <h5 className="font-semibold text-gray-900">{account.bankName}</h5>
+                                {account.isDefault && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                                    Preferred
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="text-gray-600">Account Number:</span>
+                                  <div className="text-gray-900 font-mono bg-white px-3 py-2 rounded mt-1">
+                                    {account.accountNumber}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Account Name:</span>
+                                  <div className="text-gray-900 font-medium mt-1">{account.fullName}</div>
+                                </div>
+                                {account.branch && (
+                                  <div className="md:col-span-2">
+                                    <span className="text-gray-600">Branch:</span>
+                                    <span className="text-gray-900 ml-2">{account.branch}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                         
-                        {!paymentSlip ? (
-                          <div className="space-y-2">
-                            <label className="block">
-                              <input
-                                type="file"
-                                accept="image/*,.pdf"
-                                onChange={handlePaymentSlipUpload}
-                                className="block w-full text-xs text-gray-500 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 file:cursor-pointer cursor-pointer"
-                              />
-                            </label>
-                            <div className="text-xs text-orange-600">
-                              JPG, PNG, PDF (max 10MB)
-                            </div>
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                          <div className="text-lg font-bold text-green-800">
+                            Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 p-2 bg-white rounded border border-orange-300">
-                              <div className="text-orange-600 text-sm">📄</div>
-                              <div className="flex-1">
-                                <div className="text-xs font-medium text-gray-900">
-                                  {paymentSlip.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => setPaymentSlip(null)}
-                                className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1"
-                                disabled={uploadingPayment}
-                              >
-                                <FiX className="w-3 h-3" />
-                              </button>
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <button
-                                onClick={confirmPaymentSlipUpload}
-                                disabled={uploadingPayment}
-                                className="flex-1 py-2 px-3 bg-orange-600 text-white rounded text-xs font-bold hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                              >
-                                {uploadingPayment ? (
-                                  <>
-                                    <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Uploading...
-                                  </>
-                                ) : (
-                                  <>
-                                    <FiUpload className="w-3 h-3" />
-                                    Upload
-                                  </>
-                                )}
-                              </button>
-                              <label className="py-2 px-3 bg-gray-100 text-gray-700 rounded text-xs font-semibold hover:bg-gray-200 transition cursor-pointer">
-                                Change
+                          <div className="text-sm text-green-700 mt-1">
+                            Include order ID in reference: {customOrder.id}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <div>Contact seller for bank transfer details.</div>
+                        <div className="font-medium text-lg">
+                          Amount: LKR {formatCurrency(orders.length > 0 ? getTotalOrderValue() : (customOrder.totalAmount + customOrder.shippingCost))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Slip Upload - Show only if user is buyer */}
+                  {customOrder.buyerId === user?.uid && (
+                    <div className="border-t border-gray-200 pt-6">
+                      <h4 className="text-base font-semibold text-gray-900 mb-3">
+                        Step 2: Upload Payment Slip
+                      </h4>
+                      
+                      {orders.length > 0 && orders.some(order => order.paymentSlipUrl) ? (
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="text-sm font-bold text-green-800 mb-2">
+                            Payment Slip Uploaded Successfully!
+                          </div>
+                          <div className="text-sm text-green-700 mb-3">
+                            Your payment slip is being reviewed. All orders will be updated automatically.
+                          </div>
+                          <a
+                            href={orders.find(order => order.paymentSlipUrl)?.paymentSlipUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-800 hover:underline font-medium"
+                          >
+                            <FiEye className="w-4 h-4" />
+                            View Payment Slip
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-sm text-gray-600">
+                            Upload your payment slip or screenshot as proof of payment. This will update all your orders automatically.
+                          </p>
+                          
+                          {!paymentSlip ? (
+                            <div className="space-y-3">
+                              <label className="block">
                                 <input
                                   type="file"
                                   accept="image/*,.pdf"
                                   onChange={handlePaymentSlipUpload}
-                                  className="hidden"
-                                  disabled={uploadingPayment}
+                                  className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer"
                                 />
                               </label>
+                              <p className="text-xs text-gray-500">
+                                Supported formats: JPG, PNG, PDF (max 10MB)
+                              </p>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="text-blue-600 text-lg">📄</div>
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {paymentSlip.name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setPaymentSlip(null)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                  disabled={uploadingPayment}
+                                >
+                                  <FiX className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={confirmPaymentSlipUpload}
+                                  disabled={uploadingPayment}
+                                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                  {uploadingPayment ? (
+                                    <>
+                                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FiUpload className="w-4 h-4" />
+                                      Upload Payment Slip
+                                    </>
+                                  )}
+                                </button>
+                                <label className="py-2 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition cursor-pointer">
+                                  Change File
+                                  <input
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    onChange={handlePaymentSlipUpload}
+                                    className="hidden"
+                                    disabled={uploadingPayment}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
-        <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'lg:grid-cols-3 gap-5'}`}>
-          {/* Left Column - Order Details */}
-          <div className={`${isMobile ? '' : 'lg:col-span-2'} space-y-4`}>
-            {/* Individual Orders */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
-              <div className={`flex items-center justify-between ${isMobile ? 'mb-3' : 'mb-3'}`}>
-                <h2 className={`${isMobile ? 'text-base' : 'text-base'} font-semibold text-gray-900`}>
-                  Your Orders ({orders.length})
-                </h2>
-                {orders.length > 0 && (
-                  <div className="text-right">
-                    <div className="text-xs text-gray-500">Total</div>
-                    <div className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>LKR {formatCurrency(getTotalOrderValue())}</div>
-                  </div>
-                )}
+          {/* Main Order Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
+                <FiPackage className="w-5 h-5 text-gray-600" />
               </div>
-              
-              <div className={`space-y-${isMobile ? '3' : '2'}`}>
-                {orders.length > 0 ? (
-                  orders.map((order) => (
-                  <div key={order.id} className={`border border-gray-100 rounded ${isMobile ? 'p-3' : 'p-3'} bg-gray-50/30`}>
-                    <div className={`flex items-start ${isMobile ? 'gap-3' : 'gap-3'}`}>
+              <h3 className="text-lg font-semibold text-gray-900">Order Items ({orders.length})</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {orders.length > 0 ? (
+                orders.map((order) => (
+                  <div key={order.id} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition">
+                    <div className="flex items-start gap-4">
                       {/* Item Image */}
                       <div className="flex-shrink-0">
                         {order.itemImage ? (
                           <img
                             src={order.itemImage}
                             alt={order.itemName}
-                            className={`${isMobile ? 'w-12 h-12' : 'w-12 h-12'} object-cover rounded border border-gray-200`}
+                            className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                           />
                         ) : (
-                          <div className={`${isMobile ? 'w-12 h-12' : 'w-12 h-12'} bg-gray-100 rounded border border-gray-200 flex items-center justify-center`}>
-                            <FiPackage className="w-4 h-4 text-gray-400" />
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                            <FiPackage className="w-6 h-6 text-gray-400" />
                           </div>
                         )}
                       </div>
 
                       {/* Order Details */}
                       <div className="flex-1 min-w-0">
-                        <div className={`flex items-start ${isMobile ? 'gap-2' : 'gap-2'} mb-2`}>
+                        <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0">
-                            <h3 className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'} line-clamp-2 pr-2`}>{order.itemName}</h3>
-                            <div className="text-xs text-gray-500">#{order.id.slice(-8)}</div>
+                            <h4 className="font-semibold text-gray-900 text-base leading-tight pr-2">
+                              {order.itemName}
+                            </h4>
+                            <p className="text-sm text-gray-500 mt-1">Order #{order.id.slice(-8)}</p>
                           </div>
                           <div className="flex-shrink-0">
-                            <span className={`px-2 py-1 rounded ${isMobile ? 'text-xs' : 'text-xs'} font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
                               {order.status.replace('_', ' ').toUpperCase()}
                             </span>
                           </div>
                         </div>
                         
-                        {/* Order details */}
-                        <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-2'} text-xs mb-2`}>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
                           <div>
-                            <span className="text-gray-500">Qty:</span>
-                            <span className="ml-1 font-medium">{order.quantity}</span>
+                            <span className="text-gray-500">Quantity:</span>
+                            <div className="font-medium text-gray-900">{order.quantity}</div>
                           </div>
                           <div>
-                            <span className="text-gray-500">Price:</span>
-                            <span className="ml-1 font-medium">LKR {formatCurrency(order.price)}</span>
+                            <span className="text-gray-500">Unit Price:</span>
+                            <div className="font-medium text-gray-900">LKR {formatCurrency(order.price / order.quantity)}</div>
                           </div>
                           <div>
                             <span className="text-gray-500">Shipping:</span>
-                            <span className="ml-1 font-medium">LKR {formatCurrency(order.shipping)}</span>
+                            <div className="font-medium text-gray-900">
+                              {order.shipping === 0 ? 'Free' : `LKR ${formatCurrency(order.shipping)}`}
+                            </div>
                           </div>
                           <div>
                             <span className="text-gray-500">Total:</span>
-                            <span className="ml-1 font-semibold">LKR {formatCurrency(order.total)}</span>
+                            <div className="font-semibold text-gray-900">LKR {formatCurrency(order.total)}</div>
                           </div>
                         </div>
 
                         {/* Payment status */}
                         {customOrder.paymentMethod === 'BANK_TRANSFER' && (
-                          <div className={`${isMobile ? 'mb-2' : 'mb-2'}`}>
+                          <div className="mb-3">
                             {order.paymentSlipUrl ? (
-                              <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                              <div className="inline-flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                 Payment uploaded
                               </div>
                             ) : (
-                              <div className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+                              <div className="inline-flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded">
+                                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                                 Awaiting payment
                               </div>
                             )}
                           </div>
                         )}
 
-                        {/* Action */}
                         <div className="text-right">
                           <button
                             onClick={() => navigate(`/order/${order.id}`)}
-                            className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-600 hover:text-[#72b01d] transition-colors`}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
                           >
                             View Details →
                           </button>
@@ -635,111 +642,138 @@ export default function CustomOrderSummaryPage() {
                     </div>
                   </div>
                 ))
-                ) : (
-                  <div className={`text-center ${isMobile ? 'py-6' : 'py-6'} text-gray-500`}>
-                    <div className={`${isMobile ? 'mb-1 text-sm' : 'mb-1 text-sm'}`}>Orders Processing</div>
-                    <div className="text-xs">Your orders will appear here shortly</div>
-                  </div>
-                )}
-              </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FiPackage className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <div className="text-base font-medium mb-1">Orders Processing</div>
+                  <div className="text-sm">Your orders will appear here shortly</div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column - Summary */}
-          <div className={`space-y-${isMobile ? '4' : '3'}`}>
-            {/* Order Summary */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
-              <h3 className={`font-semibold text-gray-900 ${isMobile ? 'mb-3' : 'mb-3'} ${isMobile ? 'text-base' : 'text-sm'}`}>Order Summary</h3>
-              
-              {orders.length > 0 ? (
-                <div className={`space-y-${isMobile ? '2' : '2'}`}>
-                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                    <span className="text-gray-600">Total Items:</span>
-                    <span className="font-medium">{getTotalItems()}</span>
+          {/* Price Breakdown Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Price Breakdown</h3>
+            </div>
+            
+            {orders.length > 0 ? (
+              <div className="space-y-4">
+                {/* Items Total */}
+                <div className="flex justify-between items-center py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Items Subtotal</span>
+                    <span className="text-sm text-gray-500">({getTotalItems()} items)</span>
                   </div>
-                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                    <span className="text-gray-600">Items Subtotal:</span>
-                    <span className="font-medium">LKR {formatCurrency(getTotalOrderValue() - getTotalShipping())}</span>
-                  </div>
-                  <div className={`flex justify-between ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                    <span className="text-gray-600">Total Shipping:</span>
-                    <span className="font-medium">LKR {formatCurrency(getTotalShipping())}</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-2">
-                    <div className="flex justify-between">
-                      <span className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>Grand Total:</span>
-                      <span className={`font-semibold text-gray-900 ${isMobile ? 'text-sm' : 'text-sm'}`}>
-                        LKR {formatCurrency(getTotalOrderValue())}
-                      </span>
-                    </div>
-                  </div>
+                  <span className="font-semibold text-gray-900">LKR {formatCurrency(getTotalOrderValue() - getTotalShipping())}</span>
                 </div>
-              ) : (
-                <div className={`text-center ${isMobile ? 'py-3' : 'py-3'} text-gray-500`}>
-                  <div className="text-xs mb-1">Processing order details...</div>
-                  <div className={`font-medium ${isMobile ? 'text-sm' : 'text-sm'}`}>
-                    Expected: LKR {formatCurrency(customOrder.totalAmount + customOrder.shippingCost)}
+                
+                {/* Shipping */}
+                <div className="flex justify-between items-center py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600">Shipping</span>
+                  </div>
+                  <span className={`font-semibold ${getTotalShipping() === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                    {getTotalShipping() > 0 ? `LKR ${formatCurrency(getTotalShipping())}` : 'Free'}
+                  </span>
+                </div>
+                
+                {/* Divider */}
+                <div className="border-t border-gray-200"></div>
+                
+                {/* Total */}
+                <div className="flex justify-between items-center py-3">
+                  <span className="text-xl font-bold text-gray-900">Order Total</span>
+                  <span className="text-2xl font-bold text-green-600">LKR {formatCurrency(getTotalOrderValue())}</span>
+                </div>
+                
+                {/* Free Shipping Badge */}
+                {getTotalShipping() === 0 && (
+                  <div className="flex justify-center pt-2">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Free Shipping
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500">
+                <div className="text-sm mb-2">Processing order details...</div>
+                <div className="text-lg font-semibold text-gray-900">
+                  Expected Total: LKR {formatCurrency(customOrder.totalAmount + customOrder.shippingCost)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Order Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Information</h3>
+            
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Items:</span>
+                <span className="font-medium">{orders.length > 0 ? getTotalItems() : customOrder.items?.length || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Payment Method:</span>
+                <span className="font-medium">
+                  {customOrder.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Bank Transfer'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Delivery Method:</span>
+                <span className="font-medium">Standard Delivery</span>
+              </div>
+              
+              {orders[0]?.buyerInfo && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="text-gray-600 mb-2">Delivery Address:</div>
+                  <div className="text-gray-900 leading-relaxed">
+                    {orders[0].buyerInfo.firstName} {orders[0].buyerInfo.lastName}<br />
+                    {orders[0].buyerInfo.address}<br />
+                    {orders[0].buyerInfo.city} {orders[0].buyerInfo.postalCode}<br />
+                    {orders[0].buyerInfo.phone}
                   </div>
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Payment & Delivery Info */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-4' : 'p-4'} bg-white`}>
-              <h3 className={`font-semibold text-gray-900 ${isMobile ? 'mb-3' : 'mb-3'} ${isMobile ? 'text-base' : 'text-sm'}`}>Payment & Delivery</h3>
-              
-              <div className={`space-y-${isMobile ? '2' : '2'} text-xs`}>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Payment:</span>
-                  <span className="font-medium">
-                    {customOrder.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Bank Transfer'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery:</span>
-                  <span className="font-medium">Standard Delivery</span>
-                </div>
-                
-                {orders[0]?.buyerInfo && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <div className="text-gray-600 mb-1">Delivery Address:</div>
-                    <div className="text-gray-900 text-xs leading-relaxed">
-                      {orders[0].buyerInfo.firstName} {orders[0].buyerInfo.lastName}<br />
-                      {orders[0].buyerInfo.address}<br />
-                      {orders[0].buyerInfo.city} {orders[0].buyerInfo.postalCode}<br />
-                      {orders[0].buyerInfo.phone}
-                    </div>
-                  </div>
-                )}
+          {/* Seller Information */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Seller Information</h3>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Seller:</span>
+                <span className="font-medium">{customOrder.sellerName}</span>
               </div>
-            </div>
-
-            {/* Seller Information */}
-            <div className={`rounded-lg border border-gray-200 ${isMobile ? 'p-3' : 'p-4'} bg-white`}>
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Seller Information</h3>
-              
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Seller:</span>
-                  <span className="font-medium">{customOrder.sellerName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Order Created:</span>
-                  <span className="font-medium">
-                    {new Date(customOrder.createdAt.seconds * 1000).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="text-gray-600 mb-1">Custom Order ID:</div>
-                  <div className="font-mono text-xs text-gray-900 bg-gray-50 px-2 py-1 rounded">
-                    {customOrder.id}
-                  </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Order Created:</span>
+                <span className="font-medium">
+                  {new Date(customOrder.createdAt.seconds * 1000).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="pt-3 border-t border-gray-200">
+                <div className="text-gray-600 mb-2">Custom Order ID:</div>
+                <div className="font-mono text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded border">
+                  {customOrder.id}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>

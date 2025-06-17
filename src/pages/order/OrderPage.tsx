@@ -360,135 +360,339 @@ export default function OrderPage() {
     if (loading) return <div className="flex items-center justify-center min-h-screen text-[#454955]">Loading...</div>;
     if (!order) return <div className="flex items-center justify-center min-h-screen text-[#454955]">Order not found.</div>;
 
+    // Get status color
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case OrderStatus.PENDING: return 'bg-yellow-100 text-yellow-800';
+            case OrderStatus.CONFIRMED: return 'bg-blue-100 text-blue-800';
+            case OrderStatus.SHIPPED: return 'bg-purple-100 text-purple-800';
+            case OrderStatus.DELIVERED: return 'bg-green-100 text-green-800';
+            case OrderStatus.CANCELLED: return 'bg-red-100 text-red-800';
+            case OrderStatus.REFUND_REQUESTED: return 'bg-orange-100 text-orange-800';
+            case OrderStatus.REFUNDED: return 'bg-gray-100 text-gray-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    // Get status text
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case OrderStatus.PENDING: return 'Pending';
+            case OrderStatus.CONFIRMED: return 'Confirmed';
+            case OrderStatus.SHIPPED: return 'Shipped';
+            case OrderStatus.DELIVERED: return 'Delivered';
+            case OrderStatus.CANCELLED: return 'Cancelled';
+            case OrderStatus.REFUND_REQUESTED: return 'Refund Requested';
+            case OrderStatus.REFUNDED: return 'Refunded';
+            default: return 'Unknown';
+        }
+    };
+
     // --- PAGE RENDER ---
     return (
-        <div className="bg-white min-h-screen w-full">
+        <div className="bg-gray-50 min-h-screen w-full">
             <Header />
-            <main className="w-full max-w-xl mx-auto mt-8 px-2 md:px-0">
-                <div className="bg-white rounded-3xl shadow-lg p-6 md:p-10 flex flex-col gap-6">
-                    <h1 className="text-2xl font-black mb-2 text-[#0d0a0b]">Order Summary</h1>
-                    <div className="flex flex-col gap-2 text-[#454955]">
-                        <div className="flex items-center gap-3">
-                            <img src={order.itemImage} alt="item" className="w-20 h-20 object-cover rounded-2xl border border-[#45495522] shadow-sm" />
-                            <div>
-                                <div className="font-bold text-lg text-[#0d0a0b]">{order.itemName}</div>
-                                {order.variationName && (
-                                    <div className="text-sm font-medium text-[#72b01d] mt-1">
-                                        Variation: {order.variationName}
-                                    </div>
-                                )}
-                                {order.sellerNotes && (
-                                    <div className="mt-2 p-3 bg-[#ff9900]/10 border border-[#ff9900]/30 rounded-2xl">
-                                        <div className="text-sm font-semibold text-[#ff9900] mb-1">Seller Notes:</div>
-                                        <div className="text-sm text-[#454955]">{order.sellerNotes}</div>
-                                    </div>
-                                )}
-                                <div className="text-sm text-[#454955]">Order ID: {order.id}</div>
+            <main className="max-w-4xl mx-auto py-8 px-4 md:px-6">
+                {/* Header Section */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
+                            <p className="text-gray-600 mt-1">Order #{order.id}</p>
+                        </div>
+                        <div className="text-right">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                                {getStatusText(order.status)}
+                            </span>
+                            <div className="text-sm text-gray-500 mt-1">
+                                {order.createdAt ? new Date(order.createdAt.seconds ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 'N/A'}
                             </div>
                         </div>
-                        <div className="flex justify-between mt-2">
-                            <span>Price:</span>
-                            <span>LKR {formatCurrency(order.price)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Quantity:</span>
-                            <span>{order.quantity}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>Shipping:</span>
-                            <span>LKR {formatCurrency(order.shipping)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg mt-2 text-[#0d0a0b]">
-                            <span>Total:</span>
-                            <span>LKR {formatCurrency(order.total)}</span>
-                        </div>
-                        {customOrderData && customOrderData.totalAmount !== order.total && (
-                            <div className="mt-2 p-2 bg-[#72b01d08] border border-[#72b01d33] rounded-xl">
-                                <div className="text-xs text-[#72b01d] font-medium">
-                                    📦 Part of custom order - Complete order total: <span className="font-bold">LKR {formatCurrency(customOrderData.totalAmount)}</span>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Main Order Information */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-start gap-6">
+                            <div className="flex-shrink-0">
+                                <img 
+                                    src={order.itemImage} 
+                                    alt={order.itemName}
+                                    className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg border border-gray-200" 
+                                />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                                    {order.itemName}
+                                </h2>
+                                
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Shop:</span>
+                                        <span className="font-medium text-gray-900">{order.sellerShopName || 'N/A'}</span>
+                                    </div>
+                                    {order.variationName && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Variation:</span>
+                                            <span className="font-medium text-blue-600">{order.variationName}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Quantity:</span>
+                                        <span className="font-medium text-gray-900">{order.quantity}</span>
+                                    </div>
                                 </div>
                             </div>
-                        )}
-                        <div className="flex justify-between mt-2 pt-2 border-t border-gray-200">
-                            <span>Payment Method:</span>
-                            <span className="font-medium text-[#72b01d]">
-                                {order.paymentMethod === 'cod' ? 'Cash on Delivery' :
-                                 order.paymentMethod === 'bankTransfer' ? 'Bank Transfer' :
-                                 order.paymentMethod === 'paynow' ? 'Online Payment' :
-                                 'Unknown'}
-                            </span>
                         </div>
+                        
+                        {/* Order Notes */}
+                        {(order.sellerNotes || order.buyerNotes) && (
+                            <div className="mt-6 pt-6 border-t border-gray-200 space-y-3">
+                                {order.sellerNotes && (
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <div className="text-sm font-medium text-amber-800 mb-1">Seller Notes:</div>
+                                        <div className="text-sm text-amber-700">{order.sellerNotes}</div>
+                                    </div>
+                                )}
+                                {order.buyerNotes && (
+                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="text-sm font-medium text-blue-800 mb-1">{isBuyer ? 'Your Notes:' : 'Buyer Notes:'}</div>
+                                        <div className="text-sm text-blue-700">{order.buyerNotes}</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Price Breakdown Section */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">Price Breakdown</h3>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            {/* Item Price */}
+                            <div className="flex justify-between items-center py-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">Item Price</span>
+                                    {order.quantity > 1 && (
+                                        <span className="text-sm text-gray-500">
+                                            ({order.quantity} × LKR {formatCurrency(order.price / order.quantity)})
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="font-semibold text-gray-900">LKR {formatCurrency(order.price)}</span>
+                            </div>
+                            
+                            {/* Shipping */}
+                            <div className="flex justify-between items-center py-2">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    <span className="text-gray-600">Shipping & Handling</span>
+                                </div>
+                                <span className={`font-semibold ${order.shipping === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                                    {order.shipping > 0 ? `LKR ${formatCurrency(order.shipping)}` : 'Free'}
+                                </span>
+                            </div>
+                            
+                            {/* Divider */}
+                            <div className="border-t border-gray-200"></div>
+                            
+                            {/* Total */}
+                            <div className="flex justify-between items-center py-3">
+                                <span className="text-xl font-bold text-gray-900">Order Total</span>
+                                <span className="text-2xl font-bold text-green-600">LKR {formatCurrency(order.total)}</span>
+                            </div>
+                            
+                            {/* Free Shipping Badge */}
+                            {order.shipping === 0 && (
+                                <div className="flex justify-center pt-2">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        You saved on shipping!
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Custom Order Information */}
+                    {customOrderId && (
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                    <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h3 className="text-lg font-semibold text-gray-900">Custom Order</h3>
+                                        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                            Multi-item
+                                        </span>
+                                    </div>
+                                    <div className="text-sm text-gray-600 mb-4">
+                                        {customOrderData ? (
+                                            <>
+                                                This order is part of a custom order with <span className="font-semibold">{customOrderData.items?.length || 1} items</span>. 
+                                                Total value: <span className="font-semibold text-green-600">LKR {formatCurrency(customOrderData.totalAmount || 0)}</span>
+                                            </>
+                                        ) : customOrderLoading ? (
+                                            "Loading custom order details..."
+                                        ) : (
+                                            "This order originated from a custom order request. View the full details for complete information."
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={() => navigate(`/custom-order-summary/${customOrderId}`)}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+                                        disabled={customOrderLoading}
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        {customOrderLoading ? 'Loading...' : 'View Full Custom Order'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Payment Information */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Information</h3>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-shrink-0 w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
+                                <FiCreditCard className="w-5 h-5 text-gray-600" />
+                            </div>
+                            <div>
+                                <div className="font-medium text-gray-900">
+                                    {order.paymentMethod === 'cod' ? 'Cash on Delivery' :
+                                     order.paymentMethod === 'bankTransfer' ? 'Bank Transfer' :
+                                     order.paymentMethod === 'paynow' ? 'Online Payment' :
+                                     'Unknown'}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    {order.paymentMethod === 'cod' ? 'Pay when you receive the item' :
+                                     order.paymentMethod === 'bankTransfer' ? 'Transfer to seller\'s account' :
+                                     order.paymentMethod === 'paynow' ? 'Paid online' :
+                                     'Payment method not specified'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bank Transfer Section */}
                         {order.paymentMethod === 'bankTransfer' && (
-                            <div className="mt-2 p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
-                                {/* Collapsible Header */}
+                            <div className="border-t border-gray-200 pt-4">
                                 <button
                                     onClick={() => setIsPaymentSectionExpanded(!isPaymentSectionExpanded)}
-                                    className="w-full flex items-center justify-between text-left focus:outline-none rounded p-1 -m-1"
+                                    className="w-full flex items-center justify-between text-left focus:outline-none group mb-4"
                                 >
-                                    <h3 className="text-base font-bold flex items-center gap-2 text-[#0d0a0b]">
-                                        <FiCreditCard className="w-4 h-4 text-[#72b01d]" />
-                                        Payment Instructions & Upload
-                                    </h3>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                            <FiCreditCard className="w-5 h-5 text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900">Payment Instructions</h3>
+                                            <p className="text-sm text-gray-500">Bank transfer details & upload</p>
+                                        </div>
+                                    </div>
                                     <div className="flex items-center gap-2">
                                         {order.paymentSlipUrl && (
-                                            <span className="px-2 py-1 bg-[#72b01d15] text-[#72b01d] text-xs font-medium rounded-xl">
-                                                Payment Uploaded
+                                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                                                ✓ Uploaded
                                             </span>
                                         )}
                                         {isPaymentSectionExpanded ? (
-                                            <FiChevronUp className="w-4 h-4 text-[#72b01d]" />
+                                            <FiChevronUp className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
                                         ) : (
-                                            <FiChevronDown className="w-4 h-4 text-[#72b01d]" />
+                                            <FiChevronDown className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
                                         )}
                                     </div>
                                 </button>
 
                                 {/* Collapsible Content */}
                                 {isPaymentSectionExpanded && (
-                                    <div className="mt-3 space-y-4">
-                                        {/* Bank Transfer Details */}
+                                    <div className="mt-6 space-y-6">
+                                        {/* Step 1: Bank Transfer */}
                                         <div>
-                                            <h4 className="text-sm font-semibold text-[#0d0a0b] mb-2">
-                                                Step 1: Make Bank Transfer
-                                            </h4>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                                                <h4 className="font-semibold text-gray-900">Make Bank Transfer</h4>
+                                            </div>
                                 {sellerBankAccounts.length > 0 ? (
                                     <div className="space-y-4">
-                                        <div className="text-sm text-[#454955] mb-3">
-                                            Please transfer the total amount to one of the seller's bank accounts below. Choose the bank that's most convenient for you:
+                                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                            <div className="text-sm text-blue-800 font-medium mb-2">
+                                                💰 Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
+                                            </div>
+                                            <div className="text-xs text-blue-700">
+                                                Include order ID ({order.id}) in transfer reference
+                                            </div>
+                                            {customOrderData && (
+                                                <div className="text-xs text-blue-700 mt-1 font-medium">
+                                                    💡 {getTransferAmountDescription()}
+                                                </div>
+                                            )}
                                         </div>
                                         
-                                        {/* Display all available bank accounts */}
-                                        <div className="space-y-3">
+                                        <div className="text-sm text-gray-600 mb-4">
+                                            Choose the most convenient bank account for your transfer:
+                                        </div>
+                                        
+                                        {/* Bank Accounts Grid */}
+                                        <div className="grid gap-4">
                                             {sellerBankAccounts.map((account, index) => (
-                                                <div key={account.id} className="bg-white p-4 rounded-2xl border border-[#45495522] shadow-sm">
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <h4 className="font-semibold text-[#0d0a0b] text-base">
-                                                            Option {index + 1}: {account.bankName}
-                                                        </h4>
-                                                        {account.isDefault && (
-                                                            <span className="px-2 py-1 bg-[#72b01d15] text-[#72b01d] text-xs font-medium rounded-xl">
-                                                                Preferred
+                                                <div key={account.id} className="relative p-4 border border-gray-200 rounded-xl hover:border-blue-300 transition-colors">
+                                                    {account.isDefault && (
+                                                        <div className="absolute -top-2 -right-2">
+                                                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full border border-green-200">
+                                                                ⭐ Preferred
                                                             </span>
-                                                        )}
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                                                            <span className="text-sm font-bold text-gray-600">{index + 1}</span>
+                                                        </div>
+                                                        <h4 className="font-semibold text-gray-900 text-base">
+                                                            {account.bankName}
+                                                        </h4>
                                                     </div>
                                                     
-                                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                                         <div>
-                                                            <span className="font-semibold text-[#454955]">Bank Name:</span>
-                                                            <div className="text-[#0d0a0b] font-medium">{account.bankName}</div>
+                                                            <span className="block text-gray-500 text-xs uppercase tracking-wide mb-1">Account Number</span>
+                                                            <div className="font-mono text-base font-semibold text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                                                                {account.accountNumber}
+                                                            </div>
                                                         </div>
                                                         <div>
-                                                            <span className="font-semibold text-[#454955]">Account Number:</span>
-                                                            <div className="text-[#0d0a0b] font-medium font-mono text-lg">{account.accountNumber}</div>
-                                                        </div>
-                                                        <div>
-                                                            <span className="font-semibold text-[#454955]">Account Holder:</span>
-                                                            <div className="text-[#0d0a0b] font-medium">{account.fullName}</div>
+                                                            <span className="block text-gray-500 text-xs uppercase tracking-wide mb-1">Account Holder</span>
+                                                            <div className="font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                                                                {account.fullName}
+                                                            </div>
                                                         </div>
                                                         {account.branch && (
-                                                            <div>
-                                                                <span className="font-semibold text-[#454955]">Branch:</span>
-                                                                <div className="text-[#0d0a0b] font-medium">{account.branch}</div>
+                                                            <div className="sm:col-span-2">
+                                                                <span className="block text-gray-500 text-xs uppercase tracking-wide mb-1">Branch</span>
+                                                                <div className="font-medium text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                                                                    {account.branch}
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -496,115 +700,132 @@ export default function OrderPage() {
                                             ))}
                                         </div>
                                         
-                                        <div className="bg-[#72b01d08] p-3 rounded-2xl border border-[#72b01d33]">
-                                            <div className="text-sm font-semibold text-[#72b01d] mb-1">
-                                                Amount to Transfer: <span className="text-lg">LKR {formatCurrency(getTransferAmount())}</span>
-                                            </div>
-                                            <div className="text-xs text-[#454955] mb-1">
-                                                Please include your order ID ({order.id}) in the transfer reference.
-                                            </div>
-                                            {customOrderData && (
-                                                <div className="text-xs text-[#72b01d] mt-1 font-medium">
-                                                    💡 {getTransferAmountDescription()}
+                                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                            <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-5 h-5 bg-amber-100 rounded-full flex items-center justify-center mt-0.5">
+                                                    <span className="text-amber-600 text-xs">💡</span>
                                                 </div>
-                                            )}
-                                        </div>
-                                        
-                                        <div className="bg-[#ff9900]/10 p-3 rounded-2xl border border-[#ff9900]/30">
-                                            <div className="text-sm text-[#454955]">
-                                                <div className="font-semibold mb-1 text-[#0d0a0b]">💡 Transfer Tips:</div>
-                                                <ul className="text-xs space-y-1 ml-4 list-disc text-[#454955]">
-                                                    <li>Choose the bank account that matches your own bank for faster transfers</li>
-                                                    <li>Always include the order ID ({order.id}) as reference</li>
-                                                    <li>Contact the seller after making the transfer to confirm payment</li>
-                                                    <li>Keep your transfer receipt for your records</li>
-                                                    {customOrderData && (
-                                                        <li className="text-[#72b01d] font-medium">This transfer covers the entire custom order amount</li>
-                                                    )}
-                                                </ul>
+                                                <div>
+                                                    <div className="font-medium text-amber-800 mb-2">Transfer Tips:</div>
+                                                    <ul className="text-sm text-amber-700 space-y-1">
+                                                        <li>• Choose a bank account that matches your own bank for faster transfers</li>
+                                                        <li>• Always include the order ID ({order.id}) as reference</li>
+                                                        <li>• Contact the seller after transfer to confirm payment</li>
+                                                        <li>• Keep your transfer receipt for records</li>
+                                                        {customOrderData && (
+                                                            <li className="font-medium">• This transfer covers your entire custom order</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-[#454955] space-y-1">
-                                        <div>Please contact the seller for bank transfer details.</div>
-                                        <div>The seller will provide bank account information via email or phone.</div>
-                                        <div className="font-medium mt-2 text-[#0d0a0b]">Total to transfer: LKR {formatCurrency(getTransferAmount())}</div>
-                                        {customOrderData && (
-                                            <div className="text-xs text-[#72b01d] mt-1 font-medium">
-                                                {getTransferAmountDescription()}
+                                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                        <div className="text-sm text-gray-600 space-y-2">
+                                            <p>Please contact the seller for bank transfer details.</p>
+                                            <p>The seller will provide bank account information via email or phone.</p>
+                                            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div className="font-medium text-blue-900">Total to transfer: LKR {formatCurrency(getTransferAmount())}</div>
+                                                {customOrderData && (
+                                                    <div className="text-xs text-blue-700 mt-1 font-medium">
+                                                        {getTransferAmountDescription()}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 )}
                                         </div>
 
-                                        {/* Payment Slip Upload - Show only if user is buyer */}
+                                        {/* Step 2: Payment Slip Upload */}
                                         {isBuyer && order.status === OrderStatus.PENDING_PAYMENT && (
-                                            <div className="border-t border-[#45495522] pt-3">
-                                                <h4 className="text-sm font-semibold text-[#0d0a0b] mb-2">
-                                                    Step 2: Upload Payment Slip
-                                                </h4>
+                                            <div className="border-t border-gray-200 pt-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                                                    <h4 className="font-semibold text-gray-900">Upload Payment Slip</h4>
+                                                </div>
                                                 
                                                 {order.paymentSlipUrl ? (
-                                                    <div className="p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
-                                                        <div className="text-sm font-bold text-[#72b01d] mb-1">
-                                                            Payment Slip Uploaded Successfully!
+                                                    <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            <span className="font-medium text-green-800">Payment Slip Uploaded Successfully!</span>
                                                         </div>
-                                                        <div className="text-xs text-[#454955] mb-2">
+                                                        <p className="text-sm text-green-700">
                                                             Your payment slip is being reviewed by the seller.
-                                                        </div>
+                                                        </p>
                                                     </div>
                                                 ) : (
-                                                    <div className="space-y-3">
-                                                        <div className="text-xs text-[#454955] mb-2">
+                                                    <div className="space-y-4">
+                                                        <p className="text-sm text-gray-600">
                                                             Upload your payment slip or screenshot as proof of payment.
-                                                        </div>
+                                                        </p>
                                                         
                                                         {!paymentSlip ? (
-                                                            <div className="space-y-2">
+                                                            <div className="space-y-3">
                                                                 <label className="block">
+                                                                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                                                        <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                        </svg>
+                                                                        <p className="text-sm font-medium text-gray-700 mb-1">Click to upload payment slip</p>
+                                                                        <p className="text-xs text-gray-500">JPG, PNG, PDF (max 10MB)</p>
+                                                                    </div>
                                                                     <input
                                                                         type="file"
                                                                         accept="image/*,.pdf"
                                                                         onChange={handlePaymentSlipUpload}
-                                                                        className="block w-full text-xs text-[#454955] file:mr-2 file:py-2 file:px-3 file:rounded-2xl file:border-0 file:text-xs file:font-semibold file:bg-[#72b01d15] file:text-[#72b01d] hover:file:bg-[#72b01d25] file:cursor-pointer cursor-pointer"
+                                                                        className="hidden"
                                                                     />
                                                                 </label>
-                                                                <div className="text-xs text-[#454955]">
-                                                                    JPG, PNG, PDF (max 10MB)
-                                                                </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="space-y-2">
-                                                                <div className="flex items-center gap-2 p-2 bg-white rounded-2xl border border-[#45495522]">
-                                                                    <div className="text-[#72b01d] text-sm">📄</div>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                                                    <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                        </svg>
+                                                                    </div>
                                                                     <div className="flex-1">
-                                                                        <div className="text-xs font-medium text-[#0d0a0b]">
+                                                                        <div className="text-sm font-medium text-gray-900">
                                                                             {paymentSlip.name}
                                                                         </div>
-                                                                        <div className="text-xs text-[#454955]">
+                                                                        <div className="text-xs text-gray-500">
                                                                             {(paymentSlip.size / 1024 / 1024).toFixed(2)} MB
                                                                         </div>
                                                                     </div>
                                                                     <button
                                                                         onClick={() => setPaymentSlip(null)}
-                                                                        className="text-red-500 hover:text-red-700 text-xs transition"
+                                                                        className="text-red-500 hover:text-red-700 text-sm transition p-1"
                                                                         disabled={uploadingPayment}
                                                                     >
-                                                                        Remove
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                        </svg>
                                                                     </button>
                                                                 </div>
                                                                 
-                                                                <div className="flex gap-2">
-                                                                    <button
-                                                                        onClick={confirmPaymentSlipUpload}
-                                                                        disabled={uploadingPayment}
-                                                                        className="flex-1 py-2 px-3 bg-[#72b01d] text-white rounded-2xl text-xs font-bold hover:bg-[#3f7d20] transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                    >
-                                                                        {uploadingPayment ? 'Uploading...' : 'Upload'}
-                                                                    </button>
-                                                                </div>
+                                                                <button
+                                                                    onClick={confirmPaymentSlipUpload}
+                                                                    disabled={uploadingPayment}
+                                                                    className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                >
+                                                                    {uploadingPayment ? (
+                                                                        <span className="flex items-center justify-center gap-2">
+                                                                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                            </svg>
+                                                                            Uploading...
+                                                                        </span>
+                                                                    ) : (
+                                                                        'Upload Payment Slip'
+                                                                    )}
+                                                                </button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -615,233 +836,250 @@ export default function OrderPage() {
                                 )}
                             </div>
                         )}
-                    </div>
-
-                    {/* Custom Order Link */}
-                    {customOrderId && (
-                        <div className="mt-4 p-4 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
-                            <div className="flex items-center gap-3">
-                                <div className="flex-shrink-0">
-                                    <div className="w-10 h-10 bg-[#72b01d15] rounded-full flex items-center justify-center">
-                                        <svg className="w-5 h-5 text-[#72b01d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        {/* Order Status */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status</h3>
+                            
+                            {order.status === OrderStatus.REFUND_REQUESTED ? (
+                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
+                                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 15.5c-.77.833.192 2.5 1.732 2.5z" />
                                         </svg>
                                     </div>
+                                    <h4 className="font-bold text-yellow-800 mb-1">Refund Requested</h4>
+                                    <p className="text-sm text-yellow-700">Your refund request is being reviewed</p>
                                 </div>
-                                <div className="flex-1">
-                                    <div className="text-sm font-semibold text-[#72b01d] mb-1">
-                                        📋 Custom Order Detected
-                                    </div>
-                                    <div className="text-sm text-[#454955] mb-2">
-                                        {customOrderData ? (
-                                            <>
-                                                This order is part of a custom order with {customOrderData.items?.length || 1} items. 
-                                                Total custom order value: <span className="font-semibold text-[#72b01d]">LKR {formatCurrency(customOrderData.totalAmount || 0)}</span>
-                                            </>
-                                        ) : customOrderLoading ? (
-                                            "Loading custom order details..."
-                                        ) : (
-                                            "This order originated from a custom order request. View the full custom order details for more information."
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={() => navigate(`/custom-order-summary/${customOrderId}`)}
-                                        className="inline-flex items-center gap-2 px-3 py-2 bg-[#72b01d] text-white rounded-2xl text-sm font-medium hover:bg-[#3f7d20] transition-colors shadow-sm"
-                                        disabled={customOrderLoading}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            ) : order.status === OrderStatus.REFUNDED ? (
+                                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center">
+                                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m5 14v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3" />
                                         </svg>
-                                        {customOrderLoading ? 'Loading...' : 'View Custom Order Details'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Buyer Notes - Show to both buyers and sellers */}
-                    {order.buyerNotes && (
-                        <div className="mt-4 p-3 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
-                            <div className="text-sm font-semibold text-[#72b01d] mb-1">
-                                {isBuyer ? 'Your Notes:' : 'Buyer Notes:'}
-                            </div>
-                            <div className="text-sm text-[#454955]">
-                                {order.buyerNotes}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Order Status Steps or Refund Requested */}
-                    <div className="flex flex-col gap-2 mt-4 w-full">
-                        <span className="text-sm font-semibold mb-2 text-[#0d0a0b]">Order Status:</span>
-                        {order.status === OrderStatus.REFUND_REQUESTED ? (
-                            <div className="w-full text-center py-3 bg-[#72b01d20] text-[#3f7d20] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
-                                Refund Requested
-                            </div>
-                        ) : order.status === OrderStatus.REFUNDED ? (
-                            <div className="w-full text-center py-3 bg-[#ff4444aa] text-[#cc0000] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
-                                Order Refunded
-                            </div>
-                        ) : order.status === OrderStatus.CANCELLED ? (
-                            <div className="w-full text-center py-3 bg-[#45495522] text-[#454955] rounded-2xl font-bold text-base uppercase tracking-wide shadow-sm">
-                                Order Cancelled
-                            </div>
-                        ) : (
-                            <div className="relative flex items-center w-full justify-between px-1 md:px-4">
-                                {/* Handle different status flows based on payment method */}
-                                {order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT ? (
-                                    // Special display for bank transfer orders awaiting payment
-                                    <div className="w-full text-center py-4 bg-[#ff9900]/10 border border-[#ff9900]/30 rounded-2xl">
-                                        <div className="text-[#ff9900] font-bold text-lg mb-2">
-                                            💰 Awaiting Payment
-                                        </div>
-                                        <div className="text-[#454955] text-sm">
-                                            Please complete the bank transfer and upload your payment slip to proceed.
-                                        </div>
                                     </div>
-                                ) : (
-                                    // Normal status progression
-                                    (() => {
+                                    <h4 className="font-bold text-red-800 mb-1">Order Refunded</h4>
+                                    <p className="text-sm text-red-700">This order has been refunded</p>
+                                </div>
+                            ) : order.status === OrderStatus.CANCELLED ? (
+                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+                                    <h4 className="font-bold text-gray-800 mb-1">Order Cancelled</h4>
+                                    <p className="text-sm text-gray-600">This order has been cancelled</p>
+                                </div>
+                            ) : order.paymentMethod === 'bankTransfer' && order.status === OrderStatus.PENDING_PAYMENT ? (
+                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                        </svg>
+                                    </div>
+                                    <h4 className="font-bold text-amber-800 mb-1">Awaiting Payment</h4>
+                                    <p className="text-sm text-amber-700">Complete bank transfer and upload payment slip</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {(() => {
                                         const statusSteps = [OrderStatus.PENDING, OrderStatus.SHIPPED, OrderStatus.RECEIVED];
-                                        return statusSteps.map((step, idx, arr) => {
-                                            let normalizedStatus = (order.status || OrderStatus.PENDING);
-                                            const currentIdx = statusSteps.indexOf(normalizedStatus);
+                                        const currentIdx = statusSteps.indexOf(order.status || OrderStatus.PENDING);
+                                        
+                                        return statusSteps.map((step, idx) => {
                                             const isActive = idx <= currentIdx;
                                             const isCompleted = idx < currentIdx;
+                                            const isCurrent = idx === currentIdx;
 
                                             return (
-                                                <div key={step} className="flex-1 flex flex-col items-center relative min-w-0">
-                                                    {/* Step Circle */}
-                                                    <div
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-200 z-10
-                                                        ${isActive
-                                                                ? "bg-[#72b01d] text-white border-[#72b01d] shadow-sm"
-                                                                : "bg-white text-[#454955] border-[#45495544]"}`}
-                                                    >
-                                                        {idx + 1}
+                                                <div key={step} className="flex items-center gap-4">
+                                                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
+                                                        isCompleted 
+                                                            ? "bg-green-600 text-white" 
+                                                            : isCurrent 
+                                                                ? "bg-blue-600 text-white" 
+                                                                : "bg-gray-200 text-gray-400"
+                                                    }`}>
+                                                        {isCompleted ? (
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        ) : (
+                                                            idx + 1
+                                                        )}
                                                     </div>
-                                                    {/* Step Label */}
-                                                    <span
-                                                        className={`mt-2 text-xs md:text-sm font-semibold text-center break-words transition-colors
-                                                        ${isActive ? "text-[#0d0a0b]" : "text-[#45495588]"}`}
-                                                        style={{ minWidth: 72 }}
-                                                    >
-                                                        {step.charAt(0) + step.slice(1).toLowerCase()}
-                                                    </span>
-                                                    {/* Connector Line */}
-                                                    {idx < arr.length - 1 && (
-                                                        <div
-                                                            className={`absolute top-1/2 left-1/2 h-1 transition-all duration-200 z-0
-                                                            ${isCompleted ? "bg-[#72b01d]" : "bg-[#45495522]"}`}
-                                                            style={{
-                                                                width: "100%",
-                                                                transform: "translateY(-50%)",
-                                                                left: "50%",
-                                                                right: "-50%",
-                                                                zIndex: 0,
-                                                            }}
-                                                        />
+                                                    <div className="flex-1">
+                                                        <div className={`font-medium ${isActive ? "text-gray-900" : "text-gray-400"}`}>
+                                                            {step.charAt(0) + step.slice(1).toLowerCase()}
+                                                        </div>
+                                                        <div className={`text-sm ${isActive ? "text-gray-600" : "text-gray-400"}`}>
+                                                            {step === OrderStatus.PENDING && "Order confirmed, preparing for shipment"}
+                                                            {step === OrderStatus.SHIPPED && "Order is on its way to you"}
+                                                            {step === OrderStatus.RECEIVED && "Order delivered and confirmed"}
+                                                        </div>
+                                                    </div>
+                                                    {isCurrent && (
+                                                        <div className="flex-shrink-0">
+                                                            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                                                                Current
+                                                            </span>
+                                                        </div>
                                                     )}
                                                 </div>
                                             );
                                         });
-                                    })()
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    
-                    {/* Show payment slip if already uploaded (for sellers and completed orders) */}
-                    {order.paymentSlipUrl && (order.status !== OrderStatus.PENDING_PAYMENT || !isBuyer) && (
-                        <div className="mt-4 p-4 bg-[#72b01d08] border border-[#72b01d33] rounded-2xl">
-                            <div className="text-sm font-semibold text-[#72b01d] mb-2">
-                                ✅ Payment Slip Uploaded
-                            </div>
-                            <div className="text-sm text-[#454955] mb-3">
-                                {isBuyer ? 'Your payment slip has been uploaded successfully.' : 'The buyer has uploaded their payment slip.'}
-                            </div>
-                            <a
-                                href={order.paymentSlipUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-[#72b01d] text-white rounded-2xl text-sm font-medium hover:bg-[#3f7d20] transition shadow-sm"
-                            >
-                                📄 View Payment Slip
-                            </a>
-                            {order.paymentSlipUploadedAt && (
-                                <div className="text-xs text-[#454955] mt-2">
-                                    Uploaded: {new Date(order.paymentSlipUploadedAt.seconds ? order.paymentSlipUploadedAt.toDate() : order.paymentSlipUploadedAt).toLocaleString()}
+                                    })()}
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
+                </div>
+                
+                {/* Payment Slip Display */}
+                {order.paymentSlipUrl && (order.status !== OrderStatus.PENDING_PAYMENT || !isBuyer) && (
+                    <div className="max-w-4xl mx-auto mt-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0 w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Slip Uploaded</h3>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        {isBuyer ? 'Your payment slip has been uploaded successfully.' : 'The buyer has uploaded their payment slip.'}
+                                    </p>
+                                    <div className="flex items-center gap-4">
+                                        <a
+                                            href={order.paymentSlipUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            View Payment Slip
+                                        </a>
+                                        {order.paymentSlipUploadedAt && (
+                                            <span className="text-xs text-gray-500">
+                                                Uploaded: {new Date(order.paymentSlipUploadedAt.seconds ? order.paymentSlipUploadedAt.toDate() : order.paymentSlipUploadedAt).toLocaleString()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                    {/* Only buyer can interact (refund, review) */}
-                    {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && order.status !== OrderStatus.PENDING_PAYMENT && (
-                        <>
-                            <button
-                                className="mt-2 w-full py-3 bg-[#72b01d] text-white rounded-2xl font-bold text-lg uppercase tracking-wide shadow-sm hover:bg-[#3f7d20] transition"
-                                onClick={markAsReceived}
-                                disabled={submitting}
-                            >
-                                Mark as Received
-                            </button>
-                            <div className="flex justify-center mt-1 w-full">
+                {/* Action Buttons */}
+                {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && order.status !== OrderStatus.PENDING_PAYMENT && (
+                    <div className="max-w-4xl mx-auto mt-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <button
-                                    className="text-xs text-[#454955] hover:text-[#3f7d20] transition disabled:opacity-50"
-                                    style={{ padding: 0, background: 'none', border: 'none' }}
+                                    className="flex-1 py-3 px-6 bg-green-600 text-white rounded-lg font-semibold text-center hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                    onClick={markAsReceived}
+                                    disabled={submitting}
+                                >
+                                    {submitting ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Mark as Received
+                                        </span>
+                                    )}
+                                </button>
+                                <button
+                                    className="px-6 py-3 text-gray-600 hover:text-red-600 transition focus:outline-none text-sm font-medium"
                                     onClick={requestRefund}
                                     disabled={refundSubmitting}
                                 >
-                                    Request Refund
+                                    {refundSubmitting ? 'Processing...' : 'Request Refund'}
                                 </button>
                             </div>
-                        </>
-                    )}
-                    <div className="mt-6">
-                        <h2 className="font-bold mb-2 text-[#0d0a0b]">Your Review</h2>
+                        </div>
+                    </div>
+                )}
+
+                {/* Review Section */}
+                <div className="max-w-4xl mx-auto mt-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Review & Rating</h3>
+                        
                         {order.status === OrderStatus.CANCELLED ? (
-                            <div className="bg-white border border-[#45495522] rounded-2xl p-4 text-[#454955] text-center font-semibold shadow-sm">You cannot leave a review for a cancelled order.</div>
+                            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                                <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                                </svg>
+                                <p className="text-gray-600 font-medium">Cannot review cancelled orders</p>
+                            </div>
                         ) : order.review ? (
-                            <div className="bg-white border border-[#45495522] rounded-2xl p-4 text-[#454955] shadow-sm">
-                                <div className="flex items-center mb-1">
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-1">
                                     {[1, 2, 3, 4, 5].map(i => (
-                                        <svg key={i} className={`h-5 w-5 ${order.rating >= i ? 'text-[#72b01d]' : 'text-[#45495533]'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
+                                        <svg key={i} className={`h-5 w-5 ${order.rating >= i ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
+                                        </svg>
                                     ))}
+                                    <span className="ml-2 text-sm text-gray-600">({order.rating}/5)</span>
                                 </div>
-                                <div>{order.review}</div>
+                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                    <p className="text-gray-800">{order.review}</p>
+                                </div>
                             </div>
                         ) : (
-                            // Only buyer can submit review
                             isBuyer && (
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        {[1, 2, 3, 4, 5].map(i => (
-                                            <button
-                                                key={i}
-                                                type="button"
-                                                className="focus:outline-none"
-                                                onClick={() => setRating(i)}
-                                                disabled={submitting}
-                                            >
-                                                <svg className={`h-7 w-7 ${rating >= i ? 'text-[#72b01d]' : 'text-[#45495533]'}`} fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-                                            </button>
-                                        ))}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                                        <div className="flex items-center gap-1">
+                                            {[1, 2, 3, 4, 5].map(i => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    className="focus:outline-none hover:scale-110 transition-transform"
+                                                    onClick={() => setRating(i)}
+                                                    disabled={submitting}
+                                                >
+                                                    <svg className={`h-8 w-8 ${rating >= i ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-300 transition-colors`} fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
+                                                    </svg>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <textarea
-                                        className="w-full border border-[#45495522] rounded-2xl p-3 text-base focus:outline-none focus:ring-1 focus:ring-[#72b01d] focus:border-[#72b01d] text-[#0d0a0b] shadow-sm"
-                                        rows={3}
-                                        placeholder="Write a review..."
-                                        value={review}
-                                        onChange={e => setReview(e.target.value)}
-                                        disabled={submitting}
-                                    />
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">Write a review</label>
+                                        <textarea
+                                            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                                            rows={4}
+                                            placeholder="Share your experience with this product..."
+                                            value={review}
+                                            onChange={e => setReview(e.target.value)}
+                                            disabled={submitting}
+                                        />
+                                    </div>
+                                    
                                     <button
-                                        className="w-max px-6 py-2 bg-[#72b01d] text-white rounded-2xl font-bold text-base shadow-sm hover:bg-[#3f7d20] transition"
+                                        className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={submitReview}
                                         disabled={submitting || !review.trim() || !rating}
                                     >
-                                        Submit Review
+                                        {submitting ? 'Submitting...' : 'Submit Review'}
                                     </button>
                                 </div>
                             )
@@ -849,7 +1087,9 @@ export default function OrderPage() {
                     </div>
                 </div>
             </main>
+            
             <Footer />
+            
             <ConfirmDialog
                 isOpen={isOpen}
                 title={confirmDialog.title}
