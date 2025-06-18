@@ -69,6 +69,9 @@ const Search: React.FC = () => {
 
   // On mount or search param change: sync state
   useEffect(() => {
+    const freeParam = searchParams.get("free");
+    console.log("Free shipping URL param:", freeParam, "-> boolean:", freeParam === "1");
+    
     setCat(searchParams.get("cat") || "");
     setSub(searchParams.get("sub") || "");
     setSearchInput(searchParams.get("q") || "");
@@ -76,12 +79,14 @@ const Search: React.FC = () => {
     setFilterMinPrice(searchParams.get("min") || "");
     setFilterMaxPrice(searchParams.get("max") || "");
     setFilterSort(searchParams.get("sort") || "");
-    setFilterFreeShipping(searchParams.get("free") === "1");
+    setFilterFreeShipping(freeParam === "1");
     setAppliedMinPrice(searchParams.get("min") || "");
     setAppliedMaxPrice(searchParams.get("max") || "");
     setAppliedSort(searchParams.get("sort") || "");
-    setAppliedFreeShipping(searchParams.get("free") === "1");
+    setAppliedFreeShipping(freeParam === "1");
     setCurrentPage(parseInt(searchParams.get("page") || "1"));
+    
+    console.log("Applied free shipping state:", freeParam === "1");
     // Scroll to top when search params change (i.e., when user comes to search page or changes filters/page)
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
@@ -106,9 +111,24 @@ const Search: React.FC = () => {
     if (sub) {
       conditions.push(where("subcategory", "==", sub));
     }
+    
+    // Add price range filters server-side
+    if (appliedMinPrice) {
+      conditions.push(where("price", ">=", Number(appliedMinPrice)));
+    }
+    if (appliedMaxPrice) {
+      conditions.push(where("price", "<=", Number(appliedMaxPrice)));
+    }
+    
+    // Handle free shipping filter carefully
     if (appliedFreeShipping) {
+      console.log("Adding free shipping filter: deliveryType == 'free'");
+      // Try to filter for both explicit "free" and also where deliveryType exists and equals "free"
       conditions.push(where("deliveryType", "==", "free"));
     }
+
+    // Note: Text search will be handled client-side due to Firestore limitations
+    // For production, consider using Algolia or Elasticsearch for full-text search
 
     // Add ordering (must be after where clauses)
     let queryConstraints = [...conditions];
@@ -123,8 +143,9 @@ const Search: React.FC = () => {
       queryConstraints.push(orderBy("createdAt", "desc"));
     }
 
+    console.log("Building query with", conditions.length, "conditions, appliedFreeShipping:", appliedFreeShipping);
     return query(collection(db, "listings"), ...queryConstraints);
-  }, [cat, sub, appliedFreeShipping, appliedSort]);
+  }, [cat, sub, appliedFreeShipping, appliedSort, appliedMinPrice, appliedMaxPrice]);
 
   // Server-side paginated fetch function
   const fetchPaginatedListings = useCallback(async (page: number = 1) => {
@@ -144,11 +165,14 @@ const Search: React.FC = () => {
 
     // Check cache first
     if (cacheRef.current.has(cacheKey)) {
+      console.log("Using cached results for key:", cacheKey);
       const cachedResults = cacheRef.current.get(cacheKey)!;
       setItems(cachedResults);
       setSearching(false);
       return;
     }
+    
+    console.log("No cache found, executing fresh query for:", cacheKey);
     
     try {
       setSearching(true);
@@ -157,10 +181,13 @@ const Search: React.FC = () => {
       // Get the last document for the previous page (for pagination)
       const startAfter = page > 1 ? lastDocMap.get(page - 1) : null;
       
+      // If we have a text search, fetch more items to account for client-side filtering
+      const effectiveItemsPerPage = appliedSearch ? itemsPerPage * 3 : itemsPerPage;
+      
       // Use the paginateQuery utility
       const { docs, lastDoc, hasMore } = await paginateQuery(
         baseQuery,
-        itemsPerPage,
+        effectiveItemsPerPage,
         startAfter || undefined
       );
       
@@ -170,21 +197,33 @@ const Search: React.FC = () => {
         __client_ip: ip,
       } as Listing));
 
-      // Apply client-side filters that can't be done server-side
+      console.log("Raw query results:", results.length, "items");
+      if (appliedFreeShipping) {
+        console.log("Free shipping filter applied, sample deliveryTypes:", 
+          results.slice(0, 5).map(item => ({id: item.id, deliveryType: item.deliveryType}))
+        );
+      }
+
+      // Apply text search filter client-side (due to Firestore limitations)
       if (appliedSearch) {
         results = results.filter(item => 
           item.name?.toLowerCase().includes(appliedSearch.toLowerCase()) ||
           item.description?.toLowerCase().includes(appliedSearch.toLowerCase())
         );
+        
+        // Limit results to the actual page size after filtering
+        results = results.slice(0, itemsPerPage);
       }
 
-      if (appliedMinPrice) {
-        results = results.filter(item => Number(item.price) >= Number(appliedMinPrice));
+      // Additional client-side free shipping filter as fallback
+      // (in case server-side filter didn't work due to missing fields)
+      if (appliedFreeShipping) {
+        const beforeFreeShippingFilter = results.length;
+        results = results.filter(item => item.deliveryType === "free");
+        console.log(`Client-side free shipping filter: ${beforeFreeShippingFilter} -> ${results.length} items`);
       }
 
-      if (appliedMaxPrice) {
-        results = results.filter(item => Number(item.price) <= Number(appliedMaxPrice));
-      }
+      // Price range filters are now handled server-side in the query
 
       // Update pagination state
       setLastDocMap(prev => {
@@ -217,14 +256,14 @@ const Search: React.FC = () => {
     } finally {
       setSearching(false);
     }
-  }, [ip, buildPaginatedQuery, appliedSearch, appliedMinPrice, appliedMaxPrice, cat, sub, appliedFreeShipping, appliedSort, lastDocMap, itemsPerPage]);
+  }, [ip, buildPaginatedQuery, appliedSearch, lastDocMap, itemsPerPage]);
 
   // Fetch listings when dependencies change
   useEffect(() => {
     if (ip !== null) {
       fetchPaginatedListings(currentPage);
     }
-  }, [ip, cat, sub, appliedFreeShipping, appliedSort, appliedSearch, appliedMinPrice, appliedMaxPrice, currentPage]);
+  }, [ip, cat, sub, appliedFreeShipping, appliedSort, appliedSearch, appliedMinPrice, appliedMaxPrice, currentPage, fetchPaginatedListings]);
 
   // Refresh listings (after wishlist update)
   const refreshListings = useCallback(async () => {
