@@ -1045,16 +1045,48 @@ export default function ProfileDashboard() {
                                                             onClick={async () => {
                                                                 const confirmed = await showConfirmDialog({
                                                                     title: "Delete Shop",
-                                                                    message: "Are you sure you want to delete this shop? This action cannot be undone.",
+                                                                    message: "Are you sure you want to delete this shop? This action cannot be undone and will also delete all listings and reviews in this shop.",
                                                                     confirmText: "Delete",
                                                                     cancelText: "Cancel",
                                                                     type: "danger"
                                                                 });
                                                                 if (!confirmed) return;
                                                                 try {
+                                                                    // First, delete all listings related to this shop
+                                                                    const listingsQuery = query(
+                                                                        collection(db, "listings"),
+                                                                        where("shopId", "==", shop.id)
+                                                                    );
+                                                                    const listingsSnapshot = await getDocs(listingsQuery);
+                                                                    
+                                                                    // Delete all reviews related to this shop
+                                                                    const reviewsQuery = query(
+                                                                        collection(db, "reviews"),
+                                                                        where("shopId", "==", shop.id)
+                                                                    );
+                                                                    const reviewsSnapshot = await getDocs(reviewsQuery);
+                                                                    
+                                                                    // Delete all listings and reviews in parallel
+                                                                    const deleteListingsPromises = listingsSnapshot.docs.map(listingDoc => 
+                                                                        deleteDoc(doc(db, "listings", listingDoc.id))
+                                                                    );
+                                                                    
+                                                                    const deleteReviewsPromises = reviewsSnapshot.docs.map(reviewDoc => 
+                                                                        deleteDoc(doc(db, "reviews", reviewDoc.id))
+                                                                    );
+                                                                    
+                                                                    await Promise.all([...deleteListingsPromises, ...deleteReviewsPromises]);
+                                                                    
+                                                                    // Then delete the shop
                                                                     await deleteDoc(doc(db, "shops", shop.id));
                                                                     setShops(prev => prev.filter(s => s.id !== shop.id));
+                                                                    
+                                                                    // Refresh listings to remove deleted ones from the UI
+                                                                    await fetchListings(1);
+                                                                    
+                                                                    console.log(`✅ Shop deleted successfully along with ${listingsSnapshot.size} listings and ${reviewsSnapshot.size} reviews`);
                                                                 } catch (err) {
+                                                                    console.error("Error deleting shop and listings:", err);
                                                                     alert("Failed to delete shop. Try again.");
                                                                 }
                                                             }}
