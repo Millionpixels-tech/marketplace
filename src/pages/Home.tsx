@@ -1587,50 +1587,6 @@ const Home = () => {
                 </div>
               </div>
             </div>
-
-            {/* Statistics Row */}
-            <div className={`text-center gap-8 ${isMobile ? 'mt-12 grid grid-cols-2' : 'mt-16 grid grid-cols-2 md:grid-cols-4'}`}>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#72b01d' }}>
-                  500+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Happy Sellers
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#3f7d20' }}>
-                  2,000+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Products Listed
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#72b01d' }}>
-                  10,000+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Satisfied Customers
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#3f7d20' }}>
-                  4.9/5
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Average Rating
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
