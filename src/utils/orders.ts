@@ -2,7 +2,7 @@ import { db } from "./firebase";
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { PaymentMethod, PaymentStatus, OrderStatus } from "../types/enums";
 import type { OrderStatus as OrderStatusType } from "../types/enums";
-import { sendOrderConfirmationEmails } from "./emailServiceFrontend";
+import { sendOrderConfirmationEmails } from "./emailService";
 
 export interface BuyerInfo {
     firstName: string;
@@ -65,13 +65,16 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
         createdAt: Timestamp.now(),
     });
     
-    // Send order confirmation emails only for COD orders
-    // For Pay Now orders, emails will be sent after payment completion
-    if (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
-        console.log("� COD order - sending emails immediately");
+    // Send order confirmation emails for COD and Bank Transfer orders
+    // Skip emails for orders created from custom orders - they will be handled separately
+    // For PayHere Pay Now orders, emails will be sent after payment completion
+    if (!order.customOrderId && (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY || order.paymentMethod === PaymentMethod.BANK_TRANSFER)) {
+        console.log(`📧 ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'COD' : 'Bank Transfer'} order - sending emails immediately`);
         await sendOrderConfirmationEmailsHelper(order, docRef.id);
+    } else if (order.customOrderId) {
+        console.log("📋 Custom order item - skipping individual emails (will be sent once for the entire custom order)");
     } else {
-        console.log("💳 Pay Now order - emails will be sent after payment completion");
+        console.log("💳 PayHere Pay Now order - emails will be sent after payment completion");
     }
     
     return docRef.id;

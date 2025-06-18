@@ -101,75 +101,117 @@ export default function OrderPage() {
     // Fetch order and determine role
     useEffect(() => {
         const fetchOrder = async () => {
-            if (!id) return;
-            const docRef = doc(db, "orders", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const orderData: any = { ...docSnap.data(), id: docSnap.id };
-                setOrder(orderData);
-
-                // Set custom order ID if this order came from a custom order
-                if (orderData.customOrderId) {
-                    setCustomOrderId(orderData.customOrderId);
-                    // Fetch the custom order data to get the full order details
-                    await fetchCustomOrderData(orderData.customOrderId);
-                }
-
-                // Only after setting order and user, check roles
-                if (user && user.email) {
-                    setIsBuyer(orderData.buyerEmail === user.email);
-                    setIsSeller(orderData.sellerEmail === user.email); // Adjust field name as per your db
-                }
-
-                // Fetch seller's bank account information if this is a bank transfer order
-                if (orderData.paymentMethod === 'bankTransfer' && orderData.sellerId) {
-                    try {
-                        const sellerQuery = query(
-                            collection(db, "users"), 
-                            where("uid", "==", orderData.sellerId)
-                        );
-                        const sellerSnap = await getDocs(sellerQuery);
-                        
-                        if (!sellerSnap.empty) {
-                            const sellerData = sellerSnap.docs[0].data();
-                            
-                            // Get all bank accounts from new format
-                            if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
-                                setSellerBankAccounts(sellerData.bankAccounts);
-                            } 
-                            // Fallback to legacy single bank account format
-                            else if (sellerData.bankDetails) {
-                                const legacyAccount: BankAccount = {
-                                    id: 'legacy',
-                                    accountNumber: sellerData.bankDetails.accountNumber || '',
-                                    branch: sellerData.bankDetails.branch || '',
-                                    bankName: sellerData.bankDetails.bankName || '',
-                                    fullName: sellerData.bankDetails.fullName || '',
-                                    isDefault: true,
-                                    createdAt: new Date()
-                                };
-                                setSellerBankAccounts([legacyAccount]);
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Error fetching seller bank account:", error);
-                    }
-                }
+            if (!id) {
+                setLoading(false);
+                return;
             }
-            setLoading(false);
+            
+            try {
+                const docRef = doc(db, "orders", id);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const orderData: any = { ...docSnap.data(), id: docSnap.id };
+                    setOrder(orderData);
+
+                    // Set custom order ID if this order came from a custom order
+                    if (orderData.customOrderId) {
+                        setCustomOrderId(orderData.customOrderId);
+                        // Fetch the custom order data to get the full order details
+                        await fetchCustomOrderData(orderData.customOrderId);
+                    }
+
+                    // Fetch seller's bank account information if this is a bank transfer order
+                    if (orderData.paymentMethod === 'bankTransfer' && orderData.sellerId) {
+                        try {
+                            const sellerQuery = query(
+                                collection(db, "users"), 
+                                where("uid", "==", orderData.sellerId)
+                            );
+                            const sellerSnap = await getDocs(sellerQuery);
+                            
+                            if (!sellerSnap.empty) {
+                                const sellerData = sellerSnap.docs[0].data();
+                                
+                                // Get all bank accounts from new format
+                                if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
+                                    setSellerBankAccounts(sellerData.bankAccounts);
+                                } 
+                                // Fallback to legacy single bank account format
+                                else if (sellerData.bankDetails) {
+                                    const legacyAccount: BankAccount = {
+                                        id: 'legacy',
+                                        accountNumber: sellerData.bankDetails.accountNumber || '',
+                                        branch: sellerData.bankDetails.branch || '',
+                                        bankName: sellerData.bankDetails.bankName || '',
+                                        fullName: sellerData.bankDetails.fullName || '',
+                                        isDefault: true,
+                                        createdAt: new Date()
+                                    };
+                                    setSellerBankAccounts([legacyAccount]);
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error fetching seller bank account:", error);
+                        }
+                    }
+                } else {
+                    // Order doesn't exist
+                    setOrder(null);
+                }
+            } catch (error) {
+                console.error("Error fetching order:", error);
+                setOrder(null);
+            } finally {
+                setLoading(false);
+            }
         };
         fetchOrder();
-    }, [id, user]);
+    }, [id]);
+
+    // Separate effect to determine user roles when both user and order are available
+    useEffect(() => {
+        if (order && user && user.email) {
+            setIsBuyer(order.buyerEmail === user.email);
+            setIsSeller(order.sellerEmail === user.email);
+        } else {
+            setIsBuyer(false);
+            setIsSeller(false);
+        }
+    }, [order, user]);
 
     // Redirect logic
     useEffect(() => {
+        console.log('Redirect logic check:', { loading, order: !!order, user: !!user, userEmail: user?.email, isBuyer, isSeller });
+        
         if (!loading) {
-            // Not logged in or not buyer/seller? Redirect!
-            if (!user || !user.email || (!isBuyer && !isSeller)) {
+            // If order doesn't exist, redirect to search
+            if (!order) {
+                console.log('Redirecting to search: Order not found');
                 navigate("/search", { replace: true });
+                return;
             }
+            
+            // If not logged in, redirect to auth
+            if (!user || !user.email) {
+                console.log('Redirecting to auth: User not logged in');
+                navigate("/auth", { replace: true });
+                return;
+            }
+            
+            // If not buyer or seller, redirect to search
+            if (!isBuyer && !isSeller) {
+                console.log('Redirecting to search: User is neither buyer nor seller', { 
+                    orderBuyerEmail: order?.buyerEmail, 
+                    orderSellerEmail: order?.sellerEmail, 
+                    userEmail: user?.email 
+                });
+                navigate("/search", { replace: true });
+                return;
+            }
+            
+            console.log('Access granted: User is authorized for this order');
         }
-    }, [loading, user, isBuyer, isSeller, navigate]);
+    }, [loading, user, isBuyer, isSeller, navigate, order]);
 
     const requestRefund = async () => {
         if (!order) return;
@@ -320,7 +362,7 @@ export default function OrderPage() {
             // Send notification to seller
             try {
                 // Import the email function dynamically to avoid import issues
-                const { sendPaymentSlipNotification } = await import('../../utils/emailServiceFrontend');
+                const { sendPaymentSlipNotification } = await import('../../utils/emailService');
                 const { getSellerEmailById } = await import('../../utils/orders');
                 
                 const sellerEmail = await getSellerEmailById(order.sellerId);

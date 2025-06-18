@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getCustomOrder, acceptCustomOrder, isCustomOrderExpired, updateCustomOrderBuyer } from "../../utils/customOrders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../../utils/userProfile";
 import { createOrder } from "../../utils/orders";
+import { sendCustomOrderAcceptanceEmails } from "../../utils/emailService";
 import { auth } from "../../utils/firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -237,6 +238,48 @@ export default function CustomOrderPage() {
 
       // Accept the custom order
       await acceptCustomOrder(order.id, buyerInfo.address, buyerInfo.phone);
+
+      // Send consolidated custom order acceptance emails
+      try {
+        const { getSellerEmailById } = await import('../../utils/orders');
+        const sellerEmail = await getSellerEmailById(order.sellerId);
+        
+        if (sellerEmail) {
+          // Prepare order data for email templates
+          const emailOrders = createdOrderIds.map((orderId, index) => ({
+            id: orderId,
+            itemName: order.items[index].name,
+            quantity: order.items[index].quantity,
+            total: (order.items[index].unitPrice * order.items[index].quantity) + (order.shippingCost / order.items.length)
+          }));
+
+          // Prepare custom order data for email templates
+          const customOrderForEmail = {
+            ...order,
+            buyerEmail: buyerInfo.email,
+            buyerAddress: buyerInfo.address,
+            buyerPhone: buyerInfo.phone
+          };
+
+          console.log('📧 Sending custom order acceptance emails...');
+          const emailResult = await sendCustomOrderAcceptanceEmails(
+            customOrderForEmail,
+            emailOrders,
+            sellerEmail
+          );
+
+          if (emailResult.success) {
+            console.log('✅ Custom order acceptance emails sent successfully');
+          } else {
+            console.warn('⚠️ Failed to send custom order acceptance emails:', emailResult.error);
+          }
+        } else {
+          console.warn('❌ Could not find seller email for custom order acceptance notifications');
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending custom order acceptance emails:', emailError);
+        // Don't fail the order creation if email fails
+      }
 
       // Show success message
       const orderCount = createdOrderIds.length;
