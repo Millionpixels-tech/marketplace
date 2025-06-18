@@ -264,6 +264,22 @@ export default function AdminPayments() {
                     </p>
                 </div>
 
+                {/* Admin Navigation */}
+                <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+                    <div className="flex gap-4">
+                        <div className="px-4 py-2 rounded-lg font-medium" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#72b01d' }}>
+                            Payment Dashboard
+                        </div>
+                        <a 
+                            href="/admin/management"
+                            className="px-4 py-2 rounded-lg font-medium transition duration-200 hover:bg-gray-100"
+                            style={{ color: '#454955' }}
+                        >
+                            User Management
+                        </a>
+                    </div>
+                </div>
+
                 {/* Payment Schedule Overview */}
                 {paymentSchedule && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

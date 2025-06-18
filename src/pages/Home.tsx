@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiLayers } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
@@ -985,18 +985,18 @@ const Home = () => {
                   </p>
                 </div>
 
-                {/* Shipping Labels */}
+                {/* Unlimited Product Variations */}
                 <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏷️</span>
+                    <FiLayers className={`${isMobile ? 'text-xl' : 'text-2xl'} text-white`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                    Shipping Labels
+                    Unlimited Product Variations
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Generate and print shipping labels directly from the platform. Update order statuses instantly.
+                    Create unlimited variations for your products - different colors, sizes, materials, and styles in one listing.
                   </p>
                 </div>
 

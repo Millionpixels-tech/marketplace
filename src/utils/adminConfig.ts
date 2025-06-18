@@ -1,8 +1,11 @@
 // Admin configuration constants
+// Note: Admin password is loaded from environment variables (VITE_ADMIN_PASSWORD)
+// Falls back to "7788" for development if env var is not set
 export const ADMIN_CONFIG = {
-    PASSWORD: "7788",
+    PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD || "7788", // Fallback for development
     ROUTES: {
-        PAYMENTS: "/admin/payments"
+        PAYMENTS: "/admin/payments",
+        MANAGEMENT: "/admin/management"
     }
 } as const;
 
