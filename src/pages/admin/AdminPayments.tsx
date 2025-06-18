@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import { hasAdminAccess } from "../../utils/adminConfig";
 import { 
     calculatePaymentSchedule, 
@@ -205,7 +205,7 @@ export default function AdminPayments() {
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <Header />
+                <ResponsiveHeader />
                 <div className="max-w-md mx-auto pt-20">
                     <div className="bg-white rounded-xl shadow-lg p-8">
                         <h1 className="text-2xl font-bold mb-6 text-center" style={{ color: '#0d0a0b' }}>
@@ -253,7 +253,7 @@ export default function AdminPayments() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
+            <ResponsiveHeader />
             <div className="max-w-7xl mx-auto px-4 pt-20 pb-8">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold mb-2" style={{ color: '#0d0a0b' }}>

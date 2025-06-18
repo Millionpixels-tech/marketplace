@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../utils/firebase";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Button, Input, Card } from "../../components/UI";
 
@@ -44,7 +44,7 @@ export default function ResetPassword() {
 
     return (
         <div className="min-h-screen w-full bg-gray-50 flex flex-col">
-            <Header />
+            <ResponsiveHeader />
             <main className="flex flex-1 items-center justify-center p-4 py-16 md:py-24">
                 <div className="w-full max-w-sm">
                     <Card className="p-6 shadow-lg bg-white">

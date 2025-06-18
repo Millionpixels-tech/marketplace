@@ -3,7 +3,8 @@ import { auth } from "../../utils/firebase";
 import { sendEmailVerification } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { Header, Button, Card } from "../../components/UI";
+import { Button, Card } from "../../components/UI";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 
@@ -72,7 +73,7 @@ const EmailVerification = () => {
         description="Verify your email address to complete your account setup and access all features of the Sri Lankan Marketplace."
         noIndex={true}
       />
-      <Header />
+      <ResponsiveHeader />
 
       <main className="flex flex-1 items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md">

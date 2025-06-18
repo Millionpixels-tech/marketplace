@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, query, collection, where, getDocs, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../utils/firebase";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
@@ -513,7 +513,7 @@ export default function OrderPage() {
     // --- PAGE RENDER ---
     return (
         <div className="bg-gray-50 min-h-screen w-full">
-            <Header />
+            <ResponsiveHeader />
             <main className="max-w-4xl mx-auto py-8 px-4 md:px-6">
                 {/* Header Section */}
                 <div className="mb-8">

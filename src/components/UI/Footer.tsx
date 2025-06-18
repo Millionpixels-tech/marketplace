@@ -192,7 +192,7 @@ export default function Footer() {
               <span>in Sri Lanka. All rights reserved.</span>
             </div>
             <div className={`text-gray-400 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              <span>Promoting Sri Lankan craftsmanship worldwide</span>
+              <span>Promoting small businesses islandwide with Sina</span>
             </div>
           </div>
         </div>
