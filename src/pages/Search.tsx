@@ -352,14 +352,14 @@ const Search: React.FC = () => {
               </button>
             </div>
           )}
-          <aside className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'w-full md:w-80'} ${isMobile ? 'w-full' : 'mb-8 md:mb-0'} flex flex-col gap-${isMobile ? '4' : '6'}`}>
+          <aside className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'w-full md:w-80'} ${isMobile ? 'w-full' : 'mb-8 md:mb-0'} flex flex-col ${isMobile ? 'gap-4' : 'gap-6'}`}>
             {/* Category Filter Card */}
             <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
-              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
+              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
                 {categories.map((c) => (
                   <li key={c.name} className="flex flex-col">
                     <div className="flex items-center w-full group">
@@ -393,7 +393,7 @@ const Search: React.FC = () => {
                       </button>
                     </div>
                     {expanded === c.name && c.subcategories && (
-                      <ul className={`${isMobile ? 'pl-3 py-1' : 'pl-4 py-1'} flex flex-col gap-1`}>
+                      <ul className={`${isMobile ? 'pl-4 py-2' : 'pl-6 py-2'} flex flex-col gap-1`}>
                         {c.subcategories.map(sc => (
                           <li key={sc}>
                             <button
@@ -440,11 +440,11 @@ const Search: React.FC = () => {
 
             {/* Additional Filters Card */}
             <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>More Filters</h2>
               </div>
-              <div className={`flex flex-col gap-${isMobile ? '4' : '5'} ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
+              <div className={`flex flex-col ${isMobile ? 'gap-4' : 'gap-6'} ${isMobile ? 'px-4 py-4' : 'px-6 py-6'}`}>
                 {/* Price Range */}
                 <div>
                   <label className={`block ${isMobile ? 'text-xs' : 'text-xs'} font-semibold mb-2`} style={{ color: '#454955' }}>Price Range (LKR)</label>
@@ -629,7 +629,7 @@ const Search: React.FC = () => {
                 <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}`}>
                   
                   {/* Active filters summary */}
-                  <div className={`flex flex-wrap gap-${isMobile ? '1' : '2'}`}>
+                  <div className={`flex flex-wrap ${isMobile ? 'gap-1' : 'gap-2'}`}>
                     {appliedSearch && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
