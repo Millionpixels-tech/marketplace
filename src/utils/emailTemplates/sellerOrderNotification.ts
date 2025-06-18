@@ -1,9 +1,10 @@
 import type { Order } from '../orders';
+import type { BankAccount } from '../emailService';
 import { PaymentMethod } from '../../types/enums';
 
 const FROM_NAME = 'Sina.lk';
 
-export const generateSellerOrderNotificationEmail = (order: Order & { id: string }) => {
+export const generateSellerOrderNotificationEmail = (order: Order & { id: string }, sellerBankAccounts: BankAccount[] = []) => {
     const subject = `New Order Received - ${order.itemName}`;
     
     const html = `
@@ -177,6 +178,49 @@ export const generateSellerOrderNotificationEmail = (order: Order & { id: string
                                     </table>
                                 </td>
                             </tr>
+                            
+                            ${order.paymentMethod === PaymentMethod.BANK_TRANSFER && sellerBankAccounts.length > 0 ? `
+                            <!-- Bank Transfer Information -->
+                            <tr>
+                                <td class="mobile-padding" style="padding: 0 40px;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #e8f5e8; border: 1px solid #72b01d; border-radius: 8px; margin-bottom: 20px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <h4 style="margin: 0 0 15px 0; color: #155724; font-size: 16px; font-weight: 600;">Bank Transfer Details</h4>
+                                                <p style="margin: 0 0 15px 0; color: #155724; font-size: 14px; line-height: 1.5;">
+                                                    The customer will transfer <strong>LKR ${order.total.toLocaleString()}</strong> to one of your registered bank accounts below. Please confirm payment receipt and process the order accordingly.
+                                                </p>
+                                                ${sellerBankAccounts.map(account => `
+                                                <div style="background-color: #ffffff; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Bank:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.bankName}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Branch:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.branch}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Account Number:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0; font-weight: 600;">${account.accountNumber}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Account Holder:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.fullName}</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                `).join('')}
+                                                <p style="margin: 10px 0 0 0; color: #856404; font-size: 13px; line-height: 1.4;">
+                                                    <strong>Note:</strong> Once you receive the payment, please confirm it and proceed with order fulfillment.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            ` : ''}
                             
                             <!-- Customer Information -->
                             <tr>

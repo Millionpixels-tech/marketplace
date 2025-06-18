@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, query, collection, where, getDocs, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -24,7 +24,7 @@ interface BankAccount {
 export default function OrderPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth(); // Assumes user?.email
+    const { user, loading: authLoading } = useAuth(); // Get both user and loading state
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [review, setReview] = useState("");
@@ -40,6 +40,12 @@ export default function OrderPage() {
     const [isBuyer, setIsBuyer] = useState(false);
     const [isSeller, setIsSeller] = useState(false);
     
+    // Role determination loading state
+    const [rolesDetermined, setRolesDetermined] = useState(false);
+    
+    // Ref to prevent multiple redirects
+    const authorizationChecked = useRef(false);
+
     // Custom Order Detection - Simple approach using customOrderId field
     const [customOrderId, setCustomOrderId] = useState<string | null>(null);
     const [customOrderData, setCustomOrderData] = useState<any>(null);
@@ -98,31 +104,98 @@ export default function OrderPage() {
         }
     };
 
-    // Fetch order and determine role
+    // Single useEffect to handle order fetching, role determination, and authorization
     useEffect(() => {
-        const fetchOrder = async () => {
+        const fetchOrderAndDetermineAccess = async () => {
+            // Wait for authentication to load before proceeding
+            if (authLoading) {
+                console.log('🔄 Waiting for authentication to load...');
+                return;
+            }
+            
+            // Reset states
+            setLoading(true);
+            setRolesDetermined(false);
+            authorizationChecked.current = false;
+            setIsBuyer(false);
+            setIsSeller(false);
+            
             if (!id) {
                 setLoading(false);
+                setRolesDetermined(true);
                 return;
             }
             
             try {
+                // Fetch order data
                 const docRef = doc(db, "orders", id);
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const orderData: any = { ...docSnap.data(), id: docSnap.id };
-                    setOrder(orderData);
+                
+                if (!docSnap.exists()) {
+                    setOrder(null);
+                    setLoading(false);
+                    setRolesDetermined(true);
+                    return;
+                }
+                
+                const orderData: any = { ...docSnap.data(), id: docSnap.id };
+                setOrder(orderData);
 
-                    // Set custom order ID if this order came from a custom order
-                    if (orderData.customOrderId) {
-                        setCustomOrderId(orderData.customOrderId);
-                        // Fetch the custom order data to get the full order details
-                        await fetchCustomOrderData(orderData.customOrderId);
+                // Set custom order ID if this order came from a custom order
+                if (orderData.customOrderId) {
+                    setCustomOrderId(orderData.customOrderId);
+                    // Fetch the custom order data to get the full order details
+                    await fetchCustomOrderData(orderData.customOrderId);
+                }
+
+                // Fetch seller's bank account information if this is a bank transfer order
+                if (orderData.paymentMethod === 'bankTransfer' && orderData.sellerId) {
+                    try {
+                        const sellerQuery = query(
+                            collection(db, "users"), 
+                            where("uid", "==", orderData.sellerId)
+                        );
+                        const sellerSnap = await getDocs(sellerQuery);
+                        
+                        if (!sellerSnap.empty) {
+                            const sellerData = sellerSnap.docs[0].data();
+                            
+                            // Get all bank accounts from new format
+                            if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
+                                setSellerBankAccounts(sellerData.bankAccounts);
+                            } 
+                            // Fallback to legacy single bank account format
+                            else if (sellerData.bankDetails) {
+                                const legacyAccount: BankAccount = {
+                                    id: 'legacy',
+                                    accountNumber: sellerData.bankDetails.accountNumber || '',
+                                    branch: sellerData.bankDetails.branch || '',
+                                    bankName: sellerData.bankDetails.bankName || '',
+                                    fullName: sellerData.bankDetails.fullName || '',
+                                    isDefault: true,
+                                    createdAt: new Date()
+                                };
+                                setSellerBankAccounts([legacyAccount]);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error fetching seller bank account:", error);
                     }
-
-                    // Fetch seller's bank account information if this is a bank transfer order
-                    if (orderData.paymentMethod === 'bankTransfer' && orderData.sellerId) {
+                }
+                
+                // Determine user roles if user is logged in
+                if (user && user.email) {
+                    console.log('🔍 Determining user roles for order:', orderData.id);
+                    
+                    // Check if user is the buyer
+                    const buyerMatch = orderData.buyerEmail === user.email;
+                    console.log('👤 Buyer check:', { orderBuyerEmail: orderData.buyerEmail, userEmail: user.email, isBuyer: buyerMatch });
+                    
+                    // Check if user is the seller - need to fetch seller email from sellerId
+                    let sellerMatch = false;
+                    if (orderData.sellerId) {
                         try {
+                            console.log('🔍 Fetching seller data for sellerId:', orderData.sellerId);
                             const sellerQuery = query(
                                 collection(db, "users"), 
                                 where("uid", "==", orderData.sellerId)
@@ -131,87 +204,67 @@ export default function OrderPage() {
                             
                             if (!sellerSnap.empty) {
                                 const sellerData = sellerSnap.docs[0].data();
+                                const sellerEmail = sellerData.email;
+                                sellerMatch = sellerEmail === user.email;
                                 
-                                // Get all bank accounts from new format
-                                if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
-                                    setSellerBankAccounts(sellerData.bankAccounts);
-                                } 
-                                // Fallback to legacy single bank account format
-                                else if (sellerData.bankDetails) {
-                                    const legacyAccount: BankAccount = {
-                                        id: 'legacy',
-                                        accountNumber: sellerData.bankDetails.accountNumber || '',
-                                        branch: sellerData.bankDetails.branch || '',
-                                        bankName: sellerData.bankDetails.bankName || '',
-                                        fullName: sellerData.bankDetails.fullName || '',
-                                        isDefault: true,
-                                        createdAt: new Date()
-                                    };
-                                    setSellerBankAccounts([legacyAccount]);
-                                }
+                                console.log('👤 Role determination complete:', {
+                                    userEmail: user.email,
+                                    buyerEmail: orderData.buyerEmail,
+                                    sellerEmail: sellerEmail,
+                                    isBuyer: buyerMatch,
+                                    isSeller: sellerMatch
+                                });
+                            } else {
+                                console.log('❌ Seller not found for sellerId:', orderData.sellerId);
                             }
                         } catch (error) {
-                            console.error("Error fetching seller bank account:", error);
+                            console.error("❌ Error fetching seller data for role determination:", error);
                         }
+                    } else {
+                        console.log('❌ No sellerId found in order');
                     }
+                    
+                    // Set roles
+                    setIsBuyer(buyerMatch);
+                    setIsSeller(sellerMatch);
+                    
+                    // Check authorization and redirect if necessary
+                    if (!buyerMatch && !sellerMatch) {
+                        console.log('❌ Redirecting to search: User is neither buyer nor seller', { 
+                            orderBuyerEmail: orderData.buyerEmail, 
+                            orderSellerId: orderData.sellerId, 
+                            userEmail: user.email,
+                            isBuyer: buyerMatch,
+                            isSeller: sellerMatch
+                        });
+                        navigate("/search", { replace: true });
+                        return;
+                    }
+                    
+                    console.log('✅ Access granted: User is authorized for this order', {
+                        isBuyer: buyerMatch,
+                        isSeller: sellerMatch,
+                        userEmail: user.email
+                    });
                 } else {
-                    // Order doesn't exist
-                    setOrder(null);
+                    // User not logged in
+                    console.log('❌ Redirecting to auth: User not logged in');
+                    navigate("/auth", { replace: true });
+                    return;
                 }
+                
             } catch (error) {
-                console.error("Error fetching order:", error);
+                console.error("Error in fetchOrderAndDetermineAccess:", error);
                 setOrder(null);
             } finally {
                 setLoading(false);
+                setRolesDetermined(true);
+                authorizationChecked.current = true;
             }
         };
-        fetchOrder();
-    }, [id]);
-
-    // Separate effect to determine user roles when both user and order are available
-    useEffect(() => {
-        if (order && user && user.email) {
-            setIsBuyer(order.buyerEmail === user.email);
-            setIsSeller(order.sellerEmail === user.email);
-        } else {
-            setIsBuyer(false);
-            setIsSeller(false);
-        }
-    }, [order, user]);
-
-    // Redirect logic
-    useEffect(() => {
-        console.log('Redirect logic check:', { loading, order: !!order, user: !!user, userEmail: user?.email, isBuyer, isSeller });
         
-        if (!loading) {
-            // If order doesn't exist, redirect to search
-            if (!order) {
-                console.log('Redirecting to search: Order not found');
-                navigate("/search", { replace: true });
-                return;
-            }
-            
-            // If not logged in, redirect to auth
-            if (!user || !user.email) {
-                console.log('Redirecting to auth: User not logged in');
-                navigate("/auth", { replace: true });
-                return;
-            }
-            
-            // If not buyer or seller, redirect to search
-            if (!isBuyer && !isSeller) {
-                console.log('Redirecting to search: User is neither buyer nor seller', { 
-                    orderBuyerEmail: order?.buyerEmail, 
-                    orderSellerEmail: order?.sellerEmail, 
-                    userEmail: user?.email 
-                });
-                navigate("/search", { replace: true });
-                return;
-            }
-            
-            console.log('Access granted: User is authorized for this order');
-        }
-    }, [loading, user, isBuyer, isSeller, navigate, order]);
+        fetchOrderAndDetermineAccess();
+    }, [id, user, navigate, authLoading]);
 
     const requestRefund = async () => {
         if (!order) return;
@@ -228,6 +281,20 @@ export default function OrderPage() {
         setRefundSubmitting(true);
         await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUND_REQUESTED });
         setOrder({ ...order, status: OrderStatus.REFUND_REQUESTED });
+        
+        // Send email notification to buyer
+        try {
+            const { sendOrderStatusChangeNotification } = await import('../../utils/emailService');
+            await sendOrderStatusChangeNotification(
+                { ...order, id: order.id }, 
+                OrderStatus.REFUND_REQUESTED,
+                'Your refund request has been submitted successfully. The seller will review your request and process it accordingly.'
+            );
+        } catch (emailError) {
+            console.error('❌ Error sending refund request notification email:', emailError);
+            // Don't fail the status update if email fails
+        }
+        
         setRefundSubmitting(false);
     };
 
@@ -369,7 +436,6 @@ export default function OrderPage() {
                 if (sellerEmail) {
                     const orderWithId = { ...order, id: order.id };
                     await sendPaymentSlipNotification(orderWithId, sellerEmail);
-                    console.log('📧 Payment slip notification sent to seller');
                 } else {
                     console.warn('⚠️ Could not find seller email for payment slip notification');
                 }
@@ -399,8 +465,22 @@ export default function OrderPage() {
         }
     };
 
-    if (loading) return <div className="flex items-center justify-center min-h-screen text-[#454955]">Loading...</div>;
-    if (!order) return <div className="flex items-center justify-center min-h-screen text-[#454955]">Order not found.</div>;
+    // Show loading while authentication is loading, fetching data or determining roles
+    if (authLoading || loading || !rolesDetermined) {
+        return <div className="flex items-center justify-center min-h-screen text-[#454955]">Loading...</div>;
+    }
+
+    // At this point, loading is complete and roles are determined
+    // The redirect logic in useEffect will handle unauthorized access
+    // Only show "Order not found" if we're sure the order doesn't exist and user should see this message
+    if (!order) {
+        return <div className="flex items-center justify-center min-h-screen text-[#454955]">Order not found.</div>;
+    }
+
+    // Only render the order details if user is authorized (either buyer or seller)
+    if (!isBuyer && !isSeller) {
+        return <div className="flex items-center justify-center min-h-screen text-[#454955]">Loading...</div>;
+    }
 
     // Get status color
     const getStatusColor = (status: string) => {
@@ -939,10 +1019,10 @@ export default function OrderPage() {
                                                         isCompleted 
                                                             ? "bg-green-600 text-white" 
                                                             : isCurrent 
-                                                                ? "bg-blue-600 text-white" 
+                                                                ? (step === OrderStatus.SHIPPED || step === OrderStatus.RECEIVED) ? "bg-green-600 text-white" : "bg-blue-600 text-white"
                                                                 : "bg-gray-200 text-gray-400"
                                                     }`}>
-                                                        {isCompleted ? (
+                                                        {isCompleted || (isCurrent && (step === OrderStatus.SHIPPED || step === OrderStatus.RECEIVED)) ? (
                                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                             </svg>
@@ -960,7 +1040,7 @@ export default function OrderPage() {
                                                             {step === OrderStatus.RECEIVED && "Order delivered and confirmed"}
                                                         </div>
                                                     </div>
-                                                    {isCurrent && (
+                                                    {isCurrent && order.status === OrderStatus.PENDING && (
                                                         <div className="flex-shrink-0">
                                                             <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                                                                 Current

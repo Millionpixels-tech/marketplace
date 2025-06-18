@@ -25,21 +25,39 @@ export default function ConfirmDialog({
         switch (type) {
             case 'danger':
                 return {
-                    icon: '⚠️',
+                    icon: (
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                    ),
                     confirmBg: 'bg-red-600 hover:bg-red-700',
                     titleColor: 'text-red-800'
                 };
             case 'info':
                 return {
-                    icon: 'ℹ️',
-                    confirmBg: 'bg-blue-600 hover:bg-blue-700',
-                    titleColor: 'text-blue-800'
+                    icon: (
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    ),
+                    confirmBg: 'bg-green-600 hover:bg-green-700',
+                    titleColor: 'text-green-800'
                 };
             default: // warning
                 return {
-                    icon: '⚠️',
-                    confirmBg: 'bg-orange-600 hover:bg-orange-700',
-                    titleColor: 'text-orange-800'
+                    icon: (
+                        <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                    ),
+                    confirmBg: 'bg-amber-600 hover:bg-amber-700',
+                    titleColor: 'text-amber-800'
                 };
         }
     };
@@ -54,7 +72,7 @@ export default function ConfirmDialog({
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-gray-200" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
                 <div className="p-6">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="text-3xl">{styles.icon}</div>
+                        {styles.icon}
                         <h3 className={`text-xl font-bold ${styles.titleColor}`}>
                             {title}
                         </h3>

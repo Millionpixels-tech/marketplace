@@ -392,6 +392,19 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                     if (!confirmed) return;
                                     await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
                                     setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
+                                    
+                                    // Send email notification to buyer
+                                    try {
+                                        const { sendOrderStatusChangeNotification } = await import('../../utils/emailService');
+                                        await sendOrderStatusChangeNotification(
+                                            { ...order, id: order.id }, 
+                                            OrderStatus.REFUNDED,
+                                            'Your refund request has been processed. You should receive your refund within 3-5 business days.'
+                                        );
+                                    } catch (emailError) {
+                                        console.error('❌ Error sending refund notification email:', emailError);
+                                        // Don't fail the status update if email fails
+                                    }
                                 }}
                             >
                                 Refund Buyer
@@ -430,6 +443,19 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 if (!confirmed) return;
                                 await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.SHIPPED });
                                 setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.SHIPPED } : o));
+                                
+                                // Send email notification to buyer
+                                try {
+                                    const { sendOrderStatusChangeNotification } = await import('../../utils/emailService');
+                                    await sendOrderStatusChangeNotification(
+                                        { ...order, id: order.id }, 
+                                        OrderStatus.SHIPPED,
+                                        'Your order has been shipped and is on its way to you. You will receive it within the estimated delivery time.'
+                                    );
+                                } catch (emailError) {
+                                    console.error('❌ Error sending shipped notification email:', emailError);
+                                    // Don't fail the status update if email fails
+                                }
                             }}
                         >
                             Mark as Shipped
@@ -448,6 +474,19 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 if (!confirmed) return;
                                 await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
                                 setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
+                                
+                                // Send email notification to buyer
+                                try {
+                                    const { sendOrderStatusChangeNotification } = await import('../../utils/emailService');
+                                    await sendOrderStatusChangeNotification(
+                                        { ...order, id: order.id }, 
+                                        OrderStatus.REFUNDED,
+                                        'Your order has been cancelled and refunded by the seller. You should receive your refund within 3-5 business days.'
+                                    );
+                                } catch (emailError) {
+                                    console.error('❌ Error sending cancel & refund notification email:', emailError);
+                                    // Don't fail the status update if email fails
+                                }
                             }}
                         >
                             Cancel & Refund

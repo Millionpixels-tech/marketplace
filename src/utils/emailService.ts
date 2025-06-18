@@ -1,12 +1,63 @@
 import type { Order } from './orders';
+import { PaymentMethod } from '../types/enums';
+import { query, collection, where, getDocs } from 'firebase/firestore';
+import { db } from './firebase';
 import { 
     generateBuyerOrderConfirmationEmail,
     generateSellerOrderNotificationEmail,
     generatePaymentSlipNotificationEmail,
     generateCustomOrderAcceptanceBuyerEmail,
     generateCustomOrderAcceptanceSellerEmail,
+    generateOrderStatusChangeEmail,
     FROM_NAME
 } from './emailTemplates';
+
+export interface BankAccount {
+    id: string;
+    accountNumber: string;
+    branch: string;
+    bankName: string;
+    fullName: string;
+    isDefault: boolean;
+    createdAt: Date;
+}
+
+// Helper function to get seller bank account information
+async function getSellerBankAccounts(sellerId: string): Promise<BankAccount[]> {
+    try {
+        const sellerQuery = query(
+            collection(db, "users"), 
+            where("uid", "==", sellerId)
+        );
+        const sellerSnap = await getDocs(sellerQuery);
+        
+        if (!sellerSnap.empty) {
+            const sellerData = sellerSnap.docs[0].data();
+            
+            // Get all bank accounts from new format
+            if (sellerData.bankAccounts && Array.isArray(sellerData.bankAccounts)) {
+                return sellerData.bankAccounts;
+            } 
+            // Fallback to legacy single bank account format
+            else if (sellerData.bankDetails) {
+                const legacyAccount: BankAccount = {
+                    id: 'legacy',
+                    accountNumber: sellerData.bankDetails.accountNumber || '',
+                    branch: sellerData.bankDetails.branch || '',
+                    bankName: sellerData.bankDetails.bankName || '',
+                    fullName: sellerData.bankDetails.fullName || '',
+                    isDefault: true,
+                    createdAt: new Date()
+                };
+                return [legacyAccount];
+            }
+        }
+        return [];
+    } catch (error) {
+        console.error("Error fetching seller bank accounts:", error);
+        return [];
+    }
+}
 
 // Email service functions
 export const sendOrderConfirmationEmails = async (order: Order & { id: string }, sellerEmail: string) => {
@@ -15,8 +66,17 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
             orderId: order.id,
             buyerEmail: order.buyerEmail,
             sellerEmail: sellerEmail,
-            itemName: order.itemName
+            itemName: order.itemName,
+            paymentMethod: order.paymentMethod
         });
+
+        // Get seller bank accounts if payment method is bank transfer
+        let sellerBankAccounts: BankAccount[] = [];
+        if (order.paymentMethod === PaymentMethod.BANK_TRANSFER) {
+            console.log("🏦 Fetching seller bank accounts for bank transfer order...");
+            sellerBankAccounts = await getSellerBankAccounts(order.sellerId);
+            console.log("🏦 Retrieved bank accounts:", sellerBankAccounts.length);
+        }
 
         // Get SMTP configuration from environment variables
         const smtpConfig = {
@@ -58,9 +118,9 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
             };
         }
 
-        // Generate email templates
-        const buyerEmailData = order.buyerEmail ? generateBuyerOrderConfirmationEmail(order) : null;
-        const sellerEmailData = generateSellerOrderNotificationEmail(order);
+        // Generate email templates with bank account information
+        const buyerEmailData = order.buyerEmail ? generateBuyerOrderConfirmationEmail(order, sellerBankAccounts) : null;
+        const sellerEmailData = generateSellerOrderNotificationEmail(order, sellerBankAccounts);
 
         console.log("📧 Email generation:", {
             buyerEmailGenerated: !!buyerEmailData,
@@ -430,6 +490,112 @@ export const sendCustomOrderAcceptanceEmails = async (
     }
 };
 
+// Send order status change notification to buyer
+export const sendOrderStatusChangeNotification = async (
+    order: Order & { id: string }, 
+    newStatus: string, 
+    statusChangeMessage?: string
+) => {
+    try {
+        console.log("🔧 Order status change email service called with:", {
+            orderId: order.id,
+            buyerEmail: order.buyerEmail,
+            newStatus: newStatus,
+            itemName: order.itemName
+        });
+
+        // Get SMTP configuration from environment variables
+        const smtpConfig = {
+            host: import.meta.env.VITE_SMTP_HOST || 'smtp.gmail.com',
+            port: parseInt(import.meta.env.VITE_SMTP_PORT || '587'),
+            secure: import.meta.env.VITE_SMTP_SECURE === 'true',
+            user: import.meta.env.VITE_SMTP_USER || '',
+            pass: import.meta.env.VITE_SMTP_PASS || '',
+            fromEmail: import.meta.env.VITE_FROM_EMAIL || 'noreply@marketplace.com',
+            fromName: import.meta.env.VITE_FROM_NAME || 'Sina.lk',
+        };
+
+        // Check if SMTP is configured
+        if (!smtpConfig.user || !smtpConfig.pass) {
+            const missingVars = [];
+            if (!smtpConfig.user) missingVars.push('VITE_SMTP_USER');
+            if (!smtpConfig.pass) missingVars.push('VITE_SMTP_PASS');
+            
+            console.warn('❌ SMTP not configured for order status change email. Missing environment variables:', missingVars);
+            return {
+                success: false,
+                error: `Missing SMTP configuration: ${missingVars.join(', ')}`
+            };
+        }
+
+        // Generate status change email
+        const emailData = generateOrderStatusChangeEmail(order, newStatus, statusChangeMessage || '');
+
+        console.log("📧 Email generation:", {
+            emailGenerated: !!emailData,
+            buyerEmail: order.buyerEmail,
+            subject: emailData.subject
+        });
+
+        // Prepare email
+        if (!order.buyerEmail) {
+            console.warn('❌ No buyer email found for order:', order.id);
+            return { success: false, error: 'No buyer email address found' };
+        }
+
+        const emails = [{
+            to: order.buyerEmail,
+            subject: emailData.subject,
+            html: emailData.html,
+        }];
+
+        // Call Firebase Function
+        const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
+
+        console.log("🚀 Calling Firebase function for status change email:", functionUrl);
+
+        const response = await fetch(functionUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                emails,
+                smtpConfig 
+            }),
+        }).catch(error => {
+            console.error("❌ Fetch error:", error);
+            throw new Error(`Network error: ${error.message}`);
+        });
+
+        console.log("📥 Response status:", response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("❌ HTTP error:", response.status, errorText);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log("📥 Response data:", result);
+        
+        if (result.success) {
+            console.log('✅ Order status change email sent successfully');
+            return { success: true, results: result.results };
+        } else {
+            console.error('❌ Failed to send status change email:', result.error);
+            return { success: false, error: result.error };
+        }
+
+    } catch (error) {
+        console.error('Error sending order status change email:', error);
+        return { 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+    }
+};
+
 // Debug function to check email configuration and test sending
 export const debugEmailConfiguration = async () => {
     console.log("🔍 Email Configuration Debug");
@@ -526,5 +692,6 @@ export {
     generateSellerOrderNotificationEmail,
     generatePaymentSlipNotificationEmail,
     generateCustomOrderAcceptanceBuyerEmail,
-    generateCustomOrderAcceptanceSellerEmail
+    generateCustomOrderAcceptanceSellerEmail,
+    generateOrderStatusChangeEmail
 } from './emailTemplates';

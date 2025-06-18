@@ -1,9 +1,10 @@
 import type { Order } from '../orders';
+import type { BankAccount } from '../emailService';
 import { PaymentMethod } from '../../types/enums';
 
 const FROM_NAME = 'Sina.lk';
 
-export const generateBuyerOrderConfirmationEmail = (order: Order & { id: string }) => {
+export const generateBuyerOrderConfirmationEmail = (order: Order & { id: string }, sellerBankAccounts: BankAccount[] = []) => {
     const subject = `Order Confirmation - ${order.itemName}`;
     
     const html = `
@@ -197,6 +198,49 @@ export const generateBuyerOrderConfirmationEmail = (order: Order & { id: string 
                                     </table>
                                 </td>
                             </tr>
+                            
+                            ${order.paymentMethod === PaymentMethod.BANK_TRANSFER && sellerBankAccounts.length > 0 ? `
+                            <!-- Bank Transfer Details -->
+                            <tr>
+                                <td class="mobile-padding" style="padding: 0 40px;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #e8f5e8; border: 1px solid #72b01d; border-radius: 8px; margin-bottom: 20px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <h4 style="margin: 0 0 15px 0; color: #155724; font-size: 16px; font-weight: 600;">Bank Transfer Instructions</h4>
+                                                <p style="margin: 0 0 15px 0; color: #155724; font-size: 14px; line-height: 1.5;">
+                                                    Please transfer the total amount of <strong>LKR ${order.total.toLocaleString()}</strong> to one of the following bank accounts and upload the payment slip to confirm your payment:
+                                                </p>
+                                                ${sellerBankAccounts.map(account => `
+                                                <div style="background-color: #ffffff; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+                                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Bank:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.bankName}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Branch:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.branch}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Account Number:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0; font-weight: 600;">${account.accountNumber}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;"><strong>Account Holder:</strong></td>
+                                                            <td style="color: #0d0a0b; font-size: 14px; padding: 3px 0;">${account.fullName}</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                `).join('')}
+                                                <p style="margin: 10px 0 0 0; color: #856404; font-size: 13px; line-height: 1.4;">
+                                                    <strong>Important:</strong> After making the payment, please upload your payment slip through your order page or contact the seller directly.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            ` : ''}
                             
                             ${order.buyerNotes ? `
                             <!-- Buyer Notes -->
