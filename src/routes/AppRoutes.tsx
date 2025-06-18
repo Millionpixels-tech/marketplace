@@ -12,11 +12,14 @@ import ShopPage from "../pages/shop/ShopPage";
 import Profile from "../pages/user/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import OrderPage from "../pages/order/OrderPage";
+import CustomOrderPage from "../pages/order/CustomOrderPage";
+import CustomOrderSummaryPage from "../pages/order/CustomOrderSummaryPage";
 import WishlistPage from "../pages/WishlistPage";
 import EditShop from "../pages/shop/EditShop";
 import PublicProfile from "../pages/user/PublicProfile";
 import ResetPassword from "../pages/auth/ResetPassword";
 import AdminPayments from "../pages/admin/AdminPayments";
+import AdminManagement from "../pages/admin/AdminManagement";
 import SellerGuide from "../pages/SellerGuide";
 // Footer pages
 import AboutUs from "../pages/AboutUs";
@@ -36,6 +39,7 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Home />} />
     <Route path="/auth" element={<Auth />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/create-shop" element={<ProtectedRoute><CreateShop /></ProtectedRoute>} />
     <Route path="/add-listing" element={<ProtectedRoute><AddListing /></ProtectedRoute>} />
     <Route path="/listing/:id" element={<ListingPage />} />
@@ -44,6 +48,8 @@ const AppRoutes = () => (
     <Route path="/wishlist" element={<WishlistPage />} />
     <Route path="/search" element={<Search />} />
     <Route path="/order/:id" element={<OrderPage />} />
+    <Route path="/custom-order/:orderId" element={<CustomOrderPage />} />
+    <Route path="/custom-order-summary/:customOrderId" element={<CustomOrderSummaryPage />} />
     <Route path="/cart" element={<Cart />} />
     <Route path="/shop/:username" element={<ShopPage />} />
     <Route path="/dashboard/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -52,6 +58,7 @@ const AppRoutes = () => (
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/seller-guide" element={<SellerGuide />} />
     <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
+    <Route path="/admin/management" element={<ProtectedRoute><AdminManagement /></ProtectedRoute>} />
     
     {/* Footer pages */}
     {/* Company */}

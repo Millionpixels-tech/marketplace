@@ -1,11 +1,13 @@
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
+import { useResponsive } from "../hooks/useResponsive";
 import { getOrganizationStructuredData } from "../utils/seo";
 import { FiFileText, FiUser, FiShoppingBag, FiCreditCard, FiShield, FiAlertTriangle, FiCalendar } from "react-icons/fi";
 
 export default function TermsOfService() {
-  const lastUpdated = "June 8, 2025";
+  const { isMobile } = useResponsive();
+  const lastUpdated = "June 14, 2025";
 
   const sections = [
     {
@@ -167,13 +169,13 @@ export default function TermsOfService() {
         structuredData={getOrganizationStructuredData()}
       />
       <div className="min-h-screen bg-white">
-        <Header />
+        <ResponsiveHeader />
       
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
-          <p className="text-xl text-green-100 mb-6">
+      <div className={`bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Terms of Service</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
             Please read these terms carefully before using SinaMarketplace services.
           </p>
           <div className="flex items-center justify-center space-x-2 text-green-100">

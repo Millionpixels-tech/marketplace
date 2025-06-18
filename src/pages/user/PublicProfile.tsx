@@ -4,6 +4,7 @@ import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import Header from "../../components/UI/Header";
 import Footer from "../../components/UI/Footer";
+import ContactSellerButton from "../../components/UI/ContactSellerButton";
 
 export default function PublicProfile() {
     const { id } = useParams();
@@ -72,6 +73,22 @@ export default function PublicProfile() {
                     </div>
                     <div className="text-lg min-h-[48px] whitespace-pre-line text-center mb-8" style={{ color: '#454955' }}>
                         {userProfile.description || <span style={{ color: '#454955', opacity: 0.7 }}>No description yet.</span>}
+                    </div>
+
+                    {/* Contact User Button */}
+                    <div className="mb-8">
+                        <ContactSellerButton
+                            sellerId={userProfile.uid}
+                            sellerName={userProfile.displayName || userProfile.email}
+                            context={{
+                                type: 'user',
+                                id: userProfile.uid,
+                                title: `${userProfile.displayName || userProfile.email}'s Profile`
+                            }}
+                            buttonText="Contact User"
+                            buttonStyle="primary"
+                            size="md"
+                        />
                     </div>
 
                     {/* Shops Section INSIDE card */}

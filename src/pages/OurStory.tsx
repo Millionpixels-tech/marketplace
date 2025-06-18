@@ -1,32 +1,44 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
-import { getOrganizationStructuredData } from '../utils/seo';
+import { useResponsive } from '../hooks/useResponsive';
+import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 import { FiHeart, FiUsers, FiGlobe, FiAward } from 'react-icons/fi';
 
 export default function OurStory() {
+  const { isMobile } = useResponsive();
+  
   return (
     <>
       <SEOHead
         title="Our Story - SinaMarketplace"
         description="Learn about SinaMarketplace's journey connecting Sri Lankan artisans with global audiences. Discover our mission to showcase authentic handcrafted treasures."
-        keywords="our story, Sri Lankan artisans, marketplace history, cultural heritage, handcrafted products, authentic crafts"
-        canonicalUrl="https://sinamarketplace.com/our-story"
+        keywords={generateKeywords([
+          'our story',
+          'Sri Lankan artisans', 
+          'marketplace history',
+          'cultural heritage',
+          'handcrafted products',
+          'authentic crafts'
+        ])}
+        canonicalUrl={getCanonicalUrl('/our-story')}
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
+      <ResponsiveHeader />
       <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Story</h1>
-          <p className="text-xl md:text-2xl text-green-100">
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-4 py-16'} text-center`}>
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>Our Story</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} text-green-100`}>
             Connecting Sri Lankan artisans with the world, one handcrafted treasure at a time
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-12'}`}>
         
         {/* Origin Story */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">

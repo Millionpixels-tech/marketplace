@@ -8,6 +8,8 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as Header } from './Header';
 export { default as WishlistButton } from './WishlistButton';
 export { default as ShopReviews } from './ShopReviews';
+export { default as ConfirmDialog } from './ConfirmDialog';
+export { default as AddBankAccountModal } from './AddBankAccountModal';
 export { default as ListingTile } from './ListingTile';
 export { default as BackToTop } from './BackToTop';
 export { default as ScrollToTop } from './ScrollToTop';

@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Header from '../components/UI/Header';
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
+import { useResponsive } from '../hooks/useResponsive';
 import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiPhone, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
 import { getArticleStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 
 export default function SellerGuide() {
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
   const [activeStep, setActiveStep] = useState(1);
 
   const steps = [
@@ -16,96 +18,105 @@ export default function SellerGuide() {
       id: 1,
       title: "Create Your Account",
       icon: <FiUser className="w-8 h-8" />,
-      description: "Start your selling journey by creating a free account",
+      description: "Start your selling journey by creating a free account - it takes less than 2 minutes!",
       details: [
         "Click the 'Sign Up' button at the top right of the page",
-        "Enter your email address and create a strong password",
+        "Enter your email address and create a strong password (use at least 8 characters)",
         "Verify your email address by clicking the link sent to your inbox",
-        "Complete your profile with your name and contact details"
+        "Complete your profile with your full name and mobile number",
+        "Add a profile picture to build trust with customers"
       ],
-      tips: "💡 Use a business email if you have one - it looks more professional to customers!",
+      tips: "💡 Pro Tip: Use a business email if you have one - it looks more professional and builds customer confidence!",
       action: user ? null : { text: "Sign Up Now", link: "/auth?mode=signup" }
     },
     {
       id: 2,
       title: "Set Up Your Shop",
       icon: <FiShoppingBag className="w-8 h-8" />,
-      description: "Create your online shop to showcase your products",
+      description: "Create your online storefront that represents your brand and attracts customers",
       details: [
-        "Go to your Dashboard and click 'Create Shop'",
-        "Choose a unique shop name (this becomes your shop URL: sina.lk/shop/yourname)",
-        "Write a compelling shop description - tell customers what makes you special",
-        "Upload a professional shop logo (square image works best)",
-        "Add a cover image to make your shop attractive",
-        "Enter your complete shop address for delivery purposes",
-        "Provide your mobile number for customer contact"
+        "Go to your Dashboard and click 'Create Shop' to get started",
+        "Choose a unique shop username (this becomes your shop URL: sina.lk/shop/yourname)",
+        "Pick a memorable shop name that reflects your business",
+        "Write a compelling shop description - tell your story and what makes you special",
+        "Upload a professional shop logo (square image, at least 400x400px works best)",
+        "Add an attractive cover image that showcases your products or brand",
+        "Enter your complete business address for accurate delivery calculations",
+        "Provide your mobile number for direct customer communication"
       ],
-      tips: "🎨 Good images attract more customers! Use clear, high-quality photos for your shop.",
+      tips: "🎨 Visual Appeal Matters: High-quality shop images can increase customer trust by up to 70%! Use clear, professional photos.",
       action: user ? { text: "Create Shop", link: "/create-shop" } : null
     },
     {
       id: 3,
       title: "Add Your Products",
       icon: <FiCamera className="w-8 h-8" />,
-      description: "List your products with attractive photos and descriptions",
+      description: "Create compelling product listings that showcase your items and drive sales",
       details: [
-        "Click 'Add New Listing' from your shop or dashboard",
-        "Select the correct category for your product",
-        "Write a clear, descriptive product name",
-        "Add detailed description including materials, size, features",
-        "Upload 3-5 high-quality product photos from different angles",
-        "Set your selling price (research similar products for competitive pricing)",
-        "Choose delivery options: free delivery or charge for shipping",
-        "Enable 'Cash on Delivery' if you want to accept cash payments"
+        "Click 'Add New Listing' from your shop dashboard",
+        "Select the most appropriate category for better discoverability",
+        "Write a clear, searchable product name (include key features)",
+        "Create detailed descriptions: materials, dimensions, care instructions, and unique features",
+        "Upload 3-5 high-quality photos from different angles and lighting",
+        "Include lifestyle photos showing your product in use",
+        "Research competitor prices and set competitive but profitable pricing",
+        "Configure shipping options: free delivery zones or shipping charges",
+        "Enable payment methods: Cash on Delivery and/or Bank Transfer"
       ],
-      tips: "📸 Take photos in good lighting! Show your product from multiple angles and include size references.",
+      tips: "📸 Photography Success: Natural lighting, clean backgrounds, and multiple angles boost sales by 40%! Show size with everyday objects for reference.",
       action: user ? { text: "Add Product", link: "/add-listing" } : null
     },
     {
       id: 4,
-      title: "Set Up Payments",
+      title: "Configure Payment Options",
       icon: <FiCreditCard className="w-8 h-8" />,
-      description: "Choose how you want to receive payments from customers",
+      description: "Set up secure payment methods that work best for your business and customers",
       details: [
-        "Cash on Delivery (COD): Customer pays when they receive the product",
-        "Online Payments: Customer pays immediately through PayHere",
-        "You can offer both options to give customers flexibility",
-        "For COD orders, you collect money directly from the customer",
-        "For online payments, money is held safely and released to you after delivery"
+        "Cash on Delivery (COD): Perfect for local customers, they pay when receiving the product",
+        "Bank Transfer: Secure for higher-value items, customers transfer before shipping",
+        "Offer both options to maximize sales opportunities and customer convenience",
+        "For COD orders: Collect exact payment amount upon delivery",
+        "For bank transfers: Customers upload payment confirmation slips for your verification",
+        "Set up automatic order confirmations and payment tracking",
+        "Consider offering small discounts for advance payments to encourage bank transfers"
       ],
-      tips: "💰 Offering both payment methods increases your sales! Many customers prefer COD.",
+      tips: "💰 Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
       action: null
     },
     {
       id: 5,
-      title: "Manage Orders",
+      title: "Manage Orders Like a Pro",
       icon: <FiPackage className="w-8 h-8" />,
-      description: "Handle customer orders efficiently",
+      description: "Efficiently handle customer orders to build reputation and increase repeat business",
       details: [
-        "Check your Dashboard regularly for new orders",
-        "You'll see customer contact details including phone and address",
-        "Print delivery labels for easy shipping",
-        "Contact customers to confirm orders and delivery details",
-        "Mark orders as 'Shipped' when you send them",
-        "Keep customers updated about delivery status"
+        "Check your Dashboard notifications daily for new orders",
+        "Access complete customer details: name, phone, delivery address",
+        "Call customers within 24 hours to confirm orders and delivery preferences",
+        "Print shipping labels and pack items securely with protective materials",
+        "Use reliable courier services and provide tracking numbers when available",
+        "Update order status to 'Shipped' immediately after dispatch",
+        "Follow up with customers to ensure successful delivery and satisfaction",
+        "Respond promptly to customer inquiries and concerns"
       ],
-      tips: "📞 Quick communication builds trust! Contact customers promptly about their orders.",
+      tips: "📞 Customer Service Excellence: Quick response times (under 2 hours) lead to 5-star reviews and repeat customers!",
       action: user ? { text: "View Dashboard", link: `/dashboard/${user.uid}` } : null
     },
     {
       id: 6,
-      title: "Get Paid",
+      title: "Receive Payments & Grow",
       icon: <FiDollarSign className="w-8 h-8" />,
-      description: "Understand how and when you receive your money",
+      description: "Understand payment processing and strategies to scale your business",
       details: [
-        "COD orders: You collect cash directly from customers",
-        "Online orders: Money is held securely by the platform",
-        "Payments are released 14 days after order completion",
-        "This ensures customers receive their products before payment is released",
-        "Track your earnings in the Dashboard",
-        "Payment schedule protects both buyers and sellers"
+        "COD orders: Collect exact cash amount from customers upon delivery",
+        "Bank transfer orders: Money goes directly to your account after customer payment",
+        "Verify bank transfer payment slips before shipping to avoid fraud",
+        "Track all earnings and order history in your seller dashboard",
+        "Use payment tracking to understand your most profitable products",
+        "Reinvest profits into better photography, more inventory, or marketing",
+        "Consider offering bundle deals or discounts to increase average order value",
+        "Build a customer email list for repeat business and new product announcements"
       ],
-      tips: "🕒 Be patient with online payments - the 14-day hold protects everyone and builds customer trust!",
+      tips: "🚀 Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
       action: null
     }
   ];
@@ -113,27 +124,35 @@ export default function SellerGuide() {
   const faqs = [
     {
       question: "Is it free to sell on sina.lk?",
-      answer: "Yes! Creating an account, setting up your shop, and listing products is completely free. We only succeed when you succeed."
+      answer: "Yes! Creating an account, setting up your shop, and listing products is completely free. There are no monthly fees or setup costs. We only succeed when you succeed."
     },
     {
       question: "What can I sell on sina.lk?",
-      answer: "You can sell authentic Sri Lankan crafts, handmade items, local foods, traditional items, and other legal products. We focus on promoting Sri Lankan culture and craftsmanship."
+      answer: "You can sell authentic Sri Lankan crafts, handmade items, traditional foods, clothing, jewelry, home decor, and other unique products. We focus on promoting Sri Lankan culture and craftsmanship. All products must be legal and comply with our community guidelines."
     },
     {
-      question: "How do I get more customers?",
-      answer: "Use high-quality photos, write detailed descriptions, price competitively, respond quickly to customers, and maintain good reviews. Active sellers get more visibility!"
+      question: "How do I get more customers and increase sales?",
+      answer: "Success comes from great photos, detailed descriptions, competitive pricing, quick customer responses, and excellent service. Active sellers who update listings regularly and maintain good reviews get more visibility in search results."
     },
     {
-      question: "What if a customer wants to return a product?",
-      answer: "Handle returns professionally. For legitimate issues, offer refunds or exchanges. Good customer service leads to positive reviews and repeat customers."
+      question: "What should I do if a customer wants to return a product?",
+      answer: "Handle returns professionally and promptly. For legitimate quality issues or damage during shipping, offer refunds or exchanges. Clear return policies and good customer service lead to positive reviews and repeat customers."
     },
     {
-      question: "How do I handle shipping?",
-      answer: "You're responsible for shipping products to customers. Use reliable courier services, pack items securely, and provide tracking information when possible."
+      question: "How do I handle shipping and delivery?",
+      answer: "You're responsible for safely delivering products to customers. Use reliable courier services, pack items securely with protective materials, and provide tracking information when available. Consider offering both pickup and delivery options."
     },
     {
-      question: "Can I sell internationally?",
-      answer: "Currently, we focus on the Sri Lankan market. You can ship within Sri Lanka to reach customers across the island."
+      question: "Can I sell to customers outside Sri Lanka?",
+      answer: "Currently, sina.lk focuses on the Sri Lankan market. You can ship anywhere within Sri Lanka to reach customers from Colombo to Jaffna, giving you access to the entire island's market."
+    },
+    {
+      question: "How long does it take to receive payments?",
+      answer: "For Cash on Delivery orders, you receive payment immediately upon delivery. For bank transfer orders, customers transfer money directly to your account before you ship, so you get paid upfront."
+    },
+    {
+      question: "What makes a successful seller on sina.lk?",
+      answer: "Successful sellers focus on quality products, professional photography, detailed descriptions, prompt communication, reliable shipping, and excellent customer service. They also stay active by adding new products and engaging with customers."
     }
   ];
 
@@ -165,8 +184,8 @@ export default function SellerGuide() {
     },
     {
       icon: <FiDollarSign className="w-6 h-6" />,
-      title: "Secure Payments",
-      description: "Safe payment processing with guaranteed payouts for completed orders"
+      title: "Flexible Payments",
+      description: "Multiple payment options: Cash on Delivery and secure Bank Transfer with payment verification"
     }
   ];
 
@@ -193,15 +212,15 @@ export default function SellerGuide() {
           url: getCanonicalUrl('/seller-guide')
         })}
       />
-      <Header />
+      <ResponsiveHeader />
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[#72b01d] to-[#3f7d20] text-white py-16">
-          <div className="max-w-6xl mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Start Selling on sina.lk
+        <div className={`bg-gradient-to-r from-[#72b01d] to-[#3f7d20] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+            <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>
+              Start Selling on SinaMarketplace
             </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
+            <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} mb-8 opacity-90`}>
               Turn your Sri Lankan crafts and products into a thriving online business
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

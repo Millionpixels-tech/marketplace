@@ -7,7 +7,7 @@ import { useResponsive } from "../hooks/useResponsive";
 
 export default function PrivacyPolicy() {
   const { isMobile } = useResponsive();
-  const lastUpdated = "June 8, 2025";
+  const lastUpdated = "June 14, 2025";
 
   const sections = [
     {
@@ -81,8 +81,8 @@ export default function PrivacyPolicy() {
           details: "We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction."
         },
         {
-          subtitle: "Secure Payments",
-          details: "All payment information is processed through secure, PCI-compliant payment processors. We do not store your complete payment card information on our servers."
+          subtitle: "Payment Security",
+          details: "For bank transfer payments, we securely store payment slip images and transaction references. For Cash on Delivery orders, no sensitive payment information is stored."
         },
         {
           subtitle: "Data Transmission",

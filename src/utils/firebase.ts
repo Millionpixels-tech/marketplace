@@ -3,14 +3,31 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
+// Validate that all required Firebase environment variables are present
+const requiredEnvVars = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID'
+];
+
+const missingEnvVars = requiredEnvVars.filter(envVar => !import.meta.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required Firebase environment variables:', missingEnvVars);
+  console.error('Please check your .env file and ensure all Firebase configuration variables are set.');
+}
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDQWvX8J5BG-QK4Rgk06ioYG7rllEE1uJY",
-  authDomain: "marketplace-bd270.firebaseapp.com",
-  projectId: "marketplace-bd270",
-  storageBucket: "gs://marketplace-bd270.firebasestorage.app",
-  messagingSenderId: "308553460725",
-  appId: "1:308553460725:web:e2a63b079c2f4d0b48cebc",
-  measurementId: "G-YNBS2T66R8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);

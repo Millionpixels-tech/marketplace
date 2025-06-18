@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { db } from "../utils/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
@@ -55,18 +55,41 @@ export default function WishlistPage() {
         // Clear cache when refreshing to ensure fresh data
         cacheRef.current = null;
         
-        const snap = await getDocs(collection(db, "listings"));
-        const results: Listing[] = [];
-        snap.docs.forEach(doc => {
-            const listing = { id: doc.id, ...doc.data(), __client_ip: ip } as Listing;
-            if (Array.isArray(listing.wishlist)) {
-                const hasOwner = user && listing.wishlist.some(w => w.ownerId === user.uid);
-                const hasIp = ip && listing.wishlist.some(w => w.ip === ip);
-                if (hasOwner || hasIp) {
-                    results.push(listing);
+        if (!user?.uid && !ip) {
+            setItems([]);
+            return;
+        }
+        
+        let results: Listing[] = [];
+        
+        try {
+            // Since wishlist objects have varying structures (with timestamps),
+            // we need to use a more targeted approach rather than exact array-contains matching
+            
+            // Get all listings with any wishlist items and filter client-side
+            // This is more efficient than full collection scan but handles the complex wishlist structure
+            const allListingsQuery = query(
+                collection(db, "listings"),
+                where("wishlist", "!=", null), // Only get listings that have wishlist arrays
+                limit(500) // Reasonable limit to prevent excessive reads
+            );
+            
+            const snap = await getDocs(allListingsQuery);
+            
+            snap.docs.forEach(doc => {
+                const listing = { id: doc.id, ...doc.data(), __client_ip: ip } as Listing;
+                if (Array.isArray(listing.wishlist)) {
+                    const hasOwner = user?.uid && listing.wishlist.some((w: any) => w.ownerId === user.uid);
+                    const hasIp = ip && listing.wishlist.some((w: any) => w.ip === ip);
+                    if (hasOwner || hasIp) {
+                        results.push(listing);
+                    }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error fetching wishlist:', error);
+            results = [];
+        }
         
         // Update cache
         cacheRef.current = { data: results, timestamp: Date.now() };
@@ -93,25 +116,34 @@ export default function WishlistPage() {
         }
 
         try {
-            // Fetch all listings, then filter client-side by wishlist
-            // Note: Firestore doesn't support efficient queries for array contains with OR conditions
-            // across different user identifiers, so client-side filtering is necessary here
-            const snap = await getDocs(collection(db, "listings"));
-            const results: Listing[] = [];
-            snap.docs.forEach(doc => {
-                const listing = { id: doc.id, ...doc.data() } as Listing;
-                // Add client IP to each listing for WishlistButton to use
-                if (userIp) {
-                    (listing as any).__client_ip = userIp;
-                }
-                if (Array.isArray(listing.wishlist)) {
-                    const hasOwner = user && listing.wishlist.some(w => w.ownerId === user.uid);
-                    const hasIp = userIp && listing.wishlist.some(w => w.ip === userIp);
-                    if (hasOwner || hasIp) {
-                        results.push(listing);
+            // Optimized wishlist fetch with filtering
+            let results: Listing[] = [];
+            
+            if (user?.uid || userIp) {
+                // Get listings that have wishlist items and filter appropriately
+                const wishlistQuery = query(
+                    collection(db, "listings"),
+                    where("wishlist", "!=", null), // Only get listings with wishlist arrays
+                    limit(500) // Reasonable limit to prevent excessive reads
+                );
+                
+                const snap = await getDocs(wishlistQuery);
+                
+                snap.docs.forEach(doc => {
+                    const listing = { id: doc.id, ...doc.data() } as Listing;
+                    // Add client IP to each listing for WishlistButton to use
+                    if (userIp) {
+                        (listing as any).__client_ip = userIp;
                     }
-                }
-            });
+                    if (Array.isArray(listing.wishlist)) {
+                        const hasOwner = user?.uid && listing.wishlist.some((w: any) => w.ownerId === user.uid);
+                        const hasIp = userIp && listing.wishlist.some((w: any) => w.ip === userIp);
+                        if (hasOwner || hasIp) {
+                            results.push(listing);
+                        }
+                    }
+                });
+            }
             
             // Cache the results
             cacheRef.current = { data: results, timestamp: Date.now() };
@@ -141,20 +173,28 @@ export default function WishlistPage() {
 
     // Memoized empty state for unauthenticated users
     const unauthenticatedEmptyState = useMemo(() => (
-        <div className="min-h-screen flex items-center justify-center bg-white">
-            <div className={`text-center ${isMobile ? 'p-6 max-w-sm' : 'p-8 max-w-lg'} bg-white rounded-2xl shadow-lg border border-[#45495522]`}>
-                <div className={`text-[#72b01d] ${isMobile ? 'text-3xl mb-3' : 'text-5xl mb-4'}`}>❤️</div>
-                <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[#0d0a0b] mb-2`}>Your Wishlist is Empty</h2>
-                <p className={`text-[#454955] ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Please log in to view your wishlist or start adding some items you love!</p>
-                <Link
-                    to="/auth"
-                    className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
-                >
-                    Sign In
-                </Link>
+        <div className="min-h-screen bg-white w-full">
+            <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
+                <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
+                <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
+                    Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
+                </p>
+                <div className="flex items-center justify-center">
+                    <div className={`text-center ${isMobile ? 'p-6 max-w-sm' : 'p-8 max-w-lg'} bg-white rounded-2xl shadow-lg border border-[#45495522]`}>
+                        <div className={`text-[#72b01d] ${isMobile ? 'text-3xl mb-3' : 'text-5xl mb-4'}`}>❤️</div>
+                        <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-[#0d0a0b] mb-2`}>Your Wishlist is Empty</h2>
+                        <p className={`text-[#454955] ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>Please log in to view your wishlist or start adding some items you love!</p>
+                        <Link
+                            to="/auth"
+                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-[#72b01d] text-white rounded-xl font-semibold shadow-md hover:bg-[#3f7d20] transition-colors`}
+                        >
+                            Sign In
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
-    ), []);
+    ), [isMobile]);
 
     // Memoized empty wishlist state
     const emptyWishlistState = useMemo(() => (
@@ -185,11 +225,20 @@ export default function WishlistPage() {
     ), [items, refreshListings, isMobile]);
 
     if (loading) {
-        return loadingComponent;
-    }
-
-    if (!user && items.length === 0) {
-        return unauthenticatedEmptyState;
+        return (
+            <>
+                <SEOHead
+                    title="My Wishlist - SinaMarketplace"
+                    description="View and manage your saved items on SinaMarketplace. Keep track of your favorite products and never miss out on great deals."
+                    keywords="wishlist, saved items, favorites, Sri Lanka marketplace, online shopping, wish list"
+                    canonicalUrl="https://sinamarketplace.com/wishlist"
+                    noIndex={true}
+                />
+                <ResponsiveHeader />
+                {loadingComponent}
+                <Footer />
+            </>
+        );
     }
 
     return (
@@ -202,15 +251,19 @@ export default function WishlistPage() {
                 noIndex={true}
             />
             <ResponsiveHeader />
-            <div className="min-h-screen bg-white w-full">
-                <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
-                    <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
-                    <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
-                        Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
-                    </p>
-                    {items.length === 0 ? emptyWishlistState : itemsGrid}
+            {!user && items.length === 0 ? (
+                unauthenticatedEmptyState
+            ) : (
+                <div className="min-h-screen bg-white w-full">
+                    <div className={`w-full ${isMobile ? 'py-8 px-4' : 'py-12 px-4'}`}>
+                        <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-black mb-2 text-center text-[#0d0a0b]`}>Your Wishlist</h1>
+                        <p className={`text-center text-[#454955] ${isMobile ? 'mb-6 text-sm max-w-sm' : 'mb-8 max-w-2xl'} mx-auto`}>
+                            Here you'll find all the items you've added to your wishlist. Save your favorites and come back anytime to shop or keep track of what you love!
+                        </p>
+                        {items.length === 0 ? emptyWishlistState : itemsGrid}
+                    </div>
                 </div>
-            </div>
+            )}
             <Footer />
         </>
     );

@@ -1,33 +1,45 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
-import { getOrganizationStructuredData } from '../utils/seo';
+import { useResponsive } from '../hooks/useResponsive';
+import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 import { FiUsers, FiHeart, FiShield, FiFlag, FiMessageCircle, FiMail } from 'react-icons/fi';
 
 export default function CommunityGuidelines() {
+  const { isMobile } = useResponsive();
+  
   return (
     <>
       <SEOHead
         title="Community Guidelines - SinaMarketplace"
         description="Learn about our community guidelines for creating a safe, respectful marketplace that celebrates Sri Lankan culture and craftsmanship."
-        keywords="community guidelines, marketplace rules, safe shopping, Sri Lanka community, respectful trading, platform rules"
-        canonicalUrl="https://sinamarketplace.com/community-guidelines"
+        keywords={generateKeywords([
+          'community guidelines',
+          'marketplace rules',
+          'safe shopping',
+          'Sri Lanka community',
+          'respectful trading',
+          'platform rules'
+        ])}
+        canonicalUrl={getCanonicalUrl('/community-guidelines')}
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
+      <ResponsiveHeader />
       <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
-          <FiUsers className="mx-auto text-5xl mb-4 text-green-100" />
-          <h1 className="text-4xl font-bold mb-4">Community Guidelines</h1>
-          <p className="text-xl text-green-100">
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-4 py-12'} text-center`}>
+          <FiUsers className={`mx-auto ${isMobile ? 'text-4xl' : 'text-5xl'} mb-4 text-green-100`} />
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold mb-4`}>Community Guidelines</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100`}>
             Creating a safe, respectful, and thriving marketplace for everyone
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-8'}`}>
         
         {/* Introduction */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
@@ -248,7 +260,7 @@ export default function CommunityGuidelines() {
                 <li>• Read product descriptions and seller policies carefully</li>
                 <li>• Ask questions before purchasing if you need clarification</li>
                 <li>• Respect sellers' processing and shipping timeframes</li>
-                <li>• Use secure payment methods provided by the platform</li>
+                <li>• Use approved payment methods: Cash on Delivery or Bank Transfer</li>
                 <li>• Understand that handmade items may have slight variations</li>
               </ul>
             </div>

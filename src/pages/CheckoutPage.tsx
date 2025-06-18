@@ -23,14 +23,24 @@ type CheckoutItem = {
   name: string;
   price: number;
   images?: string[];
+  itemType?: string;
+  sellerNotes?: string;
   deliveryType?: DeliveryTypeType;
   deliveryPerItem?: number;
   deliveryAdditional?: number;
   cashOnDelivery?: boolean;
+  bankTransfer?: boolean;
   owner: string;
   shopId?: string;
   shop?: string;
   quantity?: number;
+  hasVariations?: boolean;
+  variations?: Array<{
+    id: string;
+    name: string;
+    priceChange: number;
+    quantity: number;
+  }>;
 };
 
 type Shop = {
@@ -88,6 +98,7 @@ export default function CheckoutPage() {
   
   const [item, setItem] = useState<CheckoutItem | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
+  const [selectedVariation, setSelectedVariation] = useState<{id: string; name: string; priceChange: number; quantity: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
@@ -123,9 +134,10 @@ export default function CheckoutPage() {
   const itemId = searchParams.get("itemId");
   const quantity = parseInt(searchParams.get("quantity") || "1");
   const paymentMethodParam = searchParams.get("paymentMethod") as PaymentMethodType | null;
+  const variationId = searchParams.get("variationId");
   
   // Form state
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.PAY_NOW);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>(paymentMethodParam || PaymentMethod.CASH_ON_DELIVERY);
   const [buyerNotes, setBuyerNotes] = useState<string>('');
   const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
     firstName: '',
@@ -157,6 +169,14 @@ export default function CheckoutPage() {
         const itemData = { id: itemDoc.id, ...itemDoc.data() } as CheckoutItem;
         setItem(itemData);
         
+        // Set selected variation if variationId is provided
+        if (variationId && itemData.hasVariations && itemData.variations) {
+          const variation = itemData.variations.find(v => v.id === variationId);
+          if (variation) {
+            setSelectedVariation(variation);
+          }
+        }
+        
         // Batch shop fetch if shopId exists
         const shopId = itemData.shopId || itemData.shop;
         if (shopId) {
@@ -167,9 +187,17 @@ export default function CheckoutPage() {
           }
         }
         
-        // Set payment method based on item COD availability
-        if (itemData.cashOnDelivery && !paymentMethodParam) {
-          setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+        // Set payment method based on item's available payment options
+        if (!paymentMethodParam) {
+          // If no payment method specified, choose based on what's available
+          if (itemData.cashOnDelivery && itemData.bankTransfer) {
+            // If both are available, default to COD (customer preference)
+            setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+          } else if (itemData.cashOnDelivery) {
+            setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+          } else if (itemData.bankTransfer) {
+            setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+          }
         }
         
       } catch (error) {
@@ -328,7 +356,9 @@ export default function CheckoutPage() {
   const calculateTotals = () => {
     if (!item) return { subtotal: 0, shipping: 0, total: 0 };
     
-    const price = Number(item.price || 0);
+    const basePrice = Number(item.price || 0);
+    const variationPriceChange = selectedVariation?.priceChange || 0;
+    const price = basePrice + variationPriceChange;
     const subtotal = price * quantity;
     
     let shipping = 0;
@@ -339,10 +369,10 @@ export default function CheckoutPage() {
     }
     
     const total = subtotal + shipping;
-    return { subtotal, shipping, total };
+    return { subtotal, shipping, total, price };
   };
 
-  const { subtotal, shipping, total } = calculateTotals();
+  const { subtotal, shipping, total, price } = calculateTotals();
 
   // Validation functions
   const validateForm = (): boolean => {
@@ -405,6 +435,65 @@ export default function CheckoutPage() {
     return `ORDER_${timestamp}_${random}`;
   };
 
+  // Handle Bank Transfer order
+  const handleBankTransferOrder = async () => {
+    if (!item || !shop || !user) {
+      setGeneralError("Missing required data. Please refresh the page and try again.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setGeneralError("");
+
+      // Save buyer information to user profile first
+      await saveBuyerInfo(user.uid, buyerInfo);
+      
+      // Create order with buyer information and get the order ID
+      const orderData: any = {
+        itemId: item.id,
+        itemName: item.name,
+        itemImage: item.images?.[0] || "",
+        buyerId: user.uid,
+        buyerEmail: buyerInfo.email,
+        buyerInfo: buyerInfo,
+        sellerId: item.owner,
+        sellerShopId: item.shopId || item.shop || "",
+        sellerShopName: shop.name,
+        price: price, // Use calculated price including variation
+        quantity: quantity,
+        shipping: shipping,
+        total: total,
+        paymentMethod: PaymentMethod.BANK_TRANSFER,
+        paymentStatus: PaymentStatus.PENDING,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
+      };
+
+      // Only add buyerNotes if it has content
+      if (buyerNotes.trim()) {
+        orderData.buyerNotes = buyerNotes.trim();
+      }
+
+      const orderId = await createOrder(orderData);
+      
+      // Redirect to order summary page
+      navigate('/order/' + orderId);
+      
+    } catch (error) {
+      console.error("Error creating bank transfer order:", error);
+      setGeneralError("Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // Handle Cash on Delivery order
   const handleCODOrder = async () => {
     if (!item || !shop || !user) {
@@ -430,11 +519,19 @@ export default function CheckoutPage() {
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
-        price: Number(item.price || 0),
+        price: price, // Use calculated price including variation
         quantity: quantity,
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
       };
 
       // Only add buyerNotes if it has content
@@ -505,13 +602,21 @@ export default function CheckoutPage() {
         sellerId: item.owner,
         sellerShopId: item.shopId || item.shop || "",
         sellerShopName: shop.name,
-        price: Number(item.price || 0),
+        price: price, // Use calculated price including variation
         quantity: quantity,
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.PAY_NOW,
         paymentStatus: PaymentStatus.PENDING,
-        orderId: orderId
+        orderId: orderId,
+        // Include variation information if selected
+        ...(selectedVariation && {
+          variationId: selectedVariation.id,
+          variationName: selectedVariation.name,
+          variationPriceChange: selectedVariation.priceChange
+        }),
+        // Include seller notes if they exist
+        ...(item.sellerNotes && { sellerNotes: item.sellerNotes })
       };
 
       // Only add buyerNotes if it has content
@@ -531,7 +636,7 @@ export default function CheckoutPage() {
         cancel_url: undefined,
         notify_url: `${window.location.origin}/api/payhere/notify`, // You'll need to implement this endpoint
         order_id: orderId,
-        items: `${item.name} (Qty: ${quantity})`,
+        items: `${item.name}${selectedVariation ? ` - ${selectedVariation.name}` : ''} (Qty: ${quantity})`,
         amount: total.toFixed(2),
         currency: 'LKR',
         hash: hashResult.hash,
@@ -630,7 +735,10 @@ export default function CheckoutPage() {
     // Route to appropriate payment method
     if (paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
       await handleCODOrder();
+    } else if (paymentMethod === PaymentMethod.BANK_TRANSFER) {
+      await handleBankTransferOrder();
     } else {
+      // Temporarily disabled online payment - keeping code for future use
       await handlePayHerePayment();
     }
   };
@@ -664,8 +772,8 @@ export default function CheckoutPage() {
     <>
       <SEOHead
         title="Checkout - SinaMarketplace"
-        description="Complete your purchase securely on SinaMarketplace. Multiple payment options and secure checkout process."
-        keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, secure payment"
+        description="Complete your purchase securely on SinaMarketplace. Choose from Cash on Delivery or Bank Transfer payment options."
+        keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, cash on delivery, bank transfer"
         canonicalUrl="https://sinamarketplace.com/checkout"
         noIndex={true}
       />
@@ -1082,6 +1190,50 @@ export default function CheckoutPage() {
                   </label>
                 )}
                 
+                {item.bankTransfer && (
+                  <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
+                    style={{
+                      backgroundColor: paymentMethod === PaymentMethod.BANK_TRANSFER ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
+                      borderColor: paymentMethod === PaymentMethod.BANK_TRANSFER ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'
+                    }}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={PaymentMethod.BANK_TRANSFER}
+                      checked={paymentMethod === PaymentMethod.BANK_TRANSFER}
+                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                      className="mr-3"
+                    />
+                    <div className="flex items-center gap-3">
+                      <FiCreditCard size={20} style={{ color: '#72b01d' }} />
+                      <div>
+                        <div className="font-medium" style={{ color: '#0d0a0b' }}>Bank Transfer</div>
+                        <div className="text-sm" style={{ color: '#454955' }}>Direct bank transfer payment</div>
+                        <div className="text-xs mt-1" style={{ color: '#72b01d' }}>
+                          Bank details will be provided after order confirmation
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {/* No payment methods available warning */}
+                {!item.cashOnDelivery && !item.bankTransfer && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="#ef4444" strokeWidth="1.5"/>
+                        <path d="M12 8v4m0 4h.01" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                      <div>
+                        <div className="font-medium text-red-800">No Payment Methods Available</div>
+                        <div className="text-sm text-red-600">This listing doesn't have any payment methods enabled.</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Temporarily disabled online payment - keeping code for future use
                 <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
                   style={{
                     backgroundColor: paymentMethod === PaymentMethod.PAY_NOW ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
@@ -1106,6 +1258,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </label>
+                */}
               </div>
             </div>
           </div>
@@ -1132,13 +1285,47 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-lg mb-1 leading-tight" style={{ color: '#0d0a0b' }}>{item.name}</h4>
+                  {selectedVariation && (
+                    <p className="text-sm mb-1 font-medium" style={{ color: '#72b01d' }}>
+                      Variation: {selectedVariation.name}
+                    </p>
+                  )}
                   {shop && (
                     <p className="text-sm mb-1" style={{ color: '#454955' }}>From {shop.name}</p>
                   )}
                   <p className="text-sm" style={{ color: '#454955' }}>Quantity: {quantity}</p>
-                  {/* <p className="font-semibold" style={{ color: '#0d0a0b' }}>LKR {item.price?.toLocaleString()}</p> */}
+                  <p className="font-semibold" style={{ color: '#0d0a0b' }}>
+                    LKR {(price || 0).toLocaleString()}
+                    {selectedVariation && selectedVariation.priceChange !== 0 && (
+                      <span className="text-xs ml-1" style={{ color: '#6b7280' }}>
+                        (Base: LKR {item.price?.toLocaleString()}{selectedVariation.priceChange > 0 ? ' +' : ' '}LKR {selectedVariation.priceChange.toFixed(2)})
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
+
+              {/* Seller Notes */}
+              {item.sellerNotes && (
+                <div className="mb-6 p-4 rounded-xl border" style={{ 
+                  backgroundColor: 'rgba(34, 197, 94, 0.05)', 
+                  borderColor: 'rgba(34, 197, 94, 0.2)' 
+                }}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">
+                      
+                    </span>
+                    <div className="flex-1">
+                      <h5 className="font-semibold text-sm mb-2" style={{ color: '#0d0a0b' }}>
+                        Delivery Information
+                      </h5>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#454955' }}>
+                        {item.sellerNotes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Delivery Information */}
               <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>

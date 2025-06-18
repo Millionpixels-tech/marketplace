@@ -27,6 +27,7 @@ export default function WishlistButton({ listing, refresh, displayText = false }
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent parent link navigation
         setLoading(true);
         if (wishlisted) {
             await removeFromWishlist(listing.id, user?.uid);

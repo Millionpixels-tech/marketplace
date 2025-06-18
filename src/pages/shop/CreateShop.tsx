@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { db, auth, storage } from "../../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useNavigate } from "react-router-dom";
 import { FiCamera, FiUpload, FiCheck, FiLoader } from "react-icons/fi";
 import { Button, Card, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -28,6 +29,7 @@ export default function CreateShop() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
+  const navigate = useNavigate();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -215,6 +217,11 @@ export default function CreateShop() {
       
       setLoading(false);
       setDone(true);
+      
+      // Redirect to the newly created shop page
+      setTimeout(() => {
+        navigate(`/shop/${shopUser.toLowerCase()}`);
+      }, 1000); // Small delay to show success message
     } catch (error) {
       console.error("Error creating shop:", error);
       setUsernameError("Error creating shop. Please try again.");
@@ -465,7 +472,7 @@ export default function CreateShop() {
               <Card className="p-4 md:p-6 bg-green-50 border-green-200">
                 <div className="text-green-700 font-bold text-base md:text-lg flex items-center justify-center gap-2 md:gap-3">
                   <span className="text-xl md:text-2xl">🎉</span>
-                  <span>Shop profile created successfully!</span>
+                  <span>Shop created successfully! Redirecting to your shop...</span>
                   <FiCheck className="text-green-600" />
                 </div>
               </Card>

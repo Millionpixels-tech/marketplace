@@ -1,4 +1,4 @@
-import Header from "../components/UI/Header";
+import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { FiSearch, FiMessageCircle, FiShoppingBag, FiTruck, FiCreditCard, FiUser, FiHelpCircle, FiMail } from "react-icons/fi";
@@ -30,11 +30,11 @@ export default function HelpCenter() {
       faqs: [
         {
           question: "How do I make a purchase?",
-          answer: "Browse items, click on products you like, add them to your cart, and proceed to checkout. We support secure payments through PayHere with multiple payment methods."
+          answer: "Browse items, click on products you like, add them to your cart, and proceed to checkout. We offer two convenient payment methods: Cash on Delivery and Bank Transfer."
         },
         {
           question: "What payment methods do you accept?",
-          answer: "We accept Visa, MasterCard, local bank transfers, and mobile payments through our secure PayHere integration. Cash on delivery is also available for selected items."
+          answer: "We accept Cash on Delivery (COD) where you pay when you receive your order, and Bank Transfer where you transfer money directly to the seller's bank account with payment slip verification."
         },
         {
           question: "Can I cancel my order?",
@@ -56,7 +56,7 @@ export default function HelpCenter() {
         },
         {
           question: "How do I get paid?",
-          answer: "Payments are processed securely through PayHere and transferred to your account after successful delivery confirmation."
+          answer: "For Cash on Delivery orders, customers pay you directly when they receive the item. For Bank Transfer orders, customers transfer money to your bank account and upload payment slips for verification before you ship."
         }
       ]
     },
@@ -129,7 +129,7 @@ export default function HelpCenter() {
         canonicalUrl={getCanonicalUrl('/help')}
         structuredData={getFAQStructuredData(allFAQs)}
       />
-      <Header />
+      <ResponsiveHeader />
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white py-16">

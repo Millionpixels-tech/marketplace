@@ -1,6 +1,7 @@
 // Order Status Constants
 export const OrderStatus = {
-  PENDING: 'PENDING',
+  PENDING_PAYMENT: 'PENDING_PAYMENT', // For bank transfer orders waiting for payment
+  PENDING: 'PENDING', // For COD orders or bank transfer orders after payment confirmed
   CONFIRMED: 'CONFIRMED',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',

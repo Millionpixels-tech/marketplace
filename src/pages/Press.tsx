@@ -1,24 +1,46 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { useResponsive } from '../hooks/useResponsive';
+import { getCanonicalUrl, generateKeywords } from '../utils/seo';
 import { FiFileText, FiUsers, FiMail, FiCalendar } from 'react-icons/fi';
 
 export default function Press() {
+  const { isMobile } = useResponsive();
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <FiFileText className="text-[#72b01d] text-3xl" />
-            <h1 className="text-3xl font-bold text-gray-900">Press & Media</h1>
+    <>
+      <SEOHead
+        title="Press & Media - SinaMarketplace"
+        description="Media resources, press releases, and information about SinaMarketplace for journalists and media professionals."
+        keywords={generateKeywords([
+          'press',
+          'media',
+          'news',
+          'press releases',
+          'Sri Lankan marketplace',
+          'media kit'
+        ])}
+        canonicalUrl={getCanonicalUrl('/press')}
+      />
+      <ResponsiveHeader />
+      
+      {/* Hero Section */}
+      <div className={`bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
+          <div className="flex items-center justify-center mb-6">
+            <FiFileText className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-white`} />
           </div>
-          <p className="text-gray-600 text-lg">
-            Media resources, press releases, and information about SinaMarketplace for journalists and media professionals.
+          <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Press & Media</h1>
+          <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
+            Media resources and information for journalists and media professionals.
           </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Main Content */}
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-8'}`}>
         
         {/* Press Kit */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
@@ -267,6 +289,7 @@ export default function Press() {
       </div>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 }

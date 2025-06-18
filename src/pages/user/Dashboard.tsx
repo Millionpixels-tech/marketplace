@@ -1,30 +1,28 @@
-
 import { useEffect, useState } from "react";
 import OrderSellerRow from "../order/OrderSellerRow";
 import { useAuth } from "../../context/AuthContext";
+import { formatPrice } from "../../utils/formatters";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter } from "firebase/firestore";
-import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX } from "react-icons/fi";
+import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter, getDoc } from "firebase/firestore";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
 import { VerificationStatus, OrderStatus } from "../../types/enums";
 import type { VerificationStatus as VerificationStatusType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
-import { 
-    calculatePaymentSchedule, 
-    getEligibleOrdersForPayment, 
-    calculatePeriodEarnings, 
-    formatPaymentDate, 
-    getDaysUntilNextPayment,
-    initializePaymentSystem,
-    debugOrderEligibility,
-    resetPaymentSystem,
-    type PaymentSchedule
-} from "../../utils/paymentSchedule";
+import { ConfirmDialog } from "../../components/UI";
+import { useConfirmDialog } from "../../hooks/useConfirmDialog";
+import { useUnreadMessages } from "../../hooks/useUnreadMessages";
+
+// Import separate earnings page
+import EarningsPage from "./dashboard/EarningsPage";
+import StockManagement from "./dashboard/StockManagement";
+import MessagesPage from "./dashboard/MessagesPage";
+import CreateCustomOrderModal from "../../components/UI/CreateCustomOrderModal";
 
 interface VerifyForm {
     fullName: string;
@@ -38,13 +36,24 @@ interface VerifyForm {
     isVerified: VerificationStatusType;
 }
 
+interface BankAccount {
+    id: string;
+    accountNumber: string;
+    branch: string;
+    bankName: string;
+    fullName: string;
+    isDefault: boolean;
+    createdAt: Date;
+}
+
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
-    { key: "orders", label: "Orders", icon: <FiList /> },
-    { key: "reviews", label: "Reviews", icon: <FiStar /> },
+    { key: "orders", label: "Orders", icon: <FiPackage /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
-    { key: "payments", label: "Payments", icon: <FiStar /> },
+    { key: "messages", label: "Messages", icon: <FiMessageSquare /> },
+    { key: "earnings", label: "Earnings", icon: <FiStar /> },
+    { key: "stock", label: "Stock", icon: <FiBox /> },
     { key: "settings", label: "Settings", icon: <FiUser /> },
 ];
 
@@ -59,20 +68,29 @@ export default function ProfileDashboard() {
     const { id } = useParams();
     const [shops, setShops] = useState<any[]>([]);
     const [desc, setDesc] = useState("");
-    const [editing, setEditing] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [displayName, setDisplayName] = useState("");
     const [photoURL, setPhotoURL] = useState("");
-    const [uploadingPic, setUploadingPic] = useState(false);
     const [profileUid, setProfileUid] = useState<string | null>(null);
     const [profileEmail, setProfileEmail] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     // Settings form state
     const [bankForm, setBankForm] = useState({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+    const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [isAddingBank, setIsAddingBank] = useState(false);
+    const [editingBankId, setEditingBankId] = useState<string | null>(null);
     const [verifyForm, setVerifyForm] = useState<VerifyForm>({ fullName: '', idFront: null, idBack: null, selfie: null, address: '', idFrontUrl: '', idBackUrl: '', selfieUrl: '', isVerified: VerificationStatus.NO_DATA });
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
     const [settingsError, setSettingsError] = useState<string | null>(null);
+
+    // Custom confirmation dialog hook
+    const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+
+    // Unread messages count
+    const unreadMessagesCount = useUnreadMessages();
+
+    // Custom Order Modal state
+    const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
 
     // Handlers for saving (implement Firestore logic as needed)
     // Helper: upload file to Firebase Storage and return URL
@@ -84,16 +102,11 @@ export default function ProfileDashboard() {
     };
 
     // Save all settings at once
-    const handleSaveAllSettings = async () => {
+    // Save verification settings
+    const handleSaveVerification = async () => {
         setSettingsLoading(true); setSettingsSuccess(null); setSettingsError(null);
         try {
-
-
-            // Bank Details
             if (!user?.uid) throw new Error('No user');
-            await updateDoc(doc(db, 'users', user.uid), {
-                bankDetails: { ...bankForm }
-            });
 
             // Verification Info
             let idFrontUrl = verifyForm.idFrontUrl;
@@ -126,82 +139,219 @@ export default function ProfileDashboard() {
             });
             setVerifyForm(f => ({ ...f, idFront: null, idBack: null, selfie: null, idFrontUrl, idBackUrl, selfieUrl, isVerified: verificationStatus }));
 
-            setSettingsSuccess('All settings saved!');
+            setSettingsSuccess('Verification documents submitted for review!');
         } catch (e: any) {
-            setSettingsError(e.message || 'Failed to save settings');
+            setSettingsError(e.message || 'Failed to submit verification');
         } finally {
             setSettingsLoading(false);
         }
     };
 
-    // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "reviews" | "listings" | "payments" | "settings">("profile");
+    // Bank Account Management Functions
+    const generateBankAccountId = () => {
+        return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    };
 
-    // Payments state
-    const [payments, setPayments] = useState<any[]>([]);
-    const [paymentSchedule, setPaymentSchedule] = useState<PaymentSchedule | null>(null);
-    const [allSellerOrders, setAllSellerOrders] = useState<any[]>([]);
-    // Bank details state
-    // Payments fetching
-    useEffect(() => {
-        if (selectedTab !== "payments" || !profileUid) return;
-        
-        const fetchPaymentsAndSchedule = async () => {
-            try {
-                // Initialize payment system if not already done
-                initializePaymentSystem();
+    const addBankAccount = async () => {
+        if (!user || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName) {
+            setSettingsError('Please fill in all required bank account fields');
+            return;
+        }
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const newAccount: BankAccount = {
+                id: generateBankAccountId(),
+                accountNumber: bankForm.accountNumber,
+                branch: bankForm.branch,
+                bankName: bankForm.bankName,
+                fullName: bankForm.fullName,
+                isDefault: bankAccounts.length === 0, // First account is default
+                createdAt: new Date()
+            };
+
+            const updatedAccounts = [...bankAccounts, newAccount];
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            // Clear form
+            setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+            setIsAddingBank(false);
+            setSettingsSuccess('Bank account added successfully!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to add bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const editBankAccount = async (accountId: string) => {
+        if (!user || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName) {
+            setSettingsError('Please fill in all required bank account fields');
+            return;
+        }
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const updatedAccounts = bankAccounts.map(account => 
+                account.id === accountId 
+                    ? { ...account, accountNumber: bankForm.accountNumber, branch: bankForm.branch, bankName: bankForm.bankName, fullName: bankForm.fullName }
+                    : account
+            );
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            // Clear form
+            setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+            setEditingBankId(null);
+            setSettingsSuccess('Bank account updated successfully!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to update bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const deleteBankAccount = async (accountId: string) => {
+        console.log(`Deleting bank account with ID: ${accountId}`);
+        if (!user) return;
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            // Check if there are any active listings with bank transfer enabled
+            const listingsQuery = query(
+                collection(db, "listings"),
+                where("owner", "==", user.uid),
+                where("bankTransfer", "==", true)
+            );
+            
+            const listingsSnapshot = await getDocs(listingsQuery);
+            
+            if (!listingsSnapshot.empty) {
+                const listingNames = listingsSnapshot.docs
+                    .map(doc => doc.data().name || 'Unnamed listing')
+                    .slice(0, 3); // Show first 3 listings
                 
-                // Calculate payment schedule
-                const schedule = calculatePaymentSchedule();
-                setPaymentSchedule(schedule);
-
-                // Fetch all seller orders without date restriction first to ensure we get all orders
-                // We'll filter by payment period in the client-side logic
-                const q = query(
-                    collection(db, "orders"),
-                    where("sellerId", "==", profileUid),
-                    orderBy("createdAt", "desc")
+                const listingText = listingNames.length > 3 
+                    ? `${listingNames.join(', ')} and ${listingsSnapshot.docs.length - 3} more`
+                    : listingNames.join(', ');
+                
+                setSettingsError(
+                    `Cannot delete bank account. The following listing(s) have bank transfer enabled: ${listingText}. Please disable bank transfer on all listings before deleting this account.`
                 );
-                
-                const snap = await getDocs(q);
-                const orders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setAllSellerOrders(orders);
-
-                // Get eligible orders for current payment period
-                const eligibleOrders = getEligibleOrdersForPayment(orders, schedule.currentPeriod);
-                setPayments(eligibleOrders);
-                
-                console.log("Payment schedule:", schedule);
-                console.log("All seller orders count:", orders.length);
-                console.log("Eligible orders for payment:", eligibleOrders);
-                console.log("Current period:", {
-                    start: schedule.currentPeriod.startDate.toISOString(),
-                    end: schedule.currentPeriod.endDate.toISOString(),
-                    paymentDate: schedule.currentPeriod.paymentDate.toISOString()
-                });
-                
-                // Debug each order
-                console.log("=== Order Eligibility Debug ===");
-                orders.forEach(order => {
-                    const debug = debugOrderEligibility(order, schedule.currentPeriod);
-                    console.log(`Order ${order.id}:`, debug);
-                });
-                console.log("=== End Debug ===");
-            } catch (err) {
-                console.error("Error loading payments:", err);
-                setPayments([]);
-                setAllSellerOrders([]);
+                setSettingsLoading(false);
+                return;
             }
-        };
 
-        fetchPaymentsAndSchedule();
-    }, [selectedTab, profileUid]);
+            // Confirm before deletion
+            const confirmed = await showConfirmDialog({
+                title: "Delete Bank Account",
+                message: "Are you sure you want to delete this bank account? This action cannot be undone.",
+                confirmText: "Delete",
+                cancelText: "Cancel",
+                type: "danger"
+            });
+            
+            if (!confirmed) {
+                setSettingsLoading(false);
+                return;
+            }
+
+            const updatedAccounts = bankAccounts.filter(account => account.id !== accountId);
+            
+            // If deleted account was default and there are other accounts, make the first one default
+            if (updatedAccounts.length > 0) {
+                const deletedAccount = bankAccounts.find(account => account.id === accountId);
+                if (deletedAccount?.isDefault) {
+                    updatedAccounts[0].isDefault = true;
+                }
+            }
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            setSettingsSuccess('Bank account deleted successfully!');
+        } catch (e: any) {
+            console.error('Bank account deletion error:', e);
+            setSettingsError(e.message || 'Failed to delete bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const setDefaultBankAccount = async (accountId: string) => {
+        if (!user) return;
+
+        try {
+            setSettingsLoading(true);
+            setSettingsError(null);
+
+            const updatedAccounts = bankAccounts.map(account => ({
+                ...account,
+                isDefault: account.id === accountId
+            }));
+
+            setBankAccounts(updatedAccounts);
+
+            // Save to Firestore
+            await updateDoc(doc(db, 'users', user.uid), {
+                bankAccounts: updatedAccounts
+            });
+
+            setSettingsSuccess('Default bank account updated!');
+        } catch (e: any) {
+            setSettingsError(e.message || 'Failed to update default bank account');
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const startEditingBank = (account: BankAccount) => {
+        setBankForm({
+            accountNumber: account.accountNumber,
+            branch: account.branch,
+            bankName: account.bankName,
+            fullName: account.fullName
+        });
+        setEditingBankId(account.id);
+        setIsAddingBank(false);
+    };
+
+    const cancelBankEdit = () => {
+        setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+        setEditingBankId(null);
+        setIsAddingBank(false);
+    };
+
+    // Dashboard state
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "messages" | "earnings" | "stock" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [listings, setListings] = useState<any[]>([]);
     const [listingsLoading, setListingsLoading] = useState(false);
-    const [listingsPage, setListingsPage] = useState(1); // <-- Pagination
+    const [listingsPage, setListingsPage] = useState(1);
+    const [listingsCursors, setListingsCursors] = useState<any[]>([null]); // Array of cursors for each page
+    const [listingsTotalCount, setListingsTotalCount] = useState(0);
     const LISTINGS_PER_PAGE = 8;
 
     const navigate = useNavigate();
@@ -220,10 +370,6 @@ export default function ProfileDashboard() {
     const [buyerTotalCount, setBuyerTotalCount] = useState(0);
     const [sellerTotalCount, setSellerTotalCount] = useState(0);
     const ORDERS_PER_PAGE = 8;
-
-    // Review sub-tabs
-    const [sellerReviews, setSellerReviews] = useState<any[]>([]);
-    const [reviewsLoading, setReviewsLoading] = useState(false);
 
     const isOwner = user && profileUid === user?.uid;
 
@@ -260,8 +406,21 @@ export default function ProfileDashboard() {
                     setPhotoURL(data.photoURL || "");
                     setDesc(data.description || "");
                     setProfileEmail(data.email || null);
-                    // Load bank details
+                    // Load bank details (legacy single account)
                     if (data.bankDetails) setBankForm(data.bankDetails);
+                    // Load bank accounts (new multiple accounts)
+                    if (data.bankAccounts) {
+                        setBankAccounts(data.bankAccounts);
+                    } else if (data.bankDetails) {
+                        // Migrate legacy single bank account to new format
+                        const legacyAccount: BankAccount = {
+                            id: generateBankAccountId(),
+                            ...data.bankDetails,
+                            isDefault: true,
+                            createdAt: new Date()
+                        };
+                        setBankAccounts([legacyAccount]);
+                    }
                     // Load verification info
                     if (data.verification) setVerifyForm(f => ({
                         ...f,
@@ -292,50 +451,75 @@ export default function ProfileDashboard() {
         fetchProfile();
     }, [user, id]);
 
-    // Listings fetching - Optimized
-    useEffect(() => {
-        const fetchListings = async () => {
-            if (selectedTab !== "listings" || !profileUid) return;
-            setListingsLoading(true);
-            try {
-                // First get user's shops, then batch query for listings
-                const shopsQuery = query(
-                    collection(db, "shops"), 
+    // Listings fetching - Server-side pagination
+    const fetchListings = async (page: number) => {
+        if (selectedTab !== "listings" || !profileUid) return;
+        setListingsLoading(true);
+        try {
+            // First get the total count for accurate pagination
+            if (page === 1) {
+                const countQuery = query(
+                    collection(db, "listings"),
                     where("owner", "==", profileUid)
                 );
-                const shopsSnapshot = await getDocs(shopsQuery);
-                const shopIds = shopsSnapshot.docs.map(doc => doc.id);
-                
-                if (shopIds.length === 0) {
-                    setListings([]);
+                const countSnapshot = await getDocs(countQuery);
+                setListingsTotalCount(countSnapshot.size);
+            }
+
+            // Build paginated listings query - directly query by owner
+            let listingsQuery;
+            
+            if (page === 1) {
+                // First page - use document ID for ordering (always exists)
+                listingsQuery = query(
+                    collection(db, "listings"), 
+                    where("owner", "==", profileUid),
+                    orderBy("__name__", "desc"),
+                    limit(LISTINGS_PER_PAGE)
+                );
+            } else {
+                // Subsequent pages - use cursor with document ID ordering
+                const cursor = listingsCursors[page - 2]; // previous page's last doc
+                if (!cursor) {
                     setListingsLoading(false);
                     return;
                 }
-
-                // Optimize listings query with limit and ordering
-                const listingsQuery = query(
+                listingsQuery = query(
                     collection(db, "listings"), 
-                    where("shopId", "in", shopIds),
-                    // Add ordering for better UX
-                    // orderBy("createdAt", "desc"),
-                    // limit(100) // Limit to prevent large queries
+                    where("owner", "==", profileUid),
+                    orderBy("__name__", "desc"),
+                    startAfter(cursor),
+                    limit(LISTINGS_PER_PAGE)
                 );
-                const listingsSnapshot = await getDocs(listingsQuery);
-                setListings(listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (err) {
-                console.error("Error loading listings:", err);
-                setListings([]);
-            } finally {
-                setListingsLoading(false);
             }
-        };
-        fetchListings();
-    }, [selectedTab, profileUid]);
 
-    // Reset page on listings change
+            const listingsSnapshot = await getDocs(listingsQuery);
+            const newListings = listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            setListings(newListings);
+            setListingsPage(page);
+            
+            // Update cursors for pagination
+            if (listingsSnapshot.docs.length > 0) {
+                const newCursors = [...listingsCursors];
+                newCursors[page - 1] = listingsSnapshot.docs[listingsSnapshot.docs.length - 1];
+                setListingsCursors(newCursors);
+            }
+            
+        } catch (err) {
+            console.error("Error loading listings:", err);
+            setListings([]);
+        } finally {
+            setListingsLoading(false);
+        }
+    };
+
     useEffect(() => {
-        setListingsPage(1);
-    }, [listings]);
+        if (selectedTab === "listings") {
+            setListingsCursors([null]); // Reset cursors
+            fetchListings(1); // Always start from page 1 when tab changes
+        }
+    }, [selectedTab, profileUid]);
 
     // Orders fetching - Server-side pagination
     useEffect(() => {
@@ -557,41 +741,19 @@ export default function ProfileDashboard() {
         }
     };
 
-    // Reviews fetching - Optimized
-    useEffect(() => {
-        if (selectedTab !== "reviews" || !profileUid) return;
-        setReviewsLoading(true);
-        const fetchReviews = async () => {
-            try {
-                // For now, only fetch seller reviews as commented
-                // In the future, you could add buyer reviews query as well
-                const sellerSnap = await getDocs(
-                    query(collection(db, "reviews"),
-                        where("reviewedUserId", "==", profileUid),
-                        where("role", "==", "seller"),
-                        // Add ordering for better UX
-                        // orderBy("createdAt", "desc"),
-                        // limit(20)
-                    )
-                );
-                setSellerReviews(sellerSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (error) {
-                console.error("Error fetching reviews:", error);
-                setSellerReviews([]);
-            } finally {
-                setReviewsLoading(false);
-            }
-        };
-        fetchReviews();
-    }, [selectedTab, profileUid]);
-
     const handleEditListing = (listingId: string) => {
         navigate(`/listing/${listingId}/edit`);
     };
 
     const handleDeleteListing = async (listingId: string) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this listing?");
-        if (!confirmDelete) return;
+        const confirmed = await showConfirmDialog({
+            title: "Delete Listing",
+            message: "Are you sure you want to delete this listing?",
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            type: "danger"
+        });
+        if (!confirmed) return;
         try {
             await deleteDoc(doc(db, "listings", listingId));
             setListings(prev => prev.filter(l => l.id !== listingId));
@@ -600,51 +762,9 @@ export default function ProfileDashboard() {
         }
     };
 
-    const handleSave = async () => {
-        if (!user) return;
-        setSaving(true);
-        const auth = getAuth();
-        if (auth.currentUser) {
-            await updateProfile(auth.currentUser, {
-                displayName: displayName,
-                photoURL: photoURL,
-            });
-        }
-        const userDocSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
-        if (!userDocSnap.empty) {
-            await updateDoc(doc(db, "users", userDocSnap.docs[0].id), { description: desc, displayName, photoURL });
-        } else {
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                email: user.email,
-                displayName,
-                photoURL,
-                description: desc,
-            });
-        }
-        setEditing(false);
-        setSaving(false);
-    };
-
-    const handlePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!user || !e.target.files || e.target.files.length === 0) return;
-        setUploadingPic(true);
-        const file = e.target.files[0];
-        const storage = getStorage();
-        const fileRef = storageRef(storage, `profile_pics/${user.uid}_${Date.now()}`);
-        await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(fileRef);
-        setPhotoURL(url);
-        setUploadingPic(false);
-    };
-
-    // Pagination logic for listings
-    const totalListings = listings.length;
-    const totalPages = Math.ceil(totalListings / LISTINGS_PER_PAGE);
-    const paginatedListings = listings.slice(
-        (listingsPage - 1) * LISTINGS_PER_PAGE,
-        listingsPage * LISTINGS_PER_PAGE
-    );
+    // Pagination logic for listings - server-side pagination
+    const totalPages = Math.ceil(listingsTotalCount / LISTINGS_PER_PAGE);
+    const paginatedListings = listings; // Already paginated from server
 
     // Pagination logic for orders - server-side pagination
     const currentTotalCount = orderSubTab === "buyer" ? buyerTotalCount : sellerTotalCount;
@@ -664,272 +784,321 @@ export default function ProfileDashboard() {
     if (!profileUid) return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955' }}>User not found.</div>;
 
     return (
-        <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <ResponsiveHeader />
-            {/* Full width, no max-w */}
-            <div className={`flex flex-col md:flex-row gap-0 ${isMobile ? 'py-4 px-4' : 'py-8 px-0 md:px-8'} w-full`}>
-                {/* Sidebar */}
-                <aside className={`w-full md:w-64 ${isMobile ? 'min-h-auto' : 'min-h-screen'} border-r rounded-3xl md:rounded-r-none md:rounded-l-3xl shadow-lg ${isMobile ? 'p-4' : 'p-6'} flex flex-row md:flex-col md:gap-4 gap-4 items-center md:items-start ${isMobile ? 'mb-4' : 'mb-6 md:mb-0'} relative transition-all`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                    {/* Burger for mobile */}
-                    <button
-                        className={`md:hidden absolute ${isMobile ? 'top-2 right-2' : 'top-4 right-4'} z-10`}
-                        onClick={() => setSidebarOpen(s => !s)}
-                    >
-                        {sidebarOpen ? <FiX size={isMobile ? 22 : 26} /> : <FiMenu size={isMobile ? 22 : 26} />}
-                    </button>
-                    {/* Sidebar Nav */}
-                    <nav className={`flex-1 w-full flex ${sidebarOpen ? "flex" : "hidden"} md:flex flex-col ${isMobile ? 'gap-1' : 'gap-2'} ${isMobile ? 'mt-6' : 'mt-8 md:mt-0'}`}>
-                        {TABS.map(tab => (
-                            <button
-                                key={tab.key}
-                                className={`group flex items-center ${isMobile ? 'gap-2 px-3 py-2' : 'gap-3 px-5 py-3'} rounded-full font-semibold ${isMobile ? 'text-sm' : 'text-base'} transition-all relative overflow-hidden border`}
-                                style={{
-                                    backgroundColor: selectedTab === tab.key ? '#72b01d' : '#ffffff',
-                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
-                                    borderColor: selectedTab === tab.key ? '#72b01d' : 'rgba(114, 176, 29, 0.3)',
-                                    boxShadow: selectedTab === tab.key ? '0 2px 8px 0 rgba(114, 176, 29, 0.3)' : undefined
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (selectedTab !== tab.key) {
-                                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                                        e.currentTarget.style.borderColor = '#72b01d';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (selectedTab !== tab.key) {
-                                        e.currentTarget.style.backgroundColor = '#ffffff';
-                                        e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                    }
-                                }}
-                                onClick={() => { setSelectedTab(tab.key as any); setSidebarOpen(false); }}
-                            >
-                                <span className={`transition-all ${isMobile ? 'text-sm' : ''}`} style={{
-                                    color: selectedTab === tab.key ? '#ffffff' : '#454955',
-                                    transform: selectedTab === tab.key ? 'scale(1.1)' : 'scale(1)',
-                                    opacity: selectedTab === tab.key ? 1 : 0.7
-                                }}>{tab.icon}</span>
-                                <span className="truncate">{tab.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
+            
+            {/* Dashboard Container */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Dashboard Header */}
+                <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                            <p className="text-gray-600">Manage your account, shops, orders and more</p>
+                        </div>
+                        <div className="mt-4 sm:mt-0">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Welcome back, {displayName || user?.email?.split('@')[0]}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                {/* Main Content */}
-                <main className={`flex-1 min-w-0 w-full shadow-lg ${isMobile ? 'p-4' : 'p-4 md:p-10'} mx-auto border rounded-2xl`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                {/* Mobile Menu Toggle */}
+                <div className="lg:hidden mb-6">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="w-full flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-gray-300 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-green-600">
+                                {TABS.find(tab => tab.key === selectedTab)?.icon}
+                            </span>
+                            <span className="font-medium text-gray-900">
+                                {TABS.find(tab => tab.key === selectedTab)?.label}
+                            </span>
+                            {selectedTab === "messages" && unreadMessagesCount > 0 && (
+                                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                                </span>
+                            )}
+                        </div>
+                        {sidebarOpen ? <FiX size={20} className="text-gray-500" /> : <FiMenu size={20} className="text-gray-500" />}
+                    </button>
+                </div>
+
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Sidebar */}
+                    <aside className={`lg:w-72 ${sidebarOpen ? 'block' : 'hidden'} lg:block`}>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+                            {/* Profile Header in Sidebar */}
+                            <div className="p-6 bg-gradient-to-r from-green-600 to-green-700 text-white">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                                        {photoURL ? (
+                                            <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-lg font-bold text-white">
+                                                {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold truncate">{displayName || user?.email?.split('@')[0]}</h3>
+                                        <p className="text-green-100 text-sm truncate">{user?.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Navigation */}
+                            <nav className="p-2">
+                                {TABS.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => { 
+                                            setSelectedTab(tab.key as any); 
+                                            setSidebarOpen(false); 
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg font-medium transition-all duration-200 text-left group ${
+                                            selectedTab === tab.key
+                                                ? 'bg-green-50 text-green-700 shadow-sm border border-green-200'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        <span className={`transition-colors group-hover:scale-110 transform duration-200 ${
+                                            selectedTab === tab.key ? 'text-green-600' : 'text-gray-400'
+                                        }`}>
+                                            {tab.icon}
+                                        </span>
+                                        <span className="text-sm font-medium">{tab.label}</span>
+                                        {tab.key === "messages" && unreadMessagesCount > 0 && (
+                                            <span className="ml-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                                                {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                                            </span>
+                                        )}
+                                        {selectedTab === tab.key && (
+                                            <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
+                                        )}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 min-w-0">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Tab Header */}
+                            <div className="border-b border-gray-200 px-6 py-5 bg-gray-50/50">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-green-600">
+                                        {TABS.find(tab => tab.key === selectedTab)?.icon}
+                                    </span>
+                                    <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                                        {selectedTab.replace(/([A-Z])/g, ' $1').trim()}
+                                    </h2>
+                                </div>
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="p-6">
                     {/* PROFILE TAB */}
                     {selectedTab === "profile" && (
-                        <div className="flex flex-col items-center w-full">
-                            {/* Profile Picture */}
-                            <div className={`${isMobile ? 'w-20 h-20' : 'w-28 h-28'} rounded-full border-4 shadow flex items-center justify-center overflow-hidden ${isMobile ? 'mb-3' : 'mb-4'} relative group`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: '#72b01d' }}>
-                                {photoURL ? (
-                                    <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
-                                ) : (
-                                    <>
-                                        <span className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold`} style={{ color: '#454955' }}>
-                                            {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
-                                        </span>
-                                    </>
-                                )}
-                                {isOwner && editing && (
-                                    <>
-                                        <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                            <span className={`text-white font-semibold ${isMobile ? 'text-xs' : ''}`}>Change</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={handlePicChange} disabled={uploadingPic} />
-                                        </label>
-                                        {uploadingPic && <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-black font-bold">{isMobile ? 'Loading...' : 'Uploading...'}</div>}
-                                    </>
-                                )}
-                            </div>
-                            {/* Name */}
-                            <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black ${isMobile ? 'mb-1' : 'mb-2'} text-center flex items-center justify-center gap-2`} style={{ color: '#0d0a0b' }}>
-                                {isOwner && editing ? (
-                                    <input
-                                        className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black text-center border rounded-xl ${isMobile ? 'px-2 py-1' : 'px-3 py-1'} w-full ${isMobile ? 'max-w-xs' : 'max-w-xs'} ${isMobile ? 'mb-1' : 'mb-2'}`}
-                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#0d0a0b' }}
-                                        value={displayName}
-                                        onChange={e => setDisplayName(e.target.value)}
-                                        maxLength={40}
-                                    />
-                                ) : (
-                                    <>
-                                        <span>{displayName || profileEmail}</span>
+                        <div className="max-w-4xl mx-auto">
+                            {/* Profile Card */}
+                            <div className={`bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl ${isMobile ? 'p-4' : 'p-8'} mb-6 border border-green-100`}>
+                                <div className="text-center">
+                                    {/* Profile Picture */}
+                                    <div className={`relative inline-block ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                        <div className={`${isMobile ? 'w-20 h-20' : 'w-32 h-32'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                            {photoURL ? (
+                                                <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
+                                            ) : (
+                                                <span className={`${isMobile ? 'text-2xl' : 'text-5xl'} font-bold text-green-600`}>
+                                                    {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                                </span>
+                                            )}
+                                        </div>
                                         {verifyForm.isVerified === VerificationStatus.COMPLETED && (
-                                            <span className={`inline-flex items-center justify-center ml-2 rounded-full ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} style={{ backgroundColor: '#72b01d' }}>
+                                            <div className={`absolute ${isMobile ? '-bottom-1 -right-1' : '-bottom-2 -right-2'} bg-green-500 rounded-full ${isMobile ? 'p-1' : 'p-2'} border-4 border-white shadow-lg`}>
                                                 <svg viewBox="0 0 20 20" fill="white" className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`}>
                                                     <path fillRule="evenodd" d="M16.707 6.293a1 1 0 00-1.414 0L9 12.586 6.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" clipRule="evenodd" />
                                                 </svg>
-                                            </span>
+                                            </div>
                                         )}
-                                    </>
-                                )}
-                            </div>
+                                    </div>
 
-                            {/* Description */}
-                            <div className={`w-full ${isMobile ? 'mb-4' : 'mb-6'} flex flex-col items-center`}>
-                                {isOwner && editing ? (
-                                    <textarea
-                                        className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} border rounded-xl ${isMobile ? 'p-2' : 'p-3'} ${isMobile ? 'text-base' : 'text-lg'} text-center`}
-                                        style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
-                                        rows={isMobile ? 2 : 3}
-                                        value={desc}
-                                        onChange={e => setDesc(e.target.value)}
-                                        placeholder="Write something about yourself..."
-                                        maxLength={300}
-                                    />
-                                ) : (
-                                    <div className={`${isMobile ? 'text-base' : 'text-lg'} min-h-[48px] whitespace-pre-line text-center`} style={{ color: '#454955' }}>{desc || <span style={{ color: '#454955', opacity: 0.6 }}>No description yet.</span>}</div>
-                                )}
-                            </div>
-                            {/* Edit/Save Buttons */}
-                            {isOwner && (
-                                <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
-                                    {editing ? (
-                                        <button
-                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold mr-2 disabled:opacity-50 transition`}
-                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-                                            onMouseEnter={(e) => {
-                                                if (!saving) {
-                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!saving) {
-                                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                                }
-                                            }}
-                                            onClick={handleSave}
-                                            disabled={saving}
-                                        >
-                                            {saving ? "Saving..." : "Save"}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className={`${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold transition border`}
-                                            style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                                                e.currentTarget.style.borderColor = '#72b01d';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                            }}
-                                            onClick={() => setEditing(true)}
-                                        >
-                                            Edit Info
-                                        </button>
-                                    )}
+                                    {/* Name */}
+                                    <div className={`${isMobile ? 'mb-3' : 'mb-4'} px-2`}>
+                                        <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold text-gray-900 flex items-center justify-center gap-3 break-words`}>
+                                            {displayName || profileEmail}
+                                        </h1>
+                                        <p className={`text-gray-600 mt-2 ${isMobile ? 'text-sm' : ''} break-all`}>{profileEmail}</p>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className={`${isMobile ? 'mb-4' : 'mb-6'} px-2`}>
+                                        <p className={`text-gray-700 max-w-lg mx-auto leading-relaxed ${isMobile ? 'text-sm' : ''} break-words`}>
+                                            {desc || <span className="text-gray-500 italic">No description yet.</span>}
+                                        </p>
+                                    </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )}
 
                     {/* SHOPS TAB */}
                     {selectedTab === "shops" && (
                         <div>
-                            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} ${isMobile ? 'mb-3' : 'mb-4'}`}>
-                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`} style={{ color: '#0d0a0b' }}>{isOwner ? "Your Shops" : "Shops"}</h2>
+                            {/* Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                        {isOwner ? "Your Shops" : "Shops"}
+                                    </h2>
+                                    <p className="text-gray-600">Manage your online storefronts</p>
+                                </div>
                                 {isOwner && (
                                     <Link
                                         to="/create-shop"
-                                        className={`${isMobile ? 'px-4 py-2 text-xs' : 'px-5 py-2 text-sm'} rounded-full font-bold uppercase tracking-wide shadow transition`}
-                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#3f7d20';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                        }}
+                                        className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                                     >
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
                                         Create New Shop
                                     </Link>
                                 )}
                             </div>
+
                             {shops.length === 0 ? (
-                                <div className="flex flex-col items-center gap-4">
-                                    <div className={`text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>You have not created any shops yet.</div>
+                                <div className="text-center py-16">
+                                    <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                        <FiShoppingBag className="w-12 h-12 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No shops yet</h3>
+                                    <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                                        Create your first shop to start selling products on our marketplace.
+                                    </p>
+                                    {isOwner && (
+                                        <Link
+                                            to="/create-shop"
+                                            className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors"
+                                        >
+                                            Get Started
+                                        </Link>
+                                    )}
                                 </div>
                             ) : (
-                                <div className={`grid grid-cols-1 ${isMobile ? '' : 'sm:grid-cols-2'} gap-4`}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {shops.map(shop => (
                                         <div
                                             key={shop.id}
-                                            className={`border rounded-xl ${isMobile ? 'p-3' : 'p-4'} flex items-center ${isMobile ? 'gap-3' : 'gap-4'} transition`}
-                                            style={{
-                                                backgroundColor: '#ffffff',
-                                                borderColor: 'rgba(114, 176, 29, 0.3)'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                e.currentTarget.style.borderColor = '#72b01d';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                            }}
+                                            className="bg-white rounded-2xl border border-gray-200 hover:border-green-300 transition-all duration-300 hover:shadow-lg group overflow-hidden flex flex-col"
                                         >
-                                            {/* Shop link and image */}
-                                            <Link
-                                                to={`/shop/${shop.username}`}
-                                                className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'} flex-1`}
-                                                style={{ textDecoration: 'none', color: 'inherit' }}
-                                            >
-                                                {shop.logo ? (
-                                                    <img src={shop.logo} alt={shop.name} className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full object-cover border`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
-                                                ) : (
-                                                    <div className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} rounded-full flex items-center justify-center ${isMobile ? 'text-lg' : 'text-2xl'} font-bold border`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}>{shop.name[0]}</div>
-                                                )}
-                                                <div>
-                                                    <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{shop.name}</div>
-                                                    <div className="text-xs" style={{ color: '#454955' }}>@{shop.username}</div>
+                                            {/* Shop Header */}
+                                            <div className="p-6 pb-4 flex-1 flex flex-col">
+                                                <Link
+                                                    to={`/shop/${shop.username}`}
+                                                    className="block text-decoration-none"
+                                                >
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        {shop.logo ? (
+                                                            <img 
+                                                                src={shop.logo} 
+                                                                alt={shop.name} 
+                                                                className="w-16 h-16 rounded-xl object-cover border-2 border-gray-200 group-hover:border-green-300 transition-colors" 
+                                                            />
+                                                        ) : (
+                                                            <div className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold bg-gradient-to-br from-green-100 to-green-200 text-green-700 border-2 border-gray-200 group-hover:border-green-300 transition-colors">
+                                                                {shop.name[0]}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-bold text-lg text-gray-900 group-hover:text-green-600 transition-colors truncate">
+                                                                {shop.name}
+                                                            </h3>
+                                                            <p className="text-sm text-gray-600">@{shop.username}</p>
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                                
+                                                {/* Always reserve space for description (2 lines) */}
+                                                <div className="h-10 mb-4">
+                                                    <p className="text-gray-600 text-sm line-clamp-2 h-full">
+                                                        {shop.description || ""}
+                                                    </p>
                                                 </div>
-                                            </Link>
+                                            </div>
+
+                                            {/* Shop Actions - Always at bottom */}
                                             {isOwner && (
-                                                <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-col gap-2'} ml-2`}>
-                                                    <button
-                                                        onClick={() => navigate(`/edit-shop/${shop.id}`)}
-                                                        className={`${isMobile ? 'px-2 py-1' : 'px-3 py-1'} rounded text-xs font-semibold transition border`}
-                                                        style={{ backgroundColor: '#72b01d', color: '#ffffff', borderColor: '#72b01d' }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                                        }}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            const confirmDelete = window.confirm("Are you sure you want to delete this shop? This action cannot be undone.");
-                                                            if (!confirmDelete) return;
-                                                            try {
-                                                                await deleteDoc(doc(db, "shops", shop.id));
-                                                                setShops(prev => prev.filter(s => s.id !== shop.id));
-                                                            } catch (err) {
-                                                                alert("Failed to delete shop. Try again.");
-                                                            }
-                                                        }}
-                                                        className="px-3 py-1 rounded text-xs font-semibold transition border"
-                                                        style={{ backgroundColor: '#ffffff', color: '#454955', borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffebee';
-                                                            e.currentTarget.style.color = '#c62828';
-                                                            e.currentTarget.style.borderColor = '#c62828';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                            e.currentTarget.style.color = '#454955';
-                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                        }}
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                <div className="px-6 pb-6 mt-auto">
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => navigate(`/edit-shop/${shop.id}`)}
+                                                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                                        >
+                                                            Edit Shop
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                const confirmed = await showConfirmDialog({
+                                                                    title: "Delete Shop",
+                                                                    message: "Are you sure you want to delete this shop? This action cannot be undone and will also delete all listings and reviews in this shop.",
+                                                                    confirmText: "Delete",
+                                                                    cancelText: "Cancel",
+                                                                    type: "danger"
+                                                                });
+                                                                if (!confirmed) return;
+                                                                try {
+                                                                    // First, delete all listings related to this shop
+                                                                    const listingsQuery = query(
+                                                                        collection(db, "listings"),
+                                                                        where("shopId", "==", shop.id)
+                                                                    );
+                                                                    const listingsSnapshot = await getDocs(listingsQuery);
+                                                                    
+                                                                    // Delete all reviews related to this shop
+                                                                    const reviewsQuery = query(
+                                                                        collection(db, "reviews"),
+                                                                        where("shopId", "==", shop.id)
+                                                                    );
+                                                                    const reviewsSnapshot = await getDocs(reviewsQuery);
+                                                                    
+                                                                    // Delete all listings and reviews in parallel
+                                                                    const deleteListingsPromises = listingsSnapshot.docs.map(listingDoc => 
+                                                                        deleteDoc(doc(db, "listings", listingDoc.id))
+                                                                    );
+                                                                    
+                                                                    const deleteReviewsPromises = reviewsSnapshot.docs.map(reviewDoc => 
+                                                                        deleteDoc(doc(db, "reviews", reviewDoc.id))
+                                                                    );
+                                                                    
+                                                                    await Promise.all([...deleteListingsPromises, ...deleteReviewsPromises]);
+                                                                    
+                                                                    // Then delete the shop
+                                                                    await deleteDoc(doc(db, "shops", shop.id));
+                                                                    setShops(prev => prev.filter(s => s.id !== shop.id));
+                                                                    
+                                                                    // Refresh listings to remove deleted ones from the UI
+                                                                    await fetchListings(1);
+                                                                    
+                                                                    console.log(`✅ Shop deleted successfully along with ${listingsSnapshot.size} listings and ${reviewsSnapshot.size} reviews`);
+                                                                } catch (err) {
+                                                                    console.error("Error deleting shop and listings:", err);
+                                                                    alert("Failed to delete shop. Try again.");
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors border border-red-200 hover:border-red-300"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     ))}
-
                                 </div>
                             )}
                         </div>
@@ -938,95 +1107,140 @@ export default function ProfileDashboard() {
                     {/* ORDERS TAB */}
                     {selectedTab === "orders" && (
                         <div>
-                            <div className={`flex ${isMobile ? 'gap-3' : 'gap-6'} ${isMobile ? 'mb-4' : 'mb-6'} border-b`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                {ORDER_SUBTABS.map(subTab => (
+                            {/* Header */}
+                            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                <div>
+                                    <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 mb-2`}>Orders</h2>
+                                    <p className={`text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Track your buying and selling activities</p>
+                                </div>
+                                
+                                {/* Create Custom Order Button - Only show for seller tab */}
+                                {orderSubTab === "seller" && (
                                     <button
-                                        key={subTab.key}
-                                        className={`${isMobile ? 'py-2 px-3' : 'py-3 px-6'} font-bold ${isMobile ? 'text-sm' : 'text-base'} border-b-2 transition-all`}
-                                        style={{
-                                            borderBottomColor: orderSubTab === subTab.key ? '#72b01d' : 'transparent',
-                                            color: orderSubTab === subTab.key ? '#0d0a0b' : '#454955'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (orderSubTab !== subTab.key) {
-                                                e.currentTarget.style.color = '#0d0a0b';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (orderSubTab !== subTab.key) {
-                                                e.currentTarget.style.color = '#454955';
-                                            }
-                                        }}
-                                        onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
+                                        onClick={() => setShowCustomOrderModal(true)}
+                                        className={`${isMobile ? 'mt-4 self-start px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2`}
                                     >
-                                        {subTab.label}
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Create Custom Order
                                     </button>
-                                ))}
+                                )}
                             </div>
+
+                            {/* Sub-tabs */}
+                            <div className={`border-b border-gray-200 ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                <nav className={`flex ${isMobile ? 'space-x-4' : 'space-x-8'}`}>
+                                    {ORDER_SUBTABS.map(subTab => (
+                                        <button
+                                            key={subTab.key}
+                                            className={`${isMobile ? 'py-3 px-1' : 'py-4 px-1'} border-b-2 font-medium ${isMobile ? 'text-sm' : 'text-sm'} transition-colors ${
+                                                orderSubTab === subTab.key
+                                                    ? 'border-green-500 text-green-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }`}
+                                            onClick={() => setOrderSubTab(subTab.key as "buyer" | "seller")}
+                                        >
+                                            {subTab.label}
+                                        </button>
+                                    ))}
+                                </nav>
+                            </div>
+
                             {ordersLoading ? (
-                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955' }}>Loading orders...</div>
+                                <div className={`flex items-center justify-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                    <div className={`animate-spin rounded-full ${isMobile ? 'h-8 w-8' : 'h-12 w-12'} border-b-2 border-green-600`}></div>
+                                    <span className={`ml-3 text-gray-600 ${isMobile ? 'text-sm' : ''}`}>Loading orders...</span>
+                                </div>
                             ) : (
                                 <div>
                                     {/* As Buyer */}
                                     {orderSubTab === "buyer" && (
                                         <div>
                                             {buyerOrders.length === 0 ? (
-                                                <div className={`${isMobile ? 'py-8' : 'py-10'} text-center ${isMobile ? 'text-sm' : ''}`} style={{ color: '#454955', opacity: 0.7 }}>No orders as buyer yet.</div>
+                                                <div className={`text-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                                    <div className={`mx-auto ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} bg-gray-100 rounded-full flex items-center justify-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                                        <FiList className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-gray-400`} />
+                                                    </div>
+                                                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-2`}>No orders yet</h3>
+                                                    <p className={`text-gray-600 ${isMobile ? 'mb-4 max-w-xs text-sm' : 'mb-6 max-w-sm'} mx-auto px-4`}>
+                                                        When you purchase items, they'll appear here.
+                                                    </p>
+                                                    <Link
+                                                        to="/search"
+                                                        className={`inline-flex items-center ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors`}
+                                                    >
+                                                        Start Shopping
+                                                    </Link>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+                                                    <div className={`space-y-${isMobile ? '3' : '4'}`}>
                                                         {buyerOrders.map((order: any) => (
                                                             <Link
                                                                 to={`/order/${order.id}`}
                                                                 key={order.id}
-                                                                className="border rounded-xl p-5 flex items-center gap-4 shadow transition cursor-pointer"
-                                                                style={{
-                                                                    backgroundColor: '#ffffff',
-                                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                                    textDecoration: 'none',
-                                                                    color: 'inherit'
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    e.currentTarget.style.backgroundColor = '#ffffff';
-                                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                                    e.currentTarget.style.boxShadow = '';
-                                                                }}
+                                                                className={`block bg-white border border-gray-200 rounded-xl ${isMobile ? 'p-4' : 'p-6'} hover:border-green-300 hover:shadow-md transition-all duration-200 group`}
                                                             >
-                                                                <img
-                                                                    src={order.itemImage || '/placeholder.png'}
-                                                                    alt={order.itemName}
-                                                                    className="w-16 h-16 object-cover rounded-lg border"
-                                                                    style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                                                                />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="font-bold text-lg mb-1 truncate" style={{ color: '#0d0a0b' }}>{order.itemName}</div>
-                                                                    <div className="text-sm mb-1" style={{ color: '#454955' }}>
-                                                                        Status: <span className="font-semibold">
-                                                                            {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
-                                                                            {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
-                                                                            {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
-                                                                            {order.status === OrderStatus.RECEIVED && 'Order Completed'}
-                                                                            {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
-                                                                            {order.status === OrderStatus.PENDING && 'Order Pending'}
-                                                                            {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
-                                                                            {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
-                                                                        </span>
+                                                                <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
+                                                                    <img
+                                                                        src={order.itemImage || '/placeholder.png'}
+                                                                        alt={order.itemName}
+                                                                        className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} object-cover rounded-lg border border-gray-200 flex-shrink-0`}
+                                                                    />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'} text-gray-900 group-hover:text-green-600 transition-colors truncate mb-1`}>
+                                                                            {order.itemName}
+                                                                        </h3>
+                                                                        <div className={`flex ${isMobile ? 'flex-col gap-1' : 'items-center gap-4'} ${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
+                                                                            <span>
+                                                                                Status: <span className={`font-medium ${
+                                                                                    order.status === OrderStatus.PENDING_PAYMENT ? 'text-orange-600' :
+                                                                                    order.status === OrderStatus.CANCELLED ? 'text-red-600' :
+                                                                                    order.status === OrderStatus.REFUND_REQUESTED ? 'text-yellow-600' :
+                                                                                    order.status === OrderStatus.REFUNDED ? 'text-red-600' :
+                                                                                    order.status === OrderStatus.RECEIVED ? 'text-green-600' :
+                                                                                    order.status === OrderStatus.SHIPPED ? 'text-blue-600' :
+                                                                                    order.status === OrderStatus.DELIVERED ? 'text-green-600' :
+                                                                                    'text-gray-600'
+                                                                                }`}>
+                                                                                    {order.status === OrderStatus.PENDING_PAYMENT && 'Awaiting Payment'}
+                                                                                    {order.status === OrderStatus.CANCELLED && 'Order Cancelled'}
+                                                                                    {order.status === OrderStatus.REFUND_REQUESTED && 'Refund Requested'}
+                                                                                    {order.status === OrderStatus.REFUNDED && 'Order Refunded'}
+                                                                                    {order.status === OrderStatus.RECEIVED && 'Order Completed'}
+                                                                                    {order.status === OrderStatus.SHIPPED && 'Order Shipped'}
+                                                                                    {order.status === OrderStatus.PENDING && 'Order Pending'}
+                                                                                    {order.status === OrderStatus.CONFIRMED && 'Order Confirmed'}
+                                                                                    {order.status === OrderStatus.DELIVERED && 'Order Delivered'}
+                                                                                </span>
+                                                                            </span>
+                                                                            {!isMobile && <span>•</span>}
+                                                                            <span className="truncate">Seller: {order.sellerName || order.sellerId}</span>
+                                                                        </div>
+                                                                        {isMobile && (
+                                                                            <div className="mt-2">
+                                                                                <div className="text-lg font-bold text-green-600">
+                                                                                    {formatPrice(order.total)}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
-                                                                    <div className="text-xs truncate" style={{ color: '#454955', opacity: 0.8 }}>Seller: {order.sellerName || order.sellerId}</div>
+                                                                    {!isMobile && (
+                                                                        <div className="text-right flex-shrink-0">
+                                                                            <div className="text-xl font-bold text-green-600">
+                                                                                {formatPrice(order.total)}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                <div className="text-lg font-bold self-end whitespace-nowrap" style={{ color: '#3f7d20' }}>LKR {order.total?.toLocaleString()}</div>
                                                             </Link>
                                                         ))}
                                                     </div>
                                                     
                                                     {/* Buyer Orders Pagination */}
                                                     {totalOrderPages > 1 && (
-                                                        <div className="mt-6 flex justify-center">
+                                                        <div className="mt-8 flex justify-center">
                                                             <Pagination
                                                                 currentPage={buyerOrdersPage}
                                                                 totalPages={totalOrderPages}
@@ -1043,14 +1257,29 @@ export default function ProfileDashboard() {
                                             )}
                                         </div>
                                     )}
+
                                     {/* As Seller */}
                                     {orderSubTab === "seller" && (
                                         <div>
                                             {sellerOrders.length === 0 ? (
-                                                <div className="py-10 text-center" style={{ color: '#454955', opacity: 0.7 }}>No orders as seller yet.</div>
+                                                <div className={`text-center ${isMobile ? 'py-12' : 'py-16'}`}>
+                                                    <div className={`mx-auto ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} bg-gray-100 rounded-full flex items-center justify-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                                        <FiShoppingBag className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-gray-400`} />
+                                                    </div>
+                                                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-2`}>No sales yet</h3>
+                                                    <p className={`text-gray-600 ${isMobile ? 'mb-4 max-w-xs text-sm' : 'mb-6 max-w-sm'} mx-auto px-4`}>
+                                                        When customers purchase your items, orders will appear here.
+                                                    </p>
+                                                    <Link
+                                                        to="/add-listing"
+                                                        className={`inline-flex items-center ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'} bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-colors`}
+                                                    >
+                                                        Create Listing
+                                                    </Link>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <div className="space-y-4">
+                                                    <div className={`space-y-${isMobile ? '3' : '4'}`}>
                                                         {sellerOrders.map((order: any) => (
                                                             <OrderSellerRow key={order.id} order={order} setSellerOrders={setSellerOrders} />
                                                         ))}
@@ -1058,7 +1287,7 @@ export default function ProfileDashboard() {
                                                     
                                                     {/* Seller Orders Pagination */}
                                                     {totalOrderPages > 1 && (
-                                                        <div className="mt-6 flex justify-center">
+                                                        <div className="mt-8 flex justify-center">
                                                             <Pagination
                                                                 currentPage={sellerOrdersPage}
                                                                 totalPages={totalOrderPages}
@@ -1075,44 +1304,6 @@ export default function ProfileDashboard() {
                                             )}
                                         </div>
                                     )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* REVIEWS TAB */}
-                    {selectedTab === "reviews" && (
-                        <div>
-                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Your Seller Reviews</h2>
-                            {reviewsLoading ? (
-                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading reviews...</div>
-                            ) : sellerReviews.length === 0 ? (
-                                <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No reviews as seller yet.</div>
-                            ) : (
-                                <div className={`space-y-${isMobile ? '3' : '4'}`}>
-                                    {sellerReviews.map(r => (
-                                        <div key={r.id} className={`border rounded-xl shadow transition ${isMobile ? 'p-3' : 'p-5'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }} onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                            e.currentTarget.style.borderColor = '#72b01d';
-                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 176, 29, 0.15)';
-                                        }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                e.currentTarget.style.boxShadow = '';
-                                            }}>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className={`font-bold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>{r.rating}★</span>
-                                                <span className="text-xs" style={{ color: '#454955', opacity: 0.8 }}>{new Date(r.createdAt?.seconds ? r.createdAt.seconds * 1000 : Date.now()).toLocaleDateString()}</span>
-                                            </div>
-                                            <div className={`${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>{r.text}</div>
-                                            {r.writtenByUserName && (
-                                                <div className="mt-2 text-xs" style={{ color: '#454955', opacity: 0.7 }}>
-                                                    — {r.writtenByUserName}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
                                 </div>
                             )}
                         </div>
@@ -1139,7 +1330,7 @@ export default function ProfileDashboard() {
                             </div>
                             {listingsLoading ? (
                                 <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955' }}>Loading listings...</div>
-                            ) : totalListings === 0 ? (
+                            ) : listingsTotalCount === 0 ? (
                                 <div className={`text-center ${isMobile ? 'py-6' : 'py-10'}`} style={{ color: '#454955', opacity: 0.7 }}>No listings found.</div>
                             ) : (
                                 <>
@@ -1171,7 +1362,7 @@ export default function ProfileDashboard() {
                                                             <h3 className={`font-bold truncate ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>{listing.name}</h3>
                                                             <p className="text-xs truncate mb-1" style={{ color: '#454955', opacity: 0.8 }}>{shop ? shop.name : ''}</p>
                                                             <p className={`truncate ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>{listing.description}</p>
-                                                            <p className={`font-bold mt-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#3f7d20' }}>LKR {listing.price?.toLocaleString()}</p>
+                                                            <p className={`font-bold mt-1 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#3f7d20' }}>{formatPrice(listing.price)}</p>
                                                         </div>
                                                     </div>
                                                     <div className={`mt-${isMobile ? '3' : '4'} flex justify-end gap-2`}>
@@ -1233,7 +1424,7 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
-                                                onClick={() => setListingsPage(p => Math.max(p - 1, 1))}
+                                                onClick={() => fetchListings(Math.max(listingsPage - 1, 1))}
                                                 disabled={listingsPage === 1}
                                             >
                                                 {isMobile ? '‹' : 'Prev'}
@@ -1259,7 +1450,7 @@ export default function ProfileDashboard() {
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                         }
                                                     }}
-                                                    onClick={() => setListingsPage(i + 1)}
+                                                    onClick={() => fetchListings(i + 1)}
                                                 >
                                                     {i + 1}
                                                 </button>
@@ -1284,7 +1475,7 @@ export default function ProfileDashboard() {
                                                         e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                     }
                                                 }}
-                                                onClick={() => setListingsPage(p => Math.min(p + 1, totalPages))}
+                                                onClick={() => fetchListings(Math.min(listingsPage + 1, totalPages))}
                                                 disabled={listingsPage === totalPages}
                                             >
                                                 {isMobile ? '›' : 'Next'}
@@ -1295,256 +1486,704 @@ export default function ProfileDashboard() {
                             )}
                         </div>
                     )}
-                    {/* PAYMENTS TAB */}
-                    {selectedTab === "payments" && (
-                        <div>
-                            <div className={`flex items-center justify-between mb-4 ${isMobile ? 'flex-col gap-3' : ''}`}>
-                                <h2 className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>Your Payments</h2>
-                                {/* Debug/Test buttons */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => {
-                                            resetPaymentSystem();
-                                            window.location.reload();
-                                        }}
-                                        className={`bg-yellow-500 text-white rounded hover:bg-yellow-600 ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-xs'}`}
-                                    >
-                                        Reset Payment System
-                                    </button>
-                                </div>
+
+                    {/* MESSAGES TAB */}
+                    {selectedTab === "messages" && (
+                        <div className="space-y-6">
+                            <div className={`flex justify-between items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                                <h2 className={`font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`} style={{ color: '#0d0a0b' }}>Messages</h2>
                             </div>
-
-                            {/* Payment Schedule Information */}
-                            {paymentSchedule && (
-                                <div className={`grid gap-4 mb-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-                                    {/* Next Payment Info */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Next Payment Date</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#72b01d' }}>
-                                            {formatPaymentDate(paymentSchedule.nextPaymentDate)}
-                                        </div>
-                                        <div className="text-xs mt-1" style={{ color: '#454955', opacity: 0.7 }}>
-                                            {getDaysUntilNextPayment(paymentSchedule.nextPaymentDate)} days remaining
-                                        </div>
-                                    </div>
-
-                                    {/* Current Period Earnings */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Pending Payment</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>
-                                            LKR {calculatePeriodEarnings(payments).toLocaleString()}
-                                        </div>
-                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
-                                            From {formatPaymentDate(paymentSchedule.currentPeriod.startDate)} to {formatPaymentDate(paymentSchedule.currentPeriod.endDate)}
-                                        </div>
-                                    </div>
-
-                                    {/* Last Payment Info */}
-                                    <div className={`rounded-xl flex flex-col items-center justify-center ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                        <div className="text-xs mb-1" style={{ color: '#454955', opacity: 0.8 }}>Last Payment Date</div>
-                                        <div className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
-                                            {formatPaymentDate(paymentSchedule.lastPaymentDate)}
-                                        </div>
-                                        <div className="text-xs mt-1 text-center" style={{ color: '#454955', opacity: 0.7 }}>
-                                            {paymentSchedule.previousPeriod ? 
-                                                `LKR ${calculatePeriodEarnings(getEligibleOrdersForPayment(allSellerOrders, paymentSchedule.previousPeriod)).toLocaleString()} paid` 
-                                                : 'No previous payment'
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Payment Period Information */}
-                            {paymentSchedule && (
-                                <div className={`mb-6 rounded-xl ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', border: '1px solid rgba(114, 176, 29, 0.2)' }}>
-                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-sm' : ''}`} style={{ color: '#0d0a0b' }}>Payment System Information</h3>
-                                    <div className={`space-y-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                                        <p>• Payments are made every 14 days</p>
-                                        <p>• We hold your earnings for a minimum of 14 days before payment</p>
-                                        <p>• Only orders with payment method "PayNow" are eligible for payment</p>
-                                        <p>• Orders with status "Received", "Shipped", or "Pending" are eligible for payment</p>
-                                        <p>• COD (Cash on Delivery) orders are excluded from automated payments</p>
-                                        <p>• Current payment period: <strong>{formatPaymentDate(paymentSchedule.currentPeriod.startDate)}</strong> to <strong>{formatPaymentDate(paymentSchedule.currentPeriod.endDate)}</strong></p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Payment Summary for Current Period */}
-                            <div className="mb-6">
-                                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Orders Eligible for Next Payment</h3>
-                                {payments.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full border rounded-xl" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                            <thead style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                                                <tr>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order ID</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Date</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Status</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Payment Method</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Item Name</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Quantity</th>
-                                                    <th className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-sm'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>Order Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {payments
-                                                    .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
-                                                    .map(order => (
-                                                        <tr key={order.id} className="transition" style={{ backgroundColor: '#ffffff' }} onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.05)';
-                                                        }}
-                                                            onMouseLeave={(e) => {
-                                                                e.currentTarget.style.backgroundColor = '#ffffff';
-                                                            }}>
-                                                            <td className={`border-b text-left font-mono ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? order.id.slice(-8) : order.id}</td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                {order.createdAt && new Date(order.createdAt.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleDateString()}
-                                                            </td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className={`px-1 py-1 rounded font-semibold ${isMobile ? 'text-xs' : 'text-xs'} ${
-                                                                    order.status === 'received' ? 'bg-green-100 text-green-800' :
-                                                                    order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                                                    'bg-yellow-100 text-yellow-800'
-                                                                }`}>
-                                                                    {order.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                                                <span className={`px-1 py-1 rounded font-semibold bg-green-100 text-green-800 ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                                                                    {order.paymentMethod || 'N/A'}
-                                                                </span>
-                                                            </td>
-                                                            <td className={`border-b text-left font-semibold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{isMobile ? (order.itemName || '-').slice(0, 15) + '...' : (order.itemName || '-')}</td>
-                                                            <td className={`border-b text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#454955', borderColor: 'rgba(114, 176, 29, 0.2)' }}>{order.quantity || 1}</td>
-                                                            <td className={`border-b text-left font-bold ${isMobile ? 'px-2 py-1 text-xs' : 'px-4 py-2 text-xs'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.2)' }}>LKR {order.total?.toLocaleString()}</td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                            <tfoot style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)' }}>
-                                                <tr>
-                                                    <td colSpan={6} className={`border-t text-right font-bold ${isMobile ? 'px-2 py-2 text-xs' : 'px-4 py-3'}`} style={{ color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                                        Total Payment:
-                                                    </td>
-                                                    <td className={`border-t text-left font-bold ${isMobile ? 'px-2 py-2 text-sm' : 'px-4 py-3 text-lg'}`} style={{ color: '#3f7d20', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                                        LKR {calculatePeriodEarnings(payments).toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
-                                ) : (
-                                    <div className={`text-center ${isMobile ? 'py-4' : 'py-6'}`} style={{ color: '#454955', opacity: 0.7 }}>
-                                        No eligible orders for the current payment period.
-                                    </div>
-                                )}
-                            </div>
+                            <MessagesPage />
                         </div>
+                    )}
+                    
+                    {/* EARNINGS TAB */}
+                    {selectedTab === "earnings" && (
+                        <EarningsPage profileUid={profileUid} />
+                    )}
+
+                    {/* STOCK MANAGEMENT TAB */}
+                    {selectedTab === "stock" && (
+                        <StockManagement profileUid={profileUid} />
                     )}
 
                     {/* SETTINGS TAB */}
                     {selectedTab === "settings" && (
                         <div>
-                            <h2 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Settings</h2>
+                            <h2 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Settings</h2>
                             <form className="w-full space-y-8" onSubmit={e => { e.preventDefault(); }}>
                                 {settingsLoading && <div style={{ color: '#72b01d' }}>Saving...</div>}
                                 {settingsSuccess && <div style={{ color: '#3f7d20' }}>{settingsSuccess}</div>}
                                 {settingsError && <div style={{ color: '#d32f2f' }}>{settingsError}</div>}
 
-                                {/* Bank Account Details */}
+                                {/* Profile Information Section */}
                                 <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Account Details for Payouts</h3>
-                                    <div className={`grid gap-4 w-full ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Account Number</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.accountNumber}
-                                                onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))}
-                                            />
+                                    <h3 className={`font-bold mb-4 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Profile Information</h3>
+                                    
+                                    {/* Profile Picture */}
+                                    <div className={`flex ${isMobile ? 'flex-col items-center' : 'items-center'} mb-6`}>
+                                        <div className={`relative ${isMobile ? 'mb-4' : 'mr-6'}`}>
+                                            <div className={`${isMobile ? 'w-20 h-20' : 'w-24 h-24'} rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden relative group cursor-pointer`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                                {photoURL ? (
+                                                    <img src={photoURL} alt="Profile" className="object-cover w-full h-full" />
+                                                ) : (
+                                                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-600`}>
+                                                        {displayName ? displayName[0] : user?.email ? user.email[0] : ''}
+                                                    </span>
+                                                )}
+                                                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+                                                    <span className={`text-white font-semibold ${isMobile ? 'text-xs' : 'text-sm'}`}>Change</span>
+                                                    <input 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        className="hidden" 
+                                                        onChange={async (e) => {
+                                                            if (!user || !e.target.files || e.target.files.length === 0) return;
+                                                            const file = e.target.files[0];
+                                                            const storage = getStorage();
+                                                            const fileRef = storageRef(storage, `profile_pics/${user.uid}_${Date.now()}`);
+                                                            await uploadBytes(fileRef, file);
+                                                            const url = await getDownloadURL(fileRef);
+                                                            setPhotoURL(url);
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Branch Name</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.branch}
-                                                onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Bank Name</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.bankName}
-                                                onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Full Name as in Bank</label>
-                                            <input
-                                                className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
-                                                style={{
-                                                    backgroundColor: '#ffffff',
-                                                    borderColor: 'rgba(114, 176, 29, 0.3)',
-                                                    color: '#0d0a0b'
-                                                }}
-                                                onFocus={(e) => {
-                                                    e.currentTarget.style.borderColor = '#72b01d';
-                                                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
-                                                    e.currentTarget.style.boxShadow = 'none';
-                                                }}
-                                                value={bankForm.fullName}
-                                                onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))}
-                                            />
+                                        <div className="flex-1">
+                                            <p className={`${isMobile ? 'text-sm text-center' : 'text-base'} text-gray-600 mb-2`}>
+                                                Click on your profile picture to change it
+                                            </p>
                                         </div>
                                     </div>
+
+                                    {/* Name Field */}
+                                    <div className="mb-4">
+                                        <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                            Display Name
+                                        </label>
+                                        <input
+                                            className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                color: '#0d0a0b'
+                                            }}
+                                            onFocus={(e) => {
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                            }}
+                                            onBlur={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                            value={displayName}
+                                            onChange={e => setDisplayName(e.target.value)}
+                                            placeholder="Enter your display name"
+                                            maxLength={40}
+                                        />
+                                    </div>
+
+                                    {/* Description Field */}
+                                    <div className="mb-4">
+                                        <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                            Bio/Description
+                                        </label>
+                                        <textarea
+                                            className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 resize-none ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                color: '#0d0a0b'
+                                            }}
+                                            onFocus={(e) => {
+                                                e.currentTarget.style.borderColor = '#72b01d';
+                                                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                            }}
+                                            onBlur={(e) => {
+                                                e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                e.currentTarget.style.boxShadow = 'none';
+                                            }}
+                                            rows={3}
+                                            value={desc}
+                                            onChange={e => setDesc(e.target.value)}
+                                            placeholder="Write something about yourself..."
+                                            maxLength={300}
+                                        />
+                                        <div className={`text-right mt-1 ${isMobile ? 'text-xs' : 'text-sm'} text-gray-500`}>
+                                            {desc.length}/300
+                                        </div>
+                                    </div>
+
+                                    {/* Save Profile Button */}
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!user) return;
+                                                setSettingsLoading(true);
+                                                setSettingsError(null);
+                                                try {
+                                                    const auth = getAuth();
+                                                    if (auth.currentUser) {
+                                                        await updateProfile(auth.currentUser, {
+                                                            displayName: displayName,
+                                                            photoURL: photoURL,
+                                                        });
+                                                    }
+                                                    // FIXED: Use direct document access instead of query
+                                                    const userDocRef = doc(db, "users", user.uid);
+                                                    const userDoc = await getDoc(userDocRef);
+                                                    if (userDoc.exists()) {
+                                                        await updateDoc(userDocRef, { description: desc, displayName, photoURL });
+                                                    } else {
+                                                        await setDoc(userDocRef, {
+                                                            uid: user.uid,
+                                                            email: user.email,
+                                                            displayName,
+                                                            photoURL,
+                                                            description: desc,
+                                                        });
+                                                    }
+                                                    setSettingsSuccess('Profile updated successfully!');
+                                                } catch (e: any) {
+                                                    setSettingsError(e.message || 'Failed to update profile');
+                                                } finally {
+                                                    setSettingsLoading(false);
+                                                }
+                                            }}
+                                            disabled={settingsLoading}
+                                            className={`rounded-lg font-semibold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2 text-base'}`}
+                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                            onMouseEnter={(e) => {
+                                                if (!settingsLoading) {
+                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!settingsLoading) {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                }
+                                            }}
+                                        >
+                                            {settingsLoading ? 'Saving...' : 'Save Profile'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Password Change Section */}
+                                <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <h3 className={`font-bold mb-4 ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Account Security</h3>
+                                    
+                                    {user && user.providerData && user.providerData.some(provider => provider.providerId === 'google.com') ? (
+                                        // Google user - cannot change password
+                                        <div className="rounded-lg border p-4" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                            <div className="flex items-start gap-3">
+                                                <div className="flex-shrink-0">
+                                                    <svg className="w-5 h-5 mt-0.5" style={{ color: '#72b01d' }} fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h4 className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#3f7d20' }}>
+                                                        Google Account Sign-In
+                                                    </h4>
+                                                    <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        You're signed in with Google. To change your password, please visit your Google Account settings.
+                                                    </p>
+                                                    <div className="mt-3">
+                                                        <a
+                                                            href="https://myaccount.google.com/security"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isMobile ? 'text-xs' : 'text-sm'}`}
+                                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                                            }}
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                            Manage Google Account
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // Email/password user - can change password
+                                        <>
+                                            <div className={`grid gap-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Current Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Enter current password"
+                                                        id="currentPassword"
+                                                    />
+                                                </div>
+                                                <div></div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Enter new password"
+                                                        minLength={6}
+                                                        id="newPassword"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Confirm New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        placeholder="Confirm new password"
+                                                        minLength={6}
+                                                        id="confirmPassword"
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement)?.value;
+                                                        const newPassword = (document.getElementById('newPassword') as HTMLInputElement)?.value;
+                                                        const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
+                                                        
+                                                        // Validation
+                                                        if (!currentPassword || !newPassword || !confirmPassword) {
+                                                            setSettingsError('Please fill in all password fields');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (newPassword !== confirmPassword) {
+                                                            setSettingsError('New passwords do not match');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (newPassword.length < 6) {
+                                                            setSettingsError('New password must be at least 6 characters long');
+                                                            return;
+                                                        }
+                                                        
+                                                        if (currentPassword === newPassword) {
+                                                            setSettingsError('New password must be different from current password');
+                                                            return;
+                                                        }
+                                                        
+                                                        setSettingsLoading(true);
+                                                        setSettingsError(null);
+                                                        
+                                                        try {
+                                                            const auth = getAuth();
+                                                            if (auth.currentUser && user?.email) {
+                                                                // Re-authenticate user first
+                                                                const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = await import('firebase/auth');
+                                                                const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                                                                
+                                                                await reauthenticateWithCredential(auth.currentUser, credential);
+                                                                await updatePassword(auth.currentUser, newPassword);
+                                                                
+                                                                setSettingsSuccess('Password updated successfully!');
+                                                                // Clear password fields
+                                                                (document.getElementById('currentPassword') as HTMLInputElement).value = '';
+                                                                (document.getElementById('newPassword') as HTMLInputElement).value = '';
+                                                                (document.getElementById('confirmPassword') as HTMLInputElement).value = '';
+                                                            }
+                                                        } catch (e: any) {
+                                                            console.error('Password change error:', e);
+                                                            if (e.code === 'auth/wrong-password') {
+                                                                setSettingsError('Current password is incorrect');
+                                                            } else if (e.code === 'auth/weak-password') {
+                                                                setSettingsError('New password is too weak');
+                                                            } else if (e.code === 'auth/requires-recent-login') {
+                                                                setSettingsError('Please log out and log back in before changing your password');
+                                                            } else {
+                                                                setSettingsError(e.message || 'Failed to update password');
+                                                            }
+                                                        } finally {
+                                                            setSettingsLoading(false);
+                                                        }
+                                                    }}
+                                                    disabled={settingsLoading}
+                                                    className={`rounded-lg font-semibold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2 text-base'}`}
+                                                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }
+                                                    }}
+                                                >
+                                                    {settingsLoading ? 'Updating...' : 'Change Password'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Bank Account Management */}
+                                <div className={`rounded-xl border w-full ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4`}>
+                                        <h3 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>Bank Accounts for Payouts</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setIsAddingBank(true);
+                                                setEditingBankId(null);
+                                                setBankForm({ accountNumber: '', branch: '', bankName: '', fullName: '' });
+                                            }}
+                                            className={`rounded-lg font-semibold transition ${isMobile ? 'w-full px-4 py-3 text-sm' : 'px-4 py-2 text-sm'}`}
+                                            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#3f7d20';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#72b01d';
+                                            }}
+                                        >
+                                            + Add Bank Account
+                                        </button>
+                                    </div>
+
+                                    {/* Bank Accounts List */}
+                                    {bankAccounts.length > 0 && (
+                                        <div className={`${isMobile ? 'space-y-4' : 'space-y-3'} mb-4`}>
+                                            {bankAccounts.map((account) => (
+                                                <div key={account.id} className={`${isMobile ? 'p-4' : 'p-4'} rounded-lg border ${account.isDefault ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                                                    {isMobile ? (
+                                                        /* Mobile Layout - Stacked */
+                                                        <div className="space-y-3">
+                                                            {/* Header with bank name and default badge */}
+                                                            <div className="flex items-center justify-between">
+                                                                <h4 className="font-semibold text-sm" style={{ color: '#0d0a0b' }}>
+                                                                    {account.bankName}
+                                                                </h4>
+                                                                {account.isDefault && (
+                                                                    <span className="px-2 py-1 rounded text-green-700 bg-green-100 text-xs font-medium">
+                                                                        Default
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Account Details */}
+                                                            <div className="space-y-1">
+                                                                <div className="flex justify-between">
+                                                                    <span className="text-xs text-gray-600">Account:</span>
+                                                                    <span className="text-xs font-medium" style={{ color: '#454955' }}>
+                                                                        {account.accountNumber}
+                                                                    </span>
+                                                                </div>
+                                                                {account.branch && (
+                                                                    <div className="flex justify-between">
+                                                                        <span className="text-xs text-gray-600">Branch:</span>
+                                                                        <span className="text-xs" style={{ color: '#454955' }}>
+                                                                            {account.branch}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex justify-between">
+                                                                    <span className="text-xs text-gray-600">Name:</span>
+                                                                    <span className="text-xs" style={{ color: '#454955' }}>
+                                                                        {account.fullName}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Action Buttons - Stacked on Mobile */}
+                                                            <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+                                                                {!account.isDefault && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setDefaultBankAccount(account.id)}
+                                                                        className="w-full px-3 py-2 rounded-lg border border-green-300 text-green-700 bg-white hover:bg-green-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Set as Default
+                                                                    </button>
+                                                                )}
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => startEditingBank(account)}
+                                                                        className="flex-1 px-3 py-2 rounded-lg border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => deleteBankAccount(account.id)}
+                                                                        className="flex-1 px-3 py-2 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 transition text-sm font-medium"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        /* Desktop Layout - Side by Side */
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <h4 className="font-semibold text-base" style={{ color: '#0d0a0b' }}>
+                                                                        {account.bankName}
+                                                                    </h4>
+                                                                    {account.isDefault && (
+                                                                        <span className="px-2 py-1 rounded text-green-700 bg-green-100 text-sm">
+                                                                            Default
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Account: {account.accountNumber}
+                                                                </p>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Branch: {account.branch}
+                                                                </p>
+                                                                <p className="text-sm" style={{ color: '#454955' }}>
+                                                                    Name: {account.fullName}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex gap-2 ml-4">
+                                                                {!account.isDefault && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setDefaultBankAccount(account.id)}
+                                                                        className="px-3 py-1 rounded border border-green-300 text-green-700 hover:bg-green-50 transition text-sm"
+                                                                        disabled={settingsLoading}
+                                                                    >
+                                                                        Set Default
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => startEditingBank(account)}
+                                                                    className="px-3 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50 transition text-sm"
+                                                                    disabled={settingsLoading}
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => deleteBankAccount(account.id)}
+                                                                    className="px-3 py-1 rounded border border-red-300 text-red-700 hover:bg-red-50 transition text-sm"
+                                                                    disabled={settingsLoading}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Add/Edit Bank Account Form */}
+                                    {(isAddingBank || editingBankId) && (
+                                        <div className="p-4 border border-blue-200 rounded-lg bg-blue-50 mb-4">
+                                            <h4 className={`font-semibold mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#0d0a0b' }}>
+                                                {editingBankId ? 'Edit Bank Account' : 'Add New Bank Account'}
+                                            </h4>
+                                            <div className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Bank Account Number *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.accountNumber}
+                                                        onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))}
+                                                        placeholder="Enter account number"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Branch Name
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.branch}
+                                                        onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
+                                                        placeholder="Enter branch name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Bank Name *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.bankName}
+                                                        onChange={e => setBankForm(f => ({ ...f, bankName: e.target.value }))}
+                                                        placeholder="Enter bank name"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className={`block font-semibold mb-1 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Full Name as in Bank *
+                                                    </label>
+                                                    <input
+                                                        className={`border rounded w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-2 py-2 text-sm' : 'px-3 py-2'}`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            borderColor: 'rgba(114, 176, 29, 0.3)',
+                                                            color: '#0d0a0b'
+                                                        }}
+                                                        onFocus={(e) => {
+                                                            e.currentTarget.style.borderColor = '#72b01d';
+                                                            e.currentTarget.style.boxShadow = '0 0 0 2px rgba(114, 176, 29, 0.2)';
+                                                        }}
+                                                        onBlur={(e) => {
+                                                            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
+                                                            e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        value={bankForm.fullName}
+                                                        onChange={e => setBankForm(f => ({ ...f, fullName: e.target.value }))}
+                                                        placeholder="Enter full name as in bank"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'} mt-4`}>
+                                                <button
+                                                    type="button"
+                                                    onClick={editingBankId ? () => editBankAccount(editingBankId) : addBankAccount}
+                                                    disabled={settingsLoading || !bankForm.accountNumber || !bankForm.bankName || !bankForm.fullName}
+                                                    className={`${isMobile ? 'w-full py-3' : ''} px-4 py-2 rounded font-semibold transition ${isMobile ? 'text-sm' : 'text-sm'}`}
+                                                    style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!settingsLoading) {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }
+                                                    }}
+                                                >
+                                                    {settingsLoading ? 'Saving...' : (editingBankId ? 'Update Account' : 'Add Account')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={cancelBankEdit}
+                                                    className={`${isMobile ? 'w-full py-3' : ''} px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 transition ${isMobile ? 'text-sm' : 'text-sm'}`}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {bankAccounts.length === 0 && !isAddingBank && (
+                                        <div className="text-center py-8" style={{ color: '#454955' }}>
+                                            <div className="mb-2">No bank accounts added yet</div>
+                                            <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>Add a bank account to receive payouts from your sales</div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Seller Verification */}
                                 <div className={`rounded-2xl border w-full shadow-sm flex flex-col ${isMobile ? 'p-4' : 'p-6'}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <h3 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Verified Seller Badge</h3>
+                                    <h3 className={`font-bold mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>Verified User Badge</h3>
                                     
                                     {/* Verified Status */}
                                     {verifyForm.isVerified === VerificationStatus.COMPLETED && (
@@ -1552,8 +2191,8 @@ export default function ProfileDashboard() {
                                             <div className={`rounded-full mb-2 ${isMobile ? 'p-3' : 'p-4'}`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)' }}>
                                                 <svg width={isMobile ? "28" : "36"} height={isMobile ? "28" : "36"} fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#72b01d" fillOpacity="0.12" /><path d="M8 12.5l2.5 2.5 5-5" stroke="#3f7d20" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                             </div>
-                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>You are a verified seller!</div>
-                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and you can sell on our platform.</div>
+                                            <div className={`font-semibold text-center ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#3f7d20' }}>You are a verified user!</div>
+                                            <div className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955', opacity: 0.8 }}>Your account has been verified and it will cause to gain more trust from buyers and sellers.</div>
                                         </div>
                                     )}
                                     
@@ -1592,8 +2231,8 @@ export default function ProfileDashboard() {
                                             {verifyForm.isVerified === VerificationStatus.NO_DATA && (
                                                 <div className="mb-6">
                                                     <div className={`bg-blue-50 border border-blue-200 rounded-xl mb-4 ${isMobile ? 'p-3' : 'p-4'}`}>
-                                                        <div className={`text-blue-700 font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>📋 Complete your seller verification</div>
-                                                        <div className={`text-blue-600 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>Submit your documents to become a verified seller and gain customer trust.</div>
+                                                        <div className={`text-blue-700 font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>📋 Complete your user verification</div>
+                                                        <div className={`text-blue-600 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>Submit your documents to become a verified user and gain other users trust.</div>
                                                     </div>
                                                 </div>
                                             )}
@@ -1702,7 +2341,7 @@ export default function ProfileDashboard() {
                                                 e.currentTarget.style.backgroundColor = '#72b01d';
                                             }
                                         }}
-                                        onClick={handleSaveAllSettings}
+                                        onClick={handleSaveVerification}
                                         disabled={settingsLoading}
                                     >
                                         {settingsLoading ? 'Saving...' : 'Submit for Review'}
@@ -1712,9 +2351,29 @@ export default function ProfileDashboard() {
                         </div>
                     )}
 
-                </main>
+                </div>
+                        </div>
+                    </main>
+                </div>
             </div>
             <Footer />
+            <ConfirmDialog
+                isOpen={isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText={confirmDialog.confirmText}
+                cancelText={confirmDialog.cancelText}
+                type={confirmDialog.type}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+            
+            {/* Custom Order Modal */}
+            <CreateCustomOrderModal
+                isOpen={showCustomOrderModal}
+                onClose={() => setShowCustomOrderModal(false)}
+                source="dashboard"
+            />
         </div>
     );
 }

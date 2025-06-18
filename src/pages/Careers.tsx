@@ -1,22 +1,43 @@
+import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
+import { SEOHead } from '../components/SEO/SEOHead';
+import { useResponsive } from '../hooks/useResponsive';
+import { getCanonicalUrl, generateKeywords } from '../utils/seo';
 import { FiBriefcase, FiHeart, FiGlobe, FiUsers, FiMail } from 'react-icons/fi';
 
 export default function Careers() {
+  const { isMobile } = useResponsive();
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <FiBriefcase className="mx-auto text-6xl mb-6 text-green-100" />
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Join Our Team</h1>
-          <p className="text-xl md:text-2xl text-green-100">
-            Help us connect Sri Lankan artisans with the world
-          </p>
+    <>
+      <SEOHead
+        title="Careers - SinaMarketplace"
+        description="Join our mission to connect Sri Lankan artisans with the world. Explore career opportunities at SinaMarketplace."
+        keywords={generateKeywords([
+          'careers',
+          'jobs',
+          'Sri Lankan marketplace',
+          'remote work',
+          'employment',
+          'artisan platform'
+        ])}
+        canonicalUrl={getCanonicalUrl('/careers')}
+      />
+      <ResponsiveHeader />
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
+        <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8d17] text-white">
+          <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-4 py-16'} text-center`}>
+            <FiBriefcase className={`mx-auto ${isMobile ? 'text-5xl' : 'text-6xl'} mb-6 text-green-100`} />
+            <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>Join Our Team</h1>
+            <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} text-green-100`}>
+              Help us connect Sri Lankan artisans with the world
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Main Content */}
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-12'}`}>
         
         {/* Why Work With Us */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
@@ -208,6 +229,7 @@ export default function Careers() {
       </div>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,16 +1,18 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, orderBy, type QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button, Input, Pagination, BackToTop } from "../components/UI";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../components/HOC/WithReviewStats";
 import Footer from "../components/UI/Footer";
 import { useResponsive } from "../hooks/useResponsive";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../utils/seo";
+import { paginateQuery } from "../utils/paginateFirestore";
 
 interface Listing {
   id: string;
@@ -60,9 +62,16 @@ const Search: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; // Adjust as needed
+  
+  // Server-side pagination state
+  const [lastDocMap, setLastDocMap] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(new Map());
+  const [maxKnownPage, setMaxKnownPage] = useState(1);
 
   // On mount or search param change: sync state
   useEffect(() => {
+    const freeParam = searchParams.get("free");
+    console.log("Free shipping URL param:", freeParam, "-> boolean:", freeParam === "1");
+    
     setCat(searchParams.get("cat") || "");
     setSub(searchParams.get("sub") || "");
     setSearchInput(searchParams.get("q") || "");
@@ -70,12 +79,14 @@ const Search: React.FC = () => {
     setFilterMinPrice(searchParams.get("min") || "");
     setFilterMaxPrice(searchParams.get("max") || "");
     setFilterSort(searchParams.get("sort") || "");
-    setFilterFreeShipping(searchParams.get("free") === "1");
+    setFilterFreeShipping(freeParam === "1");
     setAppliedMinPrice(searchParams.get("min") || "");
     setAppliedMaxPrice(searchParams.get("max") || "");
     setAppliedSort(searchParams.get("sort") || "");
-    setAppliedFreeShipping(searchParams.get("free") === "1");
+    setAppliedFreeShipping(freeParam === "1");
     setCurrentPage(parseInt(searchParams.get("page") || "1"));
+    
+    console.log("Applied free shipping state:", freeParam === "1");
     // Scroll to top when search params change (i.e., when user comes to search page or changes filters/page)
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
@@ -89,8 +100,8 @@ const Search: React.FC = () => {
     fetchUserIP();
   }, []);
 
-  // Optimized query builder
-  const buildOptimizedQuery = useCallback(() => {
+  // Build query for server-side pagination
+  const buildPaginatedQuery = useCallback(() => {
     const conditions: any[] = [];
 
     // Add server-side filters where possible
@@ -100,9 +111,24 @@ const Search: React.FC = () => {
     if (sub) {
       conditions.push(where("subcategory", "==", sub));
     }
+    
+    // Add price range filters server-side
+    if (appliedMinPrice) {
+      conditions.push(where("price", ">=", Number(appliedMinPrice)));
+    }
+    if (appliedMaxPrice) {
+      conditions.push(where("price", "<=", Number(appliedMaxPrice)));
+    }
+    
+    // Handle free shipping filter carefully
     if (appliedFreeShipping) {
+      console.log("Adding free shipping filter: deliveryType == 'free'");
+      // Try to filter for both explicit "free" and also where deliveryType exists and equals "free"
       conditions.push(where("deliveryType", "==", "free"));
     }
+
+    // Note: Text search will be handled client-side due to Firestore limitations
+    // For production, consider using Algolia or Elasticsearch for full-text search
 
     // Add ordering (must be after where clauses)
     let queryConstraints = [...conditions];
@@ -112,19 +138,20 @@ const Search: React.FC = () => {
       queryConstraints.push(orderBy("price", "asc"));
     } else if (appliedSort === "price-desc") {
       queryConstraints.push(orderBy("price", "desc"));
+    } else {
+      // Default ordering for pagination
+      queryConstraints.push(orderBy("createdAt", "desc"));
     }
 
-    // Add limit for better performance
-    queryConstraints.push(limit(100));
-
+    console.log("Building query with", conditions.length, "conditions, appliedFreeShipping:", appliedFreeShipping);
     return query(collection(db, "listings"), ...queryConstraints);
-  }, [cat, sub, appliedFreeShipping, appliedSort]);
+  }, [cat, sub, appliedFreeShipping, appliedSort, appliedMinPrice, appliedMaxPrice]);
 
-  // Optimized fetch function with caching
-  const fetchOptimizedListings = useCallback(async () => {
+  // Server-side paginated fetch function
+  const fetchPaginatedListings = useCallback(async (page: number = 1) => {
     if (!ip) return;
     
-    // Create cache key from current filters
+    // Create cache key from current filters and page
     const cacheKey = JSON.stringify({
       cat,
       sub,
@@ -133,41 +160,83 @@ const Search: React.FC = () => {
       appliedSearch,
       appliedMinPrice,
       appliedMaxPrice,
+      page,
     });
 
     // Check cache first
     if (cacheRef.current.has(cacheKey)) {
+      console.log("Using cached results for key:", cacheKey);
       const cachedResults = cacheRef.current.get(cacheKey)!;
       setItems(cachedResults);
       setSearching(false);
       return;
     }
     
+    console.log("No cache found, executing fresh query for:", cacheKey);
+    
     try {
       setSearching(true);
-      const optimizedQuery = buildOptimizedQuery();
-      const snapshot = await getDocs(optimizedQuery);
+      const baseQuery = buildPaginatedQuery();
       
-      let results: Listing[] = snapshot.docs.map(doc => ({
+      // Get the last document for the previous page (for pagination)
+      const startAfter = page > 1 ? lastDocMap.get(page - 1) : null;
+      
+      // If we have a text search, fetch more items to account for client-side filtering
+      const effectiveItemsPerPage = appliedSearch ? itemsPerPage * 3 : itemsPerPage;
+      
+      // Use the paginateQuery utility
+      const { docs, lastDoc, hasMore } = await paginateQuery(
+        baseQuery,
+        effectiveItemsPerPage,
+        startAfter || undefined
+      );
+      
+      let results: Listing[] = docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
         id: doc.id,
         ...doc.data(),
         __client_ip: ip,
       } as Listing));
 
-      // Apply client-side filters that can't be done server-side
+      console.log("Raw query results:", results.length, "items");
+      if (appliedFreeShipping) {
+        console.log("Free shipping filter applied, sample deliveryTypes:", 
+          results.slice(0, 5).map(item => ({id: item.id, deliveryType: item.deliveryType}))
+        );
+      }
+
+      // Apply text search filter client-side (due to Firestore limitations)
       if (appliedSearch) {
         results = results.filter(item => 
           item.name?.toLowerCase().includes(appliedSearch.toLowerCase()) ||
           item.description?.toLowerCase().includes(appliedSearch.toLowerCase())
         );
+        
+        // Limit results to the actual page size after filtering
+        results = results.slice(0, itemsPerPage);
       }
 
-      if (appliedMinPrice) {
-        results = results.filter(item => Number(item.price) >= Number(appliedMinPrice));
+      // Additional client-side free shipping filter as fallback
+      // (in case server-side filter didn't work due to missing fields)
+      if (appliedFreeShipping) {
+        const beforeFreeShippingFilter = results.length;
+        results = results.filter(item => item.deliveryType === "free");
+        console.log(`Client-side free shipping filter: ${beforeFreeShippingFilter} -> ${results.length} items`);
       }
 
-      if (appliedMaxPrice) {
-        results = results.filter(item => Number(item.price) <= Number(appliedMaxPrice));
+      // Price range filters are now handled server-side in the query
+
+      // Update pagination state
+      setLastDocMap(prev => {
+        const newMap = new Map(prev);
+        newMap.set(page, lastDoc);
+        return newMap;
+      });
+      
+      // Update max known page based on whether there are more results
+      if (hasMore) {
+        setMaxKnownPage(prev => Math.max(prev, page + 1));
+      } else {
+        setMaxKnownPage(page); // This is the last page
       }
 
       // Cache the results (limit cache size to prevent memory issues)
@@ -183,41 +252,33 @@ const Search: React.FC = () => {
     } catch (error) {
       console.error("Error fetching listings:", error);
       setItems([]);
+      // Don't update pagination state on error to preserve existing state
     } finally {
       setSearching(false);
     }
-  }, [ip, buildOptimizedQuery, appliedSearch, appliedMinPrice, appliedMaxPrice, cat, sub, appliedFreeShipping, appliedSort]);
+  }, [ip, buildPaginatedQuery, appliedSearch, lastDocMap, itemsPerPage]);
 
   // Fetch listings when dependencies change
   useEffect(() => {
     if (ip !== null) {
-      fetchOptimizedListings();
+      fetchPaginatedListings(currentPage);
     }
-  }, [fetchOptimizedListings]);
+  }, [ip, cat, sub, appliedFreeShipping, appliedSort, appliedSearch, appliedMinPrice, appliedMaxPrice, currentPage, fetchPaginatedListings]);
 
   // Refresh listings (after wishlist update)
   const refreshListings = useCallback(async () => {
     // Clear cache when refreshing to ensure fresh data
     cacheRef.current.clear();
-    await fetchOptimizedListings();
-  }, [fetchOptimizedListings]);
+    setLastDocMap(new Map()); // Reset pagination state
+    setMaxKnownPage(1); // Reset max known page
+    await fetchPaginatedListings(currentPage);
+  }, [fetchPaginatedListings, currentPage]);
 
-  // Memoized filtered and paginated results for better performance
-  const { paginatedItems, totalItems, totalPages, startIndex, endIndex } = useMemo(() => {
-    const total = items.length;
-    const pages = Math.ceil(total / itemsPerPage);
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const paginated = items.slice(start, end);
-    
-    return {
-      paginatedItems: paginated,
-      totalItems: total,
-      totalPages: pages,
-      startIndex: start,
-      endIndex: end
-    };
-  }, [items, currentPage, itemsPerPage]);
+  // Calculate total pages based on what we know about page existence
+  const totalPages = useMemo(() => {
+    if (items.length === 0 && currentPage === 1) return 1;
+    return Math.max(currentPage, maxKnownPage);
+  }, [items.length, currentPage, maxKnownPage]);
 
   // Optimized category/subcategory handlers with better performance
   const handleCategoryClick = useCallback((c: string) => {
@@ -225,6 +286,9 @@ const Search: React.FC = () => {
     setCat(newCat);
     setSub("");
     setCurrentPage(1); // Reset to first page
+    setLastDocMap(new Map()); // Reset pagination state
+    setMaxKnownPage(1); // Reset max known page
+    cacheRef.current.clear(); // Clear cache
     const params = new URLSearchParams(searchParams);
     if (newCat) params.set("cat", newCat);
     else {
@@ -239,6 +303,9 @@ const Search: React.FC = () => {
     setCat(c);
     setSub(sc);
     setCurrentPage(1); // Reset to first page
+    setLastDocMap(new Map()); // Reset pagination state
+    setMaxKnownPage(1); // Reset max known page
+    cacheRef.current.clear(); // Clear cache
     const params = new URLSearchParams(searchParams);
     params.set("cat", c);
     params.set("sub", sc);
@@ -324,14 +391,14 @@ const Search: React.FC = () => {
               </button>
             </div>
           )}
-          <aside className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'w-full md:w-80'} ${isMobile ? 'w-full' : 'mb-8 md:mb-0'} flex flex-col gap-${isMobile ? '4' : '6'}`}>
+          <aside className={`${isMobile ? (showFilters ? 'block' : 'hidden') : 'w-full md:w-80'} ${isMobile ? 'w-full' : 'mb-8 md:mb-0'} flex flex-col ${isMobile ? 'gap-4' : 'gap-6'}`}>
             {/* Category Filter Card */}
             <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)'}}>
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
-              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
+              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
                 {categories.map((c) => (
                   <li key={c.name} className="flex flex-col">
                     <div className="flex items-center w-full group">
@@ -365,7 +432,7 @@ const Search: React.FC = () => {
                       </button>
                     </div>
                     {expanded === c.name && c.subcategories && (
-                      <ul className={`${isMobile ? 'pl-3 py-1' : 'pl-4 py-1'} flex flex-col gap-1`}>
+                      <ul className={`${isMobile ? 'pl-4 py-2' : 'pl-6 py-2'} flex flex-col gap-1`}>
                         {c.subcategories.map(sc => (
                           <li key={sc}>
                             <button
@@ -412,11 +479,11 @@ const Search: React.FC = () => {
 
             {/* Additional Filters Card */}
             <div className={`rounded-2xl overflow-hidden shadow-lg border ${isMobile ? 'mx-1' : ''}`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-              <div className={`flex items-center gap-2 ${isMobile ? 'px-3 py-2' : 'px-4 py-3'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
+              <div className={`flex items-center gap-2 ${isMobile ? 'px-4 py-3' : 'px-6 py-4'} border-b`} style={{ borderBottomColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M3 6h18M6 12h12M10 18h4" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>More Filters</h2>
               </div>
-              <div className={`flex flex-col gap-${isMobile ? '4' : '5'} ${isMobile ? 'px-3 py-3' : 'px-4 py-4'}`}>
+              <div className={`flex flex-col ${isMobile ? 'gap-4' : 'gap-6'} ${isMobile ? 'px-4 py-4' : 'px-6 py-6'}`}>
                 {/* Price Range */}
                 <div>
                   <label className={`block ${isMobile ? 'text-xs' : 'text-xs'} font-semibold mb-2`} style={{ color: '#454955' }}>Price Range (LKR)</label>
@@ -595,23 +662,13 @@ const Search: React.FC = () => {
                 </Button>
               </form>
             </div>
-            {/* Results header with count and active filters */}
-            <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
-              <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}`}>
-                {/* Results count */}
-                <div className="flex flex-col">
-                  <p className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`} style={{ color: '#0d0a0b' }}>
-                    {totalItems} {totalItems === 1 ? 'Product' : 'Products'} Found
-                  </p>
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
-                    Showing {Math.min(startIndex + 1, totalItems)}-{Math.min(endIndex, totalItems)}
-                    {currentPage > 1 && ` • Page ${currentPage} of ${totalPages}`}
-                  </p>
-                </div>
-                
-                {/* Active filters summary */}
-                {(appliedSearch || cat || sub || appliedMinPrice || appliedMaxPrice || appliedSort || appliedFreeShipping) && (
-                  <div className={`flex flex-wrap gap-${isMobile ? '1' : '2'}`}>
+            {/* Results header with active filters */}
+            {(appliedSearch || cat || sub || appliedMinPrice || appliedMaxPrice || appliedSort || appliedFreeShipping) && (
+              <div className={`${isMobile ? 'mb-2' : 'mb-3'}`}>
+                <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}`}>
+                  
+                  {/* Active filters summary */}
+                  <div className={`flex flex-wrap ${isMobile ? 'gap-1' : 'gap-2'}`}>
                     {appliedSearch && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
@@ -683,9 +740,9 @@ const Search: React.FC = () => {
                       </span>
                     )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
             {/* Results grid */}
             {searching ? (
               <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -699,21 +756,25 @@ const Search: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
-                {paginatedItems.map((item: Listing) => (
-                  <ResponsiveListingTile 
-                    key={item.id}
-                    listing={item}
-                    onRefresh={refreshListings}
-                    compact={true}
-                  />
-                ))}
-                {paginatedItems.length === 0 && !searching && (
-                  <div className="col-span-full text-center text-gray-400 text-lg py-20">
-                    No products found.
+              <WithReviewStats listings={items}>
+                {(listingsWithStats) => (
+                  <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
+                    {listingsWithStats.map((item: any) => (
+                      <ResponsiveListingTile 
+                        key={item.id}
+                        listing={item}
+                        onRefresh={refreshListings}
+                        compact={true}
+                      />
+                    ))}
+                    {items.length === 0 && !searching && (
+                      <div className="col-span-full text-center text-gray-400 text-lg py-20">
+                        No products found.
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </WithReviewStats>
             )}
 
             {/* Pagination Controls */}
@@ -723,9 +784,7 @@ const Search: React.FC = () => {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={handlePageChange}
-                  totalItems={totalItems}
-                  startIndex={startIndex}
-                  endIndex={Math.min(endIndex, totalItems)}
+                  totalItems={items.length}
                   showInfo={!isMobile}
                   showJumpTo={totalPages > 10 && !isMobile}
                 />

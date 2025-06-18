@@ -20,6 +20,10 @@ export interface Product {
   category: string;
   brand?: string;
   reviews?: Review[];
+  aggregateRating?: {
+    ratingValue: number;
+    reviewCount: number;
+  };
   availability: 'InStock' | 'OutOfStock' | 'PreOrder';
   condition: 'NewCondition' | 'UsedCondition' | 'RefurbishedCondition';
   seller: {
@@ -86,20 +90,22 @@ export function generateProductStructuredData(product: Product): object {
     };
   }
 
-  // Add aggregated rating if reviews exist
-  if (product.reviews && product.reviews.length > 0) {
-    const avgRating = product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length;
-    
+  // Add aggregated rating if provided (now comes from reviews collection)
+  // Note: This should be passed in pre-calculated for performance
+  if (product.aggregateRating && product.aggregateRating.reviewCount > 0) {
     structuredData.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: avgRating.toFixed(1),
-      reviewCount: product.reviews.length,
+      ratingValue: product.aggregateRating.ratingValue.toFixed(1),
+      reviewCount: product.aggregateRating.reviewCount,
       bestRating: 5,
       worstRating: 1,
     };
+  }
 
-    // Add individual reviews
-    structuredData.review = product.reviews.map(review => ({
+  // Individual reviews should be passed in separately for performance
+  // (avoiding the need to fetch all reviews when generating structured data)
+  if (product.reviews && product.reviews.length > 0) {
+    structuredData.review = product.reviews.map((review: any) => ({
       '@type': 'Review',
       reviewRating: {
         '@type': 'Rating',

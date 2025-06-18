@@ -15,10 +15,16 @@ interface Listing {
   images?: string[];
   description?: string;
   createdAt?: any;
-  reviews?: any[];
   deliveryType?: DeliveryTypeType;
   cashOnDelivery?: boolean;
   wishlist?: Array<{ ip?: string; ownerId?: string; }>;
+  // Legacy reviews field - to be phased out
+  reviews?: any[];
+  // New optimized review stats
+  reviewStats?: {
+    rating: number | null;
+    count: number;
+  };
 }
 
 interface ListingTileProps {
@@ -30,10 +36,16 @@ interface ListingTileProps {
 
 // Get review statistics for a listing
 function getReviewStats(listing: Listing): ReviewStats {
-  const reviews = Array.isArray(listing.reviews) ? listing.reviews : [];
-  if (!reviews.length) return { avg: null, count: 0 };
-  const avg = reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length;
-  return { avg, count: reviews.length };
+  // Use optimized review stats if available
+  if (listing.reviewStats) {
+    return {
+      avg: listing.reviewStats.rating,
+      count: listing.reviewStats.count
+    };
+  }
+  
+  // Fallback to no reviews for performance
+  return { avg: null, count: 0 };
 }
 
 const ListingTile: React.FC<ListingTileProps> = ({ 

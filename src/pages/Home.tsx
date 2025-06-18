@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiLayers } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
+import WithReviewStats from "../components/HOC/WithReviewStats";
 import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
@@ -105,6 +106,7 @@ const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [ip, setIp] = useState<string | null>(null);
+  const [activeFeatureTab, setActiveFeatureTab] = useState<'buyers' | 'sellers'>('buyers');
   const { isMobile } = useResponsive();
 
   // Scroll to top when component mounts
@@ -245,10 +247,50 @@ const Home = () => {
               style={{ color: '#454955' }}>
               Discover Quality & Unique Products From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Small Businesses</span>
             </p>
-            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-8 md:mb-12 font-medium px-4"
+            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-4 md:mb-6 font-medium px-4"
               style={{ color: '#3f7d20' }}>
               🌱 Shop local • Support dreams • Build community 🌱
             </p>
+
+            {/* Compact Free Badge with Animation */}
+            <div className="flex justify-center mb-8 md:mb-12">
+              <div className={`inline-flex items-center gap-2 rounded-full border-2 shadow-lg ${isMobile ? 'px-4 py-2' : 'px-6 py-2'}`}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderColor: '#72b01d',
+                  boxShadow: '0 4px 12px rgba(114, 176, 29, 0.2)',
+                  animation: 'glow-pulse 2s ease-in-out infinite alternate, bounce-badge 3s ease-in-out infinite'
+                }}>
+                <span className={`font-bold uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
+                  style={{ color: '#3f7d20' }}>
+                  {isMobile ? '100% Free • No Fees' : '100% Free • No Hidden Fees • No Commission'}
+                </span>
+                <span className="text-base animate-bounce">✨</span>
+              </div>
+            </div>
+            
+            {/* Add custom animation styles */}
+            <style>
+              {`
+                @keyframes glow-pulse {
+                  from {
+                    box-shadow: 0 4px 12px rgba(114, 176, 29, 0.2);
+                  }
+                  to {
+                    box-shadow: 0 4px 20px rgba(114, 176, 29, 0.4), 0 0 15px rgba(114, 176, 29, 0.3);
+                  }
+                }
+                
+                @keyframes bounce-badge {
+                  0%, 100% {
+                    transform: translateY(0px);
+                  }
+                  50% {
+                    transform: translateY(-8px);
+                  }
+                }
+              `}
+            </style>
 
             {/* Search bar */}
             <div className="mb-8 md:mb-12 px-4">
@@ -300,7 +342,192 @@ const Home = () => {
           </div>
         </section>
 
-        {/* 14 Days Money Back Guarantee Section */}
+        {/* Why We Give 100% Free Platform Section */}
+        <section className={`w-full border-t border-b relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
+          style={{
+            borderColor: 'rgba(114, 176, 29, 0.15)',
+            backgroundColor: '#ffffff'
+          }}>
+          
+          {/* Background decorative blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob1 absolute top-20 left-10 w-44 h-44 opacity-18"
+              style={{ backgroundColor: '#72b01d', animationDelay: '1s' }}></div>
+            <div className="blob blob3 absolute bottom-20 right-20 w-52 h-52 opacity-14"
+              style={{ backgroundColor: '#3f7d20', animationDelay: '3s' }}></div>
+          </div>
+
+          <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            {/* Header */}
+            <div className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}
+                  style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
+                  <span className={`${isMobile ? 'text-base' : 'text-xl'}`}>💡</span>
+                </div>
+                <span className={`font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
+                  style={{
+                    backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                    color: '#3f7d20'
+                  }}>
+                  OUR MISSION
+                </span>
+              </div>
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
+                style={{ color: '#0d0a0b' }}>
+                Why We Give
+                <span className="relative ml-2">
+                  <span style={{
+                    background: `linear-gradient(to right, #72b01d, #3f7d20)`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    100% Free Platform
+                  </span>
+                </span>
+              </h2>
+              <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base mb-6' : 'text-lg mb-8'}`} style={{ color: '#454955' }}>
+                Our commitment to empowering Sri Lankan entrepreneurs and supporting local communities
+              </p>
+            </div>
+
+            {/* Reasons grid */}
+            <div className={`gap-6 mt-8 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+              {/* Empower Small Businesses */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className="relative mb-4">
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                    style={{
+                      background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                      boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                    }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🚀</span>
+                  </div>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Empower Small Businesses
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  We believe every Sri Lankan entrepreneur deserves a chance to succeed without financial barriers blocking their path to success.
+                </p>
+              </div>
+
+              {/* Support Local Economy */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🇱🇰</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Support Local Economy
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  By removing fees, more money stays in sellers' pockets and circulates within our local Sri Lankan economy.
+                </p>
+              </div>
+
+              {/* Build Community */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🤝</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Build Strong Community
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  When there are no fees, buyers get better prices and sellers earn more - creating a win-win for everyone.
+                </p>
+              </div>
+
+              {/* Preserve Culture */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Preserve Our Heritage
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  Traditional crafts and homemade products carry our culture forward - they deserve a platform without barriers.
+                </p>
+              </div>
+
+              {/* Fair Access */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚖️</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Equal Opportunities
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  Whether you're a student, housewife, or retiree - everyone gets the same opportunity to start their business.
+                </p>
+              </div>
+
+              {/* Transparency */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💎</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Complete Transparency
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  No hidden costs, no surprise fees, no fine print - what you see is what you get, forever.
+                </p>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
+              <p className={`max-w-3xl mx-auto mb-6 font-medium ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
+                Join our mission to create a fair, transparent, and thriving marketplace for all Sri Lankans
+              </p>
+              <Link
+                to="/create-shop"
+                className={`inline-flex items-center gap-2 rounded-full font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-6 py-3 text-sm' : 'px-8 py-4'}`}
+                style={{
+                  background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
+                  color: '#ffffff'
+                }}
+              >
+                <span>🌟 Be Part of Our Mission</span>
+                <svg className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Payment Methods & Trust Section */}
         <section className={`w-full border-t border-b ${isMobile ? 'py-8' : 'py-10'}`}
           style={{
             borderColor: 'rgba(114, 176, 29, 0.15)',
@@ -312,12 +539,12 @@ const Home = () => {
                 Shop With Confidence
               </h2>
               <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                We've got you covered with our buyer protection policies
+                Flexible payment options and trusted seller protection
               </p>
             </div>
 
             <div className={`grid gap-6 mt-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-              {/* Money Back Guarantee */}
+              {/* Cash on Delivery */}
               <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className="relative mb-4">
@@ -327,34 +554,26 @@ const Home = () => {
                       boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                     }}>
                     <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" viewBox="0 0 24 24">
-                      <path d="M8 12.5l2.5 2.5L16 9" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </div>
-                  <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center font-bold ${isMobile ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'}`}
-                    style={{
-                      backgroundColor: '#3f7d20',
-                      color: '#ffffff',
-                      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
-                    }}>
-                    14
                   </div>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Money Back Guarantee
+                  Cash on Delivery
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  Full refund if your order isn't delivered within 14 days of purchase
+                  Pay when you receive your order. No upfront payment required
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
                   }}>
-                  Hassle-free returns
+                  Zero risk
                 </span>
               </div>
 
-              {/* Secure Payment */}
+              {/* Bank Transfer */}
               <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
@@ -363,21 +582,24 @@ const Home = () => {
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
                   <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" stroke="#ffffff" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M3 8h18l-2 8H5L3 8z"/>
+                    <path d="M3 8L1 4h4l2 4"/>
+                    <circle cx="9" cy="20" r="1"/>
+                    <circle cx="20" cy="20" r="1"/>
                   </svg>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Secure Payment
+                  Bank Transfer
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  All transactions are encrypted and processed securely through trusted payment gateways
+                  Direct bank transfer with payment slip verification for secure transactions
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
                   }}>
-                  PCI DSS compliant
+                  Secure & verified
                 </span>
               </div>
 
@@ -475,16 +697,413 @@ const Home = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-7 w-full">
-                  {latestListings.map(item => (
-                    <ResponsiveListingTile 
-                      key={item.id}
-                      listing={item}
-                      onRefresh={refreshListings}
-                    />
-                  ))}
-                </div>
+                <WithReviewStats listings={latestListings}>
+                  {(listingsWithStats) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-7 w-full">
+                      {listingsWithStats.map(item => (
+                        <ResponsiveListingTile 
+                          key={item.id}
+                          listing={item}
+                          onRefresh={refreshListings}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </WithReviewStats>
               )}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
+          style={{
+            borderColor: 'rgba(114, 176, 29, 0.15)',
+            backgroundColor: '#ffffff'
+          }}>
+          {/* Features Background Blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob1 absolute top-20 right-10 w-64 h-64 opacity-12"
+              style={{ backgroundColor: '#72b01d', animationDelay: '1s' }}></div>
+            <div className="blob blob3 absolute bottom-20 left-20 w-72 h-72 opacity-15"
+              style={{ backgroundColor: '#3f7d20', animationDelay: '3s' }}></div>
+            <div className="blob blob2 absolute top-1/2 right-1/3 w-48 h-48 opacity-10"
+              style={{ backgroundColor: '#8bc34a', animationDelay: '5s' }}></div>
+          </div>
+
+          <div className={`relative z-10 max-w-7xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            {/* Header */}
+            <div className={`text-center ${isMobile ? 'mb-10' : 'mb-16'}`}>
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
+                  style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
+                  <span className={`${isMobile ? 'text-lg' : 'text-2xl'}`}>✨</span>
+                </div>
+                <span className={`font-bold uppercase tracking-wider px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
+                  style={{
+                    backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                    color: '#3f7d20'
+                  }}>
+                  SINA.LK FEATURES
+                </span>
+              </div>
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
+                style={{ color: '#0d0a0b' }}>
+                Everything You Need to 
+                <span className="relative ml-2">
+                  <span style={{
+                    background: `linear-gradient(to right, #72b01d, #3f7d20)`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    Succeed
+                  </span>
+                </span>
+              </h2>
+              <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
+                style={{ color: '#454955' }}>
+                Discover powerful features designed for both buyers and sellers in Sri Lanka's premier marketplace
+              </p>
+            </div>
+
+            {/* Features Tabs */}
+            <div className={`flex justify-center ${isMobile ? 'mb-8' : 'mb-12'}`}>
+              <div className={`inline-flex rounded-xl border-2 ${isMobile ? 'p-1' : 'p-2'}`}
+                style={{
+                  backgroundColor: 'rgba(114, 176, 29, 0.05)',
+                  borderColor: 'rgba(114, 176, 29, 0.2)'
+                }}>
+                <button
+                  className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: activeFeatureTab === 'buyers' ? '#72b01d' : 'transparent',
+                    color: activeFeatureTab === 'buyers' ? '#ffffff' : '#72b01d'
+                  }}
+                  onClick={() => setActiveFeatureTab('buyers')}
+                >
+                  🛍️ For Buyers
+                </button>
+                <button
+                  className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: activeFeatureTab === 'sellers' ? '#72b01d' : 'transparent',
+                    color: activeFeatureTab === 'sellers' ? '#ffffff' : '#72b01d'
+                  }}
+                  onClick={() => setActiveFeatureTab('sellers')}
+                >
+                  🚀 For Sellers
+                </button>
+              </div>
+            </div>
+
+            {/* Buyers Features */}
+            {activeFeatureTab === 'buyers' && (
+              <div className={`gap-6 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+                {/* Cash on Delivery */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💳</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Cash on Delivery (COD)
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Buy items risk-free and pay upon delivery. No upfront payment required for maximum security.
+                  </p>
+                </div>
+
+                {/* Bank Transfer */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #3f7d20, #72b01d)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏦</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Bank Transfer
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Upload your payment slip and track order status directly from your account with real-time updates.
+                  </p>
+                </div>
+
+                {/* Order Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📋</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Easy Order Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Say goodbye to WhatsApp orders. Manage and track all your purchases with comprehensive order details.
+                  </p>
+                </div>
+
+                {/* Wishlist */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>❤️</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Wishlist System
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Add items to your wishlist for future purchases and never lose track of products you love.
+                  </p>
+                </div>
+
+                {/* Direct Chat */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Direct Chat with Sellers
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Chat with sellers directly on the platform. No need for external messaging apps.
+                  </p>
+                </div>
+
+                {/* Custom Orders */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Custom Orders
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Request custom orders from sellers to meet your specific needs and preferences.
+                  </p>
+                </div>
+
+                {/* Reviews & Ratings */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ffc107, #ff8f00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⭐</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Reviews & Ratings
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Browse ratings and reviews for shops and products. Compare sellers to find the best deals.
+                  </p>
+                </div>
+
+                {/* Email Notifications */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📧</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Email Notifications
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Receive emails when order statuses change and for other valuable events. Stay updated always.
+                  </p>
+                </div>
+
+                {/* Verified Buyer */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>✅</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Verified Buyer Status
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Become a verified buyer to build trust with sellers and enjoy a smoother buying experience.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Sellers Features */}
+            {activeFeatureTab === 'sellers' && (
+              <div className={`gap-6 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+                {/* Free Listings */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🆓</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Free Shop Creation
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Create and manage unlimited shops and product listings—all for free, with no hidden charges.
+                  </p>
+                </div>
+
+                {/* Real-time Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚡</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Real-time Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Edit product details and manage stock in real-time from your dashboard. Add product variations easily.
+                  </p>
+                </div>
+
+                {/* Payment Methods */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💰</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Multiple Payment Options
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Offer both COD and bank transfer payment methods. Insert bank details once for automatic instructions.
+                  </p>
+                </div>
+
+                {/* Unlimited Product Variations */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <FiLayers className={`${isMobile ? 'text-xl' : 'text-2xl'} text-white`} />
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Unlimited Product Variations
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Create unlimited variations for your products - different colors, sizes, materials, and styles in one listing.
+                  </p>
+                </div>
+
+                {/* Professional Shop */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏪</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Professional Shop Profile
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Add logo and cover image to create a professional shop profile. Receive verified seller badges.
+                  </p>
+                </div>
+
+                {/* Analytics */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📊</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Detailed Analytics
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Access detailed earnings reports filtered by any date range. View and manage orders with powerful tools.
+                  </p>
+                </div>
+
+                {/* Customer Communication */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #00bcd4, #0097a7)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Customer Communication
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Exchange real-time messages with buyers. Send custom order links even to unregistered users.
+                  </p>
+                </div>
+
+                {/* Custom Order Management */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Custom Order Management
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Send and receive custom order links—even to buyers not yet registered on sina.lk. Handle special requests easily.
+                  </p>
+                </div>
+
+                {/* Email Notifications for Sellers */}
+                <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
+                  style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                  <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
+                    style={{ background: 'linear-gradient(135deg, #607d8b, #455a64)' }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📬</span>
+                  </div>
+                  <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                    Smart Notifications
+                  </h3>
+                  <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                    Receive email notifications for buyer actions. You will never miss buyers or important updates.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Call to Action */}
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
+              <div className={`${isMobile ? 'mb-6' : 'mb-8'}`}>
+                <p className={`${isMobile ? 'text-base' : 'text-lg'} font-medium`} style={{ color: '#454955' }}>
+                  Ready to experience all these amazing features?
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  to="/search"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold border transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#3f7d20',
+                    borderColor: '#3f7d20'
+                  }}
+                >
+                  <span>🛍️ Start Shopping</span>
+                </Link>
+                <Link
+                  to="/create-shop"
+                  className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
+                  style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
+                >
+                  <span>🚀 Start Selling</span>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -966,50 +1585,6 @@ const Home = () => {
                   style={{ backgroundColor: '#454955' }}>
                   <span className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`}>"</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Statistics Row */}
-            <div className={`text-center gap-8 ${isMobile ? 'mt-12 grid grid-cols-2' : 'mt-16 grid grid-cols-2 md:grid-cols-4'}`}>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#72b01d' }}>
-                  500+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Happy Sellers
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#3f7d20' }}>
-                  2,000+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Products Listed
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#72b01d' }}>
-                  10,000+
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Satisfied Customers
-                </p>
-              </div>
-              <div className="px-4">
-                <div className={`font-black mb-2 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl'}`}
-                  style={{ color: '#3f7d20' }}>
-                  4.9/5
-                </div>
-                <p className={`font-medium uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
-                  style={{ color: '#454955' }}>
-                  Average Rating
-                </p>
               </div>
             </div>
           </div>

@@ -208,7 +208,7 @@ const Header = () => {
                             e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
-                        Start Selling
+                        Seller Guide
                     </Link>
                     <Link
                         to="/wishlist"
@@ -468,7 +468,7 @@ const Header = () => {
                                 }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Start Selling
+                                Seller Guide
                             </Link>
                             <Link
                                 to="/wishlist"
