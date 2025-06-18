@@ -247,10 +247,50 @@ const Home = () => {
               style={{ color: '#454955' }}>
               Discover Quality & Unique Products From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Small Businesses</span>
             </p>
-            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-8 md:mb-12 font-medium px-4"
+            <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-4 md:mb-6 font-medium px-4"
               style={{ color: '#3f7d20' }}>
               🌱 Shop local • Support dreams • Build community 🌱
             </p>
+
+            {/* Compact Free Badge with Animation */}
+            <div className="flex justify-center mb-8 md:mb-12">
+              <div className={`inline-flex items-center gap-2 rounded-full border-2 shadow-lg ${isMobile ? 'px-4 py-2' : 'px-6 py-2'}`}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderColor: '#72b01d',
+                  boxShadow: '0 4px 12px rgba(114, 176, 29, 0.2)',
+                  animation: 'glow-pulse 2s ease-in-out infinite alternate, bounce-badge 3s ease-in-out infinite'
+                }}>
+                <span className={`font-bold uppercase tracking-wide ${isMobile ? 'text-xs' : 'text-sm'}`}
+                  style={{ color: '#3f7d20' }}>
+                  {isMobile ? '100% Free • No Fees' : '100% Free • No Hidden Fees • No Commission'}
+                </span>
+                <span className="text-base animate-bounce">✨</span>
+              </div>
+            </div>
+            
+            {/* Add custom animation styles */}
+            <style>
+              {`
+                @keyframes glow-pulse {
+                  from {
+                    box-shadow: 0 4px 12px rgba(114, 176, 29, 0.2);
+                  }
+                  to {
+                    box-shadow: 0 4px 20px rgba(114, 176, 29, 0.4), 0 0 15px rgba(114, 176, 29, 0.3);
+                  }
+                }
+                
+                @keyframes bounce-badge {
+                  0%, 100% {
+                    transform: translateY(0px);
+                  }
+                  50% {
+                    transform: translateY(-8px);
+                  }
+                }
+              `}
+            </style>
 
             {/* Search bar */}
             <div className="mb-8 md:mb-12 px-4">
@@ -299,6 +339,191 @@ const Home = () => {
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 5V19M5 12L12 19L19 12" />
             </svg>
+          </div>
+        </section>
+
+        {/* Why We Give 100% Free Platform Section */}
+        <section className={`w-full border-t border-b relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
+          style={{
+            borderColor: 'rgba(114, 176, 29, 0.15)',
+            backgroundColor: '#ffffff'
+          }}>
+          
+          {/* Background decorative blobs */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="blob blob1 absolute top-20 left-10 w-44 h-44 opacity-18"
+              style={{ backgroundColor: '#72b01d', animationDelay: '1s' }}></div>
+            <div className="blob blob3 absolute bottom-20 right-20 w-52 h-52 opacity-14"
+              style={{ backgroundColor: '#3f7d20', animationDelay: '3s' }}></div>
+          </div>
+
+          <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            {/* Header */}
+            <div className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}
+                  style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
+                  <span className={`${isMobile ? 'text-base' : 'text-xl'}`}>💡</span>
+                </div>
+                <span className={`font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
+                  style={{
+                    backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                    color: '#3f7d20'
+                  }}>
+                  OUR MISSION
+                </span>
+              </div>
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
+                style={{ color: '#0d0a0b' }}>
+                Why We Give
+                <span className="relative ml-2">
+                  <span style={{
+                    background: `linear-gradient(to right, #72b01d, #3f7d20)`,
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}>
+                    100% Free Platform
+                  </span>
+                </span>
+              </h2>
+              <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base mb-6' : 'text-lg mb-8'}`} style={{ color: '#454955' }}>
+                Our commitment to empowering Sri Lankan entrepreneurs and supporting local communities
+              </p>
+            </div>
+
+            {/* Reasons grid */}
+            <div className={`gap-6 mt-8 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
+              {/* Empower Small Businesses */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className="relative mb-4">
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                    style={{
+                      background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                      boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                    }}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🚀</span>
+                  </div>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Empower Small Businesses
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  We believe every Sri Lankan entrepreneur deserves a chance to succeed without financial barriers blocking their path to success.
+                </p>
+              </div>
+
+              {/* Support Local Economy */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🇱🇰</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Support Local Economy
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  By removing fees, more money stays in sellers' pockets and circulates within our local Sri Lankan economy.
+                </p>
+              </div>
+
+              {/* Build Community */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🤝</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Build Strong Community
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  When there are no fees, buyers get better prices and sellers earn more - creating a win-win for everyone.
+                </p>
+              </div>
+
+              {/* Preserve Culture */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Preserve Our Heritage
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  Traditional crafts and homemade products carry our culture forward - they deserve a platform without barriers.
+                </p>
+              </div>
+
+              {/* Fair Access */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚖️</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Equal Opportunities
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  Whether you're a student, housewife, or retiree - everyone gets the same opportunity to start their business.
+                </p>
+              </div>
+
+              {/* Transparency */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-6'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                  style={{
+                    background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                    boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                  }}>
+                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💎</span>
+                </div>
+                <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Complete Transparency
+                </h3>
+                <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
+                  No hidden costs, no surprise fees, no fine print - what you see is what you get, forever.
+                </p>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
+              <p className={`max-w-3xl mx-auto mb-6 font-medium ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
+                Join our mission to create a fair, transparent, and thriving marketplace for all Sri Lankans
+              </p>
+              <Link
+                to="/create-shop"
+                className={`inline-flex items-center gap-2 rounded-full font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-6 py-3 text-sm' : 'px-8 py-4'}`}
+                style={{
+                  background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
+                  color: '#ffffff'
+                }}
+              >
+                <span>🌟 Be Part of Our Mission</span>
+                <svg className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </section>
 
