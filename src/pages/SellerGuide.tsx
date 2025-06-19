@@ -80,7 +80,7 @@ export default function SellerGuide() {
         "Set up automatic order confirmations and payment tracking",
         "Consider offering small discounts for advance payments to encourage bank transfers"
       ],
-      tips: "💰 Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
+      tips: "� Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
       action: null
     },
     {
@@ -116,7 +116,7 @@ export default function SellerGuide() {
         "Consider offering bundle deals or discounts to increase average order value",
         "Build a customer email list for repeat business and new product announcements"
       ],
-      tips: "🚀 Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
+      tips: "⚡ Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
       action: null
     }
   ];

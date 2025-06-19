@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link } from "react-router-dom";
-import { FiSearch, FiLayers } from "react-icons/fi";
+import { FiSearch, FiLayers, FiZap, FiTrendingUp, FiMapPin, FiUsers, FiAward, FiEye, FiHeart, FiStar, FiShoppingBag, FiCreditCard, FiHome, FiClipboard, FiMessageSquare, FiCheckCircle, FiMail, FiCheck, FiDollarSign, FiSettings, FiBarChart, FiShield, FiGift, FiPackage } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
@@ -326,7 +326,7 @@ const Home = () => {
                 }}
               >
                 <span className="flex items-center justify-center gap-3">
-                  🚀 Start Selling
+                  <FiZap className="w-5 h-5" /> Start Selling
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="group-hover:rotate-12 transition-transform lg:w-6 lg:h-6">
                     <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
                   </svg>
@@ -365,7 +365,7 @@ const Home = () => {
               <div className="inline-flex items-center gap-3 mb-6">
                 <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}
                   style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
-                  <span className={`${isMobile ? 'text-base' : 'text-xl'}`}>💡</span>
+                  <FiZap className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`} />
                 </div>
                 <span className={`font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
                   style={{
@@ -405,7 +405,7 @@ const Home = () => {
                       background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                       boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                     }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🚀</span>
+                    <FiTrendingUp className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
@@ -424,7 +424,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🇱🇰</span>
+                  <FiMapPin className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Support Local Economy
@@ -442,7 +442,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🤝</span>
+                  <FiUsers className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Build Strong Community
@@ -460,7 +460,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                  <FiHeart className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Preserve Our Heritage
@@ -478,7 +478,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚖️</span>
+                  <FiAward className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Equal Opportunities
@@ -496,7 +496,7 @@ const Home = () => {
                     background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
                     boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
                   }}>
-                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💎</span>
+                  <FiEye className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                   Complete Transparency
@@ -520,7 +520,8 @@ const Home = () => {
                   color: '#ffffff'
                 }}
               >
-                <span>🌟 Be Part of Our Mission</span>
+                <FiStar className={`inline ${isMobile ? 'w-4 h-4' : 'w-4 h-4'} mr-2`} />
+                <span>Be Part of Our Mission</span>
                 <svg className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="m9 18 6-6-6-6" />
                 </svg>
@@ -784,7 +785,8 @@ const Home = () => {
                   }}
                   onClick={() => setActiveFeatureTab('buyers')}
                 >
-                  🛍️ For Buyers
+                  <FiShoppingBag className="inline w-4 h-4 mr-2" />
+                  For Buyers
                 </button>
                 <button
                   className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
@@ -794,7 +796,8 @@ const Home = () => {
                   }}
                   onClick={() => setActiveFeatureTab('sellers')}
                 >
-                  🚀 For Sellers
+                  <FiTrendingUp className="inline w-4 h-4 mr-2" />
+                  For Sellers
                 </button>
               </div>
             </div>
@@ -807,7 +810,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💳</span>
+                    <FiCreditCard className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Cash on Delivery (COD)
@@ -822,7 +825,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #3f7d20, #72b01d)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏦</span>
+                    <FiHome className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Bank Transfer
@@ -837,7 +840,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📋</span>
+                    <FiClipboard className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Easy Order Management
@@ -852,7 +855,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>❤️</span>
+                    <FiHeart className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Wishlist System
@@ -867,7 +870,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                    <FiMessageSquare className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Direct Chat with Sellers
@@ -882,7 +885,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                    <FiGift className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Custom Orders
@@ -897,7 +900,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #ffc107, #ff8f00)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⭐</span>
+                    <FiStar className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Reviews & Ratings
@@ -912,7 +915,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📧</span>
+                    <FiMail className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Email Notifications
@@ -927,7 +930,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>✅</span>
+                    <FiCheckCircle className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Verified Buyer Status
@@ -947,7 +950,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #72b01d, #3f7d20)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🆓</span>
+                    <FiCheck className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Free Shop Creation
@@ -962,7 +965,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #2196f3, #1565c0)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>⚡</span>
+                    <FiZap className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Real-time Management
@@ -977,7 +980,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #4caf50, #388e3c)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💰</span>
+                    <FiDollarSign className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Multiple Payment Options
@@ -1007,7 +1010,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🏪</span>
+                    <FiShield className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Professional Shop Profile
@@ -1022,7 +1025,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #e91e63, #ad1457)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📊</span>
+                    <FiBarChart className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Detailed Analytics
@@ -1037,7 +1040,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #00bcd4, #0097a7)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>💬</span>
+                    <FiMessageSquare className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Customer Communication
@@ -1052,7 +1055,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #ff9800, #f57c00)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🎨</span>
+                    <FiSettings className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Custom Order Management
@@ -1067,7 +1070,7 @@ const Home = () => {
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
                     style={{ background: 'linear-gradient(135deg, #607d8b, #455a64)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>📬</span>
+                    <FiMail className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
                     Smart Notifications
@@ -1096,14 +1099,14 @@ const Home = () => {
                     borderColor: '#3f7d20'
                   }}
                 >
-                  <span>🛍️ Start Shopping</span>
+                  <FiShoppingBag className="w-4 h-4" /> Start Shopping
                 </Link>
                 <Link
                   to="/create-shop"
                   className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
-                  <span>🚀 Start Selling</span>
+                  <FiZap className="w-4 h-4" /> Start Selling
                 </Link>
               </div>
             </div>
@@ -1205,7 +1208,7 @@ const Home = () => {
 
                       {/* Icon */}
                       <div className="text-3xl mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
-                        {categoryIcons[cat.name] || "📦"}
+                        {categoryIcons[cat.name] || <FiPackage className="w-8 h-8 text-gray-400" />}
                       </div>
 
                       {/* Category name */}
@@ -1300,7 +1303,7 @@ const Home = () => {
               <div className="inline-flex items-center gap-3 mb-6">
                 <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-12 h-12'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)` }}>
-                  <span className={`${isMobile ? 'text-lg' : 'text-2xl'}`}>🚀</span>
+                  <FiZap className={`text-white ${isMobile ? 'w-5 h-5' : 'w-6 h-6'}`} />
                 </div>
                 <span className={`font-bold uppercase tracking-wider px-4 py-2 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
@@ -1530,7 +1533,7 @@ const Home = () => {
                 <div className={`flex items-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
                   <div className={`rounded-full flex items-center justify-center mr-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
                     style={{ backgroundColor: 'rgba(63, 125, 32, 0.1)' }}>
-                    <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>🛍️</span>
+                    <FiShoppingBag className={`text-green-700 ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} />
                   </div>
                   <div>
                     <h4 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>
@@ -1793,14 +1796,14 @@ const Home = () => {
                     borderColor: '#3f7d20'
                   }}
                 >
-                  <span>🛍️ Start Shopping</span>
+                  <FiShoppingBag className="w-4 h-4" /> Start Shopping
                 </Link>
                 <Link
                   to="/create-shop"
                   className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
-                  <span>🚀 Start Selling</span>
+                  <FiZap className="w-4 h-4" /> Start Selling
                 </Link>
               </div>
             </div>

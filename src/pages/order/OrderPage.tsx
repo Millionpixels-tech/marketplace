@@ -9,7 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
-import { FiChevronDown, FiChevronUp, FiCreditCard } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiCreditCard, FiDollarSign, FiStar } from "react-icons/fi";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
@@ -774,7 +774,7 @@ export default function OrderPage() {
                                     <div className="space-y-4">
                                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                                             <div className="text-sm text-blue-800 font-medium mb-2">
-                                                💰 Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
+                                                <FiDollarSign className="w-5 h-5 inline mr-2" />Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
                                             </div>
                                             <div className="text-xs text-blue-700">
                                                 Include order ID ({order.id}) in transfer reference
@@ -797,7 +797,7 @@ export default function OrderPage() {
                                                     {account.isDefault && (
                                                         <div className="absolute -top-2 -right-2">
                                                             <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full border border-green-200">
-                                                                ⭐ Preferred
+                                                                <FiStar className="w-4 h-4 inline mr-1" />Preferred
                                                             </span>
                                                         </div>
                                                     )}

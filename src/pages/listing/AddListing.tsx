@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { collection, addDoc, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
-import { FiX, FiPlus } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { Button, Input, AddBankAccountModal } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -690,7 +690,7 @@ export default function AddListing() {
                         : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
                     `}
                   >
-                    <span className="text-lg md:text-xl">{categoryIcons[c.name] || "📦"}</span>
+                    <span className="text-lg md:text-xl">{categoryIcons[c.name] || <FiPackage className="w-5 h-5" />}</span>
                     <span className="font-medium text-xs text-center leading-tight">{c.name}</span>
                   </button>
                 ))}
@@ -731,7 +731,7 @@ export default function AddListing() {
                         : "bg-white border border-[#45495522] hover:bg-gray-50 text-[#0d0a0b]"}
                     `}
                   >
-                    <span className="text-lg md:text-xl">{subCategoryIcons[sc] || "📦"}</span>
+                    <span className="text-lg md:text-xl">{subCategoryIcons[sc] || <FiPackage className="w-5 h-5" />}</span>
                     <span className="font-medium text-xs text-center leading-tight">{sc}</span>
                   </button>
                 ))}
@@ -919,7 +919,7 @@ Delivery & Important Notes
                     {!showAddForm && variations.filter(v => v.name.trim()).length === 0 && (
                       <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                         <div className="max-w-sm mx-auto">
-                          <div className="text-4xl mb-3">📦</div>
+                          <FiPackage className="text-gray-400 w-12 h-12 mb-3" />
                           <h6 className="text-lg font-medium text-gray-700 mb-2">No variations yet</h6>
                           <p className="text-sm text-gray-500 mb-4">
                             Add variations like "Small Blue", "Large Red" to offer different options to your customers.
@@ -1165,7 +1165,7 @@ Delivery & Important Notes
                           : "bg-white border-[#45495522] text-[#454955] hover:bg-gray-50 hover:border-[#454955]/30"}`}
                       onClick={() => setDeliveryType("paid")}
                     >
-                      📦 Buyer Pays Delivery
+                      <FiPackage className="w-5 h-5" /> Buyer Pays Delivery
                     </button>
                   </div>
                 </div>
@@ -1224,7 +1224,7 @@ Delivery & Important Notes
                         />
                         <div className="flex-1">
                           <label htmlFor="cod" className="font-semibold cursor-pointer text-sm md:text-base text-[#0d0a0b]">
-                            💰 Allow Cash on Delivery (COD)
+                            <FiDollarSign className="w-5 h-5 inline mr-2" />Allow Cash on Delivery (COD)
                           </label>
                           <p className="text-xs md:text-sm mt-1 text-[#454955]">
                             Let customers pay when they receive their order
