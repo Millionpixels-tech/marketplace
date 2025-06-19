@@ -47,6 +47,7 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
+  const [qtyInput, setQtyInput] = useState('1'); // Separate state for input display
   const [selectedVariation, setSelectedVariation] = useState<SimpleVariation | null>(null);
   const [latestItems, setLatestItems] = useState<any[]>([]);
   
@@ -103,7 +104,13 @@ export default function ListingSingle() {
   // Reset quantity when variation changes
   useEffect(() => {
     setQty(1);
+    setQtyInput('1');
   }, [selectedVariation]);
+
+  // Keep qtyInput in sync with qty when changed by buttons
+  useEffect(() => {
+    setQtyInput(qty.toString());
+  }, [qty]);
 
   // Auto-select first available variation when item loads
   useEffect(() => {
@@ -723,19 +730,64 @@ export default function ListingSingle() {
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium text-gray-700">Quantity:</label>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={availableQuantity}
-                      value={qty}
-                      onChange={e => {
-                        let val = Math.max(1, Number(e.target.value));
-                        if (val > availableQuantity) val = availableQuantity;
-                        setQty(val);
-                      }}
-                      disabled={false}
-                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-                    />
+                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newQty = Math.max(1, qty - 1);
+                          setQty(newQty);
+                        }}
+                        disabled={qty <= 1}
+                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:bg-gray-100 transition-colors"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={availableQuantity}
+                        value={qtyInput}
+                        onChange={e => {
+                          const inputValue = e.target.value;
+                          setQtyInput(inputValue);
+                          
+                          // Only update qty if it's a valid number
+                          if (inputValue !== '') {
+                            const numValue = parseInt(inputValue, 10);
+                            if (!isNaN(numValue) && numValue >= 1 && numValue <= availableQuantity) {
+                              setQty(numValue);
+                            }
+                          }
+                        }}
+                        onBlur={e => {
+                          const value = parseInt(e.target.value, 10);
+                          let finalValue;
+                          
+                          if (isNaN(value) || value < 1) {
+                            finalValue = 1;
+                          } else if (value > availableQuantity) {
+                            finalValue = availableQuantity;
+                          } else {
+                            finalValue = value;
+                          }
+                          
+                          setQty(finalValue);
+                          setQtyInput(finalValue.toString());
+                        }}
+                        className="w-16 px-2 py-2 text-center border-0 focus:ring-0 focus:outline-none bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newQty = Math.min(availableQuantity, qty + 1);
+                          setQty(newQty);
+                        }}
+                        disabled={qty >= availableQuantity}
+                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:bg-gray-100 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                     <span className="text-xs text-gray-500">
                       of {availableQuantity} available
                     </span>
