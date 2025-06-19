@@ -4,10 +4,11 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { createOrder, updateOrderPaymentStatus, deleteOrderByPayHereId, getOrderByPayHereId } from "../utils/orders";
+import { createOrder } from "../utils/orders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfile";
-import { generatePaymentHash } from "../utils/payment/paymentHash";
-import type { PaymentHashParams } from "../utils/payment/paymentHash";
+// Payment hash imports - Currently disabled as online payments are not provided
+// import { generatePaymentHash } from "../utils/payment/paymentHash";
+// import type { PaymentHashParams } from "../utils/payment/paymentHash";
 import { PaymentMethod, DeliveryType, PaymentStatus } from "../types/enums";
 import type { PaymentMethod as PaymentMethodType, DeliveryType as DeliveryTypeType } from "../types/enums";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
@@ -101,8 +102,9 @@ export default function CheckoutPage() {
   const [selectedVariation, setSelectedVariation] = useState<{id: string; name: string; priceChange: number; quantity: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  // Payment processing and script loading states - Currently disabled as online payments are not provided
+  // const [paymentProcessing, setPaymentProcessing] = useState(false);
+  // const [scriptLoaded, setScriptLoaded] = useState(false);
   const [paymentCancelled, setPaymentCancelled] = useState(false);
   
   // Validation state
@@ -117,18 +119,11 @@ export default function CheckoutPage() {
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   
-  // PayHere merchant credentials from environment variables
-  const MERCHANT_ID = import.meta.env.VITE_PAYHERE_MERCHANT_ID;
-  const MERCHANT_SECRET = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET;
-  const IS_SANDBOX = import.meta.env.VITE_PAYHERE_SANDBOX === 'true';
-
-  // Validate environment variables
-  useEffect(() => {
-    if (!MERCHANT_ID || !MERCHANT_SECRET) {
-      console.error('PayHere credentials not found in environment variables');
-      setGeneralError('Payment system is not properly configured. Please contact support.');
-    }
-  }, [MERCHANT_ID, MERCHANT_SECRET]);
+  // Note: Online payments are currently disabled
+  // PayHere credentials would be used here when online payments are enabled
+  // const MERCHANT_ID = import.meta.env.VITE_PAYHERE_MERCHANT_ID;
+  // const MERCHANT_SECRET = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET;
+  // const IS_SANDBOX = import.meta.env.VITE_PAYHERE_SANDBOX === 'true';
   
   // Get parameters from URL
   const itemId = searchParams.get("itemId");
@@ -242,7 +237,8 @@ export default function CheckoutPage() {
     loadSavedBuyerInfo();
   }, [user?.uid]);
 
-  // Load PayHere script and setup callbacks
+  // PayHere script loading - Currently disabled as online payments are not provided
+  /*
   useEffect(() => {
     const loadPayHereScript = () => {
       if (window.payhere) {
@@ -274,8 +270,10 @@ export default function CheckoutPage() {
       }
     };
   }, []);
+  */
 
-  // Setup PayHere event callbacks
+  // Setup PayHere event callbacks - Currently disabled as online payments are not provided
+  /*
   const setupPayHereCallbacks = () => {
     if (!window.payhere) return;
 
@@ -351,6 +349,7 @@ export default function CheckoutPage() {
       setGeneralError("Payment failed: " + error + ". Please try again or contact support.");
     };
   };
+  */
 
   // Calculate totals
   const calculateTotals = () => {
@@ -428,12 +427,14 @@ export default function CheckoutPage() {
     }
   };
 
-  // Generate unique order ID
+  // Generate unique order ID - Currently used only for PayHere (disabled)
+  /*
   const generateOrderId = () => {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     return `ORDER_${timestamp}_${random}`;
   };
+  */
 
   // Handle Bank Transfer order
   const handleBankTransferOrder = async () => {
@@ -552,7 +553,8 @@ export default function CheckoutPage() {
     }
   };
 
-  // Handle PayHere payment
+  // Handle PayHere payment - Currently disabled as online payments are not provided
+  /*
   const handlePayHerePayment = async () => {
     if (!item || !shop || !user) {
       setGeneralError("Missing required data. Please refresh the page and try again.");
@@ -677,6 +679,7 @@ export default function CheckoutPage() {
       setPaymentProcessing(false);
     }
   };
+  */
 
   // Authentication functions for guest users
   const handleEmailAuth = async () => {
@@ -722,7 +725,9 @@ export default function CheckoutPage() {
     // Check if user is authenticated
     if (!user) {
       setGeneralError('Please sign in or create an account to complete your order.');
-      setShowAuth(true);
+      //setShowAuth(true);
+      // Scroll to top to show the auth form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
@@ -738,8 +743,8 @@ export default function CheckoutPage() {
     } else if (paymentMethod === PaymentMethod.BANK_TRANSFER) {
       await handleBankTransferOrder();
     } else {
-      // Temporarily disabled online payment - keeping code for future use
-      await handlePayHerePayment();
+      // Online payments are currently not available
+      setGeneralError('The selected payment method is currently not available. Please choose Cash on Delivery or Bank Transfer.');
     }
   };
 
@@ -832,7 +837,7 @@ export default function CheckoutPage() {
                         type="button"
                         onClick={handleGoogleAuth}
                         disabled={authLoading}
-                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition flex-1"
+                        className={`flex items-center justify-center gap-2 ${isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-medium border transition flex-1`}
                         style={{ 
                           backgroundColor: '#ffffff', 
                           borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -841,7 +846,7 @@ export default function CheckoutPage() {
                         onMouseEnter={(e) => e.currentTarget.style.borderColor = '#72b01d'}
                         onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
                       >
-                        <svg className="w-4 h-4" viewBox="0 0 48 48">
+                        <svg className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'}`} viewBox="0 0 48 48">
                           <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.6 33.1 29.8 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6.5-6.5C34.4 6.2 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c10 0 18.7-7.2 19.8-17H44.5z"/>
                         </svg>
                         Continue with Google
@@ -1084,51 +1089,32 @@ export default function CheckoutPage() {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
-                      City *
-                    </label>
-                    <Input
-                      type="text"
-                      required
-                      value={buyerInfo.city}
-                      onChange={(e) => {
-                        setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
-                        clearFieldError('city');
-                      }}
-                      className={validationErrors.city ? 'border-red-400' : ''}
-                      style={{
-                        backgroundColor: '#ffffff',
-                        borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
-                        color: '#0d0a0b'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = validationErrors.city ? '#ef4444' : '#72b01d'}
-                      onBlur={(e) => e.target.style.borderColor = validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
-                    />
-                    {validationErrors.city && (
-                      <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
-                        {validationErrors.city}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
-                      Postal Code
-                    </label>
-                    <Input
-                      type="text"
-                      value={buyerInfo.postalCode}
-                      onChange={(e) => setBuyerInfo(prev => ({ ...prev, postalCode: e.target.value }))}
-                      style={{
-                        backgroundColor: '#ffffff',
-                        borderColor: 'rgba(114, 176, 29, 0.3)',
-                        color: '#0d0a0b'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#72b01d'}
-                      onBlur={(e) => e.target.style.borderColor = 'rgba(114, 176, 29, 0.3)'}
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                    City *
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={buyerInfo.city}
+                    onChange={(e) => {
+                      setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
+                      clearFieldError('city');
+                    }}
+                    className={validationErrors.city ? 'border-red-400' : ''}
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
+                      color: '#0d0a0b'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = validationErrors.city ? '#ef4444' : '#72b01d'}
+                    onBlur={(e) => e.target.style.borderColor = validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
+                  />
+                  {validationErrors.city && (
+                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                      {validationErrors.city}
+                    </p>
+                  )}
                 </div>
 
                 {/* Buyer Notes Section */}
@@ -1364,51 +1350,28 @@ export default function CheckoutPage() {
               {/* Place Order Button */}
               <button
                 onClick={handleSubmit}
-                disabled={submitting || (paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))}
+                disabled={submitting}
                 className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wide shadow transition disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: '#72b01d',
                   color: '#ffffff'
                 }}
                 onMouseEnter={(e) => {
-                  if (!submitting && !(paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))) {
+                  if (!submitting) {
                     e.currentTarget.style.backgroundColor = '#3f7d20';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!submitting && !(paymentMethod === PaymentMethod.PAY_NOW && (!scriptLoaded || paymentProcessing))) {
+                  if (!submitting) {
                     e.currentTarget.style.backgroundColor = '#72b01d';
                   }
                 }}
               >
                 {!user ? 'Sign in to Complete Order' :
-                 submitting && paymentProcessing ? 'Processing Payment...' :
                  submitting ? 'Placing Order...' : 
                  paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'Place Order (COD)' : 
-                 !scriptLoaded ? 'Loading Payment...' : 'Pay Now'}
+                 paymentMethod === PaymentMethod.BANK_TRANSFER ? 'Place Order (Bank Transfer)' : 'Place Order'}
               </button>
-              
-              {paymentMethod === PaymentMethod.PAY_NOW && !scriptLoaded && (
-                <p className="text-xs text-center mt-2" style={{ color: '#454955' }}>
-                  Loading PayHere payment system...
-                </p>
-              )}
-              
-              {paymentMethod === PaymentMethod.PAY_NOW && scriptLoaded && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FiCreditCard size={16} style={{ color: '#72b01d' }} />
-                    <span className="text-sm font-medium" style={{ color: '#0d0a0b' }}>
-                      Secure Payment with PayHere
-                    </span>
-                  </div>
-                  <ul className="text-xs space-y-1" style={{ color: '#454955' }}>
-                    <li>• Payment processed securely via PayHere</li>
-                    <li>• Supports Visa, MasterCard, and local banks</li>
-                    <li>• SSL encrypted transaction</li>
-                  </ul>
-                </div>
-              )}
               
               <p className="text-xs text-center mt-3" style={{ color: '#454955' }}>
                 By placing this order, you agree to our terms and conditions.

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import OrderSellerRow from "../order/OrderSellerRow";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { formatPrice } from "../../utils/formatters";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
@@ -59,6 +60,26 @@ const TABS = [
     { key: "settings", label: "Settings", icon: <FiUser /> },
 ];
 
+// Helper function to validate password strength and provide user-friendly feedback
+const validatePasswordStrength = (password: string) => {
+    if (password.length < 6) {
+        return 'Your password must be at least 6 characters long for security';
+    }
+    if (password.length < 8) {
+        return 'Consider using a longer password (8+ characters) for better security';
+    }
+    if (!/[a-zA-Z]/.test(password)) {
+        return 'Your password should include at least one letter';
+    }
+    if (!/[0-9]/.test(password)) {
+        return 'Consider adding numbers to make your password stronger';
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password) && password.length < 10) {
+        return 'Consider adding special characters or making it longer for extra security';
+    }
+    return null; // Password is strong enough
+};
+
 const ORDER_SUBTABS = [
     { key: "buyer", label: "As Buyer" },
     { key: "seller", label: "As Seller" },
@@ -67,6 +88,7 @@ const ORDER_SUBTABS = [
 export default function ProfileDashboard() {
     const { isMobile } = useResponsive();
     const { user } = useAuth();
+    const { showToast } = useToast();
     const { id } = useParams();
     const [shops, setShops] = useState<any[]>([]);
     const [desc, setDesc] = useState("");
@@ -93,6 +115,16 @@ export default function ProfileDashboard() {
 
     // Custom Order Modal state
     const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
+
+    // Auto-clear success messages after 5 seconds
+    useEffect(() => {
+        if (settingsSuccess) {
+            const timer = setTimeout(() => {
+                setSettingsSuccess(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [settingsSuccess]);
 
     // Handlers for saving (implement Firestore logic as needed)
     // Helper: upload file to Firebase Storage and return URL
@@ -1754,6 +1786,11 @@ export default function ProfileDashboard() {
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                             e.currentTarget.style.boxShadow = 'none';
                                                         }}
+                                                        onChange={() => {
+                                                            // Clear messages when user starts typing
+                                                            setSettingsError(null);
+                                                            setSettingsSuccess(null);
+                                                        }}
                                                         placeholder="Enter current password"
                                                         id="currentPassword"
                                                     />
@@ -1778,6 +1815,11 @@ export default function ProfileDashboard() {
                                                         onBlur={(e) => {
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                             e.currentTarget.style.boxShadow = 'none';
+                                                        }}
+                                                        onChange={() => {
+                                                            // Clear messages when user starts typing
+                                                            setSettingsError(null);
+                                                            setSettingsSuccess(null);
                                                         }}
                                                         placeholder="Enter new password"
                                                         minLength={6}
@@ -1804,6 +1846,11 @@ export default function ProfileDashboard() {
                                                             e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.3)';
                                                             e.currentTarget.style.boxShadow = 'none';
                                                         }}
+                                                        onChange={() => {
+                                                            // Clear messages when user starts typing
+                                                            setSettingsError(null);
+                                                            setSettingsSuccess(null);
+                                                        }}
                                                         placeholder="Confirm new password"
                                                         minLength={6}
                                                         id="confirmPassword"
@@ -1819,24 +1866,40 @@ export default function ProfileDashboard() {
                                                         const newPassword = (document.getElementById('newPassword') as HTMLInputElement)?.value;
                                                         const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
                                                         
-                                                        // Validation
+                                                        // Validation with customer-friendly messages
                                                         if (!currentPassword || !newPassword || !confirmPassword) {
-                                                            setSettingsError('Please fill in all password fields');
+                                                            const errorMsg = 'Please fill in all three password fields to continue';
+                                                            setSettingsError(errorMsg);
+                                                            showToast('error', errorMsg);
                                                             return;
                                                         }
                                                         
                                                         if (newPassword !== confirmPassword) {
-                                                            setSettingsError('New passwords do not match');
+                                                            const errorMsg = 'The new passwords you entered don\'t match. Please make sure both fields are identical';
+                                                            setSettingsError(errorMsg);
+                                                            showToast('error', errorMsg);
                                                             return;
                                                         }
                                                         
                                                         if (newPassword.length < 6) {
-                                                            setSettingsError('New password must be at least 6 characters long');
+                                                            const errorMsg = 'Your new password must be at least 6 characters long for security';
+                                                            setSettingsError(errorMsg);
+                                                            showToast('error', errorMsg);
+                                                            return;
+                                                        }
+                                                        
+                                                        // Additional password strength validation
+                                                        const strengthError = validatePasswordStrength(newPassword);
+                                                        if (strengthError && newPassword.length < 8) {
+                                                            setSettingsError(strengthError);
+                                                            showToast('error', strengthError);
                                                             return;
                                                         }
                                                         
                                                         if (currentPassword === newPassword) {
-                                                            setSettingsError('New password must be different from current password');
+                                                            const errorMsg = 'Your new password must be different from your current password';
+                                                            setSettingsError(errorMsg);
+                                                            showToast('error', errorMsg);
                                                             return;
                                                         }
                                                         
@@ -1853,7 +1916,11 @@ export default function ProfileDashboard() {
                                                                 await reauthenticateWithCredential(auth.currentUser, credential);
                                                                 await updatePassword(auth.currentUser, newPassword);
                                                                 
-                                                                setSettingsSuccess('Password updated successfully!');
+                                                                // Set both state message and toast with customer-friendly message
+                                                                const successMsg = 'Great! Your password has been updated successfully. Your account is now more secure.';
+                                                                setSettingsSuccess(successMsg);
+                                                                showToast('success', 'Password updated successfully!');
+                                                                
                                                                 // Clear password fields
                                                                 (document.getElementById('currentPassword') as HTMLInputElement).value = '';
                                                                 (document.getElementById('newPassword') as HTMLInputElement).value = '';
@@ -1861,15 +1928,35 @@ export default function ProfileDashboard() {
                                                             }
                                                         } catch (e: any) {
                                                             console.error('Password change error:', e);
+                                                            let errorMessage = '';
+                                                            
+                                                            // Customer-friendly error messages
                                                             if (e.code === 'auth/wrong-password') {
-                                                                setSettingsError('Current password is incorrect');
+                                                                errorMessage = 'The current password you entered is incorrect. Please check and try again.';
                                                             } else if (e.code === 'auth/weak-password') {
-                                                                setSettingsError('New password is too weak');
+                                                                errorMessage = 'Your new password is too simple. Please choose a stronger password with at least 6 characters, including letters and numbers.';
                                                             } else if (e.code === 'auth/requires-recent-login') {
-                                                                setSettingsError('Please log out and log back in before changing your password');
+                                                                errorMessage = 'For security reasons, please sign out and sign back in before changing your password.';
+                                                            } else if (e.code === 'auth/too-many-requests') {
+                                                                errorMessage = 'Too many failed attempts. Please wait a few minutes before trying again.';
+                                                            } else if (e.code === 'auth/network-request-failed') {
+                                                                errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+                                                            } else if (e.code === 'auth/user-disabled') {
+                                                                errorMessage = 'Your account has been temporarily disabled. Please contact customer support for assistance.';
+                                                            } else if (e.code === 'auth/user-not-found') {
+                                                                errorMessage = 'Account verification failed. Please sign out and sign back in to continue.';
+                                                            } else if (e.code === 'auth/operation-not-allowed') {
+                                                                errorMessage = 'Password changes are currently not available. Please try again later or contact support.';
+                                                            } else if (e.code === 'auth/invalid-email') {
+                                                                errorMessage = 'There seems to be an issue with your account email. Please contact customer support.';
                                                             } else {
-                                                                setSettingsError(e.message || 'Failed to update password');
+                                                                // Generic user-friendly message instead of technical error
+                                                                errorMessage = 'We encountered an issue while updating your password. Please try again in a few moments. If the problem persists, contact our support team.';
                                                             }
+                                                            
+                                                            // Set both state error and toast
+                                                            setSettingsError(errorMessage);
+                                                            showToast('error', errorMessage);
                                                         } finally {
                                                             setSettingsLoading(false);
                                                         }
