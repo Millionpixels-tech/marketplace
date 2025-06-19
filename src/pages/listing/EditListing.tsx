@@ -5,12 +5,14 @@ import { useToast } from "../../context/ToastContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiPlus } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { AddBankAccountModal, Button, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 // Simple variation interface
 interface SimpleVariation {
@@ -571,6 +573,21 @@ export default function EditListing() {
     // Steps rendering (same as AddListing)
     return (
         <>
+            <SEOHead
+                title={`Edit Listing${name ? ` - ${name}` : ''} - Sina.lk`}
+                description={`Edit your product listing on Sina.lk. Update photos, prices, and details for ${name || 'your product'}.`}
+                keywords={generateKeywords([
+                    'edit listing',
+                    'update product',
+                    'modify listing',
+                    'Sri Lankan marketplace',
+                    'manage products',
+                    cat || '',
+                    name || ''
+                ])}
+                canonicalUrl={getCanonicalUrl(`/edit-listing/${listingId}`)}
+                noIndex={true}
+            />
             <ResponsiveHeader />
             <div className="bg-white min-h-screen flex flex-col items-center py-2 md:py-8 px-2 md:px-4">
                 {/* Modern Progress Stepper */}
@@ -748,7 +765,7 @@ export default function EditListing() {
                                                 : "bg-white border border-[#45495522] hover:bg-white text-[#0d0a0b]"}
                     `}
                                     >
-                                        <span className="text-lg md:text-xl">{categoryIcons[c.name] || "📦"}</span>
+                                        <span className="text-lg md:text-xl">{categoryIcons[c.name] || <FiPackage className="w-5 h-5" />}</span>
                                         <span className="font-medium text-xs text-center">{c.name}</span>
                                     </button>
                                 ))}
@@ -789,7 +806,7 @@ export default function EditListing() {
                                                 : "bg-white border border-[#45495522] hover:bg-white text-[#0d0a0b]"}
                     `}
                                     >
-                                        <span className="text-lg md:text-xl">{subCategoryIcons[sc] || "📦"}</span>
+                                        <span className="text-lg md:text-xl">{subCategoryIcons[sc] || <FiPackage className="w-5 h-5" />}</span>
                                         <span className="font-medium text-xs text-center">{sc}</span>
                                     </button>
                                 ))}
@@ -997,7 +1014,7 @@ export default function EditListing() {
                                         {!showAddForm && variations.filter(v => v.name.trim()).length === 0 && (
                                             <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                                                 <div className="max-w-sm mx-auto">
-                                                    <div className="text-4xl mb-3">📦</div>
+                                                    <FiPackage className="text-gray-400 w-12 h-12 mb-3" />
                                                     <h6 className="text-lg font-medium text-gray-700 mb-2">No variations yet</h6>
                                                     <p className="text-sm text-gray-500 mb-4">
                                                         Add variations like "Small Blue", "Large Red" to offer different options to your customers.
@@ -1257,7 +1274,7 @@ export default function EditListing() {
                                             onClick={() => setDeliveryType("paid")}
                                         >
                                             <div className="flex items-center justify-center mb-2">
-                                                <span className="text-xl md:text-2xl mr-3">💰</span>
+                                                <FiDollarSign className="text-green-600 w-6 h-6 md:w-8 md:h-8 mr-3" />
                                                 Buyer Pays Delivery
                                             </div>
                                             <div className={`text-xs md:text-sm font-medium
@@ -1349,7 +1366,7 @@ export default function EditListing() {
                                                 />
                                                 <div className="flex-1">
                                                     <label htmlFor="cod-checkbox" className="font-semibold cursor-pointer text-sm md:text-base text-[#0d0a0b]">
-                                                        💰 Allow Cash on Delivery (COD)
+                                                        <FiDollarSign className="w-5 h-5 inline mr-2" />Allow Cash on Delivery (COD)
                                                     </label>
                                                     <p className="text-xs md:text-sm mt-1 text-[#454955]">
                                                         Let customers pay when they receive their order

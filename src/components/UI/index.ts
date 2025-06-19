@@ -5,7 +5,7 @@ export { default as Card } from './Card';
 export { default as Pagination } from './Pagination';
 export { default as FormField } from './FormField';
 export { default as LoadingSpinner } from './LoadingSpinner';
-export { default as Header } from './Header';
+export { default as ResponsiveHeader } from './ResponsiveHeader';
 export { default as WishlistButton } from './WishlistButton';
 export { default as ShopReviews } from './ShopReviews';
 export { default as ConfirmDialog } from './ConfirmDialog';

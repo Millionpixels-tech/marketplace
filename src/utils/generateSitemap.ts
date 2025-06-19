@@ -10,7 +10,7 @@ export interface SitemapUrl {
   priority?: number;
 }
 
-export const SITE_BASE_URL = 'https://sinamarketplace.com';
+export const SITE_BASE_URL = 'https://sina.lk';
 
 // Static pages with their SEO priorities
 export const STATIC_PAGES: SitemapUrl[] = [

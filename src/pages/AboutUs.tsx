@@ -61,16 +61,17 @@ export default function AboutUs() {
   return (
     <div className="min-h-screen bg-white">
       <SEOHead
-        title="About Us - Sri Lankan Marketplace"
-        description="Learn about our mission to celebrate Sri Lankan craftsmanship and connect authentic artisans with customers worldwide. Discover our story, values, and commitment to supporting local communities."
+        title="About Us - Sina.lk"
+        description="Learn about Sina.lk's mission to promote small businesses islandwide and connect authentic Sri Lankan artisans with customers. Discover our story, values, and commitment to supporting local communities."
         keywords={generateKeywords([
-          'about Sri Lankan marketplace',
+          'about Sina.lk',
           'our story',
-          'supporting artisans',
-          'Sri Lankan culture',
+          'supporting small businesses',
+          'Sri Lankan artisans',
           'authentic crafts',
           'local community',
-          'handmade products'
+          'handmade products',
+          'islandwide marketplace'
         ])}
         canonicalUrl={getCanonicalUrl('/about')}
         structuredData={getOrganizationStructuredData()}

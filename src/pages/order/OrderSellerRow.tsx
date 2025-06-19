@@ -5,6 +5,7 @@ import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { formatPrice } from "../../utils/formatters";
+import { FiDollarSign } from "react-icons/fi";
 
 // Function to print delivery label
 const printDeliveryLabel = async (order: any) => {
@@ -317,7 +318,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         {order.paymentMethod === 'bankTransfer' && (
                             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                 <div className="font-semibold text-blue-800 mb-2 text-sm">
-                                    💰 Bank Transfer Order
+                                    <FiDollarSign className="w-4 h-4 inline mr-1" />Bank Transfer Order
                                 </div>
                                 {order.status === OrderStatus.PENDING_PAYMENT ? (
                                     <div className="text-sm text-blue-700">
@@ -423,7 +424,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     </div>
                 ) : order.status === OrderStatus.PENDING_PAYMENT ? (
                     <div className="text-xs text-orange-600 py-2 italic">
-                        💰 Awaiting customer payment. Customer needs to upload payment slip.
+                        <FiDollarSign className="w-4 h-4 inline mr-1" />Awaiting customer payment. Customer needs to upload payment slip.
                     </div>
                 ) : order.status === OrderStatus.SHIPPED ? (
                     <div className="text-xs text-[#454955] py-2 italic">Order Shipped. Waiting for buyer response.</div>

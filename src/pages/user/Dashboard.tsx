@@ -17,6 +17,8 @@ import { useResponsive } from "../../hooks/useResponsive";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { useUnreadMessages } from "../../hooks/useUnreadMessages";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 // Import separate earnings page
 import EarningsPage from "./dashboard/EarningsPage";
@@ -785,6 +787,20 @@ export default function ProfileDashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+            <SEOHead
+                title={`Dashboard - ${user?.displayName || 'User'} | Sina.lk`}
+                description="Manage your account, shops, orders, and listings on Sina.lk. Access your seller dashboard, track earnings, and communicate with customers."
+                keywords={generateKeywords([
+                    'user dashboard',
+                    'seller dashboard',
+                    'account management',
+                    'order management',
+                    'shop management',
+                    'Sri Lankan marketplace'
+                ])}
+                canonicalUrl={getCanonicalUrl('/dashboard')}
+                noIndex={true}
+            />
             <ResponsiveHeader />
             
             {/* Dashboard Container */}

@@ -12,7 +12,7 @@ import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner, Pagination } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import ShopOwnerName from "../shop/ShopOwnerName";
-import { FiChevronLeft, FiChevronRight, FiMaximize2, FiStar } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMaximize2, FiStar, FiShoppingBag, FiPackage } from "react-icons/fi";
 import { PaymentMethod } from "../../types/enums";
 import { getProductStructuredData, getBreadcrumbStructuredData, getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
@@ -601,7 +601,7 @@ export default function ListingSingle() {
                       {shop.logo ? (
                         <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className={`${isMobile ? 'text-xs' : 'text-sm'}`}>🛍️</span>
+                        <FiShoppingBag className={`text-gray-400 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                       )}
                     </div>
                     
@@ -884,7 +884,7 @@ export default function ListingSingle() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Delivery Information</h3>
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <span className="text-xl">📦</span>
+                    <FiPackage className="text-green-600 w-6 h-6" />
                     <div className="flex-1 text-gray-700 leading-relaxed whitespace-pre-line">
                       {item.sellerNotes}
                     </div>

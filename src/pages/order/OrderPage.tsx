@@ -3,13 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, query, collection, where, getDocs, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../utils/firebase";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
-import { FiChevronDown, FiChevronUp, FiCreditCard } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiCreditCard, FiDollarSign, FiStar } from "react-icons/fi";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 interface BankAccount {
     id: string;
@@ -513,7 +515,20 @@ export default function OrderPage() {
     // --- PAGE RENDER ---
     return (
         <div className="bg-gray-50 min-h-screen w-full">
-            <Header />
+            <SEOHead
+                title={`Order #${order?.id ? order.id.slice(-8) : 'Details'} - Sina.lk`}
+                description={`View your order details, track status, and manage your purchase on Sina.lk. Order for ${order?.items?.length || 0} item(s).`}
+                keywords={generateKeywords([
+                    'order details',
+                    'order tracking',
+                    'purchase history',
+                    'Sri Lankan marketplace',
+                    'online shopping'
+                ])}
+                canonicalUrl={getCanonicalUrl(`/order/${id}`)}
+                noIndex={true}
+            />
+            <ResponsiveHeader />
             <main className="max-w-4xl mx-auto py-8 px-4 md:px-6">
                 {/* Header Section */}
                 <div className="mb-8">
@@ -759,7 +774,7 @@ export default function OrderPage() {
                                     <div className="space-y-4">
                                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
                                             <div className="text-sm text-blue-800 font-medium mb-2">
-                                                💰 Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
+                                                <FiDollarSign className="w-5 h-5 inline mr-2" />Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
                                             </div>
                                             <div className="text-xs text-blue-700">
                                                 Include order ID ({order.id}) in transfer reference
@@ -782,7 +797,7 @@ export default function OrderPage() {
                                                     {account.isDefault && (
                                                         <div className="absolute -top-2 -right-2">
                                                             <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full border border-green-200">
-                                                                ⭐ Preferred
+                                                                <FiStar className="w-4 h-4 inline mr-1" />Preferred
                                                             </span>
                                                         </div>
                                                     )}

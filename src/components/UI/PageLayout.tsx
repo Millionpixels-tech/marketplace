@@ -1,4 +1,4 @@
-import Header from './Header';
+import ResponsiveHeader from './ResponsiveHeader';
 import Footer from './Footer';
 
 interface PageLayoutProps {
@@ -14,7 +14,7 @@ export default function PageLayout({
 }: PageLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
-      {showHeader && <Header />}
+      {showHeader && <ResponsiveHeader />}
       <main className="flex-1">
         {children}
       </main>

@@ -2,19 +2,19 @@
 
 export const SEO_CONFIG = {
   siteName: 'Sina.lk - Sri Lankan Marketplace',
-  siteUrl: 'https://srilankanmarketplace.com', // Update with actual domain
-  defaultDescription: 'Discover authentic Sri Lankan products, crafts, and services. Connect with local artisans, shop unique items, and support Sri Lankan businesses worldwide.',
-  defaultKeywords: 'Sri Lankan products, Ceylon crafts, Sri Lankan marketplace, authentic Sri Lankan goods, local artisans, handmade crafts, Ceylon tea, Sri Lankan art, traditional crafts, online marketplace',
-  twitterHandle: '@SLMarketplace', // Update with actual handle
+  siteUrl: 'https://sina.lk', // Update with actual domain when available
+  defaultDescription: 'Discover authentic Sri Lankan products, crafts, and services on Sina.lk. Connect with local artisans, shop unique handmade items, and support small businesses islandwide.',
+  defaultKeywords: 'Sri Lankan products, Ceylon crafts, Sri Lankan marketplace, authentic Sri Lankan goods, local artisans, handmade crafts, Ceylon tea, Sri Lankan art, traditional crafts, online marketplace, Sina.lk, Sri Lanka shopping, local businesses',
+  twitterHandle: '@SinaLK', // Update with actual handle when available
   defaultImage: '/og-default.jpg',
   organization: {
-    name: 'Sri Lankan Marketplace',
-    url: 'https://srilankanmarketplace.com',
-    logo: 'https://srilankanmarketplace.com/logo.png',
+    name: 'Sina.lk',
+    url: 'https://sina.lk',
+    logo: 'https://sina.lk/logo.png',
     sameAs: [
-      'https://facebook.com/srilankanmarketplace',
-      'https://instagram.com/srilankanmarketplace',
-      'https://twitter.com/slmarketplace'
+      'https://facebook.com/sina.lk',
+      'https://instagram.com/sina.lk',
+      'https://twitter.com/sinalk'
     ]
   }
 };
@@ -169,4 +169,45 @@ export const generateTitle = (pageTitle: string, includesSiteName = false) => {
     return pageTitle;
   }
   return `${pageTitle} | ${SEO_CONFIG.siteName}`;
+};
+
+// Generate robots.txt content
+export const generateRobotsTxt = () => {
+  return `User-agent: *
+Allow: /
+
+# Disallow certain pages
+Disallow: /dashboard
+Disallow: /cart
+Disallow: /checkout
+Disallow: /admin
+Disallow: /api/
+Disallow: /order/
+Disallow: /add-listing
+Disallow: /edit-listing
+Disallow: /*?*
+Allow: /search?category=*
+
+# Sitemap location
+Sitemap: ${SEO_CONFIG.siteUrl}/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+`;
+};
+
+// Generate meta robots for specific page types
+export const getMetaRobots = (pageType: 'public' | 'user' | 'admin' | 'listing' | 'search') => {
+  switch (pageType) {
+    case 'admin':
+    case 'user':
+      return 'noindex,nofollow';
+    case 'listing':
+      return 'index,follow,max-image-preview:large';
+    case 'search':
+      return 'index,follow,max-snippet:160';
+    case 'public':
+    default:
+      return 'index,follow';
+  }
 };

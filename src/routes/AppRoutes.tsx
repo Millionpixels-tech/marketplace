@@ -1,6 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
 import Auth from "../pages/auth/Auth";
+import AuthActions from "../pages/auth/AuthActions";
+import EmailVerification from "../pages/auth/EmailVerification";
 import CreateShop from "../pages/shop/CreateShop";
 import AddListing from "../pages/listing/AddListing";
 import ListingPage from "../pages/listing/ListingPage";
@@ -39,6 +41,8 @@ const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Home />} />
     <Route path="/auth" element={<Auth />} />
+    <Route path="/_auth_actions" element={<AuthActions />} />
+    <Route path="/email-verification" element={<EmailVerification />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/create-shop" element={<ProtectedRoute><CreateShop /></ProtectedRoute>} />
     <Route path="/add-listing" element={<ProtectedRoute><AddListing /></ProtectedRoute>} />

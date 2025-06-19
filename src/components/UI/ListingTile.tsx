@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import WishlistButton from './WishlistButton';
+import { FiTruck, FiPackage } from 'react-icons/fi';
 import type { DeliveryType as DeliveryTypeType } from '../../types/enums';
 
 interface ReviewStats {
@@ -124,12 +125,12 @@ const ListingTile: React.FC<ListingTileProps> = ({
       <div className="flex items-center gap-2 mb-2">
         {listing.deliveryType === "free" ? (
           <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
-            <span className="text-base">🚚</span>
+            <FiTruck className="w-4 h-4" />
             Free Delivery
           </span>
         ) : (
           <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-gray-500 text-xs font-medium">
-            <span className="text-base">📦</span>
+            <FiPackage className="w-4 h-4" />
             Delivery Fee will apply
           </span>
         )}

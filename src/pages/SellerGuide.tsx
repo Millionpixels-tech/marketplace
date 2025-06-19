@@ -80,7 +80,7 @@ export default function SellerGuide() {
         "Set up automatic order confirmations and payment tracking",
         "Consider offering small discounts for advance payments to encourage bank transfers"
       ],
-      tips: "💰 Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
+      tips: "� Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
       action: null
     },
     {
@@ -116,7 +116,7 @@ export default function SellerGuide() {
         "Consider offering bundle deals or discounts to increase average order value",
         "Build a customer email list for repeat business and new product announcements"
       ],
-      tips: "🚀 Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
+      tips: "⚡ Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
       action: null
     }
   ];
@@ -192,22 +192,23 @@ export default function SellerGuide() {
   return (
     <>
       <SEOHead
-        title="Seller Guide - How to Start Selling on Sri Lankan Marketplace"
-        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your business on our marketplace."
+        title="Seller Guide - How to Start Selling on Sina.lk"
+        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your small business on Sina.lk."
         keywords={generateKeywords([
           'seller guide',
           'how to sell online',
-          'Sri Lankan marketplace selling',
+          'Sina.lk selling',
           'start online business',
           'sell crafts online',
-          'artisan business guide',
-          'online selling tips'
+          'small business guide',
+          'online selling tips',
+          'Sri Lankan marketplace'
         ])}
         canonicalUrl={getCanonicalUrl('/seller-guide')}
         structuredData={getArticleStructuredData({
-          title: 'Complete Seller Guide for Sri Lankan Marketplace',
-          description: 'Step-by-step guide to start selling authentic Sri Lankan products online',
-          author: 'Sri Lankan Marketplace Team',
+          title: 'Complete Seller Guide for Sina.lk',
+          description: 'Step-by-step guide to start selling authentic Sri Lankan products online on Sina.lk',
+          author: 'Sina.lk Team',
           datePublished: '2025-01-01',
           url: getCanonicalUrl('/seller-guide')
         })}

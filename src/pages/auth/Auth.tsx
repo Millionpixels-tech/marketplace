@@ -4,7 +4,8 @@ import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, create
 import { doc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Header, Button, Input, Card } from "../../components/UI";
+import { Button, Input, Card } from "../../components/UI";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
@@ -196,7 +197,7 @@ const Auth = () => {
         noIndex={true}
       />
       
-      <Header />
+      <ResponsiveHeader />
 
       <main className="flex flex-1 items-center justify-center p-4 py-16 md:py-24">
         <div className="w-full max-w-sm">

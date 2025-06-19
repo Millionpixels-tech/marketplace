@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import Header from "../../components/UI/Header";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import ContactSellerButton from "../../components/UI/ContactSellerButton";
 
@@ -49,7 +49,7 @@ export default function PublicProfile() {
 
     return (
         <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>
-            <Header />
+            <ResponsiveHeader />
             <div className="max-w-2xl mx-auto py-10 px-4">
                 <div className="flex flex-col items-center rounded-3xl shadow-lg p-8 mb-8 w-full border" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
                     <div className="w-28 h-28 rounded-full border-4 shadow flex items-center justify-center overflow-hidden mb-4" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
