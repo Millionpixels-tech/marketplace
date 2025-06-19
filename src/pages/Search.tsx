@@ -333,12 +333,12 @@ const Search: React.FC = () => {
   
   const generateSearchSEO = () => {
     let title = "Search Results";
-    let description = "Find authentic Sri Lankan products and crafts";
-    let keywords = ['search', 'Sri Lankan products', 'marketplace'];
+    let description = "Find authentic Sri Lankan products and crafts on Sina.lk";
+    let keywords = ['search', 'Sri Lankan products', 'marketplace', 'Sina.lk'];
     
     if (searchQuery) {
       title = `Search: ${searchQuery}`;
-      description = `Search results for "${searchQuery}" - Find authentic Sri Lankan products and crafts`;
+      description = `Search results for "${searchQuery}" - Find authentic Sri Lankan products and crafts on Sina.lk`;
       keywords.push(searchQuery);
     }
     
@@ -349,7 +349,7 @@ const Search: React.FC = () => {
     }
     
     return {
-      title: `${title} | Sri Lankan Marketplace`,
+      title: `${title} | Sina.lk`,
       description,
       keywords: generateKeywords(keywords)
     };

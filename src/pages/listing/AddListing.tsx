@@ -11,6 +11,8 @@ import { Button, Input, AddBankAccountModal } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 // Simple variation interface
 interface SimpleVariation {
@@ -489,6 +491,21 @@ export default function AddListing() {
 
   return (
     <>
+      <SEOHead
+        title="Add New Listing - Sina.lk"
+        description="Create a new product listing on Sina.lk. Upload photos, set prices, and start selling your authentic Sri Lankan products to customers islandwide."
+        keywords={generateKeywords([
+          'add listing',
+          'sell products',
+          'create listing',
+          'upload products',
+          'Sri Lankan marketplace',
+          'small business',
+          'sell online'
+        ])}
+        canonicalUrl={getCanonicalUrl('/add-listing')}
+        noIndex={true}
+      />
       <ResponsiveHeader />
       <div className="bg-white min-h-screen flex flex-col items-center py-4 md:py-8 px-2 md:px-4">
         {/* Modern Progress Stepper */}

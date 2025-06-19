@@ -11,6 +11,8 @@ import { AddBankAccountModal, Button, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 // Simple variation interface
 interface SimpleVariation {
@@ -571,6 +573,21 @@ export default function EditListing() {
     // Steps rendering (same as AddListing)
     return (
         <>
+            <SEOHead
+                title={`Edit Listing${name ? ` - ${name}` : ''} - Sina.lk`}
+                description={`Edit your product listing on Sina.lk. Update photos, prices, and details for ${name || 'your product'}.`}
+                keywords={generateKeywords([
+                    'edit listing',
+                    'update product',
+                    'modify listing',
+                    'Sri Lankan marketplace',
+                    'manage products',
+                    cat || '',
+                    name || ''
+                ])}
+                canonicalUrl={getCanonicalUrl(`/edit-listing/${listingId}`)}
+                noIndex={true}
+            />
             <ResponsiveHeader />
             <div className="bg-white min-h-screen flex flex-col items-center py-2 md:py-8 px-2 md:px-4">
                 {/* Modern Progress Stepper */}

@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+# Disallow certain pages
+Disallow: /dashboard
+Disallow: /cart
+Disallow: /checkout
+Disallow: /admin
+Disallow: /api/
+Disallow: /order/
+Disallow: /add-listing
+Disallow: /edit-listing
+Disallow: /*?*
+Allow: /search?category=*
+
+# Sitemap location
+Sitemap: https://sina.lk/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1

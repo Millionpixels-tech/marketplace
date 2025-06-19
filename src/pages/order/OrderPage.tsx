@@ -10,6 +10,8 @@ import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { FiChevronDown, FiChevronUp, FiCreditCard } from "react-icons/fi";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 interface BankAccount {
     id: string;
@@ -513,6 +515,19 @@ export default function OrderPage() {
     // --- PAGE RENDER ---
     return (
         <div className="bg-gray-50 min-h-screen w-full">
+            <SEOHead
+                title={`Order #${order?.id ? order.id.slice(-8) : 'Details'} - Sina.lk`}
+                description={`View your order details, track status, and manage your purchase on Sina.lk. Order for ${order?.items?.length || 0} item(s).`}
+                keywords={generateKeywords([
+                    'order details',
+                    'order tracking',
+                    'purchase history',
+                    'Sri Lankan marketplace',
+                    'online shopping'
+                ])}
+                canonicalUrl={getCanonicalUrl(`/order/${id}`)}
+                noIndex={true}
+            />
             <ResponsiveHeader />
             <main className="max-w-4xl mx-auto py-8 px-4 md:px-6">
                 {/* Header Section */}

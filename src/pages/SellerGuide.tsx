@@ -192,22 +192,23 @@ export default function SellerGuide() {
   return (
     <>
       <SEOHead
-        title="Seller Guide - How to Start Selling on Sri Lankan Marketplace"
-        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your business on our marketplace."
+        title="Seller Guide - How to Start Selling on Sina.lk"
+        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your small business on Sina.lk."
         keywords={generateKeywords([
           'seller guide',
           'how to sell online',
-          'Sri Lankan marketplace selling',
+          'Sina.lk selling',
           'start online business',
           'sell crafts online',
-          'artisan business guide',
-          'online selling tips'
+          'small business guide',
+          'online selling tips',
+          'Sri Lankan marketplace'
         ])}
         canonicalUrl={getCanonicalUrl('/seller-guide')}
         structuredData={getArticleStructuredData({
-          title: 'Complete Seller Guide for Sri Lankan Marketplace',
-          description: 'Step-by-step guide to start selling authentic Sri Lankan products online',
-          author: 'Sri Lankan Marketplace Team',
+          title: 'Complete Seller Guide for Sina.lk',
+          description: 'Step-by-step guide to start selling authentic Sri Lankan products online on Sina.lk',
+          author: 'Sina.lk Team',
           datePublished: '2025-01-01',
           url: getCanonicalUrl('/seller-guide')
         })}

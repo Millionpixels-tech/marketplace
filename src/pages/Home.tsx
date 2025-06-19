@@ -161,9 +161,10 @@ const Home = () => {
 
     <>
       <SEOHead
-        title="Sri Lankan Marketplace - Authentic Products & Crafts"
-        description="Discover authentic Sri Lankan products, handmade crafts, traditional textiles, Ceylon tea, and unique artisan creations. Connect with local sellers and support Sri Lankan businesses worldwide."
+        title="Sina.lk - Sri Lankan Marketplace for Authentic Products & Crafts"
+        description="Discover authentic Sri Lankan products, handmade crafts, traditional textiles, Ceylon tea, and unique artisan creations on Sina.lk. Connect with local sellers and support small businesses islandwide."
         keywords={generateKeywords([
+          'Sina.lk',
           'Sri Lankan marketplace',
           'Ceylon crafts',
           'handmade products',
@@ -174,7 +175,8 @@ const Home = () => {
           'jewelry',
           'textiles',
           'pottery',
-          'Ceylon tea'
+          'Ceylon tea',
+          'small businesses Sri Lanka'
         ])}
         canonicalUrl={getCanonicalUrl('/')}
         ogType="website"
