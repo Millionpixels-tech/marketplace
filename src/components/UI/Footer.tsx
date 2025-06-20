@@ -41,7 +41,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className={`${isMobile ? 'col-span-2 mb-6' : 'lg:col-span-1 md:col-span-2 lg:col-span-1'}`}>
             <div className={`${isMobile ? 'mb-3' : 'mb-4'}`}>
-              <Link to="/" className={`font-black tracking-tight ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+              <Link to="/" state={{ fromInternal: true }} className={`font-black tracking-tight ${isMobile ? 'text-xl' : 'text-2xl'}`}>
                 <span className="text-white hover:text-[#72b01d] transition-colors duration-300">
                   Sina<span className="font-light">Marketplace</span>
                 </span>

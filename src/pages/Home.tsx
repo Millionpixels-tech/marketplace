@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { FiSearch, FiLayers, FiZap, FiTrendingUp, FiMapPin, FiUsers, FiAward, FiEye, FiHeart, FiStar, FiShoppingBag, FiCreditCard, FiHome, FiClipboard, FiMessageSquare, FiCheckCircle, FiMail, FiCheck, FiDollarSign, FiSettings, FiBarChart, FiShield, FiGift, FiPackage } from "react-icons/fi";
 import { categories, categoryIcons } from "../utils/categories";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
@@ -12,6 +12,7 @@ import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 import { useResponsive } from "../hooks/useResponsive";
+import { useAuth } from "../context/AuthContext";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 function ProductHeroSearch() {
@@ -107,6 +108,22 @@ const Home = () => {
   const [ip, setIp] = useState<string | null>(null);
   const [activeFeatureTab, setActiveFeatureTab] = useState<'buyers' | 'sellers'>('buyers');
   const { isMobile } = useResponsive();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect logged-in users to search page when they visit home via external links
+  useEffect(() => {
+    // Check if user is logged in and came from an external source or direct navigation
+    if (user && !location.state?.fromInternal) {
+      // Add a small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        navigate('/search', { replace: true });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user, location.state, navigate]);
 
   // Scroll to top when component mounts
   useEffect(() => {
