@@ -78,7 +78,7 @@ const MobileListingTile: React.FC<MobileListingTileProps> = ({ listing, shopInfo
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
       {/* Image Section */}
-      <div className="relative aspect-square flex-shrink-0">
+      <div className="relative w-full h-48 flex-shrink-0">
         <Link to={`/listing/${listing.id}`}>
           {listing.images && listing.images.length > 0 ? (
             <img

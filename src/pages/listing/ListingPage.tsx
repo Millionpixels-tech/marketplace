@@ -47,6 +47,7 @@ export default function ListingSingle() {
   const [imgIdx, setImgIdx] = useState(0);
   const [enlarge, setEnlarge] = useState(false);
   const [qty, setQty] = useState(1);
+  const [qtyInput, setQtyInput] = useState('1'); // Separate state for input display
   const [selectedVariation, setSelectedVariation] = useState<SimpleVariation | null>(null);
   const [latestItems, setLatestItems] = useState<any[]>([]);
   
@@ -103,7 +104,13 @@ export default function ListingSingle() {
   // Reset quantity when variation changes
   useEffect(() => {
     setQty(1);
+    setQtyInput('1');
   }, [selectedVariation]);
+
+  // Keep qtyInput in sync with qty when changed by buttons
+  useEffect(() => {
+    setQtyInput(qty.toString());
+  }, [qty]);
 
   // Auto-select first available variation when item loads
   useEffect(() => {
@@ -467,37 +474,67 @@ export default function ListingSingle() {
       />
       <ResponsiveHeader />
 
-      {/* Breadcrumb */}
-      <nav className={`max-w-6xl mx-auto mt-4 mb-2 ${isMobile ? 'px-4' : 'px-4'}`} aria-label="Breadcrumb">
-        <ol className="flex items-center gap-2 text-sm text-gray-500">
-          {item?.category && (
-            <li>
-              <Link
-                to={`/search?cat=${encodeURIComponent(item.category)}`}
-                className="hover:text-green-600 font-medium transition-colors"
-              >
-                {item.category}
-              </Link>
-            </li>
-          )}
-          {item?.subcategory && (
-            <>
-              <span className="mx-1">/</span>
-              <li>
+      {/* Breadcrumb - Enhanced mobile UI */}
+      <nav className={`max-w-6xl mx-auto mt-4 mb-2 px-4`} aria-label="Breadcrumb">
+        <div className={`${isMobile ? 'bg-gray-50 rounded-lg p-3' : ''}`}>
+          <ol className={`flex items-center ${isMobile ? 'gap-1 text-xs overflow-x-auto scrollbar-hide' : 'gap-2 text-sm'} text-gray-500`}>
+            {item?.category && (
+              <li className="flex-shrink-0">
                 <Link
-                  to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
-                  className="hover:text-green-600 font-medium transition-colors"
+                  to={`/search?cat=${encodeURIComponent(item.category)}`}
+                  className={`hover:text-green-600 font-medium transition-colors ${
+                    isMobile 
+                      ? 'inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-xs shadow-sm hover:shadow-md' 
+                      : ''
+                  }`}
                 >
-                  {item.subcategory}
+                  {item.category}
                 </Link>
               </li>
-            </>
-          )}
-          <span className="mx-1">/</span>
-          <li className={`font-semibold text-gray-900 truncate ${isMobile ? 'max-w-[150px]' : 'max-w-[200px]'}`} title={item.name}>
-            {item.name}
-          </li>
-        </ol>
+            )}
+            {item?.subcategory && (
+              <>
+                <span className={`flex-shrink-0 ${isMobile ? 'text-gray-400 mx-1' : 'mx-1 text-gray-400'}`}>
+                  {isMobile ? (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    '/'
+                  )}
+                </span>
+                <li className="flex-shrink-0">
+                  <Link
+                    to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
+                    className={`hover:text-green-600 font-medium transition-colors ${
+                      isMobile 
+                        ? 'inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-xs shadow-sm hover:shadow-md' 
+                        : ''
+                    }`}
+                  >
+                    {item.subcategory}
+                  </Link>
+                </li>
+              </>
+            )}
+            <span className={`flex-shrink-0 ${isMobile ? 'text-gray-400 mx-1' : 'mx-1 text-gray-400'}`}>
+              {isMobile ? (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                '/'
+              )}
+            </span>
+            <li className={`font-semibold text-gray-900 truncate ${
+              isMobile 
+                ? 'max-w-[100px] text-xs px-2 py-1 bg-green-100 border border-green-200 rounded-md' 
+                : 'max-w-[200px]'
+            }`} title={item.name}>
+              {item.name}
+            </li>
+          </ol>
+        </div>
       </nav>
 
       <main className={`w-full max-w-6xl mx-auto mt-6 ${isMobile ? 'px-4' : 'px-4'}`}>
@@ -723,19 +760,68 @@ export default function ListingSingle() {
                 <div className="flex items-center gap-4">
                   <label className="text-sm font-medium text-gray-700">Quantity:</label>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={availableQuantity}
-                      value={qty}
-                      onChange={e => {
-                        let val = Math.max(1, Number(e.target.value));
-                        if (val > availableQuantity) val = availableQuantity;
-                        setQty(val);
-                      }}
-                      disabled={false}
-                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white"
-                    />
+                    <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newQty = Math.max(1, qty - 1);
+                          setQty(newQty);
+                        }}
+                        disabled={qty <= 1}
+                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:bg-gray-100 transition-colors"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={availableQuantity}
+                        value={qtyInput}
+                        onChange={e => {
+                          const inputValue = e.target.value;
+                          setQtyInput(inputValue);
+                          
+                          // Only update qty if it's a valid number
+                          if (inputValue !== '') {
+                            const numValue = parseInt(inputValue, 10);
+                            if (!isNaN(numValue) && numValue >= 1 && numValue <= availableQuantity) {
+                              setQty(numValue);
+                            }
+                          }
+                        }}
+                        onBlur={e => {
+                          const value = parseInt(e.target.value, 10);
+                          let finalValue;
+                          
+                          if (isNaN(value) || value < 1) {
+                            finalValue = 1;
+                          } else if (value > availableQuantity) {
+                            finalValue = availableQuantity;
+                          } else {
+                            finalValue = value;
+                          }
+                          
+                          setQty(finalValue);
+                          setQtyInput(finalValue.toString());
+                        }}
+                        className="w-16 px-2 py-2 text-center border-0 focus:ring-0 focus:outline-none bg-white"
+                        style={{
+                          MozAppearance: 'textfield' // Firefox
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()} // Prevent scroll wheel changes
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newQty = Math.min(availableQuantity, qty + 1);
+                          setQty(newQty);
+                        }}
+                        disabled={qty >= availableQuantity}
+                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:bg-gray-100 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                     <span className="text-xs text-gray-500">
                       of {availableQuantity} available
                     </span>
