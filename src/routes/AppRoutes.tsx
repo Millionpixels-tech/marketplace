@@ -39,6 +39,7 @@ import PrivacyPolicy from "../pages/PrivacyPolicy";
 import TermsOfService from "../pages/TermsOfService";
 import CookiePolicy from "../pages/CookiePolicy";
 import CommunityGuidelines from "../pages/CommunityGuidelines";
+import NotFound from "../pages/NotFound";
 
 const AppRoutes = () => (
   <EnvModeGuard>
@@ -90,6 +91,9 @@ const AppRoutes = () => (
       <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/cookie-policy" element={<CookiePolicy />} />
       <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+      
+      {/* 404 - Catch all route (must be last) */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   </EnvModeGuard>
 );
