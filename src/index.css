@@ -101,3 +101,59 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* Emoji styling for consistency and reliability */
+.emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  vertical-align: baseline;
+  display: inline-block;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Specific emoji sizing and spacing */
+.emoji-sm {
+  font-size: 1rem;
+}
+
+.emoji-md {
+  font-size: 1.5rem;
+}
+
+.emoji-lg {
+  font-size: 2rem;
+}
+
+.emoji-xl {
+  font-size: 3rem;
+}
+
+/* Emoji shadow for better visibility */
+.text-shadow-sm {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Fallback for browsers that don't support color emojis */
+@supports not (font-variation-settings: normal) {
+  .emoji {
+    font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .emoji {
+    filter: contrast(1.2);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .emoji {
+    animation: none;
+  }
+}

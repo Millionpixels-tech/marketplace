@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser, FiSearch, FiHeart } from "react-icons/fi";
+import { FaGift } from "react-icons/fa";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
@@ -186,6 +187,22 @@ const MobileHeader = () => {
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Home
+                            </Link>
+
+                            {/* Promotion Link */}
+                            <Link
+                                to="/early-launch-promotion"
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium relative hover:bg-gray-100 transition-colors"
+                                style={{ 
+                                    color: '#72b01d'
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <FaGift size={18} />
+                                <span>Early Launch Promotion</span>
+                                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                                    HOT
+                                </span>
                             </Link>
                             
                             {/* Categories */}

@@ -23,6 +23,7 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import AdminPayments from "../pages/admin/AdminPayments";
 import AdminManagement from "../pages/admin/AdminManagement";
 import SellerGuide from "../pages/SellerGuide";
+import EarlyLaunchPromotion from "../pages/EarlyLaunchPromotion";
 import ComingSoon from "../pages/ComingSoon";
 import EnvModeGuard from "../components/EnvModeGuard";
 // Footer pages
@@ -67,6 +68,7 @@ const AppRoutes = () => (
       <Route path="/edit-shop/:shopId" element={<EditShop />} />
       <Route path="/profile/:id" element={<PublicProfile />} />
       <Route path="/seller-guide" element={<SellerGuide />} />
+      <Route path="/early-launch-promotion" element={<EarlyLaunchPromotion />} />
       <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
       <Route path="/admin/management" element={<ProtectedRoute><AdminManagement /></ProtectedRoute>} />
       

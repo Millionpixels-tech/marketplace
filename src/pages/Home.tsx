@@ -360,6 +360,43 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Early Launch Promotion Banner */}
+        <section className="w-full py-8 md:py-12 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-90"></div>
+          <div className="relative z-10 max-w-6xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                  <span className="text-2xl">🎉</span>
+                  <span className="bg-white text-orange-600 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">
+                    Limited Time
+                  </span>
+                </div>
+                <h3 className={`font-black text-white ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'} mb-2`}>
+                  Early Launch Promotion
+                </h3>
+                <p className={`text-white ${isMobile ? 'text-sm' : 'text-base'} opacity-90 max-w-md`}>
+                  Create 1 shop + 10 listings and get LKR 1,000 cash! First 50 eligible sellers only.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/early-launch-promotion"
+                  className="bg-white text-orange-600 px-6 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg text-center"
+                >
+                  Check Eligibility
+                </Link>
+                <Link
+                  to="/create-shop"
+                  className="border-2 border-white text-white px-6 py-3 rounded-2xl font-bold hover:bg-white hover:text-orange-600 transition-all duration-300 text-center"
+                >
+                  Start Selling
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Why We Give 100% Free Platform Section */}
         <section className={`w-full border-t border-b relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
           style={{

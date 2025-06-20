@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
+import { FaGift } from "react-icons/fa";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
@@ -209,6 +210,27 @@ const Header = () => {
                         }}
                     >
                         Seller Guide
+                    </Link>
+                    <Link
+                        to="/early-launch-promotion"
+                        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 relative flex items-center gap-2"
+                        style={{ 
+                            color: '#72b01d'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                            e.currentTarget.style.color = '#3f7d20';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                    >
+                        <FaGift size={16} />
+                        Promotion
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                            HOT
+                        </span>
                     </Link>
                     <Link
                         to="/wishlist"
@@ -469,6 +491,28 @@ const Header = () => {
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Seller Guide
+                            </Link>
+                            <Link
+                                to="/early-launch-promotion"
+                                className="py-3 px-4 rounded-lg transition font-semibold relative flex items-center gap-2"
+                                style={{ 
+                                    color: '#72b01d'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#3f7d20';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#72b01d';
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <FaGift size={16} />
+                                Early Launch Promotion
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                                    HOT
+                                </span>
                             </Link>
                             <Link
                                 to="/wishlist"
