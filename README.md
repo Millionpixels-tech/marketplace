@@ -57,14 +57,43 @@ public/                  # Static assets
    ```sh
    npm install
    ```
-3. **Start the development server:**
+3. **Configure environment variables:**
+   ```sh
+   cp .env.example .env
+   # Edit .env with your actual configuration values
+   ```
+4. **Start the development server:**
    ```sh
    npm run dev
    ```
-4. **Build for production:**
+5. **Build for production:**
    ```sh
    npm run build
    ```
+
+## Environment Configuration
+
+### Environment Mode
+The application supports different environment modes controlled by the `VITE_ENV_MODE` environment variable:
+
+- **DEV** (default): Normal application behavior with all pages accessible
+- **PROD**: Redirects all pages to a "Coming Soon" page
+
+#### Usage
+1. Set `VITE_ENV_MODE=PROD` in your `.env` file or environment variables
+2. All routes will automatically redirect to `/coming-soon` except the coming soon page itself
+3. Internal navigation (logo, menu, footer links) includes state flags to properly handle user flows
+
+#### Implementation Details
+- The `EnvModeGuard` component wraps all routes in `AppRoutes.tsx`
+- When in PROD mode, users are redirected to `/coming-soon` regardless of the URL they access
+- The coming soon page displays a professional announcement with feature previews
+- Navigation links include `state={{ fromInternal: true }}` for proper user experience
+
+This feature is useful for:
+- Pre-launch maintenance mode
+- Staged deployments
+- Feature flag-based access control
 
 ## UI Design System
 
