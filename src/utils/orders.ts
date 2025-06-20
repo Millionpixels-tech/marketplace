@@ -3,6 +3,7 @@ import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, d
 import { PaymentMethod, PaymentStatus, OrderStatus } from "../types/enums";
 import type { OrderStatus as OrderStatusType } from "../types/enums";
 import { sendOrderConfirmationEmails } from "./emailService";
+import { reduceListingStock, restoreListingStock } from "./stockManagement";
 
 export interface BuyerInfo {
     firstName: string;
@@ -34,6 +35,10 @@ export interface Order {
     status?: OrderStatusType;
     orderId?: string; // PayHere order ID
     customOrderId?: string; // Reference to custom order if created from one
+    variationId?: string; // For items with variations
+    variationName?: string; // Name of the selected variation
+    variationPriceChange?: number; // Price change for the variation
+    sellerNotes?: string; // Seller's notes about the item
     createdAt: any;
 }
 
@@ -53,31 +58,62 @@ async function getSellerEmail(sellerId: string): Promise<string | null> {
 }
 
 export async function createOrder(order: Omit<Order, "createdAt">) {
-    // Set initial status based on payment method
-    let initialStatus: string = OrderStatus.PENDING; // Default for COD
-    if (order.paymentMethod === PaymentMethod.BANK_TRANSFER) {
-        initialStatus = OrderStatus.PENDING_PAYMENT; // Bank transfer orders start as pending payment
+    // Reduce stock first before creating the order
+    // This ensures we don't oversell items
+    if (order.itemId && order.quantity) {
+        console.log(`📦 Reducing stock for item ${order.itemId}: quantity ${order.quantity}${order.variationId ? `, variation ${order.variationId}` : ''}`);
+        
+        const stockResult = await reduceListingStock(
+            order.itemId,
+            order.quantity,
+            order.variationId
+        );
+        
+        if (!stockResult.success) {
+            throw new Error(stockResult.error || "Failed to reduce stock");
+        }
     }
     
-    const docRef = await addDoc(collection(db, "orders"), {
-        ...order,
-        status: initialStatus,
-        createdAt: Timestamp.now(),
-    });
-    
-    // Send order confirmation emails for COD and Bank Transfer orders
-    // Skip emails for orders created from custom orders - they will be handled separately
-    // For PayHere Pay Now orders, emails will be sent after payment completion
-    if (!order.customOrderId && (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY || order.paymentMethod === PaymentMethod.BANK_TRANSFER)) {
-        console.log(`📧 ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'COD' : 'Bank Transfer'} order - sending emails immediately`);
-        await sendOrderConfirmationEmailsHelper(order, docRef.id);
-    } else if (order.customOrderId) {
-        console.log("📋 Custom order item - skipping individual emails (will be sent once for the entire custom order)");
-    } else {
-        console.log("💳 PayHere Pay Now order - emails will be sent after payment completion");
+    try {
+        // Set initial status based on payment method
+        let initialStatus: string = OrderStatus.PENDING; // Default for COD
+        if (order.paymentMethod === PaymentMethod.BANK_TRANSFER) {
+            initialStatus = OrderStatus.PENDING_PAYMENT; // Bank transfer orders start as pending payment
+        }
+        
+        const docRef = await addDoc(collection(db, "orders"), {
+            ...order,
+            status: initialStatus,
+            createdAt: Timestamp.now(),
+        });
+        
+        console.log(`✅ Order created successfully with ID: ${docRef.id}`);
+        
+        // Send order confirmation emails for COD and Bank Transfer orders
+        // Skip emails for orders created from custom orders - they will be handled separately
+        // For PayHere Pay Now orders, emails will be sent after payment completion
+        if (!order.customOrderId && (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY || order.paymentMethod === PaymentMethod.BANK_TRANSFER)) {
+            console.log(`📧 ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'COD' : 'Bank Transfer'} order - sending emails immediately`);
+            await sendOrderConfirmationEmailsHelper(order, docRef.id);
+        } else if (order.customOrderId) {
+            console.log("📋 Custom order item - skipping individual emails (will be sent once for the entire custom order)");
+        } else {
+            console.log("💳 PayHere Pay Now order - emails will be sent after payment completion");
+        }
+        
+        return docRef.id;
+    } catch (error) {
+        // If order creation fails, restore the stock we reduced
+        if (order.itemId && order.quantity) {
+            console.log(`🔄 Order creation failed, restoring stock for item ${order.itemId}`);
+            await restoreListingStock(
+                order.itemId,
+                order.quantity,
+                order.variationId
+            );
+        }
+        throw error; // Re-throw the original error
     }
-    
-    return docRef.id;
 }
 
 // Helper function to send order confirmation emails
@@ -117,6 +153,57 @@ async function sendOrderConfirmationEmailsHelper(order: Omit<Order, "createdAt">
     } catch (error) {
         console.error("❌ Error sending order confirmation emails:", error);
         // Don't throw error here - order creation should still succeed even if emails fail
+    }
+}
+
+// Cancel or refund an order and restore stock
+export async function cancelOrder(orderId: string, reason?: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Get the order details first
+        const orderRef = doc(db, "orders", orderId);
+        const orderDoc = await getDoc(orderRef);
+        
+        if (!orderDoc.exists()) {
+            return { success: false, error: "Order not found" };
+        }
+        
+        const orderData = orderDoc.data() as Order;
+        
+        // Restore stock if the order has item details
+        if (orderData.itemId && orderData.quantity) {
+            console.log(`🔄 Restoring stock for cancelled order ${orderId}: item ${orderData.itemId}, quantity ${orderData.quantity}`);
+            
+            const stockResult = await restoreListingStock(
+                orderData.itemId,
+                orderData.quantity,
+                orderData.variationId
+            );
+            
+            if (!stockResult.success) {
+                console.error(`Failed to restore stock for cancelled order ${orderId}:`, stockResult.error);
+                // Continue with order cancellation even if stock restoration fails
+                // This prevents the order from being stuck in a cancelled state
+            } else {
+                console.log(`✅ Stock restored successfully for cancelled order ${orderId}`);
+            }
+        }
+        
+        // Update order status to cancelled
+        await updateDoc(orderRef, {
+            status: OrderStatus.CANCELLED,
+            cancellationReason: reason,
+            cancelledAt: Timestamp.now()
+        });
+        
+        console.log(`✅ Order ${orderId} cancelled successfully`);
+        return { success: true };
+        
+    } catch (error) {
+        console.error("Error cancelling order:", error);
+        return { 
+            success: false, 
+            error: error instanceof Error ? error.message : "Failed to cancel order" 
+        };
     }
 }
 

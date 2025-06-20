@@ -6,6 +6,7 @@ import { db, auth } from "../utils/firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { createOrder } from "../utils/orders";
 import { saveBuyerInfo, getBuyerInfo, type BuyerInfo } from "../utils/userProfile";
+import { checkStockAvailability } from "../utils/stockManagement";
 // Payment hash imports - Currently disabled as online payments are not provided
 // import { generatePaymentHash } from "../utils/payment/paymentHash";
 // import type { PaymentHashParams } from "../utils/payment/paymentHash";
@@ -447,6 +448,23 @@ export default function CheckoutPage() {
       setSubmitting(true);
       setGeneralError("");
 
+      // Check stock availability before proceeding with order
+      const stockCheck = await checkStockAvailability(
+        item.id,
+        quantity,
+        selectedVariation?.id
+      );
+
+      if (!stockCheck.available) {
+        if (stockCheck.error) {
+          setGeneralError(stockCheck.error);
+        } else {
+          const itemName = selectedVariation ? `${item.name} (${selectedVariation.name})` : item.name;
+          setGeneralError(`Insufficient stock for ${itemName}. Available: ${stockCheck.currentStock}, Requested: ${quantity}`);
+        }
+        return;
+      }
+
       // Save buyer information to user profile first
       await saveBuyerInfo(user.uid, buyerInfo);
       
@@ -505,6 +523,23 @@ export default function CheckoutPage() {
     try {
       setSubmitting(true);
       setGeneralError('');
+      
+      // Check stock availability before proceeding with order
+      const stockCheck = await checkStockAvailability(
+        item.id,
+        quantity,
+        selectedVariation?.id
+      );
+
+      if (!stockCheck.available) {
+        if (stockCheck.error) {
+          setGeneralError(stockCheck.error);
+        } else {
+          const itemName = selectedVariation ? `${item.name} (${selectedVariation.name})` : item.name;
+          setGeneralError(`Insufficient stock for ${itemName}. Available: ${stockCheck.currentStock}, Requested: ${quantity}`);
+        }
+        return;
+      }
       
       // Save buyer information to user profile first
       await saveBuyerInfo(user.uid, buyerInfo);
