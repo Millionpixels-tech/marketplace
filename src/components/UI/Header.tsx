@@ -60,7 +60,7 @@ const Header = () => {
                 {/* Logo & Categories (Left) */}
                 <div className="flex items-center gap-2 md:gap-6">
                     {/* Logo/Title */}
-                    <Link to="/" className="text-2xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
+                    <Link to="/" state={{ fromInternal: true }} className="text-2xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
                         <span className="hover:underline">
                             Sina<span className="font-light">Marketplace</span>
                         </span>

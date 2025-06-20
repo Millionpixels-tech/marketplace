@@ -69,7 +69,7 @@ const MobileHeader = () => {
                             <FiMenu size={20} style={{ color: '#72b01d' }} />
                         </button>
                         
-                        <Link to="/" className="text-xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
+                        <Link to="/" state={{ fromInternal: true }} className="text-xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
                             SINA
                         </Link>
                     </div>
@@ -181,6 +181,7 @@ const MobileHeader = () => {
                         <div className="p-4 space-y-4">
                             <Link
                                 to="/"
+                                state={{ fromInternal: true }}
                                 className="block text-lg font-medium text-gray-900 hover:text-green-600"
                                 onClick={() => setMobileMenuOpen(false)}
                             >

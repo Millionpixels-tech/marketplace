@@ -632,7 +632,7 @@ const Search: React.FC = () => {
                 }}
               >
                 <Input
-                  className={`flex-1 outline-none ${isMobile ? 'px-3 py-2 text-base' : 'px-5 py-3 text-lg'} rounded-l-xl font-medium transition border border-r-0`}
+                  className={`flex-1 outline-none ${isMobile ? 'px-3 py-2 text-base' : 'px-5 py-3 text-lg'} rounded-l-xl rounded-r-none font-medium transition border border-r-0`}
                   style={{
                     backgroundColor: '#ffffff',
                     borderColor: 'rgba(114, 176, 29, 0.3)',
@@ -645,7 +645,7 @@ const Search: React.FC = () => {
                 />
                 <Button
                   type="submit"
-                  className={`${isMobile ? 'px-4 py-2 text-base' : 'px-6 py-3 text-lg'} rounded-r-xl text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border`}
+                  className={`${isMobile ? 'px-4 py-2 text-base' : 'px-6 py-3 text-lg'} rounded-l-none rounded-r-xl text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 border`}
                   style={{
                     background: 'linear-gradient(to right, #72b01d, #3f7d20)',
                     borderColor: 'rgba(114, 176, 29, 0.3)'
@@ -758,7 +758,7 @@ const Search: React.FC = () => {
             ) : (
               <WithReviewStats listings={items}>
                 {(listingsWithStats) => (
-                  <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
+                  <div className={`w-full grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
                     {listingsWithStats.map((item: any) => (
                       <ResponsiveListingTile 
                         key={item.id}

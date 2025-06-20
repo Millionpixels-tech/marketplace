@@ -95,7 +95,9 @@ const MobileListingTile: React.FC<MobileListingTileProps> = ({ listing, shopInfo
         
         {/* Wishlist Button */}
         <div className="absolute top-2 right-2">
-          <WishlistButton listing={listing} refresh={onRefresh || (() => {})} />
+          <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+            <WishlistButton listing={listing} refresh={onRefresh || (() => {})} />
+          </div>
         </div>
 
         {/* Delivery Badge */}
