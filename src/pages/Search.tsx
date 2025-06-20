@@ -758,7 +758,7 @@ const Search: React.FC = () => {
             ) : (
               <WithReviewStats listings={items}>
                 {(listingsWithStats) => (
-                  <div className={`w-full grid grid-cols-1 ${isMobile ? 'gap-3' : 'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
+                  <div className={`w-full grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'}`}>
                     {listingsWithStats.map((item: any) => (
                       <ResponsiveListingTile 
                         key={item.id}
