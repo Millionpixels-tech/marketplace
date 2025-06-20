@@ -314,7 +314,7 @@ const Header = () => {
                                             <button
                                                 onClick={() => {
                                                     setUserMenuOpen(false);
-                                                    navigate(`/dashboard/${user.uid}`);
+                                                    navigate("/dashboard");
                                                 }}
                                                 className="flex items-center gap-2 px-4 py-3 text-left font-semibold transition border-b"
                                                 style={{
@@ -594,7 +594,7 @@ const Header = () => {
                                     <button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            navigate(`/dashboard/${user.uid}`);
+                                            navigate("/dashboard");
                                         }}
                                         className="flex items-center gap-2 mt-4 py-3 px-2 rounded border transition uppercase font-medium"
                                         style={{

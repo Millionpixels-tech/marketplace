@@ -23,7 +23,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      navigate(`/dashboard/${user.uid}`);
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 

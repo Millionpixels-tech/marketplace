@@ -3,7 +3,7 @@ import OrderSellerRow from "../order/OrderSellerRow";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { formatPrice } from "../../utils/formatters";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
@@ -89,7 +89,7 @@ export default function ProfileDashboard() {
     const { isMobile } = useResponsive();
     const { user } = useAuth();
     const { showToast } = useToast();
-    const { id } = useParams();
+    const navigate = useNavigate();
     const [shops, setShops] = useState<any[]>([]);
     const [desc, setDesc] = useState("");
     const [displayName, setDisplayName] = useState("");
@@ -388,8 +388,6 @@ export default function ProfileDashboard() {
     const [listingsTotalCount, setListingsTotalCount] = useState(0);
     const LISTINGS_PER_PAGE = 8;
 
-    const navigate = useNavigate();
-
     // Order sub-tabs
     const [orderSubTab, setOrderSubTab] = useState<"buyer" | "seller">("buyer");
     const [ordersLoading, setOrdersLoading] = useState(false);
@@ -419,7 +417,6 @@ export default function ProfileDashboard() {
         const fetchProfile = async () => {
             setLoading(true);
             let uid = user?.uid;
-            if (id) uid = id;
             if (!uid) {
                 setLoading(false);
                 return;
@@ -483,7 +480,7 @@ export default function ProfileDashboard() {
             }
         };
         fetchProfile();
-    }, [user, id]);
+    }, [user]);
 
     // Listings fetching - Server-side pagination
     const fetchListings = async (page: number) => {

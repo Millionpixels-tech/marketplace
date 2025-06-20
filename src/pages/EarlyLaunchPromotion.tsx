@@ -565,7 +565,7 @@ const EarlyLaunchPromotion = () => {
                               +{listings.length - 5} more listings
                             </p>
                             <Link 
-                              to={`/dashboard/${user?.uid}`}
+                              to="/dashboard"
                               className="inline-block mt-2 text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
                               View All Listings →

@@ -65,7 +65,7 @@ const AppRoutes = () => (
       <Route path="/custom-order-summary/:customOrderId" element={<CustomOrderSummaryPage />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/shop/:username" element={<ShopPage />} />
-      <Route path="/dashboard/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/edit-shop/:shopId" element={<EditShop />} />
       <Route path="/profile/:id" element={<PublicProfile />} />
       <Route path="/seller-guide" element={<SellerGuide />} />

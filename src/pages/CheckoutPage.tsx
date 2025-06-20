@@ -296,13 +296,13 @@ export default function CheckoutPage() {
           navigate(`/order/${order.id}`);
         } else {
           // Fallback to dashboard if we can't find the order
-          navigate('/dashboard/' + user?.uid);
+          navigate('/dashboard');
         }
         
       } catch (error) {
         console.error("Error updating order status:", error);
         // Still navigate to dashboard as payment was successful
-        navigate('/dashboard/' + user?.uid);
+        navigate('/dashboard');
       }
     };
 

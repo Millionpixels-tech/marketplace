@@ -144,7 +144,7 @@ const MobileHeader = () => {
                                     </p>
                                 </div>
                                 <Link
-                                    to={`/dashboard/${user.uid}`}
+                                    to="/dashboard"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     onClick={() => setUserMenuOpen(false)}
                                 >
@@ -268,7 +268,7 @@ const MobileHeader = () => {
                             {user && (
                                 <>
                                     <Link
-                                        to={`/dashboard/${user.uid}`}
+                                        to="/dashboard"
                                         className="block text-lg font-medium text-gray-900 hover:text-green-600"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
