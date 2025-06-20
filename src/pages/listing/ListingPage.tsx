@@ -474,37 +474,67 @@ export default function ListingSingle() {
       />
       <ResponsiveHeader />
 
-      {/* Breadcrumb */}
-      <nav className={`max-w-6xl mx-auto mt-4 mb-2 ${isMobile ? 'px-4' : 'px-4'}`} aria-label="Breadcrumb">
-        <ol className="flex items-center gap-2 text-sm text-gray-500">
-          {item?.category && (
-            <li>
-              <Link
-                to={`/search?cat=${encodeURIComponent(item.category)}`}
-                className="hover:text-green-600 font-medium transition-colors"
-              >
-                {item.category}
-              </Link>
-            </li>
-          )}
-          {item?.subcategory && (
-            <>
-              <span className="mx-1">/</span>
-              <li>
+      {/* Breadcrumb - Enhanced mobile UI */}
+      <nav className={`max-w-6xl mx-auto mt-4 mb-2 px-4`} aria-label="Breadcrumb">
+        <div className={`${isMobile ? 'bg-gray-50 rounded-lg p-3' : ''}`}>
+          <ol className={`flex items-center ${isMobile ? 'gap-1 text-xs overflow-x-auto scrollbar-hide' : 'gap-2 text-sm'} text-gray-500`}>
+            {item?.category && (
+              <li className="flex-shrink-0">
                 <Link
-                  to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
-                  className="hover:text-green-600 font-medium transition-colors"
+                  to={`/search?cat=${encodeURIComponent(item.category)}`}
+                  className={`hover:text-green-600 font-medium transition-colors ${
+                    isMobile 
+                      ? 'inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-xs shadow-sm hover:shadow-md' 
+                      : ''
+                  }`}
                 >
-                  {item.subcategory}
+                  {item.category}
                 </Link>
               </li>
-            </>
-          )}
-          <span className="mx-1">/</span>
-          <li className={`font-semibold text-gray-900 truncate ${isMobile ? 'max-w-[150px]' : 'max-w-[200px]'}`} title={item.name}>
-            {item.name}
-          </li>
-        </ol>
+            )}
+            {item?.subcategory && (
+              <>
+                <span className={`flex-shrink-0 ${isMobile ? 'text-gray-400 mx-1' : 'mx-1 text-gray-400'}`}>
+                  {isMobile ? (
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    '/'
+                  )}
+                </span>
+                <li className="flex-shrink-0">
+                  <Link
+                    to={`/search?cat=${encodeURIComponent(item.category)}&sub=${encodeURIComponent(item.subcategory)}`}
+                    className={`hover:text-green-600 font-medium transition-colors ${
+                      isMobile 
+                        ? 'inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-xs shadow-sm hover:shadow-md' 
+                        : ''
+                    }`}
+                  >
+                    {item.subcategory}
+                  </Link>
+                </li>
+              </>
+            )}
+            <span className={`flex-shrink-0 ${isMobile ? 'text-gray-400 mx-1' : 'mx-1 text-gray-400'}`}>
+              {isMobile ? (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                '/'
+              )}
+            </span>
+            <li className={`font-semibold text-gray-900 truncate ${
+              isMobile 
+                ? 'max-w-[100px] text-xs px-2 py-1 bg-green-100 border border-green-200 rounded-md' 
+                : 'max-w-[200px]'
+            }`} title={item.name}>
+              {item.name}
+            </li>
+          </ol>
+        </div>
       </nav>
 
       <main className={`w-full max-w-6xl mx-auto mt-6 ${isMobile ? 'px-4' : 'px-4'}`}>
@@ -775,6 +805,10 @@ export default function ListingSingle() {
                           setQtyInput(finalValue.toString());
                         }}
                         className="w-16 px-2 py-2 text-center border-0 focus:ring-0 focus:outline-none bg-white"
+                        style={{
+                          MozAppearance: 'textfield' // Firefox
+                        }}
+                        onWheel={(e) => e.currentTarget.blur()} // Prevent scroll wheel changes
                       />
                       <button
                         type="button"
