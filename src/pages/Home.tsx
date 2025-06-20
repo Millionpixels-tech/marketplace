@@ -72,7 +72,6 @@ function ProductHeroSearch() {
             type="button"
             onClick={() => {
               setQ(term);
-              handleSearch({ preventDefault: () => {} });
             }}
             className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
             style={{
