@@ -1,4 +1,3 @@
-// src/utils/messaging.ts
 import { db } from "./firebase";
 import { 
   collection, 
@@ -15,6 +14,7 @@ import {
   limit,
   startAfter
 } from "firebase/firestore";
+import { createMessageNotification } from "./notifications";
 
 export interface Message {
   id: string;
@@ -148,6 +148,15 @@ export async function sendMessage(
         [recipientId]: (currentUnreadCount[recipientId] || 0) + 1
       }
     });
+
+    // Create notification for recipient about new message
+    try {
+      await createMessageNotification(recipientId, senderName, conversationId);
+      console.log('📨 Message notification sent to recipient');
+    } catch (notificationError) {
+      console.error('❌ Failed to create message notification:', notificationError);
+      // Don't fail the message sending if notification fails
+    }
   }
 }
 

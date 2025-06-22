@@ -4,6 +4,7 @@ import { PaymentMethod, PaymentStatus, OrderStatus } from "../types/enums";
 import type { OrderStatus as OrderStatusType } from "../types/enums";
 import { sendOrderConfirmationEmails } from "./emailService";
 import { reduceListingStock, restoreListingStock } from "./stockManagement";
+import { createOrderNotification } from "./notifications";
 
 export interface BuyerInfo {
     firstName: string;
@@ -88,6 +89,24 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
         });
         
         console.log(`✅ Order created successfully with ID: ${docRef.id}`);
+        
+        // Create notification for seller about new order
+        try {
+            await createOrderNotification(
+                order.sellerId,
+                'new_order',
+                docRef.id,
+                {
+                    buyerName: order.buyerInfo ? `${order.buyerInfo.firstName} ${order.buyerInfo.lastName}` : 'Customer',
+                    itemName: order.itemName,
+                    amount: order.total
+                }
+            );
+            console.log('📨 Notification sent to seller');
+        } catch (notificationError) {
+            console.error('❌ Failed to create seller notification:', notificationError);
+            // Don't fail the order creation if notification fails
+        }
         
         // Send order confirmation emails for COD and Bank Transfer orders
         // Skip emails for orders created from custom orders - they will be handled separately

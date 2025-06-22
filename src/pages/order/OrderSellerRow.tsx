@@ -6,6 +6,7 @@ import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { formatPrice } from "../../utils/formatters";
 import { FiDollarSign } from "react-icons/fi";
+import { createOrderNotification } from "../../utils/notifications";
 
 // Function to print delivery label
 const printDeliveryLabel = async (order: any) => {
@@ -394,6 +395,22 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                     await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.REFUNDED });
                                     setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.REFUNDED } : o));
                                     
+                                    // Create notification for buyer about refund
+                                    try {
+                                        await createOrderNotification(
+                                            order.buyerId,
+                                            'order_cancelled',
+                                            order.id,
+                                            {
+                                                itemName: order.itemName,
+                                                amount: order.total
+                                            }
+                                        );
+                                        console.log('📨 Refund notification sent to buyer');
+                                    } catch (notificationError) {
+                                        console.error('❌ Failed to create refund notification:', notificationError);
+                                    }
+                                    
                                     // Send email notification to buyer
                                     try {
                                         const { sendOrderStatusChangeNotification } = await import('../../utils/emailService');
@@ -444,6 +461,22 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 if (!confirmed) return;
                                 await updateDoc(doc(db, "orders", order.id), { status: OrderStatus.SHIPPED });
                                 setSellerOrders((prev: any[]) => prev.map(o => o.id === order.id ? { ...o, status: OrderStatus.SHIPPED } : o));
+                                
+                                // Create notification for buyer about shipped order
+                                try {
+                                    await createOrderNotification(
+                                        order.buyerId,
+                                        'order_shipped',
+                                        order.id,
+                                        {
+                                            itemName: order.itemName,
+                                            sellerName: order.sellerShopName
+                                        }
+                                    );
+                                    console.log('📨 Shipped notification sent to buyer');
+                                } catch (notificationError) {
+                                    console.error('❌ Failed to create shipped notification:', notificationError);
+                                }
                                 
                                 // Send email notification to buyer
                                 try {
