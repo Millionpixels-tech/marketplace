@@ -8,10 +8,6 @@ import Footer from "../../components/UI/Footer";
 import { useParams } from "react-router-dom";
 import { compressImage, generateSEOFilename } from "../../utils/imageUtils";
 
-function wordCount(text: string) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
 export default function EditShop() {
     const { shopId } = useParams(); // shopId passed from route params
     const [shopName, setShopName] = useState("");
@@ -338,28 +334,28 @@ export default function EditShop() {
                                 </label>
                                 <textarea
                                     className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] md:min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none text-sm md:text-base"
-                                    maxLength={1500}
+                                    maxLength={200}
                                     rows={6}
                                     placeholder="Describe your shop - what you sell, what makes it unique, your story..."
                                     value={desc}
                                     onChange={e => setDesc(e.target.value)}
                                     required
                                 />
-                                <div className="flex justify-between items-center mt-3">
-                                    <div className="text-xs text-[#6b7280] ml-1">
-                                        Tell customers about your shop and what makes it special
+                                <div className="flex justify-between items-center mt-2">
+                                    <div className="text-xs md:text-sm text-[#6b7280]">
+                                        Tell customers what makes your shop special
                                     </div>
-                                    <div className={`text-xs font-medium ml-1 ${wordCount(desc) > 300 ? 'text-red-600' : 'text-[#6b7280]'}`}>
-                                        {wordCount(desc)} / 300 words
+                                    <div className={`text-xs md:text-sm font-medium ${desc.length > 200 ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                                        {desc.length}/200
                                     </div>
                                 </div>
-                                {wordCount(desc) > 300 && (
+                                {desc.length > 200 && (
                                     <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
                                         <div className="text-sm text-red-700 font-medium">
                                             ⚠️ Description is too long
                                         </div>
                                         <div className="text-xs text-red-600 mt-1">
-                                            Please keep your description under 300 words
+                                            Please keep your description under 200 characters
                                         </div>
                                     </div>
                                 )}
@@ -370,7 +366,7 @@ export default function EditShop() {
                         <button
                             className="w-full md:w-auto bg-[#72b01d] text-white px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
                             disabled={
-                                !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || wordCount(desc) > 300
+                                !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || desc.length > 200
                             }
                             onClick={handleUpdate}
                             type="button"
