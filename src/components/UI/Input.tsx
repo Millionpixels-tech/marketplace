@@ -22,36 +22,10 @@ const Input: React.FC<InputProps> = ({
         </label>
       )}
       <input
-        className={`w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none font-medium placeholder-[#9ca3af] ${className}`}
+        className={`w-full bg-white border rounded-xl transition-all duration-200 focus:outline-none font-medium placeholder-[#9ca3af] text-[#0d0a0b] px-3 md:px-4 py-2 md:py-3 text-sm md:text-base focus:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus:shadow-lg focus:ring-4 focus:ring-[#72b01d]/10 ${className}`}
         style={{
-          backgroundColor: '#ffffff',
-          borderColor: error ? '#ef4444' : 'rgba(114, 176, 29, 0.2)',
-          borderWidth: '1px',
+          borderColor: error ? '#ef4444' : 'rgba(114, 176, 29, 0.3)',
           color: '#0d0a0b'
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = error ? '#ef4444' : '#72b01d';
-          e.currentTarget.style.borderWidth = '1px';
-          e.currentTarget.style.boxShadow = error 
-            ? '0 0 0 4px rgba(239, 68, 68, 0.1)' 
-            : '0 0 0 4px rgba(114, 176, 29, 0.1)';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = error ? '#ef4444' : 'rgba(114, 176, 29, 0.2)';
-          e.currentTarget.style.borderWidth = '1px';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
-        onMouseEnter={(e) => {
-          if (!error && document.activeElement !== e.currentTarget) {
-            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.4)';
-            e.currentTarget.style.borderWidth = '1px';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!error && document.activeElement !== e.currentTarget) {
-            e.currentTarget.style.borderColor = 'rgba(114, 176, 29, 0.2)';
-            e.currentTarget.style.borderWidth = '1px';
-          }
         }}
         {...props}
       />

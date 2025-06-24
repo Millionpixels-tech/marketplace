@@ -456,7 +456,7 @@ export default function CreateShop() {
               }
               loading={loading}
               onClick={handleSave}
-              className="w-full md:w-auto px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20 bg-gradient-to-r from-[#72b01d] to-[#5a8a17] hover:from-[#5a8a17] hover:to-[#4a7314] transform hover:scale-105 transition-all duration-200"
+              className="w-full md:w-auto px-8 md:px-12 py-3 md:py-4 rounded-xl font-bold uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-200 focus:ring-4 focus:ring-[#72b01d]/20"
             >
               {done
                 ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>
