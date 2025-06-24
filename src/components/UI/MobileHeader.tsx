@@ -71,9 +71,8 @@ const MobileHeader = () => {
                             <FiMenu size={20} style={{ color: '#72b01d' }} />
                         </button>
                         
-                        <Link to="/" state={{ fromInternal: true }} className="text-lg sm:text-xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
-                            <span className="hidden xs:inline">SINA</span>
-                            <span className="xs:hidden">S</span>
+                        <Link to="/" state={{ fromInternal: true }} className="flex items-center -ml-2" style={{ color: '#0d0a0b' }}>
+                            <img src="/logo.svg" alt="Sina.lk Logo" className="h-6 sm:h-7 w-auto hover:opacity-80 transition-opacity" />
                         </Link>
                     </div>
 

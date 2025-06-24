@@ -62,13 +62,8 @@ const Header = () => {
                 {/* Logo & Categories (Left) */}
                 <div className="flex items-center gap-1 md:gap-3 lg:gap-6">
                     {/* Logo/Title */}
-                    <Link to="/" state={{ fromInternal: true }} className="text-lg md:text-xl lg:text-2xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
-                        <span className="hover:underline">
-                            <span className="hidden sm:inline">Sina</span>
-                            <span className="sm:hidden">S</span>
-                            <span className="font-light hidden lg:inline">Marketplace</span>
-                            <span className="font-light lg:hidden hidden sm:inline">MP</span>
-                        </span>
+                    <Link to="/" state={{ fromInternal: true }} className="flex items-center" style={{ color: '#0d0a0b' }}>
+                        <img src="/logo.svg" alt="Sina.lk Logo" className="h-6 lg:h-7 w-auto hover:opacity-80 transition-opacity" />
                     </Link>
                     {/* Categories Dropdown */}
                     <div className="relative hidden md:block">
