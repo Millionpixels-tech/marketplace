@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { formatPrice } from "../../utils/formatters";
-import { FiDollarSign } from "react-icons/fi";
+import { FiDollarSign, FiFlag } from "react-icons/fi";
 import { createOrderNotification } from "../../utils/notifications";
+import ReportBuyerModal from "../../components/UI/ReportBuyerModal";
+import { useAuth } from "../../context/AuthContext";
 
 // Function to print delivery label
 const printDeliveryLabel = async (order: any) => {
@@ -215,9 +217,39 @@ const printDeliveryLabel = async (order: any) => {
 
 export default function OrderSellerRow({ order, setSellerOrders }: { order: any, setSellerOrders: any }) {
     const [expanded, setExpanded] = useState(false);
+    const [reportBuyerModalOpen, setReportBuyerModalOpen] = useState(false);
+    const [hasBuyerBeenReported, setHasBuyerBeenReported] = useState(false);
     
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
+    const { user } = useAuth();
+
+    // Check if buyer has already been reported for this order
+    useEffect(() => {
+        const checkIfBuyerReported = async () => {
+            if (!user?.uid || !order.id) return;
+            
+            try {
+                const { query, collection, where, getDocs } = await import('firebase/firestore');
+                const reportQuery = query(
+                    collection(db, 'buyerReports'),
+                    where('orderId', '==', order.id),
+                    where('sellerId', '==', user.uid)
+                );
+                
+                const reportSnapshot = await getDocs(reportQuery);
+                setHasBuyerBeenReported(!reportSnapshot.empty);
+            } catch (error) {
+                console.error('Error checking buyer report status:', error);
+            }
+        };
+
+        checkIfBuyerReported();
+    }, [user?.uid, order.id]);
+
+    const handleReportSubmitted = () => {
+        setHasBuyerBeenReported(true);
+    };
     
     return (
         <>
@@ -377,6 +409,25 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 Print Delivery Label
                             </button>
                         )}
+                        
+                        {/* Report Buyer Button */}
+                        <button
+                            className={`px-4 py-2 rounded-lg font-bold transition text-sm shadow-sm ${
+                                hasBuyerBeenReported 
+                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                    : 'bg-red-600 text-white hover:bg-red-700'
+                            }`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (!hasBuyerBeenReported) {
+                                    setReportBuyerModalOpen(true);
+                                }
+                            }}
+                            disabled={hasBuyerBeenReported}
+                        >
+                            <FiFlag className="w-4 h-4 inline mr-1" />
+                            {hasBuyerBeenReported ? 'Buyer Reported' : 'Report Buyer'}
+                        </button>
                         
                         {/* Refund Button */}
                         {order.status === OrderStatus.REFUND_REQUESTED && (
@@ -538,6 +589,12 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                 type={confirmDialog.type}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
+            />
+            <ReportBuyerModal
+                isOpen={reportBuyerModalOpen}
+                onClose={() => setReportBuyerModalOpen(false)}
+                order={order}
+                onReportSubmitted={handleReportSubmitted}
             />
         </>
     );

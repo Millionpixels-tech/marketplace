@@ -50,6 +50,11 @@ export default function CustomerService() {
       link: "/help-center#payments"
     },
     {
+      title: "Account Verification",
+      description: "Account verification, buyer reports, or placing order restrictions",
+      link: "/customer-service#verification"
+    },
+    {
       title: "Account Help",
       description: "Login issues, account settings, or profile updates",
       link: "/help-center#account"

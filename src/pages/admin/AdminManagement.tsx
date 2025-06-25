@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, deleteDoc, doc, limit, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, limit, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import type { DocumentData } from "firebase/firestore";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import { hasAdminAccess } from "../../utils/adminConfig";
-import { FiSearch, FiTrash2, FiUser, FiPackage, FiShoppingBag, FiAlertTriangle, FiExternalLink } from "react-icons/fi";
+import { formatPrice } from "../../utils/formatters";
+import { FiSearch, FiTrash2, FiUser, FiPackage, FiShoppingBag, FiAlertTriangle, FiExternalLink, FiCheckCircle, FiXCircle, FiEye, FiClock } from "react-icons/fi";
 
 interface User {
     id: string;
@@ -36,7 +37,48 @@ interface Shop {
     createdAt?: any;
 }
 
-type SearchType = 'users' | 'listings' | 'shops';
+interface BuyerReport {
+    id: string;
+    orderId: string;
+    sellerId: string;
+    sellerName: string;
+    buyerId: string;
+    buyerName: string;
+    buyerEmail: string;
+    complaint: string;
+    orderDetails: {
+        itemName: string;
+        itemPrice: number;
+        total: number;
+        status: string;
+        paymentMethod: string;
+    };
+    reportedAt: any;
+    status: string;
+    adminNotes?: string;
+}
+
+interface VerificationRequest {
+    id: string;
+    userId: string;
+    userEmail: string;
+    userName: string;
+    fullName: string;
+    submittedAt: any;
+    isVerified: 'PENDING' | 'COMPLETED' | 'APPROVED' | 'REJECTED' | 'NO_DATA';
+    verification: {
+        isVerified: 'PENDING' | 'COMPLETED' | 'APPROVED' | 'REJECTED' | 'NO_DATA';
+        fullName?: string;
+        address?: string;
+        idFrontUrl?: string;
+        idBackUrl?: string;
+        selfieUrl?: string;
+        submittedAt?: any;
+    };
+    createdAt?: any;
+}
+
+type SearchType = 'users' | 'listings' | 'shops' | 'buyerReports' | 'verificationRequests';
 
 interface DeleteModalData {
     isOpen: boolean;
@@ -104,6 +146,10 @@ export default function AdminManagement() {
                 results = await searchListings(searchQuery.trim());
             } else if (searchType === 'shops') {
                 results = await searchShops(searchQuery.trim());
+            } else if (searchType === 'buyerReports') {
+                results = await searchBuyerReports(searchQuery.trim());
+            } else if (searchType === 'verificationRequests') {
+                results = await searchVerificationRequests(searchQuery.trim());
             }
 
             setSearchResults(results);
@@ -351,6 +397,207 @@ export default function AdminManagement() {
         return shops;
     };
 
+    const searchBuyerReports = async (searchTerm: string): Promise<BuyerReport[]> => {
+        const reports: BuyerReport[] = [];
+        
+        try {
+            // If no search term, get all reports (limited)
+            let reportQuery;
+            if (!searchTerm) {
+                reportQuery = query(
+                    collection(db, "buyerReports"),
+                    limit(50)
+                );
+            } else {
+                // Search by orderId, buyerName, sellerName, or complaint keywords
+                const allReportsQuery = query(collection(db, "buyerReports"), limit(200));
+                const allReportsSnap = await getDocs(allReportsQuery);
+                const searchTermLower = searchTerm.toLowerCase();
+                
+                allReportsSnap.docs.forEach(docRef => {
+                    const reportData = docRef.data() as DocumentData;
+                    if (docRef.id.toLowerCase().includes(searchTermLower) ||
+                        reportData.orderId?.toLowerCase().includes(searchTermLower) ||
+                        reportData.buyerName?.toLowerCase().includes(searchTermLower) ||
+                        reportData.sellerName?.toLowerCase().includes(searchTermLower) ||
+                        reportData.buyerEmail?.toLowerCase().includes(searchTermLower) ||
+                        reportData.complaint?.toLowerCase().includes(searchTermLower) ||
+                        reportData.orderDetails?.itemName?.toLowerCase().includes(searchTermLower)) {
+                        
+                        reports.push({ id: docRef.id, ...reportData } as BuyerReport);
+                        
+                        // Limit results
+                        if (reports.length >= 50) return;
+                    }
+                });
+                
+                return reports;
+            }
+            
+            const reportSnap = await getDocs(reportQuery);
+            reportSnap.docs.forEach(docRef => {
+                const reportData = docRef.data() as DocumentData;
+                reports.push({ id: docRef.id, ...reportData } as BuyerReport);
+            });
+            
+        } catch (error) {
+            console.error("Error searching buyer reports:", error);
+        }
+
+        return reports;
+    };
+
+    const searchVerificationRequests = async (searchTerm: string = ""): Promise<VerificationRequest[]> => {
+        const requests: VerificationRequest[] = [];
+        
+        try {
+            // Query users collection where verification.isVerified is PENDING
+            let usersQuery;
+            if (!searchTerm) {
+                // Load all users with pending verification
+                usersQuery = query(
+                    collection(db, "users"),
+                    where("verification.isVerified", "==", "PENDING"),
+                    limit(100)
+                );
+            } else {
+                // Search all users and filter by search term and pending status
+                const allUsersQuery = query(
+                    collection(db, "users"),
+                    limit(200)
+                );
+                const allUsersSnap = await getDocs(allUsersQuery);
+                const searchTermLower = searchTerm.toLowerCase();
+                
+                allUsersSnap.docs.forEach(docRef => {
+                    const userData = docRef.data() as DocumentData;
+                    const hasVerificationPending = userData.verification?.isVerified === 'PENDING';
+                    
+                    if (hasVerificationPending && (
+                        docRef.id.toLowerCase().includes(searchTermLower) ||
+                        userData.email?.toLowerCase().includes(searchTermLower) ||
+                        userData.displayName?.toLowerCase().includes(searchTermLower) ||
+                        userData.uid?.toLowerCase().includes(searchTermLower) ||
+                        userData.verification?.fullName?.toLowerCase().includes(searchTermLower)
+                    )) {
+                        requests.push({
+                            id: docRef.id,
+                            userId: userData.uid || docRef.id,
+                            userEmail: userData.email || '',
+                            userName: userData.displayName || userData.verification?.fullName || 'Unknown User',
+                            fullName: userData.verification?.fullName || userData.displayName || '',
+                            submittedAt: userData.verification?.submittedAt || userData.createdAt,
+                            isVerified: userData.verification?.isVerified || 'NO_DATA',
+                            verification: userData.verification || {},
+                            createdAt: userData.createdAt
+                        } as VerificationRequest);
+                        
+                        // Limit results
+                        if (requests.length >= 100) return;
+                    }
+                });
+                
+                return requests;
+            }
+            
+            const usersSnap = await getDocs(usersQuery);
+            
+            usersSnap.docs.forEach(docRef => {
+                const userData = docRef.data() as DocumentData;
+                
+                requests.push({
+                    id: docRef.id,
+                    userId: userData.uid || docRef.id,
+                    userEmail: userData.email || '',
+                    userName: userData.displayName || userData.verification?.fullName || 'Unknown User',
+                    fullName: userData.verification?.fullName || userData.displayName || '',
+                    submittedAt: userData.verification?.submittedAt || userData.createdAt,
+                    isVerified: userData.verification?.isVerified || 'NO_DATA',
+                    verification: userData.verification || {},
+                    createdAt: userData.createdAt
+                } as VerificationRequest);
+            });
+            
+        } catch (error) {
+            console.error("Error searching verification requests:", error);
+        }
+
+        return requests.sort((a, b) => {
+            // Sort by submission date, newest first
+            if (a.submittedAt && b.submittedAt) {
+                return b.submittedAt.seconds - a.submittedAt.seconds;
+            }
+            return 0;
+        });
+    };
+
+    // Load pending verification requests automatically when tab is selected
+    useEffect(() => {
+        if (searchType === 'verificationRequests') {
+            setSearching(true);
+            setHasSearched(true);
+            searchVerificationRequests().then(results => {
+                setSearchResults(results);
+                setSearching(false);
+            }).catch(error => {
+                console.error("Error loading verification requests:", error);
+                setSearching(false);
+            });
+        }
+    }, [searchType]);
+
+    const handleVerificationAction = async (userId: string, action: 'approve' | 'reject', notes?: string) => {
+        try {
+
+            
+            // Find the user document
+            const userQuery = query(
+                collection(db, 'users'),
+                where('uid', '==', userId)
+            );
+            const userSnap = await getDocs(userQuery);
+            
+            if (userSnap.empty) {
+                // Try to find by document ID if uid search fails
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    await updateDoc(userDocRef, {
+                        'verification.isVerified': action === 'approve' ? 'COMPLETED' : 'REJECTED',
+                        'verification.reviewedAt': serverTimestamp(),
+                        'verification.reviewedBy': user?.email || 'admin',
+                        'verification.adminNotes': notes || '',
+                        'verified': action === 'approve' // Also set the top-level verified field
+                    });
+                } else {
+                    throw new Error('User not found');
+                }
+            } else {
+                const userDoc = userSnap.docs[0];
+                await updateDoc(userDoc.ref, {
+                    'verification.isVerified': action === 'approve' ? 'COMPLETED' : 'REJECTED',
+                    'verification.reviewedAt': serverTimestamp(),
+                    'verification.reviewedBy': user?.email || 'admin',
+                    'verification.adminNotes': notes || '',
+                    'verified': action === 'approve' // Also set the top-level verified field
+                });
+            }
+
+
+
+            // Refresh the search results
+            if (searchType === 'verificationRequests') {
+                const updatedResults = await searchVerificationRequests(searchQuery);
+                setSearchResults(updatedResults);
+            }
+
+        } catch (error) {
+            console.error('Error updating verification request:', error);
+            alert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} verification request. Please try again.`);
+        }
+    };
+
     const openDeleteModal = (type: SearchType, item: any) => {
         let itemName = "";
         if (type === 'users') {
@@ -359,6 +606,8 @@ export default function AdminManagement() {
             itemName = item.name || "Unknown Listing";
         } else if (type === 'shops') {
             itemName = item.name || "Unknown Shop";
+        } else if (type === 'buyerReports') {
+            itemName = `Report for Order ${item.orderId} by ${item.sellerName}`;
         }
 
         setDeleteModal({
@@ -390,44 +639,48 @@ export default function AdminManagement() {
                 // Delete shop and all related listings and reviews
                 const shopId = deleteModal.item.id;
                 
-                console.log(`Starting deletion of shop: ${shopId}`);
+
                 
                 // Delete all listings
-                console.log('Fetching listings to delete...');
+
                 const listingsQuery = query(collection(db, "listings"), where("shopId", "==", shopId));
                 const listingsSnap = await getDocs(listingsQuery);
-                console.log(`Found ${listingsSnap.docs.length} listings to delete`);
+
                 
                 const deleteListingsPromises = listingsSnap.docs.map(docRef => {
-                    console.log(`Deleting listing: ${docRef.id}`);
+
                     return deleteDoc(docRef.ref);
                 });
                 
                 // Delete all reviews
-                console.log('Fetching reviews to delete...');
+
                 const reviewsQuery = query(collection(db, "reviews"), where("shopId", "==", shopId));
                 const reviewsSnap = await getDocs(reviewsQuery);
-                console.log(`Found ${reviewsSnap.docs.length} reviews to delete`);
+
                 
                 const deleteReviewsPromises = reviewsSnap.docs.map(docRef => {
-                    console.log(`Deleting review: ${docRef.id}`);
+
                     return deleteDoc(docRef.ref);
                 });
                 
                 // Execute all deletions in parallel
-                console.log('Executing all deletions...');
+
                 await Promise.all([...deleteListingsPromises, ...deleteReviewsPromises]);
                 
                 // Delete shop last
-                console.log(`Deleting shop: ${shopId}`);
+
                 await deleteDoc(doc(db, "shops", shopId));
                 
-                console.log('Shop deletion completed successfully');
+
                 setSearchResults(prev => prev.filter(item => item.id !== shopId));
             } else if (deleteModal.type === 'users') {
                 // Note: In a real app, you'd want to be very careful about deleting users
                 // as it may have cascading effects. For now, we'll just delete the user document.
                 await deleteDoc(doc(db, "users", deleteModal.item.id));
+                setSearchResults(prev => prev.filter(item => item.id !== deleteModal.item.id));
+            } else if (deleteModal.type === 'buyerReports') {
+                // Delete buyer report
+                await deleteDoc(doc(db, "buyerReports", deleteModal.item.id));
                 setSearchResults(prev => prev.filter(item => item.id !== deleteModal.item.id));
             }
 
@@ -509,7 +762,7 @@ export default function AdminManagement() {
                         Admin Management Dashboard
                     </h1>
                     <p className="text-sm" style={{ color: '#454955' }}>
-                        Search and manage users, listings, and shops
+                        Search and manage users, listings, shops, buyer reports, and user verification requests
                     </p>
                 </div>
 
@@ -540,7 +793,9 @@ export default function AdminManagement() {
                         {[
                             { type: 'users' as SearchType, label: 'Users', icon: FiUser },
                             { type: 'listings' as SearchType, label: 'Listings', icon: FiPackage },
-                            { type: 'shops' as SearchType, label: 'Shops', icon: FiShoppingBag }
+                            { type: 'shops' as SearchType, label: 'Shops', icon: FiShoppingBag },
+                            { type: 'buyerReports' as SearchType, label: 'Buyer Reports', icon: FiAlertTriangle },
+                            { type: 'verificationRequests' as SearchType, label: 'User Verification', icon: FiCheckCircle }
                         ].map(({ type, label, icon: Icon }) => (
                             <button
                                 key={type}
@@ -561,37 +816,52 @@ export default function AdminManagement() {
                     </div>
 
                     {/* Search Input */}
-                    <div className="flex gap-4">
-                        <div className="flex-1 relative">
-                            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#454955' }} />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                                placeholder={`Search ${searchType} by name, email, or ID...`}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                                style={{ borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
-                            />
+                    {searchType !== 'verificationRequests' && (
+                        <div className="flex gap-4">
+                            <div className="flex-1 relative">
+                                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#454955' }} />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                    placeholder={`Search ${searchType} by name, email, or ID...`}
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                                    style={{ borderColor: 'rgba(114, 176, 29, 0.3)', color: '#454955' }}
+                                />
+                            </div>
+                            <button
+                                onClick={handleSearch}
+                                disabled={searching || !searchQuery.trim()}
+                                className="px-6 py-2 rounded-lg font-medium text-white transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: '#72b01d' }}
+                            >
+                                {searching ? 'Searching...' : 'Search'}
+                            </button>
                         </div>
-                        <button
-                            onClick={handleSearch}
-                            disabled={searching || !searchQuery.trim()}
-                            className="px-6 py-2 rounded-lg font-medium text-white transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ backgroundColor: '#72b01d' }}
-                        >
-                            {searching ? 'Searching...' : 'Search'}
-                        </button>
-                    </div>
+                    )}
+                    
+                    {searchType === 'verificationRequests' && (
+                        <div className="text-center py-4">
+                            <p className="text-sm text-gray-600">
+                                All users with pending verification status are automatically loaded. These users have submitted identity documents for review.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Search Results */}
-                {hasSearched && (
+                {(hasSearched || searchType === 'verificationRequests') && (
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div className="p-6 border-b" style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                             <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>
-                                Search Results ({searchResults.length})
+                                {searchType === 'verificationRequests' ? 'Pending Verification Requests' : 'Search Results'} ({searchResults.length})
                             </h2>
+                            {searchType === 'verificationRequests' && (
+                                <p className="text-sm text-gray-600 mt-2">
+                                    Review submitted identity documents (ID front/back, selfie) and approve or reject user verification requests. Click the eye icon to view documents.
+                                </p>
+                            )}
                         </div>
                         
                         {searchResults.length > 0 ? (
@@ -625,10 +895,33 @@ export default function AdminManagement() {
                                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Actions</th>
                                                 </>
                                             )}
+                                            {searchType === 'buyerReports' && (
+                                                <>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Order ID</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Buyer</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Seller</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Item</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Status</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Date</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Actions</th>
+                                                </>
+                                            )}
+                                            {searchType === 'verificationRequests' && (
+                                                <>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>User ID</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>User Name</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Email</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Status</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Submitted</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Documents</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Actions</th>
+                                                </>
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
-                                        {searchResults.map((item) => (
+                                        {searchResults.map((item) => {
+                                            return (
                                             <tr key={item.id} className="hover:bg-gray-50">
                                                 {searchType === 'users' && (
                                                     <>
@@ -769,8 +1062,183 @@ export default function AdminManagement() {
                                                         </td>
                                                     </>
                                                 )}
+                                                {searchType === 'buyerReports' && (
+                                                    <>
+                                                        <td className="px-6 py-4">
+                                                            <a 
+                                                                href={`/order/${item.orderId}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-sm font-medium hover:underline flex items-center gap-1"
+                                                                style={{ color: '#72b01d' }}
+                                                            >
+                                                                {item.orderId}
+                                                                <FiExternalLink className="w-3 h-3" />
+                                                            </a>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm" style={{ color: '#454955' }}>
+                                                                <div className="font-medium">{item.buyerName || 'Unknown'}</div>
+                                                                <div className="text-xs text-gray-500">{item.buyerEmail}</div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-medium" style={{ color: '#454955' }}>
+                                                                {item.sellerName || 'Unknown'}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm" style={{ color: '#454955' }}>
+                                                                <div className="font-medium">{item.orderDetails?.itemName || 'Unknown Item'}</div>
+                                                                <div className="text-xs text-gray-500">{formatPrice(item.orderDetails?.total)}</div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                item.status === 'reviewed' ? 'bg-blue-100 text-blue-800' :
+                                                                item.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {item.status || 'pending'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-xs text-gray-500">
+                                                                {item.reportedAt ? new Date(item.reportedAt.seconds ? item.reportedAt.seconds * 1000 : item.reportedAt).toLocaleDateString() : 'Unknown'}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const complaintText = `Report ID: ${item.id}\nOrder ID: ${item.orderId}\nBuyer: ${item.buyerName} (${item.buyerEmail})\nSeller: ${item.sellerName}\nItem: ${item.orderDetails?.itemName}\nComplaint: ${item.complaint}`;
+                                                                        alert(complaintText);
+                                                                    }}
+                                                                    className="text-blue-600 hover:text-blue-800 transition duration-200 text-xs px-2 py-1 border border-blue-200 rounded"
+                                                                >
+                                                                    View Details
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => openDeleteModal('buyerReports', item)}
+                                                                    className="text-red-600 hover:text-red-800 transition duration-200"
+                                                                >
+                                                                    <FiTrash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {searchType === 'verificationRequests' && (
+                                                    <>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-xs font-mono" style={{ color: '#454955' }}>
+                                                                {item.userId}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-medium" style={{ color: '#454955' }}>
+                                                                {item.userName || 'Unknown User'}
+                                                            </div>
+                                                            {item.fullName && item.fullName !== item.userName && (
+                                                                <div className="text-xs text-gray-500">
+                                                                    {item.fullName}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm" style={{ color: '#454955' }}>
+                                                                {item.userEmail}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                item.isVerified === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                                item.isVerified === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                                                item.isVerified === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                <FiClock className="w-3 h-3 mr-1" />
+                                                                {item.isVerified || 'PENDING'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-xs text-gray-500">
+                                                                {item.submittedAt ? new Date(item.submittedAt.seconds ? item.submittedAt.seconds * 1000 : item.submittedAt).toLocaleDateString() : 'Unknown'}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2">
+                                                                {item.verification?.idFrontUrl && (
+                                                                    <a 
+                                                                        href={item.verification.idFrontUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                                                        title="View ID Front"
+                                                                    >
+                                                                        <FiEye className="w-4 h-4" />
+                                                                    </a>
+                                                                )}
+                                                                {item.verification?.idBackUrl && (
+                                                                    <a 
+                                                                        href={item.verification.idBackUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                                                        title="View ID Back"
+                                                                    >
+                                                                        <FiEye className="w-4 h-4" />
+                                                                    </a>
+                                                                )}
+                                                                {item.verification?.selfieUrl && (
+                                                                    <a 
+                                                                        href={item.verification.selfieUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                                                        title="View Selfie"
+                                                                    >
+                                                                        <FiEye className="w-4 h-4" />
+                                                                    </a>
+                                                                )}
+                                                                {!item.verification?.idFrontUrl && !item.verification?.idBackUrl && !item.verification?.selfieUrl && (
+                                                                    <span className="text-xs text-gray-400">No documents</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2">
+                                                                {item.isVerified === 'PENDING' && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => handleVerificationAction(item.userId, 'approve')}
+                                                                            className="text-green-600 hover:text-green-800 transition duration-200"
+                                                                            title="Approve Verification"
+                                                                        >
+                                                                            <FiCheckCircle className="w-4 h-4" />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleVerificationAction(item.userId, 'reject')}
+                                                                            className="text-red-600 hover:text-red-800 transition duration-200"
+                                                                            title="Reject Verification"
+                                                                        >
+                                                                            <FiXCircle className="w-4 h-4" />
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                                {item.isVerified !== 'PENDING' && (
+                                                                    <span className="text-xs text-gray-500">
+                                                                        {item.isVerified === 'COMPLETED' ? 'Approved' : 'Rejected'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                )}
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

@@ -18,6 +18,8 @@ import { SEOHead } from "../components/SEO/SEOHead";
 import { Input } from "../components/UI";
 import { useResponsive } from "../hooks/useResponsive";
 import { useToast } from "../context/ToastContext";
+import { checkBuyerReports, checkBuyerVerification, getBuyerStatusMessage, shouldBlockBuyer, type BuyerReportStatus } from "../utils/buyerVerification";
+import BuyerStatusWarning from "../components/UI/BuyerStatusWarning";
 import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
 
 type CheckoutItem = {
@@ -145,6 +147,16 @@ export default function CheckoutPage() {
     postalCode: ''
   });
   
+  // Buyer verification state
+  const [buyerReportStatus, setBuyerReportStatus] = useState<BuyerReportStatus>({
+    hasReports: false,
+    reportCount: 0,
+    isBlocked: false,
+    needsVerification: false
+  });
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+  
   // Load item and shop data
   useEffect(() => {
     const fetchData = async () => {
@@ -236,6 +248,35 @@ export default function CheckoutPage() {
     };
 
     loadSavedBuyerInfo();
+  }, [user?.uid]);
+
+  // Check buyer verification status
+  useEffect(() => {
+    const checkBuyerStatus = async () => {
+      if (!user?.uid) {
+        setVerificationLoading(false);
+        return;
+      }
+
+      try {
+        setVerificationLoading(true);
+        
+        // Check if buyer has reports against them
+        const reportStatus = await checkBuyerReports(user.uid);
+        setBuyerReportStatus(reportStatus);
+        
+        // Check if buyer is verified
+        const verified = await checkBuyerVerification(user.uid);
+        setIsVerified(verified);
+        
+      } catch (error) {
+        console.error('Error checking buyer status:', error);
+      } finally {
+        setVerificationLoading(false);
+      }
+    };
+
+    checkBuyerStatus();
   }, [user?.uid]);
 
   // PayHere script loading - Currently disabled as online payments are not provided
@@ -766,6 +807,17 @@ export default function CheckoutPage() {
       return;
     }
     
+    // Check buyer verification status
+    if (shouldBlockBuyer(buyerReportStatus, isVerified)) {
+      if (!isVerified) {
+        setGeneralError('Your account requires verification before placing orders. Go to Settings to submit documents for verification or contact customer support.');
+      } else {
+        setGeneralError('Your account has too many reports from sellers. Please contact customer support to resolve these issues before placing orders.');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    
     // Validate form
     if (!validateForm()) {
       setGeneralError('Please correct the errors below and try again.');
@@ -841,6 +893,13 @@ export default function CheckoutPage() {
                 <FiShoppingBag size={isMobile ? 18 : 20} />
                 Buyer Information
               </h2>
+              
+              {/* Buyer Status Warning */}
+              {user && !verificationLoading && (
+                <BuyerStatusWarning
+                  {...getBuyerStatusMessage(buyerReportStatus, isVerified)}
+                />
+              )}
               
               {/* Authentication Section for Guest Users */}
               {!user && (

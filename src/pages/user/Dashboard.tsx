@@ -260,7 +260,7 @@ export default function ProfileDashboard() {
     };
 
     const deleteBankAccount = async (accountId: string) => {
-        console.log(`Deleting bank account with ID: ${accountId}`);
+
         if (!user) return;
 
         try {

@@ -183,7 +183,7 @@ export default function ListingSingle() {
   const fetchReviews = async () => {
     if (!id) return;
     
-    console.log('Fetching reviews for item:', id);
+
     
     try {
       setReviewsLoading(true);
@@ -195,7 +195,7 @@ export default function ListingSingle() {
       );
       const countSnapshot = await getDocs(countQuery);
       const totalReviews = countSnapshot.size;
-      console.log('Total reviews found:', totalReviews);
+
       setListingReviewCount(totalReviews);
       
       if (totalReviews > 0) {
@@ -241,7 +241,7 @@ export default function ListingSingle() {
           })
         );
         
-        console.log('Enriched reviews data:', enrichedReviews);
+
         setReviews(enrichedReviews);
         setCurrentReviewPage(1);
         
