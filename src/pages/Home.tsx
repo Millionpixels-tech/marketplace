@@ -376,7 +376,7 @@ const Home = () => {
                   Early Launch Promotion
                 </h3>
                 <p className={`text-white ${isMobile ? 'text-sm' : 'text-base'} opacity-90 max-w-md`}>
-                  Create 1 shop + 10 listings and get LKR 1,000 cash! First 50 eligible sellers only.
+                  Create 1 shop + 5 listings and get LKR 500 cash! First 50 eligible sellers only.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
