@@ -3,7 +3,7 @@ import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
 import { useResponsive } from '../hooks/useResponsive';
 import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
-import { FiHeart, FiUsers, FiGlobe, FiAward } from 'react-icons/fi';
+import { FiHeart, FiUsers, FiAward } from 'react-icons/fi';
 
 export default function OurStory() {
   const { isMobile } = useResponsive();
@@ -11,15 +11,15 @@ export default function OurStory() {
   return (
     <>
       <SEOHead
-        title="Our Story - SinaMarketplace"
-        description="Learn about SinaMarketplace's journey connecting Sri Lankan artisans with global audiences. Discover our mission to showcase authentic handcrafted treasures."
+        title="Our Story - Sina.lk"
+        description="Learn about Sina.lk's journey to create a reliable online marketplace for small businesses across Sri Lanka. Discover how we're supporting local entrepreneurship through digital platforms."
         keywords={generateKeywords([
           'our story',
-          'Sri Lankan artisans', 
-          'marketplace history',
-          'cultural heritage',
-          'handcrafted products',
-          'authentic crafts'
+          'Sina.lk marketplace', 
+          'Sri Lankan businesses',
+          'online marketplace',
+          'small business support',
+          'digital platform'
         ])}
         canonicalUrl={getCanonicalUrl('/our-story')}
         noIndex={false}
@@ -32,7 +32,7 @@ export default function OurStory() {
         <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-4 py-16'} text-center`}>
           <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>Our Story</h1>
           <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} text-green-100`}>
-            Connecting Sri Lankan artisans with the world, one handcrafted treasure at a time
+            Building a digital marketplace to support small businesses across Sri Lanka
           </p>
         </div>
       </div>
@@ -49,23 +49,23 @@ export default function OurStory() {
           
           <div className="prose prose-lg text-gray-700 space-y-6">
             <p>
-              SinaMarketplace was born from a simple yet powerful vision: to showcase the incredible craftsmanship 
-              and cultural richness of Sri Lanka to the world. Founded in 2023 by a team of passionate locals and 
-              diaspora Sri Lankans, we recognized that many of our island's most talented artisans and small 
-              businesses lacked a platform to reach global audiences.
+              Sina.lk was created to address a simple challenge: helping small businesses across Sri Lanka 
+              establish their online presence and reach customers through digital channels. We recognized 
+              that many talented entrepreneurs and business owners needed a reliable platform to showcase 
+              their products and services.
             </p>
             
             <p>
-              Walking through the bustling markets of Colombo, the ancient streets of Kandy, and the coastal towns 
-              of Galle, we witnessed extraordinary talent – master craftsmen creating intricate woodcarvings, 
-              talented seamstresses weaving traditional fabrics, skilled potters shaping clay into works of art, 
-              and innovative entrepreneurs developing modern products with Sri Lankan soul.
+              Our marketplace provides businesses with essential tools including secure payment processing, 
+              direct customer communication, custom order management, and inventory tracking. Whether you're 
+              a startup, a family business, or an established enterprise looking to expand online, Sina.lk 
+              offers the infrastructure you need.
             </p>
             
             <p>
-              Yet many of these creators struggled to find customers beyond their local communities. We knew there 
-              was a global appetite for authentic, handcrafted products with stories behind them. SinaMarketplace 
-              became our answer to bridging this gap.
+              We focus on practical solutions that work for Sri Lankan businesses - supporting local payment 
+              methods like bank transfers and cash on delivery, enabling sellers to set their own shipping 
+              policies, and providing customer support in a way that makes sense for our market.
             </p>
           </div>
         </section>
@@ -73,25 +73,25 @@ export default function OurStory() {
         {/* Mission Section */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
           <div className="flex items-center space-x-3 mb-6">
-            <FiGlobe className="text-[#72b01d] text-2xl" />
+            <FiUsers className="text-[#72b01d] text-2xl" />
             <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">For Artisans</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">For Sellers</h3>
               <p className="text-gray-700">
-                We provide Sri Lankan creators with the tools, platform, and support they need to showcase their 
-                work to a global audience. From traditional craftspeople to modern entrepreneurs, we help them 
-                build sustainable businesses and preserve cultural heritage.
+                We provide businesses with a comprehensive platform to manage their online operations. From 
+                product listings and inventory management to secure payment processing and customer communication, 
+                sellers have everything they need to run their business effectively.
               </p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">For Customers</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">For Buyers</h3>
               <p className="text-gray-700">
-                We offer customers worldwide access to authentic Sri Lankan products – each with its own story, 
-                cultural significance, and unmatched quality. Every purchase supports local communities and 
-                helps preserve traditional crafts.
+                We offer customers a convenient way to discover products from various sellers across Sri Lanka. 
+                With secure payment options, direct seller communication, and buyer protection measures, 
+                customers can shop with confidence.
               </p>
             </div>
           </div>
@@ -106,27 +106,27 @@ export default function OurStory() {
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="border-l-4 border-[#72b01d] pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Authenticity</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Reliability</h3>
               <p className="text-gray-600">
-                Every product on our platform represents genuine Sri Lankan craftsmanship and culture.
+                We maintain a stable, secure platform that businesses and customers can depend on.
               </p>
             </div>
             <div className="border-l-4 border-[#72b01d] pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Community</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Local Focus</h3>
               <p className="text-gray-600">
-                We believe in building strong relationships between creators, customers, and communities.
+                We understand the Sri Lankan market and build features that work for local businesses.
               </p>
             </div>
             <div className="border-l-4 border-[#72b01d] pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Sustainability</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Transparency</h3>
               <p className="text-gray-600">
-                We promote eco-friendly practices and support sustainable livelihoods for artisans.
+                We believe in clear communication, honest policies, and transparent business practices.
               </p>
             </div>
             <div className="border-l-4 border-[#72b01d] pl-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Quality</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Support</h3>
               <p className="text-gray-600">
-                We maintain high standards to ensure every customer receives exceptional products.
+                We provide ongoing support to help sellers succeed and resolve any customer issues.
               </p>
             </div>
           </div>
@@ -141,16 +141,16 @@ export default function OurStory() {
           
           <div className="grid md:grid-cols-3 gap-6 text-center">
             <div className="p-6 bg-gray-50 rounded-lg">
-              <div className="text-3xl font-bold text-[#72b01d] mb-2">500+</div>
-              <div className="text-gray-700">Active Sellers</div>
+              <div className="text-3xl font-bold text-[#72b01d] mb-2">Growing</div>
+              <div className="text-gray-700">Seller Community</div>
             </div>
             <div className="p-6 bg-gray-50 rounded-lg">
-              <div className="text-3xl font-bold text-[#72b01d] mb-2">25,000+</div>
-              <div className="text-gray-700">Products Listed</div>
+              <div className="text-3xl font-bold text-[#72b01d] mb-2">Secure</div>
+              <div className="text-gray-700">Payment Processing</div>
             </div>
             <div className="p-6 bg-gray-50 rounded-lg">
-              <div className="text-3xl font-bold text-[#72b01d] mb-2">60+</div>
-              <div className="text-gray-700">Countries Served</div>
+              <div className="text-3xl font-bold text-[#72b01d] mb-2">24/7</div>
+              <div className="text-gray-700">Platform Availability</div>
             </div>
           </div>
         </section>
@@ -160,14 +160,12 @@ export default function OurStory() {
           <h2 className="text-3xl font-bold mb-6 text-center">Looking Forward</h2>
           <div className="prose prose-lg text-gray-300 space-y-4">
             <p className="text-center">
-              Our vision extends beyond being just a marketplace. We aim to become the global ambassador for 
-              Sri Lankan creativity, innovation, and cultural heritage. Through technology, community building, 
-              and sustainable practices, we're working to ensure that the rich traditions of our island nation 
-              continue to thrive in the modern world.
+              Our goal is to continue improving our platform to better serve Sri Lankan businesses and 
+              customers. We're constantly working on new features, enhancing security, and expanding 
+              our support capabilities to help more businesses succeed online.
             </p>
             <p className="text-center">
-              Join us in celebrating Sri Lankan craftsmanship and supporting the talented creators who keep 
-              our cultural heritage alive.
+              Join us in supporting local businesses and contributing to Sri Lanka's growing digital economy.
             </p>
           </div>
         </section>

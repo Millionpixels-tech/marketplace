@@ -16,11 +16,11 @@ export default function TermsOfService() {
       content: [
         {
           subtitle: "Agreement",
-          details: "By accessing and using SinaMarketplace, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service."
+          details: "By accessing and using Sina.lk, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service."
         },
         {
           subtitle: "Eligibility",
-          details: "You must be at least 18 years old to use our services. By using SinaMarketplace, you represent and warrant that you have the legal capacity to enter into these terms."
+          details: "You must be at least 18 years old to use our services. By using Sina.lk, you represent and warrant that you have the legal capacity to enter into these terms."
         },
         {
           subtitle: "Changes to Terms",
@@ -56,15 +56,15 @@ export default function TermsOfService() {
         },
         {
           subtitle: "Purchase Process",
-          details: "By placing an order, you enter into a direct contractual relationship with the seller. SinaMarketplace facilitates the transaction but is not a party to the sale."
+          details: "By placing an order, you enter into a direct contractual relationship with the seller. Sina.lk facilitates the transaction but is not a party to the sale. Custom orders may require additional communication between buyers and sellers."
         },
         {
           subtitle: "Order Fulfillment",
-          details: "Sellers are responsible for fulfilling orders in a timely manner and as described. Buyers should communicate any issues directly with sellers initially."
+          details: "Sellers are responsible for fulfilling orders in a timely manner and as described. Buyers can communicate with sellers directly through our messaging system to discuss order details and requirements."
         },
         {
           subtitle: "Returns and Refunds",
-          details: "Return and refund policies are set by individual sellers. Buyers should review these policies before making a purchase. SinaMarketplace may assist in dispute resolution."
+          details: "Return and refund policies are set by individual sellers. Buyers should review these policies before making a purchase. Sina.lk may assist in dispute resolution when necessary."
         }
       ]
     },
@@ -74,15 +74,15 @@ export default function TermsOfService() {
       content: [
         {
           subtitle: "Payment Processing",
-          details: "All payments are processed through secure third-party payment processors. SinaMarketplace does not store your complete payment information."
+          details: "We support bank transfers and cash on delivery (COD) payments. For bank transfers, buyers upload payment confirmation which is verified by sellers. For COD orders, payment is made directly to the seller upon delivery."
         },
         {
           subtitle: "Seller Fees",
-          details: "Sellers may be subject to transaction fees and other charges as outlined in our seller agreement. These fees help maintain and improve our platform."
+          details: "Sellers may be subject to transaction fees and other charges as outlined in our seller agreement. Current fee structure will be clearly communicated to sellers when they join the platform."
         },
         {
           subtitle: "Pricing",
-          details: "Prices displayed include any applicable taxes. Additional shipping charges may apply and will be clearly indicated before checkout."
+          details: "Prices are set by individual sellers and displayed in Sri Lankan Rupees (LKR). Shipping charges, if applicable, are determined by sellers and will be clearly indicated before order confirmation."
         },
         {
           subtitle: "Currency",
@@ -107,8 +107,8 @@ export default function TermsOfService() {
           details: "You may not use our platform for spam, harassment, spreading malware, or any other activity that disrupts our services or harms other users."
         },
         {
-          subtitle: "Circumventing Fees",
-          details: "Attempting to circumvent our fee structure or direct buyers to external payment methods is prohibited."
+          subtitle: "Circumventing Platform",
+          details: "Attempting to conduct transactions outside of our platform or directing buyers to external payment methods that bypass our system is prohibited and may result in account suspension."
         }
       ]
     },
@@ -118,7 +118,7 @@ export default function TermsOfService() {
       content: [
         {
           subtitle: "Platform Content",
-          details: "All content on SinaMarketplace, including but not limited to text, graphics, logos, and software, is owned by us or our licensors and is protected by intellectual property laws."
+          details: "All content on Sina.lk, including but not limited to text, graphics, logos, and software, is owned by us or our licensors and is protected by intellectual property laws."
         },
         {
           subtitle: "User Content",
@@ -161,10 +161,10 @@ export default function TermsOfService() {
   return (
     <>
       <SEOHead
-        title="Terms of Service - SinaMarketplace"
-        description="Read our comprehensive terms of service that govern the use of SinaMarketplace, Sri Lanka's premier online marketplace platform."
+        title="Terms of Service - Sina.lk"
+        description="Read our comprehensive terms of service that govern the use of Sina.lk, Sri Lanka's marketplace platform connecting buyers and sellers."
         keywords="terms of service, user agreement, marketplace terms, Sri Lanka, legal agreement, platform rules"
-        canonicalUrl="https://sinamarketplace.com/terms"
+        canonicalUrl="https://sina.lk/terms"
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
@@ -176,7 +176,7 @@ export default function TermsOfService() {
         <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
           <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Terms of Service</h1>
           <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
-            Please read these terms carefully before using SinaMarketplace services.
+            Please read these terms carefully before using Sina.lk services.
           </p>
           <div className="flex items-center justify-center space-x-2 text-green-100">
             <FiCalendar className="w-5 h-5" />
@@ -191,10 +191,10 @@ export default function TermsOfService() {
           <div className="bg-blue-50 border-l-4 border-blue-400 p-6 mb-8">
             <div className="flex items-center mb-4">
               <FiFileText className="w-6 h-6 text-blue-600 mr-3" />
-              <h2 className="text-xl font-bold text-blue-900">Welcome to SinaMarketplace</h2>
+              <h2 className="text-xl font-bold text-blue-900">Welcome to Sina.lk</h2>
             </div>
             <p className="text-blue-800 leading-relaxed">
-              These Terms of Service govern your use of SinaMarketplace and the services we provide. By using our platform, you agree to these terms in full. These terms help ensure a safe and fair marketplace for all users.
+              These Terms of Service govern your use of Sina.lk and the services we provide. By using our platform, you agree to these terms in full. These terms help ensure a safe and fair marketplace for all users.
             </p>
           </div>
         </div>
@@ -259,14 +259,14 @@ export default function TermsOfService() {
             <div className="flex items-center justify-center mb-4">
               <FiFileText className="w-8 h-8 text-[#72b01d] mr-3" />
               <div className="text-left">
-                <div className="font-semibold text-[#0d0a0b]">Legal Department</div>
-                <a href="mailto:legal@sina.lk" className="text-[#72b01d] hover:underline">
-                  legal@sina.lk
+                <div className="font-semibold text-[#0d0a0b]">Support Team</div>
+                <a href="mailto:support@sina.lk" className="text-[#72b01d] hover:underline">
+                  support@sina.lk
                 </a>
               </div>
             </div>
             <p className="text-sm text-gray-600">
-              For urgent legal matters, we typically respond within 24 hours.
+              We respond to inquiries as quickly as possible.
             </p>
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function TermsOfService() {
           <div className="bg-white rounded-lg p-6 shadow-md">
             <h3 className="text-xl font-bold text-[#0d0a0b] mb-4">Governing Law</h3>
             <p className="text-gray-600 leading-relaxed">
-              These Terms of Service are governed by and construed in accordance with the laws of Sri Lanka. Any disputes arising from these terms or your use of SinaMarketplace will be subject to the exclusive jurisdiction of the courts of Sri Lanka.
+              These Terms of Service are governed by and construed in accordance with the laws of Sri Lanka. Any disputes arising from these terms or your use of Sina.lk will be subject to the exclusive jurisdiction of the courts of Sri Lanka.
             </p>
           </div>
         </div>        </div>

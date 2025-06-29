@@ -1536,11 +1536,11 @@ const Home = () => {
           <div className={`relative z-10 max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             <h2 className={`font-bold text-center mb-4 uppercase tracking-wide ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`}
               style={{ color: '#0d0a0b' }}>
-              What Our Community Says
+              What community request from us?
             </h2>
             <p className={`text-center mb-16 ${isMobile ? 'text-base' : 'text-lg'}`}
               style={{ color: '#454955' }}>
-              Real stories from Sri Lankan creators and happy customers
+              Real feedback and requests that shaped our marketplace
             </p>
             <div className={`gap-8 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-3'}`}>
               {/* Testimonial 1 */}
@@ -1556,20 +1556,20 @@ const Home = () => {
                   </div>
                   <div>
                     <h4 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#0d0a0b' }}>
-                      Priya Jayasinghe
+                      Pasindu Fernando
                     </h4>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
-                      Handmade Jewelry Seller
+                      Small Business Owner
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
-                  ))}
+                  <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>
+                    Request: Secure Marketplace Platform
+                  </span>
                 </div>
                 <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
-                  "This platform changed my life! I started selling my traditional Sri Lankan jewelry from home and now I have customers from all over the island. The zero listing fee means I can focus on creating beautiful pieces."
+                  "I had a terrible experience selling through WhatsApp groups. Buyers would disappear after agreeing to purchase, and I had no way to verify serious customers. I requested a proper marketplace with seller protection and buyer verification system."
                 </p>
                 <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#72b01d' }}>
@@ -1593,17 +1593,17 @@ const Home = () => {
                       Saman Perera
                     </h4>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
-                      Happy Customer
+                      Frequent Online Buyer
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
-                  ))}
+                  <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>
+                    Request: Direct Communication System
+                  </span>
                 </div>
                 <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
-                  "I love supporting local Sri Lankan businesses through this platform. The quality of handmade items is amazing and the 14-day guarantee gives me confidence in every purchase. Highly recommended!"
+                  "I was frustrated with Facebook marketplace where I couldn't properly communicate with sellers or track my orders. I requested a platform with built-in messaging and order tracking so I could follow up on my purchases safely."
                 </p>
                 <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#3f7d20' }}>
@@ -1627,17 +1627,17 @@ const Home = () => {
                       Kamala Silva
                     </h4>
                     <p className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#3f7d20' }}>
-                      Traditional Food Seller
+                      Home Baker
                     </p>
                   </div>
                 </div>
                 <div className="mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className={`${isMobile ? 'text-lg' : 'text-2xl'}`} style={{ color: '#72b01d' }}>★</span>
-                  ))}
+                  <span className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#72b01d' }}>
+                    Request: Custom Order Management
+                  </span>
                 </div>
                 <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
-                  "As a home-based food business owner, this marketplace gave me the perfect platform to reach more customers. The unlimited listings feature helps me showcase all my traditional Sri Lankan delicacies!"
+                  "Managing custom cake orders through phone calls was chaotic. Customers would forget details, and I couldn't keep proper records. I requested a system where customers can submit detailed custom orders with specifications and photos."
                 </p>
                 <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#454955' }}>
