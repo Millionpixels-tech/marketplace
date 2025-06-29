@@ -25,7 +25,6 @@ import AdminManagement from "../pages/admin/AdminManagement";
 import SellerGuide from "../pages/SellerGuide";
 import EarlyLaunchPromotion from "../pages/EarlyLaunchPromotion";
 import ComingSoon from "../pages/ComingSoon";
-import EnvModeGuard from "../components/EnvModeGuard";
 // Footer pages
 import AboutUs from "../pages/AboutUs";
 import OurStory from "../pages/OurStory";
@@ -42,7 +41,6 @@ import CommunityGuidelines from "../pages/CommunityGuidelines";
 import NotFound from "../pages/NotFound";
 
 const AppRoutes = () => (
-  <EnvModeGuard>
     <Routes>
       {/* Coming Soon route - must be accessible even in PROD mode */}
       <Route path="/coming-soon" element={<ComingSoon />} />
@@ -95,7 +93,6 @@ const AppRoutes = () => (
       {/* 404 - Catch all route (must be last) */}
       <Route path="*" element={<NotFound />} />
     </Routes>
-  </EnvModeGuard>
 );
 
 export default AppRoutes;
