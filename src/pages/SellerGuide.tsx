@@ -99,7 +99,7 @@ export default function SellerGuide() {
         "Respond promptly to customer inquiries and concerns"
       ],
       tips: "📞 Customer Service Excellence: Quick response times (under 2 hours) lead to 5-star reviews and repeat customers!",
-      action: user ? { text: "View Dashboard", link: `/dashboard/${user.uid}` } : null
+      action: user ? { text: "View Dashboard", link: "/dashboard" } : null
     },
     {
       id: 6,
@@ -436,7 +436,7 @@ export default function SellerGuide() {
                     Create Your Shop
                   </Link>
                   <Link
-                    to={user ? `/dashboard/${user.uid}` : "/auth"}
+                    to={user ? "/dashboard" : "/auth"}
                     className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-[#72b01d] transition"
                   >
                     Go to Dashboard

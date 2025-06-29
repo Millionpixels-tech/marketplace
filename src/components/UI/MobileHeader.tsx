@@ -2,9 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser, FiSearch, FiHeart } from "react-icons/fi";
+import { FaGift } from "react-icons/fa";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
+import MobileNotificationDropdown from "./MobileNotificationDropdown";
 
 const MobileHeader = () => {
     const [catOpen, setCatOpen] = useState(false);
@@ -69,44 +71,49 @@ const MobileHeader = () => {
                             <FiMenu size={20} style={{ color: '#72b01d' }} />
                         </button>
                         
-                        <Link to="/" state={{ fromInternal: true }} className="text-xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
-                            SINA
+                        <Link to="/" state={{ fromInternal: true }} className="flex items-center -ml-2" style={{ color: '#0d0a0b' }}>
+                            <img src="/logo.svg" alt="Sina.lk Logo" className="h-6 sm:h-7 w-auto hover:opacity-80 transition-opacity" />
                         </Link>
                     </div>
 
                     {/* Right: Action Buttons */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                         {/* Search Button */}
                         <button
                             onClick={() => navigate('/search')}
-                            className="p-2 rounded-lg hover:bg-gray-100"
+                            className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100"
                             aria-label="Search"
                         >
-                            <FiSearch size={18} style={{ color: '#72b01d' }} />
+                            <FiSearch size={16} className="sm:hidden" style={{ color: '#72b01d' }} />
+                            <FiSearch size={18} className="hidden sm:block" style={{ color: '#72b01d' }} />
                         </button>
 
                         {/* Wishlist */}
                         {user && (
                             <Link
                                 to="/wishlist"
-                                className="relative p-2 rounded-lg hover:bg-gray-100"
+                                className="relative p-1.5 sm:p-2 rounded-lg hover:bg-gray-100"
                                 aria-label="Wishlist"
                             >
-                                <FiHeart size={18} style={{ color: '#72b01d' }} />
+                                <FiHeart size={16} className="sm:hidden" style={{ color: '#72b01d' }} />
+                                <FiHeart size={18} className="hidden sm:block" style={{ color: '#72b01d' }} />
                                 {wishlistCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                    <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
                                         {wishlistCount > 99 ? '99+' : wishlistCount}
                                     </span>
                                 )}
                             </Link>
                         )}
 
+                        {/* Notifications - Only show for logged in users */}
+                        {user && <MobileNotificationDropdown className="flex-shrink-0" />}
+
                         {/* User Menu */}
                         {!loading && (
                             user ? (
                                 <button
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="relative p-1 rounded-full w-8 h-8 flex items-center justify-center text-xs font-semibold text-white"
+                                    className="relative p-0.5 sm:p-1 rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs font-semibold text-white ml-0.5"
                                     style={{ backgroundColor: '#72b01d' }}
                                     aria-label="User menu"
                                 >
@@ -115,10 +122,11 @@ const MobileHeader = () => {
                             ) : (
                                 <Link
                                     to="/auth"
-                                    className="p-2 rounded-lg hover:bg-gray-100"
+                                    className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100"
                                     aria-label="Login"
                                 >
-                                    <FiUser size={18} style={{ color: '#72b01d' }} />
+                                    <FiUser size={16} className="sm:hidden" style={{ color: '#72b01d' }} />
+                                    <FiUser size={18} className="hidden sm:block" style={{ color: '#72b01d' }} />
                                 </Link>
                             )
                         )}
@@ -143,7 +151,7 @@ const MobileHeader = () => {
                                     </p>
                                 </div>
                                 <Link
-                                    to={`/dashboard/${user.uid}`}
+                                    to="/dashboard"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                     onClick={() => setUserMenuOpen(false)}
                                 >
@@ -186,6 +194,22 @@ const MobileHeader = () => {
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 Home
+                            </Link>
+
+                            {/* Promotion Link */}
+                            <Link
+                                to="/early-launch-promotion"
+                                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium relative hover:bg-gray-100 transition-colors"
+                                style={{ 
+                                    color: '#72b01d'
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <FaGift size={18} />
+                                <span>Early Launch Promotion</span>
+                                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                                    HOT
+                                </span>
                             </Link>
                             
                             {/* Categories */}
@@ -251,7 +275,7 @@ const MobileHeader = () => {
                             {user && (
                                 <>
                                     <Link
-                                        to={`/dashboard/${user.uid}`}
+                                        to="/dashboard"
                                         className="block text-lg font-medium text-gray-900 hover:text-green-600"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >

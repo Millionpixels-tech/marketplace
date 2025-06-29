@@ -41,10 +41,12 @@ export default function Footer() {
           {/* Brand Section */}
           <div className={`${isMobile ? 'col-span-2 mb-6' : 'lg:col-span-1 md:col-span-2 lg:col-span-1'}`}>
             <div className={`${isMobile ? 'mb-3' : 'mb-4'}`}>
-              <Link to="/" state={{ fromInternal: true }} className={`font-black tracking-tight ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-                <span className="text-white hover:text-[#72b01d] transition-colors duration-300">
-                  Sina<span className="font-light">Marketplace</span>
-                </span>
+              <Link to="/" state={{ fromInternal: true }} className="block">
+                <img 
+                  src="/sina-logo-white.svg" 
+                  alt="Sina.lk Logo" 
+                  className={`hover:opacity-80 transition-opacity duration-300 ${isMobile ? 'h-5' : 'h-7'} w-auto`}
+                />
               </Link>
             </div>
             <p className={`text-gray-300 leading-relaxed ${isMobile ? 'text-xs mb-4' : 'text-sm mb-6'}`}>

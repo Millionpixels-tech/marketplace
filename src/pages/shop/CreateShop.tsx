@@ -9,10 +9,6 @@ import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { compressImage, generateSEOFilename } from "../../utils/imageUtils";
 
-function wordCount(text: string) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
 export default function CreateShop() {
   const [shopName, setShopName] = useState("");
   const [shopUser, setShopUser] = useState("");
@@ -410,28 +406,28 @@ export default function CreateShop() {
                 <textarea
                   className="w-full bg-white border rounded-xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] md:min-h-[180px] px-3 md:px-4 py-2 md:py-3 transition-all duration-200 focus:outline-none resize-none focus:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus:shadow-lg focus:ring-4 focus:ring-[#72b01d]/10 text-sm md:text-base"
                   style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
-                  maxLength={1500}
+                  maxLength={200}
                   rows={6}
                   placeholder="Describe your shop - what you sell, what makes it unique, your story..."
                   value={desc}
                   onChange={e => setDesc(e.target.value)}
                   required
                 />
-                <div className="flex justify-between items-center mt-3">
-                  <div className="text-xs text-[#6b7280] ml-1">
-                    Tell customers about your shop and what makes it special
+                <div className="flex justify-between items-center mt-2">
+                  <div className="text-xs md:text-sm text-[#6b7280]">
+                    Tell customers what makes your shop special
                   </div>
-                  <div className={`text-xs font-medium ml-1 ${wordCount(desc) > 300 ? 'text-red-600' : 'text-[#6b7280]'}`}>
-                    {wordCount(desc)} / 300 words
+                  <div className={`text-xs md:text-sm font-medium ${desc.length > 200 ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                    {desc.length}/200
                   </div>
                 </div>
-                {wordCount(desc) > 300 && (
+                {desc.length > 200 && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
                     <div className="text-sm text-red-700 font-medium">
                       ⚠️ Description is too long
                     </div>
                     <div className="text-xs text-red-600 mt-1">
-                      Please keep your description under 300 words
+                      Please keep your description under 200 characters
                     </div>
                   </div>
                 )}
@@ -456,11 +452,11 @@ export default function CreateShop() {
                 !logo || 
                 !cover || 
                 loading || 
-                wordCount(desc) > 300
+                desc.length > 200
               }
               loading={loading}
               onClick={handleSave}
-              className="w-full md:w-auto px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-lg hover:shadow-xl focus:ring-4 focus:ring-[#72b01d]/20 bg-gradient-to-r from-[#72b01d] to-[#5a8a17] hover:from-[#5a8a17] hover:to-[#4a7314] transform hover:scale-105 transition-all duration-200"
+              className="w-full md:w-auto px-8 md:px-12 py-3 md:py-4 rounded-xl font-bold uppercase tracking-wide shadow-lg hover:shadow-xl transition-all duration-200 focus:ring-4 focus:ring-[#72b01d]/20"
             >
               {done
                 ? <span className="flex items-center gap-2"><FiCheck /> Shop Created! ✨</span>

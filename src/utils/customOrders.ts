@@ -13,6 +13,7 @@ import {
   serverTimestamp,
   Timestamp
 } from "firebase/firestore";
+import { createCustomOrderNotification } from "./notifications";
 
 export interface CustomOrderItem {
   id: string;
@@ -93,6 +94,21 @@ export async function createCustomOrder(
   };
   
   const docRef = await addDoc(collection(db, "customOrders"), customOrder);
+  
+  // Create notification for seller about new custom order request
+  try {
+    const itemsDescription = items.map(item => item.name).join(', ');
+    await createCustomOrderNotification(
+      sellerId,
+      'custom_order_request',
+      buyerName,
+      itemsDescription
+    );
+    console.log('📨 Custom order notification sent to seller');
+  } catch (notificationError) {
+    console.error('❌ Failed to create custom order notification:', notificationError);
+  }
+  
   return docRef.id;
 }
 
@@ -132,10 +148,29 @@ export async function acceptCustomOrder(
   buyerAddress: string,
   buyerPhone: string
 ): Promise<void> {
+  // First get the custom order details for notifications
+  const customOrder = await getCustomOrder(orderId);
+  
   await updateCustomOrderStatus(orderId, 'ACCEPTED', {
     buyerAddress,
     buyerPhone
   });
+  
+  // Create notification for seller about accepted custom order
+  if (customOrder) {
+    try {
+      const itemsDescription = customOrder.items.map(item => item.name).join(', ');
+      await createCustomOrderNotification(
+        customOrder.sellerId,
+        'custom_order_accepted',
+        customOrder.buyerName,
+        itemsDescription
+      );
+      console.log('📨 Custom order acceptance notification sent to seller');
+    } catch (notificationError) {
+      console.error('❌ Failed to create custom order acceptance notification:', notificationError);
+    }
+  }
 }
 
 // Mark custom order as paid

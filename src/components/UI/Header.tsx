@@ -2,9 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
+import { FaGift } from "react-icons/fa";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Header = () => {
     const [catOpen, setCatOpen] = useState(false);
@@ -56,20 +58,18 @@ const Header = () => {
 
     return (
         <header className="sticky top-0 z-30 w-full border-b" style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-            <div className="flex items-center justify-between px-4 md:px-10 py-4 w-full">
+            <div className="flex items-center justify-between px-2 md:px-4 lg:px-6 xl:px-10 py-3 md:py-4 w-full">
                 {/* Logo & Categories (Left) */}
-                <div className="flex items-center gap-2 md:gap-6">
+                <div className="flex items-center gap-1 md:gap-3 lg:gap-6">
                     {/* Logo/Title */}
-                    <Link to="/" state={{ fromInternal: true }} className="text-2xl font-black tracking-tight uppercase" style={{ color: '#0d0a0b' }}>
-                        <span className="hover:underline">
-                            Sina<span className="font-light">Marketplace</span>
-                        </span>
+                    <Link to="/" state={{ fromInternal: true }} className="flex items-center" style={{ color: '#0d0a0b' }}>
+                        <img src="/logo.svg" alt="Sina.lk Logo" className="h-6 lg:h-7 w-auto hover:opacity-80 transition-opacity" />
                     </Link>
                     {/* Categories Dropdown */}
                     <div className="relative hidden md:block">
                         <button
                             onClick={() => setCatOpen((open) => !open)}
-                            className="flex items-center px-4 py-2 rounded-lg font-semibold border transition"
+                            className="flex items-center px-2 lg:px-4 py-2 rounded-lg font-semibold border transition text-sm lg:text-base"
                             style={{
                                 borderColor: 'rgba(114, 176, 29, 0.6)',
                                 color: '#0d0a0b',
@@ -179,10 +179,11 @@ const Header = () => {
                     </div>
                 </div>
                 {/* Menu (Right) */}
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 lg:gap-4">
+                    {/* Browse Items - Hide on medium screens, show on large */}
                     <Link
                         to="/search"
-                        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+                        className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
                         style={{ color: '#0d0a0b' }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
@@ -195,9 +196,11 @@ const Header = () => {
                     >
                         Browse Items
                     </Link>
+                    
+                    {/* Seller Guide - Hide on medium screens, show on large */}
                     <Link
                         to="/seller-guide"
-                        className="px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105"
+                        className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
                         style={{ color: '#0d0a0b' }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
@@ -210,9 +213,35 @@ const Header = () => {
                     >
                         Seller Guide
                     </Link>
+                    
+                    {/* Promotion - Always show but responsive sizing */}
+                    <Link
+                        to="/early-launch-promotion"
+                        className="px-2 md:px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 relative flex items-center gap-1 lg:gap-2 text-xs md:text-sm lg:text-base"
+                        style={{ 
+                            color: '#72b01d'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                            e.currentTarget.style.color = '#3f7d20';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                    >
+                        <FaGift size={14} className="lg:hidden" />
+                        <FaGift size={16} className="hidden lg:block" />
+                        <span className="hidden md:inline">Promotion</span>
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                            HOT
+                        </span>
+                    </Link>
+                    
+                    {/* Wishlist - Responsive sizing */}
                     <Link
                         to="/wishlist"
-                        className="px-4 py-2 rounded-lg font-semibold relative flex items-center transition-all duration-300 hover:scale-105"
+                        className="px-2 md:px-3 lg:px-4 py-2 rounded-lg font-semibold relative flex items-center transition-all duration-300 hover:scale-105 text-xs md:text-sm lg:text-base"
                         style={{ color: '#0d0a0b' }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
@@ -223,17 +252,26 @@ const Header = () => {
                             e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
-                        Wishlist
+                        <span className="hidden lg:inline">Wishlist</span>
+                        <span className="lg:hidden">❤️</span>
                         {wishlistCount > 0 && (
                             <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none rounded-full absolute -top-2 -right-3" style={{ backgroundColor: '#72b01d', color: '#ffffff' }}>{wishlistCount}</span>
                         )}
                     </Link>
+                    
+                    {/* Notifications - Only show for logged in users with responsive sizing */}
+                    {user && (
+                        <div className="md:block">
+                            <NotificationDropdown className="relative" />
+                        </div>
+                    )}
+                    
                     {/* Auth/User */}
-                    <div className="flex items-center gap-2 ml-4 relative">
+                    <div className="flex items-center gap-1 lg:gap-2 ml-2 lg:ml-4 relative">
                         {loading ? null : !user ? (
                             <Link
                                 to="/auth"
-                                className="border rounded-full px-5 py-2 font-semibold transition"
+                                className="border rounded-full px-3 md:px-4 lg:px-5 py-2 font-semibold transition text-xs md:text-sm lg:text-base"
                                 style={{
                                     borderColor: 'rgba(114, 176, 29, 0.6)',
                                     color: '#0d0a0b',
@@ -248,13 +286,14 @@ const Header = () => {
                                     e.currentTarget.style.color = '#0d0a0b';
                                 }}
                             >
-                                Login / Register
+                                <span className="hidden lg:inline">Login / Register</span>
+                                <span className="lg:hidden">Login</span>
                             </Link>
                         ) : (
                             <div className="relative">
                                 <button
                                     onClick={() => setUserMenuOpen((open) => !open)}
-                                    className="flex items-center gap-2 rounded-full px-2 py-1 transition"
+                                    className="flex items-center gap-1 lg:gap-2 rounded-full px-1 lg:px-2 py-1 transition"
                                     style={{ backgroundColor: '#ffffff' }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
@@ -269,15 +308,15 @@ const Header = () => {
                                         <img
                                             src={user.photoURL}
                                             alt="Profile"
-                                            className="w-9 h-9 rounded-full object-cover border"
+                                            className="w-8 h-8 lg:w-9 lg:h-9 rounded-full object-cover border"
                                             style={{ borderColor: 'rgba(114, 176, 29, 0.6)' }}
                                         />
                                     ) : (
-                                        <span className="w-9 h-9 flex items-center justify-center rounded-full font-bold border text-lg" style={{ backgroundColor: '#ffffff', color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
+                                        <span className="w-8 h-8 lg:w-9 lg:h-9 flex items-center justify-center rounded-full font-bold border text-sm lg:text-lg" style={{ backgroundColor: '#ffffff', color: '#0d0a0b', borderColor: 'rgba(114, 176, 29, 0.6)' }}>
                                             {getInitials(user.displayName || user.email)}
                                         </span>
                                     )}
-                                    <span className="hidden sm:block font-semibold max-w-[120px] truncate" style={{ color: '#0d0a0b' }}>
+                                    <span className="hidden xl:block font-semibold max-w-[100px] lg:max-w-[120px] truncate text-sm lg:text-base" style={{ color: '#0d0a0b' }}>
                                         {user.displayName || user.email}
                                     </span>
                                     <FiChevronDown className="ml-1" />
@@ -292,7 +331,7 @@ const Header = () => {
                                             <button
                                                 onClick={() => {
                                                     setUserMenuOpen(false);
-                                                    navigate(`/dashboard/${user.uid}`);
+                                                    navigate("/dashboard");
                                                 }}
                                                 className="flex items-center gap-2 px-4 py-3 text-left font-semibold transition border-b"
                                                 style={{
@@ -471,6 +510,28 @@ const Header = () => {
                                 Seller Guide
                             </Link>
                             <Link
+                                to="/early-launch-promotion"
+                                className="py-3 px-4 rounded-lg transition font-semibold relative flex items-center gap-2"
+                                style={{ 
+                                    color: '#72b01d'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                                    e.currentTarget.style.color = '#3f7d20';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.color = '#72b01d';
+                                }}
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <FaGift size={16} />
+                                Early Launch Promotion
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
+                                    HOT
+                                </span>
+                            </Link>
+                            <Link
                                 to="/wishlist"
                                 className="py-3 px-4 rounded-lg transition font-semibold relative flex items-center"
                                 style={{ color: '#0d0a0b' }}
@@ -550,7 +611,7 @@ const Header = () => {
                                     <button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            navigate(`/dashboard/${user.uid}`);
+                                            navigate("/dashboard");
                                         }}
                                         className="flex items-center gap-2 mt-4 py-3 px-2 rounded border transition uppercase font-medium"
                                         style={{

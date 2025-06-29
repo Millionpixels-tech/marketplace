@@ -22,7 +22,7 @@ const EmailVerification = () => {
     }
     
     if (currentUser.emailVerified) {
-      navigate("/dashboard/" + currentUser.uid);
+      navigate("/dashboard");
       return;
     }
     
@@ -52,7 +52,7 @@ const EmailVerification = () => {
     try {
       await user.reload();
       if (user.emailVerified) {
-        navigate("/dashboard/" + user.uid);
+        navigate("/dashboard");
       } else {
         setMessage("Email not yet verified. Please check your email and click the verification link.");
       }

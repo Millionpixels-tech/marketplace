@@ -183,7 +183,7 @@ export default function ListingSingle() {
   const fetchReviews = async () => {
     if (!id) return;
     
-    console.log('Fetching reviews for item:', id);
+
     
     try {
       setReviewsLoading(true);
@@ -195,7 +195,7 @@ export default function ListingSingle() {
       );
       const countSnapshot = await getDocs(countQuery);
       const totalReviews = countSnapshot.size;
-      console.log('Total reviews found:', totalReviews);
+
       setListingReviewCount(totalReviews);
       
       if (totalReviews > 0) {
@@ -241,7 +241,7 @@ export default function ListingSingle() {
           })
         );
         
-        console.log('Enriched reviews data:', enrichedReviews);
+
         setReviews(enrichedReviews);
         setCurrentReviewPage(1);
         
@@ -1142,15 +1142,26 @@ export default function ListingSingle() {
 
       </main>
 
-      {/* Latest Items Section */}
+      {/* Latest Items Section - Full Width */}
       {latestItems.length > 0 && (
-        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 mb-8' : 'px-4 mb-12'}`}>
+        <div className={`w-full ${isMobile ? 'px-4 mb-8' : 'px-6 mb-12'}`}>
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">You Might Also Like</h2>
+            <div className={`${isMobile ? 'p-4' : 'p-8'}`}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">You Might Also Like</h2>
+                <Link
+                  to="/search"
+                  className="inline-flex items-center gap-1 text-sm text-gray-900 hover:text-gray-700 transition-colors"
+                >
+                  See all products
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
               <WithReviewStats listings={latestItems}>
                 {(listingsWithStats) => (
-                  <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'}`}>
+                  <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6'}`}>
                     {listingsWithStats.map((item) => (
                       <ResponsiveListingTile 
                         key={item.id}

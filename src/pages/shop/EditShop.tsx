@@ -5,12 +5,9 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { FiCamera, FiUpload, FiCheck } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
+import Input from "../../components/UI/Input";
 import { useParams } from "react-router-dom";
 import { compressImage, generateSEOFilename } from "../../utils/imageUtils";
-
-function wordCount(text: string) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-}
 
 export default function EditShop() {
     const { shopId } = useParams(); // shopId passed from route params
@@ -173,7 +170,7 @@ export default function EditShop() {
                     {/* Cover + Logo Section */}
                     <div className="w-full relative flex flex-col items-center mb-8 md:mb-12">
                         <div
-                            className="w-full h-32 md:h-40 lg:h-64 rounded-xl md:rounded-2xl bg-white flex items-center justify-center overflow-hidden cursor-pointer group transition border border-[#45495522]"
+                            className="w-full h-32 md:h-40 lg:h-64 rounded-xl md:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg border-2 border-dashed border-gray-300 hover:border-[#72b01d]"
                             onClick={() => coverInputRef.current?.click()}
                             tabIndex={0}
                             title="Click to upload cover image"
@@ -181,7 +178,7 @@ export default function EditShop() {
                             {coverPreview ? (
                                 <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
                             ) : (
-                                <div className="flex flex-col items-center text-[#454955]">
+                                <div className="flex flex-col items-center justify-start pt-4 md:pt-8 text-[#6b7280] group-hover:text-[#72b01d] transition-colors h-full">
                                     <FiUpload className="text-2xl md:text-3xl mb-1 md:mb-2" />
                                     <span className="font-medium text-xs md:text-sm">Click to add cover image</span>
                                 </div>
@@ -195,7 +192,7 @@ export default function EditShop() {
                             />
                         </div>
                         <div
-                            className="absolute left-1/2 top-[70%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white bg-white flex items-center justify-center shadow-sm cursor-pointer group transition"
+                            className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105"
                             onClick={() => logoInputRef.current?.click()}
                             title="Click to upload logo"
                             tabIndex={0}
@@ -203,7 +200,7 @@ export default function EditShop() {
                             {logoPreview ? (
                                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
                             ) : (
-                                <span className="flex flex-col items-center text-[#454955]">
+                                <span className="flex flex-col items-center text-[#6b7280] group-hover:text-[#72b01d] transition-colors">
                                     <FiCamera className="text-2xl md:text-4xl mb-1" />
                                     <span className="font-medium text-xs">Add Logo</span>
                                 </span>
@@ -221,22 +218,15 @@ export default function EditShop() {
                     <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10 mt-12 md:mt-14 lg:mt-8">
                         <div className="flex-1 space-y-6 md:space-y-8">
                             {/* Shop Name */}
-                            <div className="group">
-                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
-                                    Shop Name
-                                </label>
-                                <input
-                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-base md:text-lg"
-                                    maxLength={80}
-                                    placeholder="Enter your shop name..."
-                                    value={shopName}
-                                    onChange={e => setShopName(e.target.value)}
-                                    required
-                                />
-                                <div className="text-xs text-[#6b7280] mt-2 ml-1">
-                                    {shopName.length}/80 characters • This will be your shop's display name
-                                </div>
-                            </div>
+                            <Input
+                                label="Shop Name"
+                                placeholder="Enter your shop name..."
+                                value={shopName}
+                                onChange={e => setShopName(e.target.value)}
+                                maxLength={80}
+                                required
+                                helperText={`${shopName.length}/80 characters • This will be your shop's display name`}
+                            />
 
                             {/* Shop Username */}
                             <div className="group">
@@ -290,14 +280,17 @@ export default function EditShop() {
 
                             {/* Shop Mobile */}
                             <div className="group">
-                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
+                                <label className="block text-xs md:text-sm font-bold text-[#2d3748] mb-2 md:mb-3 tracking-wide uppercase">
                                     Mobile Number
                                 </label>
                                 <div className="relative">
-                                    <div className="flex items-center bg-white border border-[#e5e5e5] focus-within:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl shadow-sm focus-within:shadow-md focus-within:ring-4 focus-within:ring-[#72b01d]/10">
-                                        <span className="text-base md:text-lg text-[#6b7280] font-bold mr-2 md:mr-3 select-none">+94</span>
+                                    <div 
+                                        className="flex items-center bg-white border rounded-xl transition-all duration-200 focus-within:border-[#72b01d] hover:border-[rgba(114,176,29,0.5)] focus-within:shadow-lg focus-within:ring-4 focus-within:ring-[#72b01d]/10"
+                                        style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                    >
+                                        <span className="text-base md:text-lg text-[#6b7280] font-bold pl-3 md:pl-4 pr-1 md:pr-2 select-none">+94</span>
                                         <input
-                                            className="flex-1 bg-transparent outline-none text-[#0d0a0b] font-medium placeholder-[#9ca3af] text-base md:text-lg"
+                                            className="flex-1 bg-transparent outline-none border-0 px-1 md:px-2 py-2 md:py-3 font-medium placeholder-[#9ca3af] text-[#0d0a0b] text-base md:text-base"
                                             maxLength={9}
                                             pattern="[0-9]{9}"
                                             placeholder="7xxxxxxxx"
@@ -313,22 +306,15 @@ export default function EditShop() {
                             </div>
 
                             {/* Shop Address */}
-                            <div className="group">
-                                <label className="block text-xs md:text-sm font-bold text-[#0d0a0b] mb-2 md:mb-3 tracking-wide uppercase">
-                                    Shop Address
-                                </label>
-                                <input
-                                    className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 text-base md:text-lg"
-                                    maxLength={150}
-                                    placeholder="Enter your complete shop address..."
-                                    value={address}
-                                    onChange={e => setAddress(e.target.value)}
-                                    required
-                                />
-                                <div className="text-xs text-[#6b7280] mt-2 ml-1">
-                                    Your shop's physical address for delivery purposes ({address.length}/150 characters)
-                                </div>
-                            </div>
+                            <Input
+                                label="Shop Address"
+                                placeholder="Enter your complete shop address..."
+                                value={address}
+                                onChange={e => setAddress(e.target.value)}
+                                maxLength={150}
+                                required
+                                helperText={`Your shop's physical address for delivery purposes (${address.length}/150 characters)`}
+                            />
                         </div>
                         {/* Description */}
                         <div className="flex-1">
@@ -338,28 +324,28 @@ export default function EditShop() {
                                 </label>
                                 <textarea
                                     className="w-full bg-white border border-[#e5e5e5] focus:border-[#72b01d] hover:border-[#d4d4d4] transition-all duration-200 px-4 md:px-6 py-3 md:py-4 rounded-xl md:rounded-2xl text-[#0d0a0b] font-medium placeholder-[#9ca3af] min-h-[140px] md:min-h-[180px] shadow-sm focus:shadow-md focus:ring-4 focus:ring-[#72b01d]/10 resize-none text-sm md:text-base"
-                                    maxLength={1500}
+                                    maxLength={200}
                                     rows={6}
                                     placeholder="Describe your shop - what you sell, what makes it unique, your story..."
                                     value={desc}
                                     onChange={e => setDesc(e.target.value)}
                                     required
                                 />
-                                <div className="flex justify-between items-center mt-3">
-                                    <div className="text-xs text-[#6b7280] ml-1">
-                                        Tell customers about your shop and what makes it special
+                                <div className="flex justify-between items-center mt-2">
+                                    <div className="text-xs md:text-sm text-[#6b7280]">
+                                        Tell customers what makes your shop special
                                     </div>
-                                    <div className={`text-xs font-medium ml-1 ${wordCount(desc) > 300 ? 'text-red-600' : 'text-[#6b7280]'}`}>
-                                        {wordCount(desc)} / 300 words
+                                    <div className={`text-xs md:text-sm font-medium ${desc.length > 200 ? 'text-red-600' : 'text-[#6b7280]'}`}>
+                                        {desc.length}/200
                                     </div>
                                 </div>
-                                {wordCount(desc) > 300 && (
+                                {desc.length > 200 && (
                                     <div className="bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
                                         <div className="text-sm text-red-700 font-medium">
                                             ⚠️ Description is too long
                                         </div>
                                         <div className="text-xs text-red-600 mt-1">
-                                            Please keep your description under 300 words
+                                            Please keep your description under 200 characters
                                         </div>
                                     </div>
                                 )}
@@ -370,7 +356,7 @@ export default function EditShop() {
                         <button
                             className="w-full md:w-auto bg-[#72b01d] text-white px-8 md:px-12 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold uppercase tracking-wide shadow-lg hover:bg-[#3f7d20] hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-4 focus:ring-[#72b01d]/20"
                             disabled={
-                                !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || wordCount(desc) > 300
+                                !shopName || !shopUser || userExists || !mobile || !address || !desc || loading || desc.length > 200
                             }
                             onClick={handleUpdate}
                             type="button"
