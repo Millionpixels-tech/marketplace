@@ -42,7 +42,6 @@ import CommunityGuidelines from "../pages/CommunityGuidelines";
 import NotFound from "../pages/NotFound";
 
 const AppRoutes = () => (
-  <EnvModeGuard>
     <Routes>
       {/* Coming Soon route - must be accessible even in PROD mode */}
       <Route path="/coming-soon" element={<ComingSoon />} />
@@ -95,7 +94,6 @@ const AppRoutes = () => (
       {/* 404 - Catch all route (must be last) */}
       <Route path="*" element={<NotFound />} />
     </Routes>
-  </EnvModeGuard>
 );
 
 export default AppRoutes;
