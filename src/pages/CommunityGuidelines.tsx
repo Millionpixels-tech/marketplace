@@ -11,13 +11,13 @@ export default function CommunityGuidelines() {
   return (
     <>
       <SEOHead
-        title="Community Guidelines - SinaMarketplace"
-        description="Learn about our community guidelines for creating a safe, respectful marketplace that celebrates Sri Lankan culture and craftsmanship."
+        title="Community Guidelines - Sina.lk"
+        description="Learn about our community guidelines for creating a safe, respectful marketplace for buyers and sellers in Sri Lanka."
         keywords={generateKeywords([
           'community guidelines',
           'marketplace rules',
           'safe shopping',
-          'Sri Lanka community',
+          'Sri Lanka marketplace',
           'respectful trading',
           'platform rules'
         ])}
@@ -49,9 +49,8 @@ export default function CommunityGuidelines() {
           </div>
           
           <p className="text-gray-700 mb-4">
-            SinaMarketplace is more than just a trading platform – we're a community that celebrates 
-            Sri Lankan culture, craftsmanship, and creativity. These guidelines help ensure that everyone 
-            can participate safely and respectfully in our marketplace.
+            Sina.lk is a marketplace platform that connects buyers and sellers across Sri Lanka. 
+            These guidelines help ensure that everyone can participate safely and respectfully in our marketplace.
           </p>
           
           <p className="text-gray-700">
@@ -99,7 +98,7 @@ export default function CommunityGuidelines() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">Community</h3>
                   <p className="text-gray-600 text-sm">
-                    Support fellow artisans and sellers while building positive relationships.
+                    Support fellow sellers and maintain positive relationships within the marketplace.
                   </p>
                 </div>
               </div>
@@ -127,8 +126,7 @@ export default function CommunityGuidelines() {
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <p className="text-gray-700">
-                <strong>Authentic Sri Lankan products:</strong> Handcrafted items, traditional crafts, 
-                local foods, and cultural artifacts
+                <strong>Quality products:</strong> Well-made items with accurate descriptions and clear photos
               </p>
             </div>
             
@@ -136,15 +134,15 @@ export default function CommunityGuidelines() {
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <p className="text-gray-700">
                 <strong>Detailed product descriptions:</strong> Clear photos, accurate measurements, 
-                material information, and cultural context
+                material information, and condition details
               </p>
             </div>
             
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <p className="text-gray-700">
-                <strong>Cultural storytelling:</strong> Share the history, tradition, or personal story 
-                behind your products
+                <strong>Honest representation:</strong> Accurate descriptions that match the actual product 
+                being sold
               </p>
             </div>
             
@@ -179,19 +177,19 @@ export default function CommunityGuidelines() {
               <div className="space-y-2">
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                  <p className="text-gray-700">Counterfeit or replica items claiming to be authentic</p>
+                  <p className="text-gray-700">Counterfeit or replica items</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                  <p className="text-gray-700">Illegal wildlife products or endangered species items</p>
+                  <p className="text-gray-700">Illegal items or substances</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                  <p className="text-gray-700">Weapons, drugs, or other illegal substances</p>
+                  <p className="text-gray-700">Items that violate intellectual property rights</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                  <p className="text-gray-700">Stolen or misrepresented cultural artifacts</p>
+                  <p className="text-gray-700">Misleading or false product information</p>
                 </div>
               </div>
             </div>
@@ -230,7 +228,7 @@ export default function CommunityGuidelines() {
               <ul className="space-y-2 text-gray-700 text-sm">
                 <li>• Use clear, high-quality photos showing the actual product</li>
                 <li>• Provide accurate descriptions including materials and dimensions</li>
-                <li>• Set fair prices that reflect the value and craftsmanship</li>
+                <li>• Set fair and reasonable prices</li>
                 <li>• Include shipping information and processing times</li>
                 <li>• Disclose any flaws or imperfections honestly</li>
               </ul>
@@ -260,8 +258,8 @@ export default function CommunityGuidelines() {
                 <li>• Read product descriptions and seller policies carefully</li>
                 <li>• Ask questions before purchasing if you need clarification</li>
                 <li>• Respect sellers' processing and shipping timeframes</li>
-                <li>• Use approved payment methods: Cash on Delivery or Bank Transfer</li>
-                <li>• Understand that handmade items may have slight variations</li>
+                <li>• Use the platform's messaging system for communication</li>
+                <li>• Understand that individual sellers may have different policies</li>
               </ul>
             </div>
             
@@ -337,13 +335,12 @@ export default function CommunityGuidelines() {
           <FiMail className="mx-auto text-4xl mb-4 text-green-400" />
           <h2 className="text-2xl font-bold mb-4">Questions or Concerns?</h2>
           <p className="text-gray-300 mb-6">
-            If you have questions about these guidelines or need to report an issue, we're here to help.
+            If you have questions about these guidelines or need to report an issue, please contact us.
           </p>
           <div className="space-y-2">
-            <p className="text-green-400 font-medium">community@sina.lk</p>
-            <p className="text-gray-400">+94 11 123 4567</p>
+            <p className="text-green-400 font-medium">support@sina.lk</p>
             <p className="text-gray-400 text-sm">
-              Community support available 24/7
+              We'll review your report and respond as soon as possible
             </p>
           </div>
         </section>

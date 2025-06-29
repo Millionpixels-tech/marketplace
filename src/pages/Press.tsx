@@ -3,7 +3,7 @@ import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
 import { useResponsive } from '../hooks/useResponsive';
 import { getCanonicalUrl, generateKeywords } from '../utils/seo';
-import { FiFileText, FiUsers, FiMail, FiCalendar } from 'react-icons/fi';
+import { FiFileText, FiMail } from 'react-icons/fi';
 
 export default function Press() {
   const { isMobile } = useResponsive();
@@ -11,15 +11,14 @@ export default function Press() {
   return (
     <>
       <SEOHead
-        title="Press & Media - SinaMarketplace"
-        description="Media resources, press releases, and information about SinaMarketplace for journalists and media professionals."
+        title="Press & Media - Sina.lk"
+        description="Media information about Sina.lk marketplace. Contact us for information about our platform supporting Sri Lankan businesses."
         keywords={generateKeywords([
           'press',
           'media',
-          'news',
-          'press releases',
-          'Sri Lankan marketplace',
-          'media kit'
+          'Sina.lk marketplace',
+          'Sri Lankan business platform',
+          'media inquiries'
         ])}
         canonicalUrl={getCanonicalUrl('/press')}
       />
@@ -33,7 +32,7 @@ export default function Press() {
           </div>
           <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Press & Media</h1>
           <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
-            Media resources and information for journalists and media professionals.
+            Information about Sina.lk for media professionals and journalists.
           </p>
         </div>
       </div>
@@ -42,231 +41,126 @@ export default function Press() {
         {/* Main Content */}
         <div className={`max-w-4xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-8'}`}>
         
-        {/* Press Kit */}
+        {/* Company Information */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Press Kit</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">About Sina.lk</h2>
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Assets</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700">Logo Package (PNG, SVG)</span>
-                  <button className="text-[#72b01d] text-sm font-medium hover:text-[#5a8d17]">
-                    Download
-                  </button>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700">Brand Guidelines</span>
-                  <button className="text-[#72b01d] text-sm font-medium hover:text-[#5a8d17]">
-                    Download
-                  </button>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700">Product Screenshots</span>
-                  <button className="text-[#72b01d] text-sm font-medium hover:text-[#5a8d17]">
-                    Download
-                  </button>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-700">Executive Photos</span>
-                  <button className="text-[#72b01d] text-sm font-medium hover:text-[#5a8d17]">
-                    Download
-                  </button>
-                </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Overview</h3>
+              <div className="space-y-3 text-gray-700">
+                <p>
+                  Sina.lk is an online marketplace platform designed to support small businesses 
+                  across Sri Lanka. We provide digital tools for sellers to manage their online 
+                  presence and reach customers effectively.
+                </p>
+                <p>
+                  Our platform features secure payment processing, custom order management, 
+                  direct buyer-seller communication, and inventory tracking capabilities.
+                </p>
               </div>
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Facts</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Information</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Founded:</span>
-                  <span className="text-gray-900 font-medium">2023</span>
+                  <span className="text-gray-600">Launched:</span>
+                  <span className="text-gray-900 font-medium">2024</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Headquarters:</span>
-                  <span className="text-gray-900 font-medium">Colombo, Sri Lanka</span>
+                  <span className="text-gray-600">Platform Type:</span>
+                  <span className="text-gray-900 font-medium">Online Marketplace</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Active Sellers:</span>
-                  <span className="text-gray-900 font-medium">500+</span>
+                  <span className="text-gray-600">Primary Market:</span>
+                  <span className="text-gray-900 font-medium">Sri Lanka</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Countries Served:</span>
-                  <span className="text-gray-900 font-medium">60+</span>
+                  <span className="text-gray-600">Focus:</span>
+                  <span className="text-gray-900 font-medium">Small Business Support</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Product Categories:</span>
-                  <span className="text-gray-900 font-medium">15+</span>
+                  <span className="text-gray-600">Payment Methods:</span>
+                  <span className="text-gray-900 font-medium">Bank Transfer, COD</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Mission:</span>
-                  <span className="text-gray-900 font-medium">Connect Sri Lankan artisans globally</span>
+                  <span className="text-gray-600">Key Features:</span>
+                  <span className="text-gray-900 font-medium">Custom Orders, Messaging</span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Recent Press Releases */}
+        {/* News & Updates */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Press Releases</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">News & Updates</h2>
           
-          <div className="space-y-6">
-            <article className="border-b border-gray-200 pb-6">
-              <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                <FiCalendar size={14} />
-                <span>December 15, 2024</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                SinaMarketplace Expands to 60+ Countries, Connecting Sri Lankan Artisans Worldwide
-              </h3>
-              <p className="text-gray-700 mb-3">
-                Leading Sri Lankan e-commerce platform announces major milestone in international expansion, 
-                now serving customers across six continents and supporting over 500 local sellers.
+          <div className="text-center py-12">
+            <FiFileText className="mx-auto text-6xl text-gray-300 mb-6" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Limited Press Coverage</h3>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              As a growing platform, we don't have extensive press coverage at this time. 
+              We're focused on building our platform and supporting our seller community.
+            </p>
+            <div className="bg-blue-50 rounded-lg p-6 max-w-lg mx-auto">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Media Inquiries Welcome</h4>
+              <p className="text-gray-600 text-sm">
+                Interested in learning more about our platform or interviewing our team? 
+                We're happy to provide information and insights about our marketplace.
               </p>
-              <button className="text-[#72b01d] font-medium hover:text-[#5a8d17]">
-                Read Full Release →
-              </button>
-            </article>
-
-            <article className="border-b border-gray-200 pb-6">
-              <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                <FiCalendar size={14} />
-                <span>November 28, 2024</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Traditional Craft Revival: How Digital Platforms Are Preserving Sri Lankan Heritage
-              </h3>
-              <p className="text-gray-700 mb-3">
-                SinaMarketplace partners with UNESCO Sri Lanka to launch artisan training programs, 
-                helping traditional craftspeople adapt to digital commerce while preserving cultural techniques.
-              </p>
-              <button className="text-[#72b01d] font-medium hover:text-[#5a8d17]">
-                Read Full Release →
-              </button>
-            </article>
-
-            <article className="border-b border-gray-200 pb-6">
-              <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                <FiCalendar size={14} />
-                <span>October 10, 2024</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                SinaMarketplace Launches Sustainability Initiative for Eco-Friendly Packaging
-              </h3>
-              <p className="text-gray-700 mb-3">
-                New program introduces biodegradable packaging options and carbon-neutral shipping 
-                for international orders, reinforcing commitment to environmental responsibility.
-              </p>
-              <button className="text-[#72b01d] font-medium hover:text-[#5a8d17]">
-                Read Full Release →
-              </button>
-            </article>
+            </div>
           </div>
         </section>
 
-        {/* Media Coverage */}
+        {/* Platform Features */}
         <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">In the News</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">What Makes Sina.lk Different</h2>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">The Daily Mirror, Sri Lanka</div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  "Bridging Tradition and Technology"
+                  Custom Orders
                 </h4>
                 <p className="text-sm text-gray-600">
-                  Feature story on how SinaMarketplace is helping traditional artisans reach global markets...
+                  Buyers can request personalized products directly from sellers, enabling unique 
+                  business opportunities beyond standard catalog items.
                 </p>
               </div>
               
               <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Tech in Asia</div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  "Sri Lankan E-commerce Platform Making Waves"
+                  Direct Communication
                 </h4>
                 <p className="text-sm text-gray-600">
-                  Analysis of SinaMarketplace's growth and impact on the regional e-commerce landscape...
+                  Built-in messaging system allows buyers and sellers to communicate directly, 
+                  building relationships and clarifying requirements.
                 </p>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Sri Lankan Airlines Magazine</div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  "Showcasing Island Craftsmanship"
+                  Local Payment Methods
                 </h4>
                 <p className="text-sm text-gray-600">
-                  Interview with founders about preserving Sri Lankan cultural heritage through commerce...
+                  Supports Sri Lankan banking systems and cash on delivery, making it accessible 
+                  for both sellers and buyers across the country.
                 </p>
               </div>
               
               <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-500 mb-1">Startup Sri Lanka</div>
                 <h4 className="font-semibold text-gray-900 mb-2">
-                  "From Local to Global: A Success Story"
+                  Seller-Controlled Policies
                 </h4>
                 <p className="text-sm text-gray-600">
-                  Profile of SinaMarketplace's journey from startup to international platform...
+                  Individual sellers set their own shipping rates, return policies, and business 
+                  terms, maintaining control over their operations.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Awards & Recognition */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Awards & Recognition</h2>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-[#72b01d] mb-2">2024</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Best E-commerce Platform</h3>
-              <p className="text-sm text-gray-600">Sri Lanka Digital Awards</p>
-            </div>
-            
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-[#72b01d] mb-2">2024</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Cultural Preservation Initiative</h3>
-              <p className="text-sm text-gray-600">UNESCO Sri Lanka Recognition</p>
-            </div>
-            
-            <div className="text-center p-6 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-[#72b01d] mb-2">2023</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Startup of the Year</h3>
-              <p className="text-sm text-gray-600">Ceylon Chamber of Commerce</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Leadership Team */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <div className="flex items-center space-x-3 mb-6">
-            <FiUsers className="text-[#72b01d] text-xl" />
-            <h2 className="text-2xl font-bold text-gray-900">Leadership Team</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-lg font-semibold text-gray-900">Samantha Perera</h3>
-              <p className="text-gray-600 mb-2">CEO & Co-Founder</p>
-              <p className="text-sm text-gray-500">
-                Former tech executive with 15 years in e-commerce and digital transformation.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
-              <h3 className="text-lg font-semibold text-gray-900">Rajitha Fernando</h3>
-              <p className="text-gray-600 mb-2">CTO & Co-Founder</p>
-              <p className="text-sm text-gray-500">
-                Technology leader specializing in scalable platforms and user experience design.
-              </p>
             </div>
           </div>
         </section>
@@ -276,13 +170,12 @@ export default function Press() {
           <FiMail className="mx-auto text-4xl mb-4 text-green-400" />
           <h2 className="text-2xl font-bold mb-4">Media Inquiries</h2>
           <p className="text-gray-300 mb-6">
-            For press inquiries, interview requests, or additional information, please contact our media team.
+            For press inquiries, interview requests, or information about our platform, please contact us directly.
           </p>
           <div className="space-y-2">
-            <p className="text-green-400 font-medium">press@sina.lk</p>
-            <p className="text-gray-400">+94 11 123 4567</p>
+            <p className="text-green-400 font-medium">contact@sina.lk</p>
             <p className="text-gray-400 text-sm">
-              Response time: 24-48 hours for media inquiries
+              We'll respond to media inquiries as quickly as possible
             </p>
           </div>
         </section>

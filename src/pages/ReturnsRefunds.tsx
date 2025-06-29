@@ -3,7 +3,7 @@ import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
 import { useResponsive } from '../hooks/useResponsive';
 import { getOrganizationStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
-import { FiTruck, FiRefreshCw, FiCheckCircle, FiClock, FiDollarSign, FiAlertCircle, FiShield } from 'react-icons/fi';
+import { FiTruck, FiRefreshCw, FiCheckCircle, FiDollarSign, FiAlertCircle, FiShield } from 'react-icons/fi';
 
 export default function ReturnsRefunds() {
   const { isMobile } = useResponsive();
@@ -11,15 +11,16 @@ export default function ReturnsRefunds() {
   return (
     <>
       <SEOHead
-        title="Returns & Refunds Policy - SinaMarketplace"
-        description="Learn about our comprehensive returns and refunds policy. 30-day return window, easy process, and full refunds for eligible items in Sri Lanka."
+        title="Returns & Refunds Policy - Sina.lk Marketplace"
+        description="Understand return policies for marketplace purchases. Learn about seller return policies, buyer protection, and how to handle returns with individual sellers on Sina.lk."
         keywords={generateKeywords([
           'returns policy',
           'refunds',
-          'return items',
-          '30 day returns',
+          'marketplace returns',
+          'seller return policy',
+          'buyer protection',
           'Sri Lanka marketplace',
-          'customer protection'
+          'custom orders returns'
         ])}
         canonicalUrl={getCanonicalUrl('/returns-refunds')}
         noIndex={false}
@@ -35,7 +36,7 @@ export default function ReturnsRefunds() {
           </div>
           <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Returns & Refunds</h1>
           <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
-            Shop with confidence - learn about our return policy and refund process.
+            Understand return policies and buyer protection for marketplace purchases from individual sellers.
           </p>
         </div>
       </div>
@@ -45,72 +46,91 @@ export default function ReturnsRefunds() {
         <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-6' : 'px-4 py-12'}`}>
         {/* Quick Overview */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Return Policy Overview</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Marketplace Return Policy Overview</h2>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start space-x-3">
+              <FiAlertCircle className="text-blue-600 mt-1" size={20} />
+              <div>
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">Important Notice</h3>
+                <p className="text-blue-700 text-sm">
+                  Sina.lk is a marketplace connecting buyers with individual sellers across Sri Lanka. Return policies are set by individual sellers, not by Sina.lk directly. We facilitate communication and provide buyer protection guidelines.
+                </p>
+              </div>
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-[#72b01d] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiClock className="text-white" size={28} />
+                <FiCheckCircle className="text-white" size={28} />
               </div>
-              <h3 className="text-lg font-semibold mb-2">30-Day Window</h3>
-              <p className="text-gray-600">Return items within 30 days of delivery</p>
+              <h3 className="text-lg font-semibold mb-2">Seller Communication</h3>
+              <p className="text-gray-600">Contact sellers directly through our messaging system</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-[#72b01d] rounded-full flex items-center justify-center mx-auto mb-4">
-                <FiCheckCircle className="text-white" size={28} />
+                <FiShield className="text-white" size={28} />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Easy Process</h3>
-              <p className="text-gray-600">Simple online return request system</p>
+              <h3 className="text-lg font-semibold mb-2">Buyer Protection</h3>
+              <p className="text-gray-600">Report issues through our support system</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-[#72b01d] rounded-full flex items-center justify-center mx-auto mb-4">
                 <FiDollarSign className="text-white" size={28} />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Full Refunds</h3>
-              <p className="text-gray-600">Get your money back for eligible returns</p>
+              <h3 className="text-lg font-semibold mb-2">Payment Protection</h3>
+              <p className="text-gray-600">COD and bank transfer payment security</p>
             </div>
           </div>
         </div>
 
-        {/* Return Conditions */}
+        {/* Return Guidelines */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
           <div className="flex items-center mb-6">
             <FiRefreshCw className="text-[#72b01d] mr-3" size={24} />
-            <h2 className="text-2xl font-bold text-gray-900">Return Conditions</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Return Guidelines & Common Practices</h2>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-green-700">✓ Items We Accept for Return</h3>
+              <h3 className="text-lg font-semibold mb-3 text-green-700">✓ Items Generally Accepted for Return</h3>
               <ul className="space-y-2 text-gray-600 ml-4">
-                <li>• Items in original, unused condition</li>
-                <li>• Products with original packaging and tags</li>
-                <li>• Items returned within 30 days of delivery</li>
-                <li>• Handmade items (subject to seller approval)</li>
-                <li>• Electronics in working condition with all accessories</li>
+                <li>• Items significantly different from descriptions or photos</li>
+                <li>• Products received damaged during shipping</li>
+                <li>• Items with manufacturing defects or quality issues</li>
+                <li>• Wrong items sent by seller</li>
+                <li>• Items that don't match the agreed specifications in custom orders</li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-red-700">✗ Items We Cannot Accept</h3>
+              <h3 className="text-lg font-semibold mb-3 text-red-700">✗ Items Typically Not Returnable</h3>
               <ul className="space-y-2 text-gray-600 ml-4">
-                <li>• Personalized or custom-made items</li>
-                <li>• Food items and perishables</li>
-                <li>• Items damaged by normal wear and tear</li>
-                <li>• Digital products and downloads</li>
-                <li>• Items returned after 30 days</li>
+                <li>• Personalized or custom-made items (unless defective)</li>
+                <li>• Food items, traditional sweets, and perishables</li>
+                <li>• Items used, worn, or damaged by the buyer</li>
+                <li>• Digital products or downloadable content</li>
+                <li>• Items sold "as-is" or with disclosed imperfections</li>
+                <li>• Custom orders that match the agreed specifications</li>
               </ul>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-yellow-800 text-sm">
+                <strong>Note:</strong> Each seller may have their own specific return policy. Always check with the seller before purchasing, especially for handmade or custom items.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* How to Return */}
+        {/* How to Handle Returns */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
           <div className="flex items-center mb-6">
             <FiTruck className="text-[#72b01d] mr-3" size={24} />
-            <h2 className="text-2xl font-bold text-gray-900">How to Return an Item</h2>
+            <h2 className="text-2xl font-bold text-gray-900">How to Handle Returns & Issues</h2>
           </div>
 
           <div className="space-y-6">
@@ -119,8 +139,8 @@ export default function ReturnsRefunds() {
                 1
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Start Return Request</h3>
-                <p className="text-gray-600">Go to your order history and click "Return Item" next to the product you want to return.</p>
+                <h3 className="text-lg font-semibold mb-2">Contact the Seller First</h3>
+                <p className="text-gray-600">Use our messaging system to contact the seller directly. Explain the issue clearly and provide photos if applicable. Most sellers are willing to resolve issues quickly.</p>
               </div>
             </div>
 
@@ -129,8 +149,8 @@ export default function ReturnsRefunds() {
                 2
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Select Return Reason</h3>
-                <p className="text-gray-600">Choose the reason for your return from the dropdown menu and provide additional details if needed.</p>
+                <h3 className="text-lg font-semibold mb-2">Negotiate a Solution</h3>
+                <p className="text-gray-600">Work with the seller to find a mutually acceptable solution - this could be a return, exchange, partial refund, or other arrangement.</p>
               </div>
             </div>
 
@@ -139,8 +159,8 @@ export default function ReturnsRefunds() {
                 3
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Print Return Label</h3>
-                <p className="text-gray-600">We'll email you a prepaid return shipping label. Print it and attach it to your package.</p>
+                <h3 className="text-lg font-semibold mb-2">Arrange Return Shipping</h3>
+                <p className="text-gray-600">If a return is agreed upon, coordinate shipping arrangements. The seller will typically provide instructions for returning the item safely.</p>
               </div>
             </div>
 
@@ -149,8 +169,8 @@ export default function ReturnsRefunds() {
                 4
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Ship the Item</h3>
-                <p className="text-gray-600">Package the item securely and drop it off at any authorized shipping location or schedule a pickup.</p>
+                <h3 className="text-lg font-semibold mb-2">Payment Resolution</h3>
+                <p className="text-gray-600">For COD orders, refunds are typically handled directly. For bank transfer orders, the seller may provide a refund via bank transfer back to your account.</p>
               </div>
             </div>
 
@@ -159,79 +179,114 @@ export default function ReturnsRefunds() {
                 5
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Get Your Refund</h3>
-                <p className="text-gray-600">Once we receive and process your return, we'll issue a refund using the same payment method you used for your order. For Cash on Delivery orders, refunds are processed via bank transfer to your provided account details.</p>
+                <h3 className="text-lg font-semibold mb-2">Contact Support if Needed</h3>
+                <p className="text-gray-600">If you cannot reach an agreement with the seller, contact our support team at support@sina.lk. We can help mediate disputes and provide guidance.</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Refund Information */}
+        {/* Payment & Refund Information */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
           <div className="flex items-center mb-6">
             <FiDollarSign className="text-[#72b01d] mr-3" size={24} />
-            <h2 className="text-2xl font-bold text-gray-900">Refund Information</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Payment & Refund Information</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Refund Timeline</h3>
+              <h3 className="text-lg font-semibold mb-4">Cash on Delivery (COD) Orders</h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Processing Time</span>
-                  <span className="font-medium">1-2 business days</span>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Return Process</h4>
+                  <p className="text-gray-600 text-sm">Since payment is made directly to the seller upon delivery, refunds are typically handled directly between buyer and seller or via bank transfer.</p>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Credit Card</span>
-                  <span className="font-medium">3-5 business days</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Bank Transfer</span>
-                  <span className="font-medium">5-7 business days</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600">Digital Wallet</span>
-                  <span className="font-medium">1-3 business days</span>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Refund Method</h4>
+                  <p className="text-gray-600 text-sm">Seller may provide bank transfer refund or arrange for item pickup with cash refund.</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold mb-4">Refund Amount</h3>
+              <h3 className="text-lg font-semibold mb-4">Bank Transfer Orders</h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Item Price</span>
-                  <span className="font-medium text-green-600">Full Refund</span>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Return Process</h4>
+                  <p className="text-gray-600 text-sm">Since payment is made upfront via bank transfer with payment slip verification, refunds require coordination with the seller.</p>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Shipping Cost</span>
-                  <span className="font-medium text-green-600">Refunded*</span>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Refund Method</h4>
+                  <p className="text-gray-600 text-sm">Seller typically processes refund via bank transfer back to buyer's account within 3-7 business days.</p>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Return Shipping</span>
-                  <span className="font-medium text-green-600">Free</span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  *Original shipping is refunded if the return is due to our error or defective product.
-                </p>
               </div>
             </div>
+          </div>
+
+          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-800 mb-2">Custom Orders</h4>
+            <p className="text-green-700 text-sm">
+              Custom orders have specific return policies set by sellers. Always clarify return terms before placing custom orders, as these items are typically made to your specifications.
+            </p>
           </div>
         </div>
 
         {/* Important Notes */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
           <div className="flex items-start space-x-3">
             <FiAlertCircle className="text-yellow-600 mt-1" size={20} />
             <div>
-              <h3 className="text-lg font-semibold text-yellow-800 mb-2">Important Notes</h3>
+              <h3 className="text-lg font-semibold text-yellow-800 mb-2">Important Guidelines</h3>
               <ul className="space-y-1 text-yellow-700 text-sm">
-                <li>• For handmade items, please contact the seller before initiating a return</li>
-                <li>• International returns may take longer to process</li>
-                <li>• Keep your return tracking number until the refund is processed</li>
-                <li>• Contact customer service if you don't receive your refund within the expected timeframe</li>
+                <li>• Each seller sets their own return policy - check before purchasing</li>
+                <li>• Communicate respectfully with sellers through our messaging system</li>
+                <li>• Take photos of any issues to help resolve disputes</li>
+                <li>• Keep all order information and communication records</li>
+                <li>• For custom orders, clarify return terms before confirming the order</li>
+                <li>• Contact support@sina.lk if you need help mediating with a seller</li>
               </ul>
             </div>
+          </div>
+        </div>
+
+        {/* Buyer Protection */}
+        <div className="bg-white rounded-lg shadow-sm p-8">
+          <div className="flex items-center mb-6">
+            <FiShield className="text-[#72b01d] mr-3" size={24} />
+            <h2 className="text-2xl font-bold text-gray-900">Buyer Protection & Support</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-3">When to Contact Support</h3>
+              <ul className="space-y-2 text-gray-600">
+                <li>• Seller is unresponsive to messages</li>
+                <li>• Item significantly different from description</li>
+                <li>• Seller refuses reasonable return request</li>
+                <li>• Suspected fraudulent activity</li>
+                <li>• Need help with payment disputes</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3">How We Can Help</h3>
+              <ul className="space-y-2 text-gray-600">
+                <li>• Mediate communication between buyers and sellers</li>
+                <li>• Provide guidance on marketplace policies</li>
+                <li>• Assist with dispute resolution</li>
+                <li>• Take action against problematic sellers</li>
+                <li>• Use buyer verification and reporting system</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-6 text-center">
+            <a
+              href="mailto:support@sina.lk"
+              className="inline-flex items-center px-6 py-3 bg-[#72b01d] text-white font-medium rounded-lg hover:bg-[#5a8f17] transition-colors"
+            >
+              Contact Support
+            </a>
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
       content: [
         {
           subtitle: "Personal Information",
-          details: "We collect information you provide directly to us, such as when you create an account, make a purchase, contact us, or participate in our services. This includes your name, email address, phone number, shipping address, and payment information."
+          details: "We collect information you provide directly to us, such as when you create an account, make a purchase, contact sellers, or use our messaging system. This includes your name, email address, phone number, shipping address, and payment information for bank transfers or cash on delivery orders."
         },
         {
           subtitle: "Usage Information", 
@@ -34,11 +34,11 @@ export default function PrivacyPolicy() {
       content: [
         {
           subtitle: "Service Delivery",
-          details: "We use your information to provide, maintain, and improve our marketplace services, process transactions, and communicate with you about your orders and account."
+          details: "We use your information to provide, maintain, and improve our marketplace services, process transactions, facilitate communication between buyers and sellers, manage custom orders, and provide customer support."
         },
         {
           subtitle: "Communication",
-          details: "We may send you service-related emails, promotional materials (with your consent), and important updates about our platform and policies."
+          details: "We may send you service-related emails about your orders, account updates, important platform changes, and responses to your inquiries. We do not send promotional marketing emails unless you specifically opt in."
         },
         {
           subtitle: "Security & Fraud Prevention",
@@ -56,11 +56,11 @@ export default function PrivacyPolicy() {
       content: [
         {
           subtitle: "With Sellers",
-          details: "When you make a purchase, we share necessary information with sellers to fulfill your order, including your name, shipping address, and contact information."
+          details: "When you make a purchase or send a custom order request, we share necessary information with sellers to fulfill your order, including your name, contact information, shipping address, and order details. This enables direct communication between buyers and sellers."
         },
         {
           subtitle: "Service Providers",
-          details: "We work with trusted third-party service providers for payment processing, shipping, analytics, and other business functions. They only receive information necessary to perform their services."
+          details: "We work with trusted third-party service providers for essential functions such as hosting, data storage, and basic analytics. They only receive information necessary to perform their specific services and are bound by confidentiality agreements."
         },
         {
           subtitle: "Legal Requirements",
@@ -82,7 +82,7 @@ export default function PrivacyPolicy() {
         },
         {
           subtitle: "Payment Security",
-          details: "For bank transfer payments, we securely store payment slip images and transaction references. For Cash on Delivery orders, no sensitive payment information is stored."
+          details: "For bank transfer payments, we securely store payment confirmation details provided by users. For Cash on Delivery orders, no financial information is stored. We do not process or store credit card information directly."
         },
         {
           subtitle: "Data Transmission",
@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
         },
         {
           subtitle: "Marketing Communications",
-          details: "You can opt out of promotional emails by clicking the unsubscribe link in any marketing email or by updating your preferences in your account settings."
+          details: "We do not send promotional or marketing emails unless you specifically request them. All our communications are service-related and necessary for your use of the platform."
         },
         {
           subtitle: "Data Access & Deletion",
@@ -122,11 +122,11 @@ export default function PrivacyPolicy() {
         },
         {
           subtitle: "Analytics Cookies",
-          details: "We use analytics tools to understand how users interact with our website, helping us improve our services and user experience."
+          details: "We use basic analytics to understand how users interact with our website, helping us improve our services and user experience. We do not use extensive tracking or third-party advertising cookies."
         },
         {
           subtitle: "Marketing Cookies",
-          details: "With your consent, we may use cookies for advertising and marketing purposes to show you relevant content and advertisements."
+          details: "We do not currently use marketing or advertising cookies. Our focus is on providing essential marketplace functionality rather than advertising tracking."
         }
       ]
     }
@@ -135,10 +135,10 @@ export default function PrivacyPolicy() {
   return (
     <>
       <SEOHead
-        title="Privacy Policy - SinaMarketplace"
-        description="Learn about how SinaMarketplace collects, uses, and protects your personal information and data privacy rights in Sri Lanka."
-        keywords="privacy policy, data protection, personal information, Sri Lanka, marketplace privacy, GDPR compliance"
-        canonicalUrl="https://sinamarketplace.com/privacy"
+        title="Privacy Policy - Sina.lk"
+        description="Learn about how Sina.lk collects, uses, and protects your personal information. Our privacy policy for the Sri Lankan marketplace platform."
+        keywords="privacy policy, data protection, personal information, Sri Lanka, marketplace privacy, Sina.lk"
+        canonicalUrl="https://sina.lk/privacy"
         noIndex={false}
         structuredData={getOrganizationStructuredData()}
       />
@@ -168,7 +168,7 @@ export default function PrivacyPolicy() {
               <h2 className={`font-bold text-blue-900 ${isMobile ? 'text-lg' : 'text-xl'}`}>Our Commitment to Your Privacy</h2>
             </div>
             <p className={`text-blue-800 leading-relaxed ${isMobile ? 'text-sm' : ''}`}>
-              At SinaMarketplace, we are committed to protecting your privacy and ensuring transparency about how we handle your personal information. This Privacy Policy applies to all users of our website and services.
+              At Sina.lk, we are committed to protecting your privacy and ensuring transparency about how we handle your personal information. This Privacy Policy applies to all users of our marketplace website and services.
             </p>
           </div>
         </div>
@@ -215,14 +215,14 @@ export default function PrivacyPolicy() {
             <div className={`flex items-center justify-center mb-4 ${isMobile ? 'flex-col space-y-2' : ''}`}>
               <FiMail className={`text-[#72b01d] ${isMobile ? 'w-6 h-6 mb-2' : 'w-8 h-8 mr-3'}`} />
               <div className={`${isMobile ? 'text-center' : 'text-left'}`}>
-                <div className={`font-semibold text-[#0d0a0b] ${isMobile ? 'text-sm' : ''}`}>Privacy Officer</div>
-                <a href="mailto:privacy@sina.lk" className={`text-[#72b01d] hover:underline ${isMobile ? 'text-sm' : ''}`}>
-                  privacy@sina.lk
+                <div className={`font-semibold text-[#0d0a0b] ${isMobile ? 'text-sm' : ''}`}>Support Team</div>
+                <a href="mailto:support@sina.lk" className={`text-[#72b01d] hover:underline ${isMobile ? 'text-sm' : ''}`}>
+                  support@sina.lk
                 </a>
               </div>
             </div>
             <p className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              We typically respond to privacy inquiries within 48 hours.
+              We respond to privacy and support inquiries as quickly as possible.
             </p>
           </div>
         </div>

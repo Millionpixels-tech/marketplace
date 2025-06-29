@@ -3,7 +3,7 @@ import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
 import { useResponsive } from '../hooks/useResponsive';
 import { getCanonicalUrl, generateKeywords } from '../utils/seo';
-import { FiMail, FiPhone, FiMessageCircle, FiClock, FiHelpCircle, FiLifeBuoy } from 'react-icons/fi';
+import { FiMail, FiClock, FiHelpCircle, FiLifeBuoy } from 'react-icons/fi';
 
 export default function CustomerService() {
   const { isMobile } = useResponsive();
@@ -12,72 +12,61 @@ export default function CustomerService() {
     {
       icon: <FiMail className="w-6 h-6" />,
       title: "Email Support",
-      description: "Get detailed help via email",
+      description: "Get comprehensive help via email for all your questions",
       contact: "support@sina.lk",
       contactHref: "mailto:support@sina.lk",
       responseTime: "Response within 24 hours",
       available: true
-    },
-    {
-      icon: <FiPhone className="w-6 h-6" />,
-      title: "Phone Support", 
-      description: "Speak directly with our team",
-      contact: "+94 11 123 4567",
-      contactHref: "tel:+94111234567",
-      responseTime: "Mon-Fri 9AM-6PM",
-      available: true
-    },
-    {
-      icon: <FiMessageCircle className="w-6 h-6" />,
-      title: "Live Chat",
-      description: "Chat with us in real-time",
-      contact: "Start Chat",
-      contactHref: "#",
-      responseTime: "Usually responds instantly",
-      available: false
     }
   ];
 
   const commonIssues = [
     {
-      title: "Order Issues",
-      description: "Problems with your order, delivery delays, or order cancellations",
-      link: "/help-center#orders"
-    },
-    {
-      title: "Payment Problems", 
-      description: "Payment failures, refunds, or billing questions",
-      link: "/help-center#payments"
+      title: "Order & Payment Issues",
+      description: "Problems with orders, payment slip uploads, bank transfers, COD, or delivery delays",
+      needsEmail: true
     },
     {
       title: "Account Verification",
-      description: "Account verification, buyer reports, or placing order restrictions",
-      link: "/customer-service#verification"
+      description: "Account verification process, buyer reports, verification badge, or order restrictions",
+      needsEmail: true
     },
     {
-      title: "Account Help",
-      description: "Login issues, account settings, or profile updates",
-      link: "/help-center#account"
+      title: "Custom Orders & Shop Management",
+      description: "Custom order creation, shop setup, product listings, bank account management, or earnings tracking",
+      needsEmail: true
+    },
+    {
+      title: "Technical Issues",
+      description: "Login problems, website errors, messaging system issues, or mobile app difficulties",
+      needsEmail: true
     },
     {
       title: "Seller Support",
-      description: "Questions about selling, shop management, or seller policies",
-      link: "/help-center#selling"
+      description: "Questions about selling policies, buyer verification system, reporting buyers, or marketplace features",
+      needsEmail: true
+    },
+    {
+      title: "General Inquiries",
+      description: "Questions about marketplace policies, Sri Lankan shipping, or platform features",
+      needsEmail: true
     }
   ];
 
   return (
     <>
       <SEOHead
-        title="Customer Service - SinaMarketplace"
-        description="Get help from our dedicated customer service team. Contact us via email, phone, or chat for support with orders, payments, and account issues."
+        title="Customer Service - Sina.lk Marketplace"
+        description="Get comprehensive email support for orders, custom orders, payment issues, account verification, and all marketplace questions. Contact support@sina.lk for help."
         keywords={generateKeywords([
           'customer service',
-          'support',
+          'email support',
           'help',
           'contact',
           'Sri Lankan marketplace',
-          'customer support'
+          'custom orders',
+          'payment support',
+          'account verification'
         ])}
         canonicalUrl={getCanonicalUrl('/customer-service')}
       />
@@ -91,7 +80,7 @@ export default function CustomerService() {
           </div>
           <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-4`}>Customer Service</h1>
           <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-green-100 mb-6`}>
-            We're here to help! Get in touch with our support team for any questions or assistance.
+            Get comprehensive email support for all your marketplace questions and issues. We're here to help with orders, payments, verification, and more.
           </p>
         </div>
       </div>
@@ -105,29 +94,25 @@ export default function CustomerService() {
             <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 text-center mb-${isMobile ? '6' : '8'}`}>
               Get In Touch
             </h2>
-            <div className={`grid grid-cols-1 ${isMobile ? 'gap-4' : 'md:grid-cols-3 gap-6'}`}>
+            <div className="flex justify-center">
               {contactMethods.map((method, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-[#72b01d] rounded-full flex items-center justify-center mx-auto mb-4">
+                <div key={index} className="bg-white rounded-xl shadow-sm p-8 text-center hover:shadow-md transition-shadow max-w-md w-full">
+                  <div className="w-16 h-16 bg-[#72b01d] rounded-full flex items-center justify-center mx-auto mb-6">
                     <div className="text-white">
                       {method.icon}
                     </div>
                   </div>
-                  <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold mb-2 text-gray-900`}>
+                  <h3 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-3 text-gray-900`}>
                     {method.title}
                   </h3>
-                  <p className="text-gray-600 mb-4">{method.description}</p>
-                  {method.available ? (
-                    <a
-                      href={method.contactHref}
-                      className="text-[#72b01d] hover:text-[#5a8a16] font-medium text-lg"
-                    >
-                      {method.contact}
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 font-medium">Coming Soon</span>
-                  )}
-                  <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500 mt-2`}>
+                  <p className="text-gray-600 mb-6">{method.description}</p>
+                  <a
+                    href={method.contactHref}
+                    className="text-[#72b01d] hover:text-[#5a8a16] font-medium text-xl"
+                  >
+                    {method.contact}
+                  </a>
+                  <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-500 mt-3`}>
                     {method.responseTime}
                   </p>
                 </div>
@@ -148,13 +133,11 @@ export default function CustomerService() {
                   </h3>
                   <p className="text-gray-600 mb-4">{issue.description}</p>
                   <a
-                    href={issue.link}
+                    href="mailto:support@sina.lk"
                     className="inline-flex items-center text-[#72b01d] hover:text-[#5a8a16] font-medium"
                   >
-                    Learn More
-                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    Email Support
+                    <FiMail className="w-4 h-4 ml-1" />
                   </a>
                 </div>
               ))}
@@ -164,14 +147,14 @@ export default function CustomerService() {
           {/* Quick Tips */}
           <section className="bg-white rounded-xl shadow-sm p-8">
             <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 text-center mb-6`}>
-              Quick Tips
+              Getting Help
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-start space-x-3">
                 <FiClock className="w-5 h-5 text-[#72b01d] mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-gray-700">
-                    <strong>Response Times:</strong> Email support typically responds within 24 hours during business days.
+                    <strong>Response Times:</strong> We respond to all emails within 24 hours during business days. Complex issues may require additional time for proper resolution.
                   </p>
                 </div>
               </div>
@@ -179,15 +162,23 @@ export default function CustomerService() {
                 <FiHelpCircle className="w-5 h-5 text-[#72b01d] mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-gray-700">
-                    <strong>Before Contacting:</strong> Check our Help Center for instant answers to common questions.
+                    <strong>Before Emailing:</strong> Check our Help Center for instant answers about custom orders, payment slips, account verification, and common marketplace questions.
                   </p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <FiMessageCircle className="w-5 h-5 text-[#72b01d] mt-0.5 flex-shrink-0" />
+                <FiMail className="w-5 h-5 text-[#72b01d] mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-gray-700">
-                    <strong>Order Issues:</strong> Have your order number ready when contacting support for faster assistance.
+                    <strong>When Contacting Support:</strong> Include your order number, account email, and detailed description of the issue. For payment problems, mention if you're using COD or bank transfer.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <FiLifeBuoy className="w-5 h-5 text-[#72b01d] mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-gray-700">
+                    <strong>Account Verification:</strong> For verification badge issues or buyer reports, email us with your account details. We review all verification requests and reports carefully.
                   </p>
                 </div>
               </div>

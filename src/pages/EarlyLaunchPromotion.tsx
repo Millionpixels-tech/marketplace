@@ -83,7 +83,7 @@ const EarlyLaunchPromotion = () => {
     shopsCount: 0,
     listingsCount: 0,
     requirementsShops: 1,
-    requirementsListings: 10
+    requirementsListings: 5
   });
 
   useEffect(() => {
@@ -132,11 +132,11 @@ const EarlyLaunchPromotion = () => {
         
         // Set eligibility data with actual counts (only one update)
         setEligibilityData({
-          isEligible: userShops.length >= 1 && userListings.length >= 10,
+          isEligible: userShops.length >= 1 && userListings.length >= 5,
           shopsCount: userShops.length,
           listingsCount: userListings.length,
           requirementsShops: 1,
-          requirementsListings: 10
+          requirementsListings: 5
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -362,7 +362,7 @@ const EarlyLaunchPromotion = () => {
                       {applicationStatus.status === 'paid' && (
                         <div className="text-center">
                           <p className="text-xs sm:text-sm text-green-600 mt-2 px-2">
-                            Your LKR 1,000 prize has been transferred to your bank account.
+                            Your LKR 500 prize has been transferred to your bank account.
                           </p>
                         </div>
                       )}
@@ -598,7 +598,7 @@ const EarlyLaunchPromotion = () => {
                       <FaMoneyBillWave className="inline-block text-green-600" />
                     </div>
                     <h4 className="font-black text-xl sm:text-2xl mb-2" style={{ color: '#0d0a0b' }}>
-                      LKR 1,000 Cash Prize
+                      LKR 500 Cash Prize
                     </h4>
                     <p className="font-bold text-base sm:text-lg text-green-700 mb-2">
                       For First 50 Eligible Sellers
@@ -619,7 +619,7 @@ const EarlyLaunchPromotion = () => {
                       Step 1: Qualify
                     </h5>
                     <p className="text-xs" style={{ color: '#454955' }}>
-                      Create 1 shop + 10 listings
+                      Create 1 shop + 5 listings
                     </p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-xl sm:rounded-2xl">
@@ -641,7 +641,7 @@ const EarlyLaunchPromotion = () => {
                       Step 3: Get Paid
                     </h5>
                     <p className="text-xs" style={{ color: '#454955' }}>
-                      Receive LKR 1,000 cash
+                      Receive LKR 500 cash
                     </p>
                   </div>
                 </div>
@@ -726,7 +726,7 @@ const EarlyLaunchPromotion = () => {
                 Bank Details for Prize Transfer
               </h3>
               <p className="text-xs sm:text-sm" style={{ color: '#454955' }}>
-                Please provide your bank details to receive the LKR 1,000 cash prize
+                Please provide your bank details to receive the LKR 500 cash prize
               </p>
             </div>
 

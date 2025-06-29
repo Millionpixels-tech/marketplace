@@ -11,11 +11,11 @@ export interface EligibilityData {
 
 /**
  * Check if a user is eligible for the early launch promotion
- * Requirements: At least 1 active shop and 10 active listings
+ * Requirements: At least 1 active shop and 5 active listings
  */
 export const checkPromotionEligibility = async (userId: string): Promise<EligibilityData> => {
   const REQUIRED_SHOPS = 1;
-  const REQUIRED_LISTINGS = 10;
+  const REQUIRED_LISTINGS = 5;
 
   try {
     // Fetch user's shops (using 'owner' field)

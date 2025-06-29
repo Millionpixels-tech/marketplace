@@ -5,7 +5,7 @@ import ResponsiveHeader from '../components/UI/ResponsiveHeader';
 import Footer from '../components/UI/Footer';
 import { SEOHead } from '../components/SEO/SEOHead';
 import { useResponsive } from '../hooks/useResponsive';
-import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiPhone, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
+import { FiUser, FiShoppingBag, FiCamera, FiDollarSign, FiTruck, FiStar, FiCheckCircle, FiArrowRight, FiMapPin, FiCreditCard, FiPackage, FiEye, FiHeart, FiMessageCircle } from 'react-icons/fi';
 import { getArticleStructuredData, getCanonicalUrl, generateKeywords } from '../utils/seo';
 
 export default function SellerGuide() {
@@ -68,55 +68,78 @@ export default function SellerGuide() {
     },
     {
       id: 4,
-      title: "Configure Payment Options",
+      title: "Configure Payment & Banking",
       icon: <FiCreditCard className="w-8 h-8" />,
-      description: "Set up secure payment methods that work best for your business and customers",
+      description: "Set up secure payment methods and bank accounts for seamless transactions",
       details: [
         "Cash on Delivery (COD): Perfect for local customers, they pay when receiving the product",
-        "Bank Transfer: Secure for higher-value items, customers transfer before shipping",
-        "Offer both options to maximize sales opportunities and customer convenience",
+        "Bank Transfer: Secure for higher-value items, customers transfer money before shipping",
+        "Add multiple bank accounts in your profile settings for customer convenience",
+        "Set a preferred bank account that will be shown first to customers",
+        "Include account number, bank name, branch, and full account holder name",
         "For COD orders: Collect exact payment amount upon delivery",
-        "For bank transfers: Customers upload payment confirmation slips for your verification",
-        "Set up automatic order confirmations and payment tracking",
-        "Consider offering small discounts for advance payments to encourage bank transfers"
+        "For bank transfers: Customers upload payment slips for your verification",
+        "Payment verification system helps prevent fraud and ensures secure transactions"
       ],
-      tips: "� Smart Strategy: Sellers offering both payment methods see 60% more orders! COD works great for items under LKR 5,000, bank transfer for premium products.",
+      tips: "🏦 Banking Pro Tip: Sellers with multiple bank account options see 60% more orders! Offer both payment methods to maximize sales opportunities.",
       action: null
     },
     {
       id: 5,
-      title: "Manage Orders Like a Pro",
+      title: "Master Order Management",
       icon: <FiPackage className="w-8 h-8" />,
-      description: "Efficiently handle customer orders to build reputation and increase repeat business",
+      description: "Efficiently handle orders, from confirmation to delivery, building strong customer relationships",
       details: [
-        "Check your Dashboard notifications daily for new orders",
-        "Access complete customer details: name, phone, delivery address",
-        "Call customers within 24 hours to confirm orders and delivery preferences",
-        "Print shipping labels and pack items securely with protective materials",
-        "Use reliable courier services and provide tracking numbers when available",
-        "Update order status to 'Shipped' immediately after dispatch",
-        "Follow up with customers to ensure successful delivery and satisfaction",
-        "Respond promptly to customer inquiries and concerns"
+        "Monitor your Dashboard daily for new order notifications and customer messages",
+        "Review order details: customer information, delivery address, and payment method",
+        "For bank transfer orders: Verify payment slips uploaded by customers before shipping",
+        "Call customers within 24 hours to confirm orders and discuss delivery preferences",
+        "Use professional packaging with protective materials and branded touches",
+        "Update order status promptly: 'Confirmed' → 'Shipped' → 'Delivered'",
+        "Provide tracking information when available from courier services",
+        "Follow up with customers to ensure satisfaction and encourage reviews",
+        "Handle customer inquiries professionally through our messaging system"
       ],
-      tips: "📞 Customer Service Excellence: Quick response times (under 2 hours) lead to 5-star reviews and repeat customers!",
+      tips: "📞 Customer Service Excellence: Quick response times (under 2 hours) and proactive communication lead to 5-star reviews and repeat customers!",
       action: user ? { text: "View Dashboard", link: "/dashboard" } : null
     },
     {
       id: 6,
-      title: "Receive Payments & Grow",
-      icon: <FiDollarSign className="w-8 h-8" />,
-      description: "Understand payment processing and strategies to scale your business",
+      title: "Leverage Advanced Features",
+      icon: <FiStar className="w-8 h-8" />,
+      description: "Use advanced tools like custom orders and buyer insights to grow your business",
       details: [
-        "COD orders: Collect exact cash amount from customers upon delivery",
-        "Bank transfer orders: Money goes directly to your account after customer payment",
-        "Verify bank transfer payment slips before shipping to avoid fraud",
-        "Track all earnings and order history in your seller dashboard",
-        "Use payment tracking to understand your most profitable products",
-        "Reinvest profits into better photography, more inventory, or marketing",
-        "Consider offering bundle deals or discounts to increase average order value",
-        "Build a customer email list for repeat business and new product announcements"
+        "Create Custom Orders for special requests or bulk orders directly from customer messages",
+        "Set custom pricing, shipping costs, and delivery terms for unique customer needs",
+        "Custom orders can be split into multiple regular orders for easier tracking",
+        "Use the buyer reporting system responsibly if you encounter problematic customers",
+        "Monitor customer verification status - verified buyers are typically more reliable",
+        "Track your earnings with detailed analytics and date-range filtering",
+        "Manage stock levels efficiently to avoid overselling popular items",
+        "Use the messaging system to build relationships and understand customer preferences",
+        "Participate in seasonal promotions and marketing campaigns for increased visibility"
       ],
-      tips: "⚡ Growth Hack: Successful sellers reinvest 20-30% of profits back into their business for photography, inventory, and marketing!",
+      tips: "⚡ Growth Hack: Sellers who actively use custom orders and maintain good customer relationships see 40% higher average order values!",
+      action: null
+    },
+    {
+      id: 7,
+      title: "Track Earnings & Scale Your Business",
+      icon: <FiDollarSign className="w-8 h-8" />,
+      description: "Understand your financial performance and implement growth strategies",
+      details: [
+        "Access detailed earnings reports filtered by date ranges in your dashboard",
+        "Track completed orders, average order value, and total revenue over time",
+        "COD orders: Collect cash payment directly from customers upon delivery",
+        "Bank transfer orders: Receive money directly in your account before shipping",
+        "All earnings calculations include confirmed, shipped, and delivered orders",
+        "Use earnings data to identify your best-selling products and peak sales periods",
+        "Reinvest 20-30% of profits into better product photography and inventory expansion",
+        "Consider offering bundle deals or volume discounts to increase order values",
+        "Build customer email lists for repeat business announcements",
+        "Maintain detailed records for business planning and tax purposes"
+      ],
+      tips: "📊 Success Metrics: Top sellers track their performance weekly and adjust strategies based on customer feedback and sales patterns!",
       action: null
     }
   ];
@@ -131,28 +154,36 @@ export default function SellerGuide() {
       answer: "You can sell authentic Sri Lankan crafts, handmade items, traditional foods, clothing, jewelry, home decor, and other unique products. We focus on promoting Sri Lankan culture and craftsmanship. All products must be legal and comply with our community guidelines."
     },
     {
-      question: "How do I get more customers and increase sales?",
-      answer: "Success comes from great photos, detailed descriptions, competitive pricing, quick customer responses, and excellent service. Active sellers who update listings regularly and maintain good reviews get more visibility in search results."
+      question: "How do custom orders work?",
+      answer: "Custom orders allow you to create personalized quotes for customers with special requests. You can set custom pricing, shipping costs, and delivery terms. Once accepted, custom orders are automatically converted into regular orders for easy tracking."
     },
     {
-      question: "What should I do if a customer wants to return a product?",
-      answer: "Handle returns professionally and promptly. For legitimate quality issues or damage during shipping, offer refunds or exchanges. Clear return policies and good customer service lead to positive reviews and repeat customers."
+      question: "What payment methods do customers use?",
+      answer: "Customers can pay via Cash on Delivery (COD) or Bank Transfer. For bank transfers, customers upload payment slips as proof of payment, which you can verify before shipping. You can add multiple bank accounts to give customers payment options."
     },
     {
-      question: "How do I handle shipping and delivery?",
-      answer: "You're responsible for safely delivering products to customers. Use reliable courier services, pack items securely with protective materials, and provide tracking information when available. Consider offering both pickup and delivery options."
+      question: "How do I handle customer reports or verification issues?",
+      answer: "Our platform includes a buyer verification system to ensure secure transactions. If you encounter problematic buyers, you can report them through the order management system. Verified buyers display verification badges, indicating they've completed our security verification process."
     },
     {
-      question: "Can I sell to customers outside Sri Lanka?",
-      answer: "Currently, sina.lk focuses on the Sri Lankan market. You can ship anywhere within Sri Lanka to reach customers from Colombo to Jaffna, giving you access to the entire island's market."
+      question: "How do I track my earnings and performance?",
+      answer: "Your dashboard includes detailed earnings analytics with date-range filtering, showing completed orders, average order value, and total revenue. You can track performance over time and identify your best-selling products and peak sales periods."
+    },
+    {
+      question: "What shipping and delivery options do I offer?",
+      answer: "You set your own shipping rates and delivery methods. You can offer free shipping zones, charge shipping fees, or combine both. Use reliable courier services and provide tracking information when available to build customer trust."
     },
     {
       question: "How long does it take to receive payments?",
-      answer: "For Cash on Delivery orders, you receive payment immediately upon delivery. For bank transfer orders, customers transfer money directly to your account before you ship, so you get paid upfront."
+      answer: "For Cash on Delivery orders, you receive payment immediately upon delivery. For bank transfer orders, customers transfer money directly to your account before you ship, so you get paid upfront with payment slip verification."
+    },
+    {
+      question: "Can I sell to customers outside Sri Lanka?",
+      answer: "Currently, sina.lk focuses on the Sri Lankan market. You can ship anywhere within Sri Lanka to reach customers from Colombo to Jaffna, giving you access to the entire island's marketplace."
     },
     {
       question: "What makes a successful seller on sina.lk?",
-      answer: "Successful sellers focus on quality products, professional photography, detailed descriptions, prompt communication, reliable shipping, and excellent customer service. They also stay active by adding new products and engaging with customers."
+      answer: "Successful sellers focus on quality products, professional photography, detailed descriptions, prompt communication, reliable shipping, and excellent customer service. They actively use features like custom orders, maintain multiple bank accounts for customer convenience, and stay engaged with the messaging system."
     }
   ];
 
@@ -160,32 +191,32 @@ export default function SellerGuide() {
     {
       icon: <FiEye className="w-6 h-6" />,
       title: "Reach More Customers",
-      description: "Access customers across Sri Lanka who are looking for authentic local products"
+      description: "Access customers across Sri Lanka who are looking for authentic local products and connect through our messaging system"
     },
     {
       icon: <FiHeart className="w-6 h-6" />,
       title: "Build Your Brand",
-      description: "Create a professional online presence with your own shop page and branding"
+      description: "Create a professional online presence with your own shop page, branding, and customer reviews"
     },
     {
       icon: <FiTruck className="w-6 h-6" />,
-      title: "Flexible Delivery",
-      description: "Choose your own shipping methods and delivery charges"
+      title: "Flexible Delivery & Payment",
+      description: "Choose your own shipping methods, delivery charges, and offer multiple payment options including COD and bank transfer"
     },
     {
       icon: <FiMessageCircle className="w-6 h-6" />,
-      title: "Direct Customer Contact",
-      description: "Get customer phone numbers and addresses for direct communication"
+      title: "Direct Customer Communication",
+      description: "Get customer contact details, use our integrated messaging system, and create custom orders for special requests"
     },
     {
       icon: <FiStar className="w-6 h-6" />,
-      title: "Build Reputation",
-      description: "Earn reviews and ratings to build trust with future customers"
+      title: "Advanced Seller Tools",
+      description: "Access earnings analytics, custom order creation, buyer verification insights, and comprehensive order management"
     },
     {
       icon: <FiDollarSign className="w-6 h-6" />,
-      title: "Flexible Payments",
-      description: "Multiple payment options: Cash on Delivery and secure Bank Transfer with payment verification"
+      title: "Secure Payments & Banking",
+      description: "Multiple bank account support, payment slip verification system, and secure COD transactions with fraud protection"
     }
   ];
 
@@ -219,10 +250,10 @@ export default function SellerGuide() {
         <div className={`bg-gradient-to-r from-[#72b01d] to-[#3f7d20] text-white ${isMobile ? 'py-8' : 'py-16'}`}>
           <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'} text-center`}>
             <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl md:text-5xl'} font-bold mb-6`}>
-              Start Selling on SinaMarketplace
+              Start Selling on Sina.lk
             </h1>
             <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} mb-8 opacity-90`}>
-              Turn your Sri Lankan crafts and products into a thriving online business
+              Complete guide to building your successful Sri Lankan online business with advanced tools and features
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {!user && (
@@ -451,17 +482,16 @@ export default function SellerGuide() {
         <div className="py-8 bg-gray-100">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <p className="text-[#454955] mb-4">
-              Need help getting started? We're here to support you!
+              Need help getting started or have questions about selling? We're here to support you!
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="flex items-center gap-2 text-[#454955]">
-                <FiPhone className="w-4 h-4" />
-                <span>Call us: +94 11 123 4567</span>
-              </div>
-              <div className="flex items-center gap-2 text-[#454955]">
+            <div className="flex justify-center">
+              <a 
+                href="mailto:support@sina.lk" 
+                className="flex items-center gap-2 text-[#454955] hover:text-[#72b01d] transition-colors font-medium"
+              >
                 <FiMapPin className="w-4 h-4" />
-                <span>Visit our office in Colombo</span>
-              </div>
+                support@sina.lk
+              </a>
             </div>
           </div>
         </div>
