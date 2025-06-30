@@ -39,14 +39,14 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
         
         setLoading(true);
         try {
-            console.log("Fetching earnings for profileUid:", profileUid);
-            console.log("Date range:", startDate, "to", endDate);
+           // console.log("Fetching earnings for profileUid:", profileUid);
+           // console.log("Date range:", startDate, "to", endDate);
             
             // Convert dates to Firestore timestamps
             const startTimestamp = new Date(startDate + 'T00:00:00');
             const endTimestamp = new Date(endDate + 'T23:59:59');
-            
-            console.log("Timestamp range:", startTimestamp, "to", endTimestamp);
+
+            // console.log("Timestamp range:", startTimestamp, "to", endTimestamp);
 
             // Query orders with date range filter
             const q = query(
@@ -60,7 +60,7 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
             const snapshot = await getDocs(q);
             const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
             
-            console.log("Orders fetched:", orders.length);
+           // console.log("Orders fetched:", orders.length);
             
             // Filter for completed orders only (orders that should count as earnings)
             const completedOrders = orders.filter((order: any) => 
@@ -69,10 +69,10 @@ export default function EarningsPage({ profileUid }: EarningsPageProps) {
                 order.status === OrderStatus.SHIPPED ||
                 order.status === OrderStatus.CONFIRMED
             );
-            
-            console.log("Completed orders:", completedOrders.length);
+
+            // console.log("Completed orders:", completedOrders.length);
             if (completedOrders.length > 0) {
-                console.log("Sample order:", completedOrders[0]);
+                // console.log("Sample order:", completedOrders[0]);
             }
             
             setEarnings(completedOrders);

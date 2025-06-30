@@ -457,7 +457,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                                 amount: order.total
                                             }
                                         );
-                                        console.log('📨 Refund notification sent to buyer');
+                                       // console.log('📨 Refund notification sent to buyer');
                                     } catch (notificationError) {
                                         console.error('❌ Failed to create refund notification:', notificationError);
                                     }
@@ -524,7 +524,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                             sellerName: order.sellerShopName
                                         }
                                     );
-                                    console.log('📨 Shipped notification sent to buyer');
+                                   // console.log('📨 Shipped notification sent to buyer');
                                 } catch (notificationError) {
                                     console.error('❌ Failed to create shipped notification:', notificationError);
                                 }

@@ -87,7 +87,7 @@ export default function ShopPage() {
     // 2. Fetch listings count for pagination
     useEffect(() => {
         if (!shop) return;
-        console.log("ShopPage: Shop loaded with ID:", shop.id);
+       // console.log("ShopPage: Shop loaded with ID:", shop.id);
         async function getTotalCount() {
             // FIXED: Use getCountFromServer for efficient counting (if available)
             // Or use aggregation count query instead of fetching all documents
@@ -99,7 +99,7 @@ export default function ShopPage() {
                 setTotalCount(snapshot.data().count);
             } catch (error) {
                 // Fallback to regular query with limit for older Firebase versions
-                console.log("Using fallback count method");
+               // console.log("Using fallback count method");
                 const countQuery = query(
                     collection(db, "listings"), 
                     where("shopId", "==", shop?.id),

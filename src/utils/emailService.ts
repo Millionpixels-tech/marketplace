@@ -62,20 +62,20 @@ async function getSellerBankAccounts(sellerId: string): Promise<BankAccount[]> {
 // Email service functions
 export const sendOrderConfirmationEmails = async (order: Order & { id: string }, sellerEmail: string) => {
     try {
-        console.log("🔧 Email service called with:", {
-            orderId: order.id,
-            buyerEmail: order.buyerEmail,
-            sellerEmail: sellerEmail,
-            itemName: order.itemName,
-            paymentMethod: order.paymentMethod
-        });
+        // console.log("🔧 Email service called with:", {
+        //     orderId: order.id,
+        //     buyerEmail: order.buyerEmail,
+        //     sellerEmail: sellerEmail,
+        //     itemName: order.itemName,
+        //     paymentMethod: order.paymentMethod
+        // });
 
         // Get seller bank accounts if payment method is bank transfer
         let sellerBankAccounts: BankAccount[] = [];
         if (order.paymentMethod === PaymentMethod.BANK_TRANSFER) {
-            console.log("🏦 Fetching seller bank accounts for bank transfer order...");
+           // console.log("🏦 Fetching seller bank accounts for bank transfer order...");
             sellerBankAccounts = await getSellerBankAccounts(order.sellerId);
-            console.log("🏦 Retrieved bank accounts:", sellerBankAccounts.length);
+            // console.log("🏦 Retrieved bank accounts:", sellerBankAccounts.length);
         }
 
         // Get SMTP configuration from environment variables
@@ -89,15 +89,15 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
             fromName: import.meta.env.VITE_FROM_NAME || 'Sina.lk',
         };
 
-        console.log("🔧 SMTP Config:", {
-            host: smtpConfig.host,
-            port: smtpConfig.port,
-            secure: smtpConfig.secure,
-            user: smtpConfig.user ? `${smtpConfig.user.substring(0, 3)}***` : 'NOT SET',
-            pass: smtpConfig.pass ? '***SET***' : 'NOT SET',
-            fromEmail: smtpConfig.fromEmail,
-            fromName: smtpConfig.fromName
-        });
+        // console.log("🔧 SMTP Config:", {
+        //     host: smtpConfig.host,
+        //     port: smtpConfig.port,
+        //     secure: smtpConfig.secure,
+        //     user: smtpConfig.user ? `${smtpConfig.user.substring(0, 3)}***` : 'NOT SET',
+        //     pass: smtpConfig.pass ? '***SET***' : 'NOT SET',
+        //     fromEmail: smtpConfig.fromEmail,
+        //     fromName: smtpConfig.fromName
+        // });
 
         // Check if SMTP is configured
         if (!smtpConfig.user || !smtpConfig.pass) {
@@ -122,12 +122,12 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
         const buyerEmailData = order.buyerEmail ? generateBuyerOrderConfirmationEmail(order, sellerBankAccounts) : null;
         const sellerEmailData = generateSellerOrderNotificationEmail(order, sellerBankAccounts);
 
-        console.log("📧 Email generation:", {
-            buyerEmailGenerated: !!buyerEmailData,
-            sellerEmailGenerated: !!sellerEmailData,
-            buyerEmail: order.buyerEmail,
-            sellerEmail: sellerEmail
-        });
+        // console.log("📧 Email generation:", {
+        //     buyerEmailGenerated: !!buyerEmailData,
+        //     sellerEmailGenerated: !!sellerEmailData,
+        //     buyerEmail: order.buyerEmail,
+        //     sellerEmail: sellerEmail
+        // });
 
         // Prepare emails array
         const emails = [];
@@ -138,7 +138,7 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
                 subject: buyerEmailData.subject,
                 html: buyerEmailData.html,
             });
-            console.log("📧 Added buyer email to queue");
+            //console.log("📧 Added buyer email to queue");
         }
 
         if (sellerEmail) {
@@ -147,10 +147,10 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
                 subject: sellerEmailData.subject,
                 html: sellerEmailData.html,
             });
-            console.log("📧 Added seller email to queue");
+           // console.log("📧 Added seller email to queue");
         }
 
-        console.log("📧 Total emails to send:", emails.length);
+       // console.log("📧 Total emails to send:", emails.length);
 
         if (emails.length === 0) {
             console.warn('❌ No emails to send - missing recipient addresses');
@@ -161,12 +161,12 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
         // Always use production URL since we deployed the function to Firebase
         const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
 
-        console.log("🚀 Calling Firebase function:", functionUrl);
-        console.log("📤 Payload:", {
-            emailCount: emails.length,
-            recipients: emails.map(e => e.to),
-            smtpConfigured: !!(smtpConfig.user && smtpConfig.pass)
-        });
+        //console.log("🚀 Calling Firebase function:", functionUrl);
+        // console.log("📤 Payload:", {
+        //     emailCount: emails.length,
+        //     recipients: emails.map(e => e.to),
+        //     smtpConfigured: !!(smtpConfig.user && smtpConfig.pass)
+        // });
 
         const response = await fetch(functionUrl, {
             method: 'POST',
@@ -182,7 +182,7 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
             throw new Error(`Network error: ${error.message}`);
         });
 
-        console.log("📥 Response status:", response.status);
+       // console.log("📥 Response status:", response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -191,18 +191,18 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
         }
 
         const result = await response.json();
-        console.log("📥 Response data:", result);
-        
+        // console.log("📥 Response data:", result);
+
         if (result.success) {
-            console.log('✅ Order confirmation emails sent successfully');
+           // console.log('✅ Order confirmation emails sent successfully');
             return { success: true, results: result.results };
         } else {
-            console.error('❌ Failed to send emails:', result.error);
+           // console.error('❌ Failed to send emails:', result.error);
             return { success: false, error: result.error };
         }
 
     } catch (error) {
-        console.error('Error sending order confirmation emails:', error);
+        //console.error('Error sending order confirmation emails:', error);
         return { 
             success: false, 
             error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -213,7 +213,7 @@ export const sendOrderConfirmationEmails = async (order: Order & { id: string },
 // Send payment slip notification to seller
 export const sendPaymentSlipNotification = async (order: Order & { id: string }, sellerEmail: string) => {
     try {
-        console.log("📧 Sending payment slip notification to seller:", sellerEmail);
+       // console.log("📧 Sending payment slip notification to seller:", sellerEmail);
         
         const { subject, html, text } = generatePaymentSlipNotificationEmail(order);
         
@@ -236,13 +236,13 @@ export const sendPaymentSlipNotification = async (order: Order & { id: string },
             pass: import.meta.env.VITE_SMTP_PASS
         };
 
-        console.log("📤 Email configuration:", {
-            host: smtpConfig.host,
-            port: smtpConfig.port,
-            secure: smtpConfig.secure,
-            user: smtpConfig.user ? '***' : 'NOT_SET',
-            emailCount: emails.length
-        });
+        // console.log("📤 Email configuration:", {
+        //     host: smtpConfig.host,
+        //     port: smtpConfig.port,
+        //     secure: smtpConfig.secure,
+        //     user: smtpConfig.user ? '***' : 'NOT_SET',
+        //     emailCount: emails.length
+        // });
 
         // Call the Firebase function to send emails
         const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
@@ -263,11 +263,11 @@ export const sendPaymentSlipNotification = async (order: Order & { id: string },
         }
 
         const result = await response.json();
-        console.log("📧 Payment slip notification result:", result);
+       // console.log("📧 Payment slip notification result:", result);
         return result;
 
     } catch (error) {
-        console.error('❌ Error sending payment slip notification:', error);
+       // console.error('❌ Error sending payment slip notification:', error);
         return { 
             success: false, 
             error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -339,13 +339,13 @@ export const sendCustomOrderAcceptanceEmails = async (
     sellerEmail: string
 ) => {
     try {
-        console.log("🔧 Custom order email service called with:", {
-            customOrderId: customOrder.id,
-            buyerEmail: customOrder.buyerEmail,
-            sellerEmail: sellerEmail,
-            itemCount: customOrder.items.length,
-            orderCount: orders.length
-        });
+        // console.log("🔧 Custom order email service called with:", {
+        //     customOrderId: customOrder.id,
+        //     buyerEmail: customOrder.buyerEmail,
+        //     sellerEmail: sellerEmail,
+        //     itemCount: customOrder.items.length,
+        //     orderCount: orders.length
+        // });
 
         // Get SMTP configuration from environment variables
         const smtpConfig = {
@@ -375,18 +375,18 @@ export const sendCustomOrderAcceptanceEmails = async (
         const buyerEmail = generateCustomOrderAcceptanceBuyerEmail(customOrder, orders);
         const sellerEmail_ = generateCustomOrderAcceptanceSellerEmail(customOrder, orders);
 
-        console.log("📧 Generated email details:", {
-            buyerSubject: buyerEmail.subject,
-            sellerSubject: sellerEmail_.subject,
-            buyerHtmlLength: buyerEmail.html?.length || 0,
-            sellerHtmlLength: sellerEmail_.html?.length || 0,
-            customOrderData: {
-                id: customOrder.id,
-                buyerEmail: customOrder.buyerEmail,
-                itemCount: customOrder.items?.length || 0,
-                orderCount: orders.length
-            }
-        });
+        // console.log("📧 Generated email details:", {
+        //     buyerSubject: buyerEmail.subject,
+        //     sellerSubject: sellerEmail_.subject,
+        //     buyerHtmlLength: buyerEmail.html?.length || 0,
+        //     sellerHtmlLength: sellerEmail_.html?.length || 0,
+        //     customOrderData: {
+        //         id: customOrder.id,
+        //         buyerEmail: customOrder.buyerEmail,
+        //         itemCount: customOrder.items?.length || 0,
+        //         orderCount: orders.length
+        //     }
+        // });
 
         // Validate email generation
         if (!buyerEmail.subject || !buyerEmail.html || !sellerEmail_.subject || !sellerEmail_.html) {
@@ -404,7 +404,7 @@ export const sendCustomOrderAcceptanceEmails = async (
 
         const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
         
-        console.log("📧 Sending custom order acceptance emails...");
+      //  console.log("📧 Sending custom order acceptance emails...");
 
         // Prepare emails array for bulk sending
         const emails = [
@@ -433,22 +433,22 @@ export const sendCustomOrderAcceptanceEmails = async (
             }
         };
 
-        console.log("📤 Email payload:", {
-            emailCount: emails.length,
-            emails: emails.map(e => ({
-                to: e.to,
-                subject: e.subject,
-                htmlLength: e.html.length
-            })),
-            smtpConfig: {
-                host: smtpConfig.host,
-                port: smtpConfig.port,
-                secure: smtpConfig.secure,
-                user: smtpConfig.user ? `${smtpConfig.user.substring(0, 3)}***` : 'NOT SET',
-                fromEmail: smtpConfig.fromEmail,
-                fromName: smtpConfig.fromName
-            }
-        });
+        // console.log("📤 Email payload:", {
+        //     emailCount: emails.length,
+        //     emails: emails.map(e => ({
+        //         to: e.to,
+        //         subject: e.subject,
+        //         htmlLength: e.html.length
+        //     })),
+        //     smtpConfig: {
+        //         host: smtpConfig.host,
+        //         port: smtpConfig.port,
+        //         secure: smtpConfig.secure,
+        //         user: smtpConfig.user ? `${smtpConfig.user.substring(0, 3)}***` : 'NOT SET',
+        //         fromEmail: smtpConfig.fromEmail,
+        //         fromName: smtpConfig.fromName
+        //     }
+        // });
 
         const response = await fetch(functionUrl, {
             method: 'POST',
@@ -460,20 +460,20 @@ export const sendCustomOrderAcceptanceEmails = async (
 
         const result = await response.json();
 
-        console.log("📧 Email sending result:", result);
+       // console.log("📧 Email sending result:", result);
 
         if (result.success) {
-            console.log("✅ Custom order acceptance emails sent successfully");
+            // console.log("✅ Custom order acceptance emails sent successfully");
             return {
                 success: true,
                 result
             };
         } else {
-            console.error("❌ Failed to send custom order acceptance emails:", {
-                error: result.error,
-                results: result.results,
-                httpStatus: response.status
-            });
+            // console.error("❌ Failed to send custom order acceptance emails:", {
+            //     error: result.error,
+            //     results: result.results,
+            //     httpStatus: response.status
+            // });
             return {
                 success: false,
                 error: result.error || `HTTP ${response.status}`,
@@ -497,12 +497,12 @@ export const sendOrderStatusChangeNotification = async (
     statusChangeMessage?: string
 ) => {
     try {
-        console.log("🔧 Order status change email service called with:", {
-            orderId: order.id,
-            buyerEmail: order.buyerEmail,
-            newStatus: newStatus,
-            itemName: order.itemName
-        });
+        // console.log("🔧 Order status change email service called with:", {
+        //     orderId: order.id,
+        //     buyerEmail: order.buyerEmail,
+        //     newStatus: newStatus,
+        //     itemName: order.itemName
+        // });
 
         // Get SMTP configuration from environment variables
         const smtpConfig = {
@@ -531,11 +531,11 @@ export const sendOrderStatusChangeNotification = async (
         // Generate status change email
         const emailData = generateOrderStatusChangeEmail(order, newStatus, statusChangeMessage || '');
 
-        console.log("📧 Email generation:", {
-            emailGenerated: !!emailData,
-            buyerEmail: order.buyerEmail,
-            subject: emailData.subject
-        });
+        // console.log("📧 Email generation:", {
+        //     emailGenerated: !!emailData,
+        //     buyerEmail: order.buyerEmail,
+        //     subject: emailData.subject
+        // });
 
         // Prepare email
         if (!order.buyerEmail) {
@@ -552,7 +552,7 @@ export const sendOrderStatusChangeNotification = async (
         // Call Firebase Function
         const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
 
-        console.log("🚀 Calling Firebase function for status change email:", functionUrl);
+       // console.log("🚀 Calling Firebase function for status change email:", functionUrl);
 
         const response = await fetch(functionUrl, {
             method: 'POST',
@@ -568,7 +568,7 @@ export const sendOrderStatusChangeNotification = async (
             throw new Error(`Network error: ${error.message}`);
         });
 
-        console.log("📥 Response status:", response.status);
+       // console.log("📥 Response status:", response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -577,18 +577,18 @@ export const sendOrderStatusChangeNotification = async (
         }
 
         const result = await response.json();
-        console.log("📥 Response data:", result);
+       // console.log("📥 Response data:", result);
         
         if (result.success) {
-            console.log('✅ Order status change email sent successfully');
+           // console.log('✅ Order status change email sent successfully');
             return { success: true, results: result.results };
         } else {
-            console.error('❌ Failed to send status change email:', result.error);
+           // console.error('❌ Failed to send status change email:', result.error);
             return { success: false, error: result.error };
         }
 
     } catch (error) {
-        console.error('Error sending order status change email:', error);
+       // console.error('Error sending order status change email:', error);
         return { 
             success: false, 
             error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -598,8 +598,8 @@ export const sendOrderStatusChangeNotification = async (
 
 // Debug function to check email configuration and test sending
 export const debugEmailConfiguration = async () => {
-    console.log("🔍 Email Configuration Debug");
-    console.log("============================");
+   // console.log("🔍 Email Configuration Debug");
+   // console.log("============================");
     
     // Check environment variables
     const envVars = {
@@ -612,7 +612,7 @@ export const debugEmailConfiguration = async () => {
         VITE_FROM_NAME: import.meta.env.VITE_FROM_NAME,
     };
     
-    console.log("📧 Environment Variables:", envVars);
+   // console.log("📧 Environment Variables:", envVars);
     
     // Check if required variables are set
     const missingVars = [];
@@ -636,7 +636,7 @@ export const debugEmailConfiguration = async () => {
     // Test Firebase function connectivity
     try {
         const functionUrl = 'https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail';
-        console.log("🚀 Testing Firebase function connectivity:", functionUrl);
+       // console.log("🚀 Testing Firebase function connectivity:", functionUrl);
         
         const testResponse = await fetch(functionUrl, {
             method: 'POST',
@@ -657,9 +657,9 @@ export const debugEmailConfiguration = async () => {
         });
         
         if (testResponse.ok) {
-            console.log("✅ Firebase function is reachable");
-            const result = await testResponse.json();
-            console.log("📥 Test response:", result);
+           // console.log("✅ Firebase function is reachable");
+           // const result = await testResponse.json();
+          //  console.log("📥 Test response:", result);
         } else {
             console.error("❌ Firebase function returned error:", testResponse.status);
             const errorText = await testResponse.text();
@@ -667,7 +667,7 @@ export const debugEmailConfiguration = async () => {
         }
         
     } catch (error) {
-        console.error("❌ Failed to reach Firebase function:", error);
+       // console.error("❌ Failed to reach Firebase function:", error);
         return {
             success: false,
             error: `Firebase function connectivity issue: ${error instanceof Error ? error.message : 'Unknown error'}`,

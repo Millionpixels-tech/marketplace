@@ -38,7 +38,7 @@ function MessagesPageContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  console.log("MessagesPage render - conversations:", conversations.length, "messages:", messages.length);
+  //console.log("MessagesPage render - conversations:", conversations.length, "messages:", messages.length);
 
   // Handle conversation selection and mark messages as read
   const handleConversationSelect = async (conversation: ChatConversation) => {
@@ -276,7 +276,7 @@ function MessagesPageContent() {
   const handleSendMessage = async () => {
     if (!user || !selectedConversation || !newMessage.trim() || sendingMessage) return;
 
-    console.log("Sending message:", newMessage.trim());
+    //console.log("Sending message:", newMessage.trim());
     setSendingMessage(true);
     setError(null);
     
@@ -287,7 +287,7 @@ function MessagesPageContent() {
         throw new Error("No recipient found");
       }
 
-      console.log("Sending to:", otherParticipantId);
+     // console.log("Sending to:", otherParticipantId);
       
       await sendMessage(
         selectedConversation.id,
@@ -297,7 +297,7 @@ function MessagesPageContent() {
         otherParticipantId
       );
       
-      console.log("Message sent successfully");
+      //console.log("Message sent successfully");
       setNewMessage("");
       
       // Scroll to bottom after sending message

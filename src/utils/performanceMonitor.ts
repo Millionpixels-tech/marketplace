@@ -151,7 +151,7 @@ export function useRenderPerformance(componentName: string) {
 
   React.useEffect(() => {
     return () => {
-      console.log(`${componentName} rendered ${renderCount.current} times during its lifecycle`);
+     // console.log(`${componentName} rendered ${renderCount.current} times during its lifecycle`);
     };
   }, [componentName]);
 }
