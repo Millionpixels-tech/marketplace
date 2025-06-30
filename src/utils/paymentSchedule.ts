@@ -122,16 +122,16 @@ export function getEligibleOrdersForPayment(
     
     const isInRange = orderDate >= periodStart && orderDate <= periodEnd;
     
-    console.log(`Order ${order.id}:`, {
-      orderDate: orderDate.toISOString(),
-      periodStart: periodStart.toISOString(),
-      periodEnd: periodEnd.toISOString(),
-      status: order.status,
-      paymentMethod: order.paymentMethod,
-      isInRange,
-      isValidStatus: validStatuses.includes(order.status?.toLowerCase()),
-      isPayNow: order.paymentMethod?.toLowerCase() === 'paynow'
-    });
+    // console.log(`Order ${order.id}:`, {
+    //   orderDate: orderDate.toISOString(),
+    //   periodStart: periodStart.toISOString(),
+    //   periodEnd: periodEnd.toISOString(),
+    //   status: order.status,
+    //   paymentMethod: order.paymentMethod,
+    //   isInRange,
+    //   isValidStatus: validStatuses.includes(order.status?.toLowerCase()),
+    //   isPayNow: order.paymentMethod?.toLowerCase() === 'paynow'
+    // });
     
     return isInRange;
   });
@@ -179,14 +179,14 @@ export function initializePaymentSystem(): void {
   const stored = getStoredPaymentData();
   if (!stored.lastPaymentDate) {
     localStorage.setItem('lastPaymentDate', INITIAL_LAST_PAYMENT_DATE.toISOString());
-    console.log('Payment system initialized with date:', INITIAL_LAST_PAYMENT_DATE.toISOString());
+   // console.log('Payment system initialized with date:', INITIAL_LAST_PAYMENT_DATE.toISOString());
   }
 }
 
 // For testing - simulate payment completion
 export function simulatePaymentCompletion(date: Date = new Date()): void {
   localStorage.setItem('lastPaymentDate', date.toISOString());
-  console.log('Payment completion simulated for date:', date.toISOString());
+  // console.log('Payment completion simulated for date:', date.toISOString());
 }
 
 // Get payment history for display
@@ -205,7 +205,7 @@ export function getPaymentHistory(): PaymentPeriod[] {
 // Reset payment system to initial state (for testing)
 export function resetPaymentSystem(): void {
   localStorage.removeItem('lastPaymentDate');
-  console.log('Payment system reset to initial state');
+ // console.log('Payment system reset to initial state');
 }
 
 // Debug function to check if an order should be eligible

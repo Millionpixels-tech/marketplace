@@ -111,7 +111,7 @@ export default function OrderPage() {
         const fetchOrderAndDetermineAccess = async () => {
             // Wait for authentication to load before proceeding
             if (authLoading) {
-                console.log('🔄 Waiting for authentication to load...');
+               // console.log('🔄 Waiting for authentication to load...');
                 return;
             }
             
@@ -187,17 +187,17 @@ export default function OrderPage() {
                 
                 // Determine user roles if user is logged in
                 if (user && user.email) {
-                    console.log('🔍 Determining user roles for order:', orderData.id);
+                   // console.log('🔍 Determining user roles for order:', orderData.id);
                     
                     // Check if user is the buyer
                     const buyerMatch = orderData.buyerEmail === user.email;
-                    console.log('👤 Buyer check:', { orderBuyerEmail: orderData.buyerEmail, userEmail: user.email, isBuyer: buyerMatch });
-                    
+                    // console.log('👤 Buyer check:', { orderBuyerEmail: orderData.buyerEmail, userEmail: user.email, isBuyer: buyerMatch });
+
                     // Check if user is the seller - need to fetch seller email from sellerId
                     let sellerMatch = false;
                     if (orderData.sellerId) {
                         try {
-                            console.log('🔍 Fetching seller data for sellerId:', orderData.sellerId);
+                           // console.log('🔍 Fetching seller data for sellerId:', orderData.sellerId);
                             const sellerQuery = query(
                                 collection(db, "users"), 
                                 where("uid", "==", orderData.sellerId)
@@ -208,22 +208,22 @@ export default function OrderPage() {
                                 const sellerData = sellerSnap.docs[0].data();
                                 const sellerEmail = sellerData.email;
                                 sellerMatch = sellerEmail === user.email;
-                                
-                                console.log('👤 Role determination complete:', {
-                                    userEmail: user.email,
-                                    buyerEmail: orderData.buyerEmail,
-                                    sellerEmail: sellerEmail,
-                                    isBuyer: buyerMatch,
-                                    isSeller: sellerMatch
-                                });
+
+                               // console.log('👤 Role determination complete:', {
+                               //     userEmail: user.email,
+                               //     buyerEmail: orderData.buyerEmail,
+                               //     sellerEmail: sellerEmail,
+                               //     isBuyer: buyerMatch,
+                               //     isSeller: sellerMatch
+                               // });
                             } else {
-                                console.log('❌ Seller not found for sellerId:', orderData.sellerId);
+                               // console.log('❌ Seller not found for sellerId:', orderData.sellerId);
                             }
                         } catch (error) {
-                            console.error("❌ Error fetching seller data for role determination:", error);
+                           // console.error("❌ Error fetching seller data for role determination:", error);
                         }
                     } else {
-                        console.log('❌ No sellerId found in order');
+                        // console.log('❌ No sellerId found in order');
                     }
                     
                     // Set roles
@@ -232,25 +232,25 @@ export default function OrderPage() {
                     
                     // Check authorization and redirect if necessary
                     if (!buyerMatch && !sellerMatch) {
-                        console.log('❌ Redirecting to search: User is neither buyer nor seller', { 
-                            orderBuyerEmail: orderData.buyerEmail, 
-                            orderSellerId: orderData.sellerId, 
-                            userEmail: user.email,
-                            isBuyer: buyerMatch,
-                            isSeller: sellerMatch
-                        });
+                        // console.log('❌ Redirecting to search: User is neither buyer nor seller', { 
+                        //     orderBuyerEmail: orderData.buyerEmail, 
+                        //     orderSellerId: orderData.sellerId, 
+                        //     userEmail: user.email,
+                        //     isBuyer: buyerMatch,
+                        //     isSeller: sellerMatch
+                        // });
                         navigate("/search", { replace: true });
                         return;
                     }
                     
-                    console.log('✅ Access granted: User is authorized for this order', {
-                        isBuyer: buyerMatch,
-                        isSeller: sellerMatch,
-                        userEmail: user.email
-                    });
+                    // console.log('✅ Access granted: User is authorized for this order', {
+                    //     isBuyer: buyerMatch,
+                    //     isSeller: sellerMatch,
+                    //     userEmail: user.email
+                    // });
                 } else {
                     // User not logged in
-                    console.log('❌ Redirecting to auth: User not logged in');
+                    //console.log('❌ Redirecting to auth: User not logged in');
                     navigate("/auth", { replace: true });
                     return;
                 }

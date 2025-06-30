@@ -4,9 +4,7 @@
 import { 
     calculatePaymentSchedule, 
     getEligibleOrdersForPayment, 
-    calculatePeriodEarnings, 
-    formatPaymentDate, 
-    getDaysUntilNextPayment,
+    calculatePeriodEarnings,
     initializePaymentSystem,
     simulatePaymentCompletion
 } from './paymentSchedule';
@@ -44,39 +42,39 @@ const mockOrders = [
 ];
 
 export function testPaymentSchedule() {
-    console.log('=== Testing Payment Schedule System ===');
+   // console.log('=== Testing Payment Schedule System ===');
     
     // Initialize the system
     initializePaymentSystem();
     
     // Get current schedule
     const schedule = calculatePaymentSchedule();
-    console.log('Current Payment Schedule:');
-    console.log('- Last Payment Date:', formatPaymentDate(schedule.lastPaymentDate));
-    console.log('- Next Payment Date:', formatPaymentDate(schedule.nextPaymentDate));
-    console.log('- Days until next payment:', getDaysUntilNextPayment(schedule.nextPaymentDate));
+    // console.log('Current Payment Schedule:');
+    // console.log('- Last Payment Date:', formatPaymentDate(schedule.lastPaymentDate));
+    // console.log('- Next Payment Date:', formatPaymentDate(schedule.nextPaymentDate));
+    // console.log('- Days until next payment:', getDaysUntilNextPayment(schedule.nextPaymentDate));
     
-    console.log('\nCurrent Period:');
-    console.log('- Start:', formatPaymentDate(schedule.currentPeriod.startDate));
-    console.log('- End:', formatPaymentDate(schedule.currentPeriod.endDate));
-    console.log('- Payment Date:', formatPaymentDate(schedule.currentPeriod.paymentDate));
+    // console.log('\nCurrent Period:');
+    // console.log('- Start:', formatPaymentDate(schedule.currentPeriod.startDate));
+    // console.log('- End:', formatPaymentDate(schedule.currentPeriod.endDate));
+    // console.log('- Payment Date:', formatPaymentDate(schedule.currentPeriod.paymentDate));
     
     if (schedule.previousPeriod) {
-        console.log('\nPrevious Period:');
-        console.log('- Start:', formatPaymentDate(schedule.previousPeriod.startDate));
-        console.log('- End:', formatPaymentDate(schedule.previousPeriod.endDate));
-        console.log('- Payment Date:', formatPaymentDate(schedule.previousPeriod.paymentDate));
+                // console.log('\nPrevious Period:');
+                // console.log('- Start:', formatPaymentDate(schedule.previousPeriod.startDate));
+                // console.log('- End:', formatPaymentDate(schedule.previousPeriod.endDate));
+                // console.log('- Payment Date:', formatPaymentDate(schedule.previousPeriod.paymentDate));
     }
     
     // Test order filtering
     const eligibleOrders = getEligibleOrdersForPayment(mockOrders, schedule.currentPeriod);
-    console.log('\nEligible Orders for Current Period:', eligibleOrders.length);
-    eligibleOrders.forEach(order => {
-        console.log(`- ${order.id}: ${order.status}, LKR ${order.total}, ${new Date(order.createdAt.seconds * 1000).toLocaleDateString()}`);
-    });
+    // console.log('\nEligible Orders for Current Period:', eligibleOrders.length);
+                // eligibleOrders.forEach(order => {
+                //     // console.log(`- ${order.id}: ${order.status}, LKR ${order.total}, ${new Date(order.createdAt.seconds * 1000).toLocaleDateString()}`);
+                // });
     
     const totalEarnings = calculatePeriodEarnings(eligibleOrders);
-    console.log(`\nTotal Earnings for Current Period: LKR ${totalEarnings.toLocaleString()}`);
+    //console.log(`\nTotal Earnings for Current Period: LKR ${totalEarnings.toLocaleString()}`);
     
     return {
         schedule,
@@ -87,20 +85,20 @@ export function testPaymentSchedule() {
 
 // Test simulating payment completion
 export function testPaymentCompletion() {
-    console.log('\n=== Testing Payment Completion ===');
+   // console.log('\n=== Testing Payment Completion ===');
     
     const beforeSchedule = calculatePaymentSchedule();
-    console.log('Before payment completion:');
-    console.log('- Next Payment Date:', formatPaymentDate(beforeSchedule.nextPaymentDate));
+    //console.log('Before payment completion:');
+    //console.log('- Next Payment Date:', formatPaymentDate(beforeSchedule.nextPaymentDate));
     
     // Simulate completing a payment today
     const today = new Date();
     simulatePaymentCompletion(today);
     
     const afterSchedule = calculatePaymentSchedule();
-    console.log('\nAfter payment completion:');
-    console.log('- Last Payment Date:', formatPaymentDate(afterSchedule.lastPaymentDate));
-    console.log('- Next Payment Date:', formatPaymentDate(afterSchedule.nextPaymentDate));
+   // console.log('\nAfter payment completion:');
+   // console.log('- Last Payment Date:', formatPaymentDate(afterSchedule.lastPaymentDate));
+   // console.log('- Next Payment Date:', formatPaymentDate(afterSchedule.nextPaymentDate));
     
     return { beforeSchedule, afterSchedule };
 }
@@ -109,7 +107,7 @@ export function testPaymentCompletion() {
 export function resetPaymentSystemForTesting() {
     localStorage.removeItem('lastPaymentDate');
     initializePaymentSystem();
-    console.log('Payment system reset to initial state');
+    // console.log('Payment system reset to initial state');
 }
 
 // Export for browser console testing

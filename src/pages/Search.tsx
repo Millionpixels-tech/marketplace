@@ -70,7 +70,6 @@ const Search: React.FC = () => {
   // On mount or search param change: sync state
   useEffect(() => {
     const freeParam = searchParams.get("free");
-    console.log("Free shipping URL param:", freeParam, "-> boolean:", freeParam === "1");
     
     setCat(searchParams.get("cat") || "");
     setSub(searchParams.get("sub") || "");
@@ -85,8 +84,6 @@ const Search: React.FC = () => {
     setAppliedSort(searchParams.get("sort") || "");
     setAppliedFreeShipping(freeParam === "1");
     setCurrentPage(parseInt(searchParams.get("page") || "1"));
-    
-    console.log("Applied free shipping state:", freeParam === "1");
     // Scroll to top when search params change (i.e., when user comes to search page or changes filters/page)
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
@@ -122,7 +119,6 @@ const Search: React.FC = () => {
     
     // Handle free shipping filter carefully
     if (appliedFreeShipping) {
-      console.log("Adding free shipping filter: deliveryType == 'free'");
       // Try to filter for both explicit "free" and also where deliveryType exists and equals "free"
       conditions.push(where("deliveryType", "==", "free"));
     }
@@ -142,8 +138,6 @@ const Search: React.FC = () => {
       // Default ordering for pagination
       queryConstraints.push(orderBy("createdAt", "desc"));
     }
-
-    console.log("Building query with", conditions.length, "conditions, appliedFreeShipping:", appliedFreeShipping);
     return query(collection(db, "listings"), ...queryConstraints);
   }, [cat, sub, appliedFreeShipping, appliedSort, appliedMinPrice, appliedMaxPrice]);
 
@@ -165,14 +159,11 @@ const Search: React.FC = () => {
 
     // Check cache first
     if (cacheRef.current.has(cacheKey)) {
-      console.log("Using cached results for key:", cacheKey);
       const cachedResults = cacheRef.current.get(cacheKey)!;
       setItems(cachedResults);
       setSearching(false);
       return;
     }
-    
-    console.log("No cache found, executing fresh query for:", cacheKey);
     
     try {
       setSearching(true);
@@ -197,13 +188,6 @@ const Search: React.FC = () => {
         __client_ip: ip,
       } as Listing));
 
-      console.log("Raw query results:", results.length, "items");
-      if (appliedFreeShipping) {
-        console.log("Free shipping filter applied, sample deliveryTypes:", 
-          results.slice(0, 5).map(item => ({id: item.id, deliveryType: item.deliveryType}))
-        );
-      }
-
       // Apply text search filter client-side (due to Firestore limitations)
       if (appliedSearch) {
         results = results.filter(item => 
@@ -218,9 +202,7 @@ const Search: React.FC = () => {
       // Additional client-side free shipping filter as fallback
       // (in case server-side filter didn't work due to missing fields)
       if (appliedFreeShipping) {
-        const beforeFreeShippingFilter = results.length;
         results = results.filter(item => item.deliveryType === "free");
-        console.log(`Client-side free shipping filter: ${beforeFreeShippingFilter} -> ${results.length} items`);
       }
 
       // Price range filters are now handled server-side in the query

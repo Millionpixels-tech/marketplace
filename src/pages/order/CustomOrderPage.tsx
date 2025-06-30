@@ -261,23 +261,16 @@ export default function CustomOrderPage() {
             buyerPhone: buyerInfo.phone
           };
 
-          console.log('📧 Sending custom order acceptance emails...');
-          const emailResult = await sendCustomOrderAcceptanceEmails(
+          await sendCustomOrderAcceptanceEmails(
             customOrderForEmail,
             emailOrders,
             sellerEmail
           );
-
-          if (emailResult.success) {
-            console.log('✅ Custom order acceptance emails sent successfully');
-          } else {
-            console.warn('⚠️ Failed to send custom order acceptance emails:', emailResult.error);
-          }
         } else {
-          console.warn('❌ Could not find seller email for custom order acceptance notifications');
+          //console.warn('❌ Could not find seller email for custom order acceptance notifications');
         }
       } catch (emailError) {
-        console.error('❌ Error sending custom order acceptance emails:', emailError);
+        //console.error('❌ Error sending custom order acceptance emails:', emailError);
         // Don't fail the order creation if email fails
       }
 

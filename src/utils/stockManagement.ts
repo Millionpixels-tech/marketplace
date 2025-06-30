@@ -57,7 +57,7 @@ export async function reduceListingStock(
           quantity: totalQuantity
         });
         
-        console.log(`✅ Stock reduced for variation "${variation.name}": ${variation.quantity} -> ${variation.quantity - quantityToReduce}`);
+       // console.log(`✅ Stock reduced for variation "${variation.name}": ${variation.quantity} -> ${variation.quantity - quantityToReduce}`);
         
       } else {
         // Handle simple quantity stock reduction
@@ -78,7 +78,7 @@ export async function reduceListingStock(
           quantity: newQuantity
         });
         
-        console.log(`✅ Stock reduced for listing: ${currentQuantity} -> ${newQuantity}`);
+       // console.log(`✅ Stock reduced for listing: ${currentQuantity} -> ${newQuantity}`);
       }
       
       return { success: true };
@@ -141,7 +141,7 @@ export async function restoreListingStock(
           quantity: totalQuantity
         });
         
-        console.log(`✅ Stock restored for variation "${variation.name}": ${variation.quantity} -> ${variation.quantity + quantityToRestore}`);
+       // console.log(`✅ Stock restored for variation "${variation.name}": ${variation.quantity} -> ${variation.quantity + quantityToRestore}`);
         
       } else {
         // Handle simple quantity stock restoration
@@ -152,8 +152,8 @@ export async function restoreListingStock(
         transaction.update(listingRef, {
           quantity: newQuantity
         });
-        
-        console.log(`✅ Stock restored for listing: ${currentQuantity} -> ${newQuantity}`);
+
+        // console.log(`✅ Stock restored for listing: ${currentQuantity} -> ${newQuantity}`);
       }
       
       return { success: true };

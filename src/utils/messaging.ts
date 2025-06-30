@@ -152,7 +152,7 @@ export async function sendMessage(
     // Create notification for recipient about new message
     try {
       await createMessageNotification(recipientId, senderName, conversationId);
-      console.log('📨 Message notification sent to recipient');
+    //  console.log('📨 Message notification sent to recipient');
     } catch (notificationError) {
       console.error('❌ Failed to create message notification:', notificationError);
       // Don't fail the message sending if notification fails

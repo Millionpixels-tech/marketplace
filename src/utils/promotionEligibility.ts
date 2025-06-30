@@ -26,7 +26,7 @@ export const checkPromotionEligibility = async (userId: string): Promise<Eligibi
     const shopsSnapshot = await getDocs(shopsQuery);
     const shopsCount = shopsSnapshot.size;
 
-    console.log("Utility function - shops count:", shopsCount);
+   // console.log("Utility function - shops count:", shopsCount);
 
     // Fetch user's listings (using 'owner' field)
     const listingsQuery = query(
@@ -36,7 +36,7 @@ export const checkPromotionEligibility = async (userId: string): Promise<Eligibi
     const listingsSnapshot = await getDocs(listingsQuery);
     const listingsCount = listingsSnapshot.size;
 
-    console.log("Utility function - listings count:", listingsCount);
+    //console.log("Utility function - listings count:", listingsCount);
 
     return {
       isEligible: shopsCount >= REQUIRED_SHOPS && listingsCount >= REQUIRED_LISTINGS,

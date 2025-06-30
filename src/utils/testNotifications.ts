@@ -12,7 +12,7 @@ import {
  */
 export async function createTestNotifications(userId: string) {
   try {
-    console.log('🧪 Creating test notifications...');
+   // console.log('🧪 Creating test notifications...');
     
     // Test order notification
     await createOrderNotification(
@@ -57,7 +57,7 @@ export async function createTestNotifications(userId: string) {
       'Custom wooden furniture piece for living room'
     );
     
-    console.log('✅ Test notifications created successfully!');
+   // console.log('✅ Test notifications created successfully!');
   } catch (error) {
     console.error('❌ Error creating test notifications:', error);
   }

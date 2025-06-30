@@ -576,7 +576,7 @@ export default function ProfileDashboard() {
 
     const fetchOrdersPage = async (page: number) => {
         if (selectedTab !== "orders" || !profileUid) return;
-        console.log("fetchOrdersPage called. page:", page, "orderSubTab:", orderSubTab);
+       // console.log("fetchOrdersPage called. page:", page, "orderSubTab:", orderSubTab);
         setOrdersLoading(true);
         
         try {
@@ -594,7 +594,7 @@ export default function ProfileDashboard() {
 
     const fetchBuyerOrdersPage = async (page: number) => {
         try {
-            console.log("Fetching buyer orders page:", page, "for profileUid:", profileUid);
+          //  console.log("Fetching buyer orders page:", page, "for profileUid:", profileUid);
             
             // Get the cursor for this page
             const cursor = buyerOrdersCursors[page - 1];
@@ -647,7 +647,7 @@ export default function ProfileDashboard() {
                 return bTime - aTime; // Latest first (descending)
             });
             
-            console.log("Buyer orders found for page", page, ":", newOrders.length);
+           // console.log("Buyer orders found for page", page, ":", newOrders.length);
             
             setBuyerOrders(newOrders);
             
@@ -684,7 +684,7 @@ export default function ProfileDashboard() {
 
     const fetchSellerOrdersPage = async (page: number) => {
         try {
-            console.log("Fetching seller orders page:", page, "for profileUid:", profileUid);
+           // console.log("Fetching seller orders page:", page, "for profileUid:", profileUid);
             
             // Get the cursor for this page
             const cursor = sellerOrdersCursors[page - 1];
@@ -737,7 +737,7 @@ export default function ProfileDashboard() {
                 return bTime - aTime; // Latest first (descending)
             });
             
-            console.log("Seller orders found for page", page, ":", newOrders.length);
+           // console.log("Seller orders found for page", page, ":", newOrders.length);
             
             setSellerOrders(newOrders);
             
@@ -1129,7 +1129,7 @@ export default function ProfileDashboard() {
                                                                     // Refresh listings to remove deleted ones from the UI
                                                                     await fetchListings(1);
                                                                     
-                                                                    console.log(`✅ Shop deleted successfully along with ${listingsSnapshot.size} listings and ${reviewsSnapshot.size} reviews`);
+                                                                   // console.log(`✅ Shop deleted successfully along with ${listingsSnapshot.size} listings and ${reviewsSnapshot.size} reviews`);
                                                                 } catch (err) {
                                                                     console.error("Error deleting shop and listings:", err);
                                                                     alert("Failed to delete shop. Try again.");

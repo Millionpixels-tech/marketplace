@@ -161,8 +161,8 @@ export function generateSitemapFiles() {
   const sitemap = generateCompleteSitemap();
   const robots = generateRobotsTxt();
   
-  console.log('Sitemap XML:', sitemap);
-  console.log('Robots.txt:', robots);
+ // console.log('Sitemap XML:', sitemap);
+ // console.log('Robots.txt:', robots);
   
   // In a real application, you would save these to public/ directory
   // fs.writeFileSync('public/sitemap.xml', sitemap);

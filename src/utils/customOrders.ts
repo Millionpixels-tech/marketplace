@@ -104,7 +104,7 @@ export async function createCustomOrder(
       buyerName,
       itemsDescription
     );
-    console.log('📨 Custom order notification sent to seller');
+    //console.log('📨 Custom order notification sent to seller');
   } catch (notificationError) {
     console.error('❌ Failed to create custom order notification:', notificationError);
   }
@@ -166,7 +166,7 @@ export async function acceptCustomOrder(
         customOrder.buyerName,
         itemsDescription
       );
-      console.log('📨 Custom order acceptance notification sent to seller');
+      //console.log('📨 Custom order acceptance notification sent to seller');
     } catch (notificationError) {
       console.error('❌ Failed to create custom order acceptance notification:', notificationError);
     }

@@ -62,7 +62,7 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
     // Reduce stock first before creating the order
     // This ensures we don't oversell items
     if (order.itemId && order.quantity) {
-        console.log(`📦 Reducing stock for item ${order.itemId}: quantity ${order.quantity}${order.variationId ? `, variation ${order.variationId}` : ''}`);
+      //  console.log(`📦 Reducing stock for item ${order.itemId}: quantity ${order.quantity}${order.variationId ? `, variation ${order.variationId}` : ''}`);
         
         const stockResult = await reduceListingStock(
             order.itemId,
@@ -88,7 +88,7 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
             createdAt: Timestamp.now(),
         });
         
-        console.log(`✅ Order created successfully with ID: ${docRef.id}`);
+       // console.log(`✅ Order created successfully with ID: ${docRef.id}`);
         
         // Create notification for seller about new order
         try {
@@ -102,7 +102,7 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
                     amount: order.total
                 }
             );
-            console.log('📨 Notification sent to seller');
+           // console.log('📨 Notification sent to seller');
         } catch (notificationError) {
             console.error('❌ Failed to create seller notification:', notificationError);
             // Don't fail the order creation if notification fails
@@ -112,19 +112,19 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
         // Skip emails for orders created from custom orders - they will be handled separately
         // For PayHere Pay Now orders, emails will be sent after payment completion
         if (!order.customOrderId && (order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY || order.paymentMethod === PaymentMethod.BANK_TRANSFER)) {
-            console.log(`📧 ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'COD' : 'Bank Transfer'} order - sending emails immediately`);
+           // console.log(`📧 ${order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'COD' : 'Bank Transfer'} order - sending emails immediately`);
             await sendOrderConfirmationEmailsHelper(order, docRef.id);
         } else if (order.customOrderId) {
-            console.log("📋 Custom order item - skipping individual emails (will be sent once for the entire custom order)");
+           // console.log("📋 Custom order item - skipping individual emails (will be sent once for the entire custom order)");
         } else {
-            console.log("💳 PayHere Pay Now order - emails will be sent after payment completion");
+           // console.log("💳 PayHere Pay Now order - emails will be sent after payment completion");
         }
         
         return docRef.id;
     } catch (error) {
         // If order creation fails, restore the stock we reduced
         if (order.itemId && order.quantity) {
-            console.log(`🔄 Order creation failed, restoring stock for item ${order.itemId}`);
+          //  console.log(`🔄 Order creation failed, restoring stock for item ${order.itemId}`);
             await restoreListingStock(
                 order.itemId,
                 order.quantity,
@@ -138,17 +138,17 @@ export async function createOrder(order: Omit<Order, "createdAt">) {
 // Helper function to send order confirmation emails
 async function sendOrderConfirmationEmailsHelper(order: Omit<Order, "createdAt">, orderId: string) {
     try {
-        console.log("�🔄 Starting email notification process for order:", orderId);
-        console.log("Order data:", {
-            buyerId: order.buyerId,
-            buyerEmail: order.buyerEmail,
-            sellerId: order.sellerId,
-            itemName: order.itemName,
-            total: order.total
-        });
+       // console.log("🔄 Starting email notification process for order:", orderId);
+        // console.log("Order data:", {
+        //     buyerId: order.buyerId,
+        //     buyerEmail: order.buyerEmail,
+        //     sellerId: order.sellerId,
+        //     itemName: order.itemName,
+        //     total: order.total
+        // });
         
         const sellerEmail = await getSellerEmail(order.sellerId);
-        console.log("📧 Seller email retrieved:", sellerEmail);
+       // console.log("📧 Seller email retrieved:", sellerEmail);
         
         if (sellerEmail) {
             const orderWithId = { 
@@ -157,17 +157,17 @@ async function sendOrderConfirmationEmailsHelper(order: Omit<Order, "createdAt">
                 createdAt: Timestamp.now()
             };
             
-            console.log("📤 Calling sendOrderConfirmationEmails...");
+           // console.log("📤 Calling sendOrderConfirmationEmails...");
             const emailResult = await sendOrderConfirmationEmails(orderWithId, sellerEmail);
-            console.log("📧 Email result:", emailResult);
+           // console.log("📧 Email result:", emailResult);
             
             if (emailResult.success) {
-                console.log("✅ Order confirmation emails sent successfully");
+              //  console.log("✅ Order confirmation emails sent successfully");
             } else {
-                console.warn("⚠️ Failed to send order confirmation emails:", emailResult.error);
+              //  console.warn("⚠️ Failed to send order confirmation emails:", emailResult.error);
             }
         } else {
-            console.warn("❌ Could not find seller email, skipping email notifications");
+           // console.warn("❌ Could not find seller email, skipping email notifications");
         }
     } catch (error) {
         console.error("❌ Error sending order confirmation emails:", error);
@@ -190,7 +190,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ s
         
         // Restore stock if the order has item details
         if (orderData.itemId && orderData.quantity) {
-            console.log(`🔄 Restoring stock for cancelled order ${orderId}: item ${orderData.itemId}, quantity ${orderData.quantity}`);
+          //  console.log(`🔄 Restoring stock for cancelled order ${orderId}: item ${orderData.itemId}, quantity ${orderData.quantity}`);
             
             const stockResult = await restoreListingStock(
                 orderData.itemId,
@@ -203,7 +203,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ s
                 // Continue with order cancellation even if stock restoration fails
                 // This prevents the order from being stuck in a cancelled state
             } else {
-                console.log(`✅ Stock restored successfully for cancelled order ${orderId}`);
+              //  console.log(`✅ Stock restored successfully for cancelled order ${orderId}`);
             }
         }
         
@@ -214,7 +214,7 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<{ s
             cancelledAt: Timestamp.now()
         });
         
-        console.log(`✅ Order ${orderId} cancelled successfully`);
+       // console.log(`✅ Order ${orderId} cancelled successfully`);
         return { success: true };
         
     } catch (error) {
@@ -245,11 +245,11 @@ export async function updateOrderPaymentStatus(
                 paymentStatus: paymentStatus,
                 updatedAt: Timestamp.now()
             });
-            console.log(`💳 Order ${orderId} status updated to ${paymentStatus}`);
+          //  console.log(`💳 Order ${orderId} status updated to ${paymentStatus}`);
             
             // Send emails when payment is completed for Pay Now orders
             if (paymentStatus === PaymentStatus.COMPLETED && orderData.paymentMethod === PaymentMethod.PAY_NOW) {
-                console.log("💳 Payment completed - sending order confirmation emails");
+              //  console.log("💳 Payment completed - sending order confirmation emails");
                 await sendOrderConfirmationEmailsHelper(orderData, orderDoc.id);
             }
         } else {
@@ -291,7 +291,7 @@ export async function deleteOrderByPayHereId(orderId: string): Promise<boolean> 
         if (!querySnapshot.empty) {
             const orderDoc = querySnapshot.docs[0];
             await deleteDoc(doc(db, "orders", orderDoc.id));
-            console.log(`Order ${orderId} deleted from database`);
+           // console.log(`Order ${orderId} deleted from database`);
             return true;
         } else {
             console.error(`Order with ID ${orderId} not found for deletion`);
@@ -307,7 +307,7 @@ export async function deleteOrderByPayHereId(orderId: string): Promise<boolean> 
 export async function deleteOrderById(docId: string): Promise<boolean> {
     try {
         await deleteDoc(doc(db, "orders", docId));
-        console.log(`Order document ${docId} deleted from database`);
+      //  console.log(`Order document ${docId} deleted from database`);
         return true;
     } catch (error) {
         console.error("Error deleting order by document ID:", error);

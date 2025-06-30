@@ -40,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 
                 await setDoc(userDocRef, userData);
-                console.log('User document created for:', user.email);
             }
         } catch (error) {
             console.error('Error creating user document:', error);
