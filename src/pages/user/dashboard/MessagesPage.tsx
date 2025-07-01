@@ -193,7 +193,27 @@ function MessagesPageContent() {
       );
 
       if (result.messages.length > 0) {
-        setMessages(prev => [...result.messages, ...prev]);
+        setMessages(prev => {
+          // Create a map for deduplication
+          const messagesMap = new Map();
+          
+          // Add new (older) messages first
+          result.messages.forEach(msg => {
+            messagesMap.set(msg.id, msg);
+          });
+          
+          // Add existing messages, which will override any duplicates
+          prev.forEach(msg => {
+            messagesMap.set(msg.id, msg);
+          });
+          
+          // Convert back to array and sort by timestamp
+          return Array.from(messagesMap.values()).sort((a, b) => {
+            const aTime = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(0);
+            const bTime = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(0);
+            return aTime.getTime() - bTime.getTime();
+          });
+        });
         setMessagesLastDoc(result.lastDoc);
       }
       
@@ -233,13 +253,31 @@ function MessagesPageContent() {
     // Set up realtime subscription for new messages only
     try {
       const unsubscribe = subscribeToMessages(selectedConversation.id, (msgs) => {
-        // Only update if we get new messages (more than current)
-        if (msgs.length > messages.length) {
-          const newMessages = msgs.slice(messages.length);
-          setMessages(prev => [...prev, ...newMessages]);
+        // Deduplicate messages by ID and merge with existing messages
+        setMessages(prev => {
+          // Create a map of existing messages by ID for fast lookup
+          const existingMessagesMap = new Map(prev.map(msg => [msg.id, msg]));
           
-          // Mark new messages as read
-          if (newMessages.length > 0) {
+          // Add or update messages from the subscription
+          const allMessagesMap = new Map(existingMessagesMap);
+          let hasNewMessages = false;
+          
+          msgs.forEach(msg => {
+            if (!allMessagesMap.has(msg.id)) {
+              hasNewMessages = true;
+            }
+            allMessagesMap.set(msg.id, msg);
+          });
+          
+          // Convert back to array and sort by timestamp
+          const deduplicatedMessages = Array.from(allMessagesMap.values()).sort((a, b) => {
+            const aTime = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(0);
+            const bTime = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(0);
+            return aTime.getTime() - bTime.getTime();
+          });
+          
+          // If we have new messages, mark them as read and scroll to bottom
+          if (hasNewMessages) {
             try {
               markMessagesAsRead(selectedConversation.id, user!.uid);
               // Dispatch event to update global unread count
@@ -247,12 +285,14 @@ function MessagesPageContent() {
             } catch (error) {
               console.error("Error marking messages as read:", error);
             }
+            
+            // Scroll to bottom for new messages
+            setShouldScrollToBottom(true);
+            setTimeout(() => scrollToBottom(true), 100);
           }
           
-          // Scroll to bottom for new messages
-          setShouldScrollToBottom(true);
-          setTimeout(() => scrollToBottom(true), 100);
-        }
+          return deduplicatedMessages;
+        });
       });
 
       setRealtimeUnsubscribe(() => unsubscribe);
