@@ -136,11 +136,65 @@ export default function ProfileDashboard() {
     };
 
     // Save all settings at once
+    // Helper function to check if all required verification fields are filled
+    const isVerificationFormComplete = () => {
+        const hasIdFront = verifyForm.idFront || verifyForm.idFrontUrl;
+        const hasIdBack = verifyForm.idBack || verifyForm.idBackUrl;
+        const hasSelfie = verifyForm.selfie || verifyForm.selfieUrl;
+        
+        return verifyForm.fullName.trim() && 
+               verifyForm.address.trim() && 
+               hasIdFront && 
+               hasIdBack && 
+               hasSelfie;
+    };
+
     // Save verification settings
     const handleSaveVerification = async () => {
         setSettingsLoading(true); setSettingsSuccess(null); setSettingsError(null);
         try {
             if (!user?.uid) throw new Error('No user');
+
+            // Validation: Check if all required fields are filled
+            if (!verifyForm.fullName.trim()) {
+                setSettingsError('Full name is required');
+                showToast('error', 'Please enter your full name as it appears on your ID');
+                setSettingsLoading(false);
+                return;
+            }
+
+            if (!verifyForm.address.trim()) {
+                setSettingsError('Address is required');
+                showToast('error', 'Please enter your complete address');
+                setSettingsLoading(false);
+                return;
+            }
+
+            // Validation: Check if all required documents are uploaded
+            const hasIdFront = verifyForm.idFront || verifyForm.idFrontUrl;
+            const hasIdBack = verifyForm.idBack || verifyForm.idBackUrl;
+            const hasSelfie = verifyForm.selfie || verifyForm.selfieUrl;
+
+            if (!hasIdFront) {
+                setSettingsError('ID front side photo is required');
+                showToast('error', 'Please upload a clear photo of the front side of your ID');
+                setSettingsLoading(false);
+                return;
+            }
+
+            if (!hasIdBack) {
+                setSettingsError('ID back side photo is required');
+                showToast('error', 'Please upload a clear photo of the back side of your ID');
+                setSettingsLoading(false);
+                return;
+            }
+
+            if (!hasSelfie) {
+                setSettingsError('Selfie with ID photo is required');
+                showToast('error', 'Please upload a selfie photo holding your ID next to your face');
+                setSettingsLoading(false);
+                return;
+            }
 
             // Verification Info
             let idFrontUrl = verifyForm.idFrontUrl;
@@ -2338,7 +2392,9 @@ export default function ProfileDashboard() {
                                             )}
                                             
                                             <div className={`mb-4 w-full ${isMobile ? 'max-w-full' : 'max-w-xl'}`}>
-                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Full Name as in ID</label>
+                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                    Full Name as in ID <span style={{ color: '#ef4444' }}>*</span>
+                                                </label>
                                                 <input
                                                     className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
                                                     style={{
@@ -2357,51 +2413,72 @@ export default function ProfileDashboard() {
                                                     placeholder="Enter your full name as it appears on your ID"
                                                     value={verifyForm.fullName}
                                                     onChange={e => setVerifyForm(f => ({ ...f, fullName: e.target.value }))}
+                                                    required
                                                 />
                                             </div>
                                             <div className={`grid gap-4 w-full mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
                                                 <div>
-                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>ID Front Side</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        ID Front Side <span style={{ color: '#ef4444' }}>*</span>
+                                                    </label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, idFront: e.target.files?.[0] ?? null }))} 
                                                         className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                        required={!(verifyForm.idFrontUrl)}
                                                     />
+                                                    <p className={`text-gray-500 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                                        Upload clear photo of front side
+                                                    </p>
                                                     {(verifyForm.idFront || verifyForm.idFrontUrl) && (
                                                         <img src={verifyForm.idFront ? URL.createObjectURL(verifyForm.idFront) : verifyForm.idFrontUrl} alt="ID Front Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>ID Back Side</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        ID Back Side <span style={{ color: '#ef4444' }}>*</span>
+                                                    </label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, idBack: e.target.files?.[0] ?? null }))} 
                                                         className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                        required={!(verifyForm.idBackUrl)}
                                                     />
+                                                    <p className={`text-gray-500 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                                        Upload clear photo of back side
+                                                    </p>
                                                     {(verifyForm.idBack || verifyForm.idBackUrl) && (
                                                         <img src={verifyForm.idBack ? URL.createObjectURL(verifyForm.idBack) : verifyForm.idBackUrl} alt="ID Back Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                                 <div>
-                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Selfie with ID</label>
+                                                    <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                        Selfie with ID <span style={{ color: '#ef4444' }}>*</span>
+                                                    </label>
                                                     <input 
                                                         type="file" 
                                                         accept="image/*" 
                                                         onChange={e => setVerifyForm(f => ({ ...f, selfie: e.target.files?.[0] ?? null }))} 
                                                         className={`block w-full border rounded-lg ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-2 text-sm'}`}
                                                         style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}
+                                                        required={!(verifyForm.selfieUrl)}
                                                     />
+                                                    <p className={`text-gray-500 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                                                        Selfie holding your ID next to face
+                                                    </p>
                                                     {(verifyForm.selfie || verifyForm.selfieUrl) && (
                                                         <img src={verifyForm.selfie ? URL.createObjectURL(verifyForm.selfie) : verifyForm.selfieUrl} alt="Selfie Preview" className={`mt-2 w-full h-auto rounded shadow border ${isMobile ? 'max-w-[100px]' : 'max-w-[120px]'}`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />
                                                     )}
                                                 </div>
                                             </div>
                                             <div className={`mb-6 w-full ${isMobile ? 'max-w-full' : 'max-w-xl'}`}>
-                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>Address</label>
+                                                <label className={`block font-semibold mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: '#454955' }}>
+                                                    Address <span style={{ color: '#ef4444' }}>*</span>
+                                                </label>
                                                 <textarea
                                                     className={`border rounded-lg w-full transition focus:outline-none focus:ring-2 resize-none ${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2 text-base'}`}
                                                     style={{
@@ -2421,31 +2498,59 @@ export default function ProfileDashboard() {
                                                     placeholder="Enter your full address"
                                                     value={verifyForm.address}
                                                     onChange={e => setVerifyForm(f => ({ ...f, address: e.target.value }))}
+                                                    required
                                                 />
                                             </div>
                                         </>
                                     )}
                                 </div>
-                                <div className="flex justify-end w-full">
-                                    <button
-                                        type="button"
-                                        className={`rounded-full font-bold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'}`}
-                                        style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-                                        onMouseEnter={(e) => {
-                                            if (!settingsLoading) {
-                                                e.currentTarget.style.backgroundColor = '#3f7d20';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (!settingsLoading) {
-                                                e.currentTarget.style.backgroundColor = '#72b01d';
-                                            }
-                                        }}
-                                        onClick={handleSaveVerification}
-                                        disabled={settingsLoading}
-                                    >
-                                        {settingsLoading ? 'Saving...' : 'Submit for Review'}
-                                    </button>
+                                <div className="flex flex-col w-full">
+                                    {/* Validation status message */}
+                                    {!isVerificationFormComplete() ? (
+                                        <div className={`mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                                            <div className="text-yellow-800 font-medium mb-1">⚠️ Please complete all required fields:</div>
+                                            <ul className="text-yellow-700 space-y-1 ml-4">
+                                                {!verifyForm.fullName.trim() && <li>• Full name</li>}
+                                                {!verifyForm.address.trim() && <li>• Address</li>}
+                                                {!(verifyForm.idFront || verifyForm.idFrontUrl) && <li>• ID front side photo</li>}
+                                                {!(verifyForm.idBack || verifyForm.idBackUrl) && <li>• ID back side photo</li>}
+                                                {!(verifyForm.selfie || verifyForm.selfieUrl) && <li>• Selfie with ID photo</li>}
+                                            </ul>
+                                        </div>
+                                    ) : (
+                                        <div className={`mb-3 p-3 bg-green-50 border border-green-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                                            <div className="text-green-800 font-medium">✅ All required fields completed! Ready to submit for review.</div>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex justify-end w-full">
+                                        <button
+                                            type="button"
+                                            className={`rounded-full font-bold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} ${
+                                                !isVerificationFormComplete() && !settingsLoading 
+                                                    ? 'opacity-50 cursor-not-allowed' 
+                                                    : ''
+                                            }`}
+                                            style={{ 
+                                                backgroundColor: !isVerificationFormComplete() && !settingsLoading ? '#9ca3af' : '#72b01d', 
+                                                color: '#ffffff' 
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!settingsLoading && isVerificationFormComplete()) {
+                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!settingsLoading && isVerificationFormComplete()) {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                }
+                                            }}
+                                            onClick={handleSaveVerification}
+                                            disabled={settingsLoading || !isVerificationFormComplete()}
+                                        >
+                                            {settingsLoading ? 'Saving...' : 'Submit for Review'}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>
