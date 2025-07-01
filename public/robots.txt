@@ -1,20 +1,23 @@
 User-agent: *
 Allow: /
 
-# Disallow certain pages
-Disallow: /dashboard
-Disallow: /cart
-Disallow: /checkout
-Disallow: /admin
+# Disallow private pages
+Disallow: /dashboard/
+Disallow: /admin/
 Disallow: /api/
-Disallow: /order/
-Disallow: /add-listing
-Disallow: /edit-listing
-Disallow: /*?*
-Allow: /search?category=*
+Disallow: /auth/
+Disallow: /_auth_actions
+Disallow: /email-verification
+Disallow: /reset-password
 
-# Sitemap location
+# Allow important pages for SEO
+Allow: /search
+Allow: /create-shop
+Allow: /add-listing
+Allow: /seller-guide
+
+# Sitemap
 Sitemap: https://sina.lk/sitemap.xml
 
-# Crawl delay
+# Crawl delay (be nice to servers)
 Crawl-delay: 1

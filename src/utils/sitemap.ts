@@ -1,27 +1,140 @@
 // Sitemap generation utility for better SEO
 // This can be used to generate a sitemap.xml for the site
 
+// Sitemap generation utility for better SEO
+// This can be used to generate a sitemap.xml for the site
+
+import { EtsyCategory } from './categories';
+
 export const STATIC_ROUTES = [
+  // Core pages
   '/',
   '/search',
   '/auth',
-  '/about',
-  '/help',
-  '/customer-service',
-  '/returns-refunds',
-  '/shipping-info',
+  '/cart',
+  '/wishlist',
+  
+  // Seller & Business pages
+  '/create-shop',
+  '/add-listing', 
+  '/seller-guide',
+  
+  // Marketing pages
+  '/early-launch-promotion',
+  
+  // Company pages
+  '/about-us',
   '/our-story',
   '/careers',
   '/press',
-  '/terms-of-service',
+  
+  // Support pages
+  '/help-center',
+  '/customer-service',
+  '/returns-refunds',
+  '/shipping-info',
+  
+  // Legal pages
   '/privacy-policy',
+  '/terms-of-service',
   '/cookie-policy',
-  '/community-guidelines',
-  '/seller-guide'
+  '/community-guidelines'
 ];
 
-export const generateSitemapXML = (baseUrl: string, dynamicRoutes: string[] = []) => {
-  const allRoutes = [...STATIC_ROUTES, ...dynamicRoutes];
+// Popular search terms for SEO
+export const POPULAR_SEARCH_TERMS = [
+  'handmade',
+  'sri lankan',
+  'authentic',
+  'artisan',
+  'traditional',
+  'craft',
+  'unique',
+  'gift'
+];
+
+// Sort options
+export const SORT_OPTIONS = [
+  'newest',
+  'price_low_high',
+  'price_high_low',
+  'most_popular'
+];
+
+// Price ranges for filtering
+export const PRICE_RANGES = [
+  { min: 0, max: 1000 },
+  { min: 1000, max: 5000 },
+  { min: 5000, max: 10000 }
+];
+
+// Popular locations in Sri Lanka
+export const LOCATIONS = [
+  'Colombo',
+  'Kandy',
+  'Galle',
+  'Negombo',
+  'Jaffna',
+  'Anuradhapura'
+];
+
+// Generate category-based URLs
+export const generateCategoryRoutes = () => {
+  const routes: string[] = [];
+  
+  // Main categories
+  Object.values(EtsyCategory).forEach(category => {
+    routes.push(`/search?cat=${encodeURIComponent(category)}`);
+  });
+  
+  return routes;
+};
+
+// Generate search filter combinations
+export const generateSearchFilterRoutes = () => {
+  const routes: string[] = [];
+  
+  // Sort-based routes
+  SORT_OPTIONS.forEach(sort => {
+    routes.push(`/search?sort=${sort}`);
+  });
+  
+  // Price range routes
+  PRICE_RANGES.forEach(({ min, max }) => {
+    routes.push(`/search?min=${min}&max=${max}`);
+  });
+  
+  // Popular search terms
+  POPULAR_SEARCH_TERMS.forEach(term => {
+    routes.push(`/search?q=${encodeURIComponent(term)}`);
+  });
+  
+  // Location-based searches
+  LOCATIONS.forEach(location => {
+    routes.push(`/search?location=${encodeURIComponent(location)}`);
+  });
+  
+  // Combined category + search term routes
+  Object.values(EtsyCategory).slice(0, 5).forEach(category => { // Limit to first 5 to avoid too many URLs
+    POPULAR_SEARCH_TERMS.slice(0, 3).forEach(term => { // Limit to first 3 terms
+      routes.push(`/search?cat=${encodeURIComponent(category)}&q=${encodeURIComponent(term)}`);
+    });
+  });
+  
+  return routes;
+};
+
+// Generate all dynamic routes
+export const generateAllDynamicRoutes = () => {
+  return [
+    ...generateCategoryRoutes(),
+    ...generateSearchFilterRoutes()
+  ];
+};
+
+export const generateSitemapXML = (baseUrl: string, additionalRoutes: string[] = []) => {
+  const dynamicRoutes = generateAllDynamicRoutes();
+  const allRoutes = [...STATIC_ROUTES, ...dynamicRoutes, ...additionalRoutes];
   const currentDate = new Date().toISOString().split('T')[0];
   
   const sitemapEntries = allRoutes.map(route => {
@@ -31,13 +144,22 @@ export const generateSitemapXML = (baseUrl: string, dynamicRoutes: string[] = []
     
     if (route === '/') {
       priority = '1.0';
-      changefreq = 'weekly';
-    } else if (route === '/search' || route.startsWith('/listing/') || route.startsWith('/shop/')) {
+      changefreq = 'daily';
+    } else if (route === '/search' || route.includes('/search?')) {
+      priority = route.includes('category=') ? '0.8' : '0.7';
+      changefreq = 'daily';
+    } else if (route.startsWith('/listing/') || route.startsWith('/shop/')) {
       priority = '0.8';
       changefreq = 'daily';
-    } else if (route === '/about' || route === '/help') {
+    } else if (['/create-shop', '/add-listing', '/seller-guide'].includes(route)) {
+      priority = '0.8';
+      changefreq = 'monthly';
+    } else if (['/about-us', '/help-center', '/customer-service'].includes(route)) {
       priority = '0.7';
       changefreq = 'monthly';
+    } else if (route.includes('privacy-policy') || route.includes('terms-of-service')) {
+      priority = '0.5';
+      changefreq = 'yearly';
     }
     
     return `  <url>
