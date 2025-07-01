@@ -362,8 +362,10 @@ export default function EditListing() {
             setDeliveryType(data.deliveryType || "");
             setDeliveryPerItem(data.deliveryPerItem ? String(data.deliveryPerItem) : "");
             setDeliveryAdditional(data.deliveryAdditional ? String(data.deliveryAdditional) : "");
-            setExistingImageUrls(data.images || []);
-            setImagePreviews(data.images || []);
+            // Create separate copies of the images array to prevent shared references
+            const imageUrls = data.images || [];
+            setExistingImageUrls([...imageUrls]); // Create a new array copy
+            setImagePreviews([...imageUrls]); // Create another separate array copy
             setQuantity(data.quantity ? String(data.quantity) : "");
             setCashOnDelivery(!!data.cashOnDelivery);
             setBankTransfer(!!data.bankTransfer);
