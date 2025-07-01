@@ -2504,54 +2504,57 @@ export default function ProfileDashboard() {
                                         </>
                                     )}
                                 </div>
-                                <div className="flex flex-col w-full">
-                                    {/* Validation status message */}
-                                    {!isVerificationFormComplete() ? (
-                                        <div className={`mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                                            <div className="text-yellow-800 font-medium mb-1">⚠️ Please complete all required fields:</div>
-                                            <ul className="text-yellow-700 space-y-1 ml-4">
-                                                {!verifyForm.fullName.trim() && <li>• Full name</li>}
-                                                {!verifyForm.address.trim() && <li>• Address</li>}
-                                                {!(verifyForm.idFront || verifyForm.idFrontUrl) && <li>• ID front side photo</li>}
-                                                {!(verifyForm.idBack || verifyForm.idBackUrl) && <li>• ID back side photo</li>}
-                                                {!(verifyForm.selfie || verifyForm.selfieUrl) && <li>• Selfie with ID photo</li>}
-                                            </ul>
+                                {/* Only show validation status and submit button if not under review */}
+                                {verifyForm.isVerified !== VerificationStatus.PENDING && (
+                                    <div className="flex flex-col w-full">
+                                        {/* Validation status message */}
+                                        {!isVerificationFormComplete() ? (
+                                            <div className={`mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                                                <div className="text-yellow-800 font-medium mb-1">⚠️ Please complete all required fields:</div>
+                                                <ul className="text-yellow-700 space-y-1 ml-4">
+                                                    {!verifyForm.fullName.trim() && <li>• Full name</li>}
+                                                    {!verifyForm.address.trim() && <li>• Address</li>}
+                                                    {!(verifyForm.idFront || verifyForm.idFrontUrl) && <li>• ID front side photo</li>}
+                                                    {!(verifyForm.idBack || verifyForm.idBackUrl) && <li>• ID back side photo</li>}
+                                                    {!(verifyForm.selfie || verifyForm.selfieUrl) && <li>• Selfie with ID photo</li>}
+                                                </ul>
+                                            </div>
+                                        ) : (
+                                            <div className={`mb-3 p-3 bg-green-50 border border-green-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                                                <div className="text-green-800 font-medium">✅ All required fields completed! Ready to submit for review.</div>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex justify-end w-full">
+                                            <button
+                                                type="button"
+                                                className={`rounded-full font-bold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} ${
+                                                    !isVerificationFormComplete() && !settingsLoading 
+                                                        ? 'opacity-50 cursor-not-allowed' 
+                                                        : ''
+                                                }`}
+                                                style={{ 
+                                                    backgroundColor: !isVerificationFormComplete() && !settingsLoading ? '#9ca3af' : '#72b01d', 
+                                                    color: '#ffffff' 
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!settingsLoading && isVerificationFormComplete()) {
+                                                        e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!settingsLoading && isVerificationFormComplete()) {
+                                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    }
+                                                }}
+                                                onClick={handleSaveVerification}
+                                                disabled={settingsLoading || !isVerificationFormComplete()}
+                                            >
+                                                {settingsLoading ? 'Saving...' : 'Submit for Review'}
+                                            </button>
                                         </div>
-                                    ) : (
-                                        <div className={`mb-3 p-3 bg-green-50 border border-green-200 rounded-lg ${isMobile ? 'text-xs' : 'text-sm'}`}>
-                                            <div className="text-green-800 font-medium">✅ All required fields completed! Ready to submit for review.</div>
-                                        </div>
-                                    )}
-                                    
-                                    <div className="flex justify-end w-full">
-                                        <button
-                                            type="button"
-                                            className={`rounded-full font-bold transition ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} ${
-                                                !isVerificationFormComplete() && !settingsLoading 
-                                                    ? 'opacity-50 cursor-not-allowed' 
-                                                    : ''
-                                            }`}
-                                            style={{ 
-                                                backgroundColor: !isVerificationFormComplete() && !settingsLoading ? '#9ca3af' : '#72b01d', 
-                                                color: '#ffffff' 
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (!settingsLoading && isVerificationFormComplete()) {
-                                                    e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (!settingsLoading && isVerificationFormComplete()) {
-                                                    e.currentTarget.style.backgroundColor = '#72b01d';
-                                                }
-                                            }}
-                                            onClick={handleSaveVerification}
-                                            disabled={settingsLoading || !isVerificationFormComplete()}
-                                        >
-                                            {settingsLoading ? 'Saving...' : 'Submit for Review'}
-                                        </button>
                                     </div>
-                                </div>
+                                )}
                             </form>
                         </div>
                     )}
