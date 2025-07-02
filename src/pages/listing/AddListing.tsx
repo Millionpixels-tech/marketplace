@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { db, auth, storage } from "../../utils/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { collection, addDoc, getDocs, query, where, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
@@ -381,26 +381,32 @@ export default function AddListing() {
     
     setSubmitting(true);
     
+    // Generate a unique listing ID for consistent image storage
+    const listingRef = doc(collection(db, "listings"));
+    const uniqueListingId = listingRef.id;
+    
     let imageUrls: string[] = [];
     let imageMetadata: any[] = [];
     
     try {
-      // Upload images to Firebase Storage with better organization
+      // Upload images to Firebase Storage with unique listing ID
       const uploadPromises = images.map(async (file, idx) => {
         const currentShop = shops.find(s => s.id === shopId);
         const shopName = currentShop?.name || 'unknown-shop';
         
-        // Create organized storage path: listings/shop-name/year/month/filename
+        // Create organized storage path with unique listing ID
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
-        const storagePath = `listings/${shopName}/${year}/${month}/${file.name}`;
+        const timestamp = now.getTime();
+        const storagePath = `listings/${uniqueListingId}/${year}/${month}/${timestamp}_${file.name}`;
         
         const storageRef = ref(storage, storagePath);
         
         // Upload with metadata
         const uploadResult = await uploadBytes(storageRef, file, {
           customMetadata: {
+            listingId: uniqueListingId,
             productName: name,
             category: cat,
             subcategory: sub || '',
@@ -478,7 +484,7 @@ export default function AddListing() {
         listingData.quantity = parseInt(quantity, 10);
       }
 
-      await addDoc(collection(db, "listings"), listingData);
+      await setDoc(listingRef, listingData);
       
       showToast('success', 'Listing added successfully!');
       navigate(`/shop/${shops.find(s => s.id === shopId)?.username}`);

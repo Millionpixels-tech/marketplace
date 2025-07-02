@@ -470,17 +470,19 @@ export default function EditListing() {
                 const currentShop = shops.find(s => s.id === shopId);
                 const shopName = currentShop?.name || 'unknown-shop';
                 
-                // Create organized storage path
+                // Create organized storage path with unique listing ID
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
-                const storagePath = `listings/${shopName}/${year}/${month}/${file.name}`;
+                const timestamp = now.getTime();
+                const storagePath = `listings/${listingId}/${year}/${month}/${timestamp}_${file.name}`;
                 
                 const storageRef = ref(storage, storagePath);
                 
                 // Upload with metadata
                 const uploadResult = await uploadBytes(storageRef, file, {
                     customMetadata: {
+                        listingId: listingId!,
                         productName: name,
                         category: cat,
                         subcategory: sub || '',
