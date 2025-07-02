@@ -13,6 +13,7 @@ import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
 import { useResponsive } from "../hooks/useResponsive";
 import { useAuth } from "../context/AuthContext";
+import { shuffleArrayWithSeed, generateRandomSeed } from "../utils/randomUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 function ProductHeroSearch() {
@@ -135,16 +136,28 @@ const Home = () => {
     async function fetchData() {
       setLoading(true);
       try {
-        const [snap, userIp] = await Promise.all([
-          getDocs(query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8))),
-          getUserIP().catch(() => null) // Handle IP fetch failure gracefully
-        ]);
+        const userIp = await getUserIP().catch(() => null); // Handle IP fetch failure gracefully
         
-        const results: Listing[] = snap.docs.map(doc => ({ 
+        // Fetch more items for better randomization
+        const fetchLimit = 24; // Fetch more items
+        const snap = await getDocs(
+          query(
+            collection(db, "listings"), 
+            orderBy("__name__"), // Use document ID for consistent ordering
+            limit(fetchLimit)
+          )
+        );
+        
+        const allResults: Listing[] = snap.docs.map(doc => ({ 
           id: doc.id, 
           ...doc.data(),
           __client_ip: userIp 
         }));
+        
+        // Randomize and take 8 items
+        const seed = generateRandomSeed(userIp || undefined);
+        const shuffled = shuffleArrayWithSeed(allResults, seed);
+        const results = shuffled.slice(0, 8);
         
         setLatestListings(results);
         setIp(userIp);
@@ -161,12 +174,27 @@ const Home = () => {
   // Function to refresh listings (after wishlist update)
   const refreshListings = async () => {
     try {
-      const snap = await getDocs(query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(8)));
-      const results: Listing[] = snap.docs.map(doc => ({ 
+      // Fetch more items for better randomization
+      const fetchLimit = 24;
+      const snap = await getDocs(
+        query(
+          collection(db, "listings"), 
+          orderBy("__name__"), // Use document ID for consistent ordering
+          limit(fetchLimit)
+        )
+      );
+      
+      const allResults: Listing[] = snap.docs.map(doc => ({ 
         id: doc.id, 
         ...doc.data(),
         __client_ip: ip 
       }));
+      
+      // Randomize with a new seed each time for refresh
+      const seed = generateRandomSeed(ip || undefined) + Date.now(); // Add timestamp for different order on refresh
+      const shuffled = shuffleArrayWithSeed(allResults, seed);
+      const results = shuffled.slice(0, 8);
+      
       setLatestListings(results);
     } catch (error) {
       console.error("Error refreshing listings:", error);

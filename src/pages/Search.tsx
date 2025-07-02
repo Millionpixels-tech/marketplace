@@ -13,6 +13,7 @@ import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../utils/seo";
 import { paginateQuery } from "../utils/paginateFirestore";
+import { shuffleArrayWithSeed } from "../utils/randomUtils";
 
 interface Listing {
   id: string;
@@ -62,6 +63,9 @@ const Search: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; // Adjust as needed
+
+  // Random seed for consistent randomization per session
+  const [randomSeed, setRandomSeed] = useState<number>(Math.random());
   
   // Server-side pagination state
   const [lastDocMap, setLastDocMap] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(new Map());
@@ -134,9 +138,14 @@ const Search: React.FC = () => {
       queryConstraints.push(orderBy("price", "asc"));
     } else if (appliedSort === "price-desc") {
       queryConstraints.push(orderBy("price", "desc"));
+    } else if (appliedSort === "random") {
+      // For random sorting, we'll fetch without specific order and randomize client-side
+      // Use document ID ordering for consistent pagination
+      queryConstraints.push(orderBy("__name__"));
     } else {
-      // Default ordering for pagination
-      queryConstraints.push(orderBy("createdAt", "desc"));
+      // Default ordering changed to random behavior
+      // Use document ID ordering for consistent pagination, then randomize client-side
+      queryConstraints.push(orderBy("__name__"));
     }
     return query(collection(db, "listings"), ...queryConstraints);
   }, [cat, sub, appliedFreeShipping, appliedSort, appliedMinPrice, appliedMaxPrice]);
@@ -155,6 +164,7 @@ const Search: React.FC = () => {
       appliedMinPrice,
       appliedMaxPrice,
       page,
+      randomSeed: (appliedSort === "random" || !appliedSort) ? randomSeed : null, // Include seed only for random sorts
     });
 
     // Check cache first
@@ -206,6 +216,14 @@ const Search: React.FC = () => {
       }
 
       // Price range filters are now handled server-side in the query
+
+      // Apply random shuffling for random sort or default behavior
+      if (appliedSort === "random" || !appliedSort) {
+        // Create a seed that combines the base random seed with current page for different orders per page
+        // Also include user IP and current time components for uniqueness across users and sessions
+        const combinedSeed = randomSeed + page + (ip ? ip.split('.').reduce((a, b) => a + parseInt(b) || 0, 0) : 0);
+        results = shuffleArrayWithSeed(results, combinedSeed);
+      }
 
       // Update pagination state
       setLastDocMap(prev => {
@@ -513,11 +531,40 @@ const Search: React.FC = () => {
                     value={filterSort}
                     onChange={e => setFilterSort(e.target.value)}
                   >
-                    <option value="">Default</option>
+                    <option value="">Random (Default)</option>
+                    <option value="random">Random</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
                     <option value="newest">Newest</option>
                   </select>
+                  
+                  {/* Refresh Order Button - Only show for random or default sort */}
+                  {(appliedSort === "random" || !appliedSort) && (
+                    <button
+                      onClick={() => {
+                        // Generate new random seed and clear cache to force refresh
+                        setRandomSeed(Math.random());
+                        cacheRef.current.clear();
+                        setCurrentPage(1);
+                        setLastDocMap(new Map());
+                        setMaxKnownPage(1);
+                      }}
+                      className={`mt-2 w-full ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg font-semibold transition-all duration-300 border`}
+                      style={{
+                        backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                        color: '#72b01d',
+                        borderColor: 'rgba(114, 176, 29, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                      }}
+                    >
+                      🎲 Shuffle Items
+                    </button>
+                  )}
                 </div>
                 <div className="border-t" style={{ borderTopColor: 'rgba(114, 176, 29, 0.2)' }} />
                 {/* Free Shipping */}
@@ -711,7 +758,7 @@ const Search: React.FC = () => {
                     {appliedSort && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Sort: {appliedSort === 'price-asc' ? 'Price ↑' : appliedSort === 'price-desc' ? 'Price ↓' : appliedSort === 'newest' ? 'Newest' : appliedSort}
+                        Sort: {appliedSort === 'price-asc' ? 'Price ↑' : appliedSort === 'price-desc' ? 'Price ↓' : appliedSort === 'newest' ? 'Newest' : appliedSort === 'random' ? 'Random 🎲' : appliedSort}
                       </span>
                     )}
                     
