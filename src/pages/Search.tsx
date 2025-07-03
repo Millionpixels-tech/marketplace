@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, orderBy, type QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
+import { collection, query, where, orderBy, getCountFromServer, type QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import { categories } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -13,7 +13,6 @@ import { SEOHead } from "../components/SEO/SEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../utils/seo";
 import { paginateQuery } from "../utils/paginateFirestore";
-import { shuffleArrayWithSeed } from "../utils/randomUtils";
 
 interface Listing {
   id: string;
@@ -24,8 +23,44 @@ interface Listing {
   subcategory?: string;
   deliveryType?: "free" | "paid";
   createdAt?: { seconds: number };
+  owner?: string;
+  shopId?: string;
+  quantity?: number;
+  images?: string[];
+  wishlist?: Array<{ ip?: string; ownerId?: string; }>;
+  reviewStats?: {
+    rating: number | null;
+    count: number;
+  };
   [key: string]: any;
 }
+
+// Random shuffle seed - changes on each page refresh for dynamic browsing
+const getRandomSeed = () => {
+  // Generate a random seed based on current timestamp and random number
+  return Math.floor(Math.random() * 1000000) + Date.now();
+};
+
+// Simple seeded shuffle function for fair rotation
+const shuffleWithSeed = (array: Listing[], seed: number) => {
+  const shuffled = [...array];
+  let currentIndex = shuffled.length;
+  let random = seed;
+  
+  // Simple linear congruential generator for reproducible "randomness"
+  const nextRandom = () => {
+    random = (random * 1103515245 + 12345) & 0x7fffffff;
+    return random / 0x7fffffff;
+  };
+
+  while (currentIndex !== 0) {
+    const randomIndex = Math.floor(nextRandom() * currentIndex);
+    currentIndex--;
+    [shuffled[currentIndex], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[currentIndex]];
+  }
+  
+  return shuffled;
+};
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
@@ -62,10 +97,14 @@ const Search: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // Adjust as needed
+  const itemsPerPage = 16; // Display 16 items per page
 
-  // Random seed for consistent randomization per session
-  const [randomSeed, setRandomSeed] = useState<number>(Math.random());
+  // Random shuffle seed for dynamic browsing experience
+  const shuffleSeed = useMemo(() => getRandomSeed(), []);
+  
+  // Total count for accurate pagination
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  // Removed countLoading as it's not currently used in the UI
   
   // Server-side pagination state
   const [lastDocMap, setLastDocMap] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(new Map());
@@ -101,11 +140,11 @@ const Search: React.FC = () => {
     fetchUserIP();
   }, []);
 
-  // Build query for server-side pagination
-  const buildPaginatedQuery = useCallback(() => {
-    const conditions: any[] = [];
+  // Build base query for listings (without ordering for shuffling)
+  const buildBaseQuery = useCallback(() => {
+    const conditions: any[] = []; // Active listings filter removed since isActive field is not consistently set
 
-    // Add server-side filters where possible
+    // Server-side filters
     if (cat) {
       conditions.push(where("category", "==", cat));
     }
@@ -113,7 +152,7 @@ const Search: React.FC = () => {
       conditions.push(where("subcategory", "==", sub));
     }
     
-    // Add price range filters server-side
+    // Price range filters
     if (appliedMinPrice) {
       conditions.push(where("price", ">=", Number(appliedMinPrice)));
     }
@@ -121,40 +160,96 @@ const Search: React.FC = () => {
       conditions.push(where("price", "<=", Number(appliedMaxPrice)));
     }
     
-    // Handle free shipping filter carefully
+    // Free shipping filter
     if (appliedFreeShipping) {
-      // Try to filter for both explicit "free" and also where deliveryType exists and equals "free"
       conditions.push(where("deliveryType", "==", "free"));
     }
 
-    // Note: Text search will be handled client-side due to Firestore limitations
-    // For production, consider using Algolia or Elasticsearch for full-text search
+    return query(collection(db, "listings"), ...conditions);
+  }, [cat, sub, appliedFreeShipping, appliedMinPrice, appliedMaxPrice]);
 
-    // Add ordering (must be after where clauses)
-    let queryConstraints = [...conditions];
+  // Build paginated query with proper ordering
+  const buildPaginatedQuery = useCallback(() => {
+    const baseConditions: any[] = []; // Active listings filter removed since isActive field is not consistently set
+
+    // Server-side filters
+    if (cat) {
+      baseConditions.push(where("category", "==", cat));
+    }
+    if (sub) {
+      baseConditions.push(where("subcategory", "==", sub));
+    }
+    
+    if (appliedMinPrice) {
+      baseConditions.push(where("price", ">=", Number(appliedMinPrice)));
+    }
+    if (appliedMaxPrice) {
+      baseConditions.push(where("price", "<=", Number(appliedMaxPrice)));
+    }
+    
+    if (appliedFreeShipping) {
+      baseConditions.push(where("deliveryType", "==", "free"));
+    }
+
+    // Add ordering based on sort type
+    let queryConstraints = [...baseConditions];
+    
+    // When price filters are applied, we need special handling for Firestore constraints
+    const hasPriceFilter = appliedMinPrice || appliedMaxPrice;
+    
     if (appliedSort === "newest") {
-      queryConstraints.push(orderBy("createdAt", "desc"));
+      if (hasPriceFilter) {
+        // When price filter is active, must order by price first, then other fields
+        queryConstraints.push(orderBy("price", "asc"));
+        queryConstraints.push(orderBy("createdAt", "desc"));
+      } else {
+        queryConstraints.push(orderBy("createdAt", "desc"));
+      }
     } else if (appliedSort === "price-asc") {
       queryConstraints.push(orderBy("price", "asc"));
     } else if (appliedSort === "price-desc") {
       queryConstraints.push(orderBy("price", "desc"));
-    } else if (appliedSort === "random") {
-      // For random sorting, we'll fetch without specific order and randomize client-side
-      // Use document ID ordering for consistent pagination
-      queryConstraints.push(orderBy("__name__"));
     } else {
-      // Default ordering changed to random behavior
-      // Use document ID ordering for consistent pagination, then randomize client-side
-      queryConstraints.push(orderBy("__name__"));
+      // Default mixed order
+      if (hasPriceFilter) {
+        // When price filter is active, must order by price first
+        queryConstraints.push(orderBy("price", "asc"));
+        queryConstraints.push(orderBy("__name__", "asc"));
+      } else {
+        // No price filter - use document ID only for better distribution
+        queryConstraints.push(orderBy("__name__", "asc"));
+      }
     }
+    
     return query(collection(db, "listings"), ...queryConstraints);
   }, [cat, sub, appliedFreeShipping, appliedSort, appliedMinPrice, appliedMaxPrice]);
+
+  // Get total count of matching listings
+  const fetchTotalCount = useCallback(async () => {
+    if (!ip) return;
+    
+    try {
+      const baseQuery = buildBaseQuery();
+      const snapshot = await getCountFromServer(baseQuery);
+      let count = snapshot.data().count;
+      
+      // Estimate for text search (since it's done client-side)
+      if (appliedSearch) {
+        count = Math.floor(count * 0.4); // Conservative estimate
+      }
+      
+      setTotalCount(count);
+    } catch (error) {
+      console.error("Error fetching total count:", error);
+      setTotalCount(null);
+    }
+  }, [ip, buildBaseQuery, appliedSearch]);
 
   // Server-side paginated fetch function
   const fetchPaginatedListings = useCallback(async (page: number = 1) => {
     if (!ip) return;
     
-    // Create cache key from current filters and page
+    // Create cache key from current filters and page (includes shuffle seed for consistent session ordering)
     const cacheKey = JSON.stringify({
       cat,
       sub,
@@ -164,7 +259,7 @@ const Search: React.FC = () => {
       appliedMinPrice,
       appliedMaxPrice,
       page,
-      randomSeed: (appliedSort === "random" || !appliedSort) ? randomSeed : null, // Include seed only for random sorts
+      shuffleSeed: appliedSort === "" ? shuffleSeed : null, // Include shuffle seed only for default sort
     });
 
     // Check cache first
@@ -217,12 +312,11 @@ const Search: React.FC = () => {
 
       // Price range filters are now handled server-side in the query
 
-      // Apply random shuffling for random sort or default behavior
-      if (appliedSort === "random" || !appliedSort) {
-        // Create a seed that combines the base random seed with current page for different orders per page
-        // Also include user IP and current time components for uniqueness across users and sessions
-        const combinedSeed = randomSeed + page + (ip ? ip.split('.').reduce((a, b) => a + parseInt(b) || 0, 0) : 0);
-        results = shuffleArrayWithSeed(results, combinedSeed);
+      // Apply fair mixing for default sort only
+      if (!appliedSort || appliedSort === "") {
+        // Create a unique seed combining page refresh seed + page offset for fair distribution
+        const pageSeed = shuffleSeed + (page * 31); // 31 is prime for better distribution
+        results = shuffleWithSeed(results, pageSeed);
       }
 
       // Update pagination state
@@ -259,26 +353,34 @@ const Search: React.FC = () => {
   }, [ip, buildPaginatedQuery, appliedSearch, lastDocMap, itemsPerPage]);
 
   // Fetch listings when dependencies change
+  // Fetch listings when dependencies change
   useEffect(() => {
     if (ip !== null) {
       fetchPaginatedListings(currentPage);
+      fetchTotalCount(); // Also fetch total count for accurate pagination
     }
-  }, [ip, cat, sub, appliedFreeShipping, appliedSort, appliedSearch, appliedMinPrice, appliedMaxPrice, currentPage, fetchPaginatedListings]);
+  }, [ip, cat, sub, appliedFreeShipping, appliedSort, appliedSearch, appliedMinPrice, appliedMaxPrice, currentPage, fetchPaginatedListings, fetchTotalCount]);
 
   // Refresh listings (after wishlist update)
   const refreshListings = useCallback(async () => {
     // Clear cache when refreshing to ensure fresh data
     cacheRef.current.clear();
+    setTotalCount(null); // Reset total count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     await fetchPaginatedListings(currentPage);
-  }, [fetchPaginatedListings, currentPage]);
+    await fetchTotalCount(); // Refresh count too
+  }, [fetchPaginatedListings, fetchTotalCount, currentPage]);
 
-  // Calculate total pages based on what we know about page existence
+  // Calculate total pages based on actual count or fallback
   const totalPages = useMemo(() => {
+    if (totalCount !== null && totalCount > 0) {
+      return Math.ceil(totalCount / itemsPerPage);
+    }
+    // Fallback to the old logic if count is not available yet
     if (items.length === 0 && currentPage === 1) return 1;
     return Math.max(currentPage, maxKnownPage);
-  }, [items.length, currentPage, maxKnownPage]);
+  }, [totalCount, itemsPerPage, items.length, currentPage, maxKnownPage]);
 
   // Optimized category/subcategory handlers with better performance
   const handleCategoryClick = useCallback((c: string) => {
@@ -286,6 +388,7 @@ const Search: React.FC = () => {
     setCat(newCat);
     setSub("");
     setCurrentPage(1); // Reset to first page
+    setTotalCount(null); // Reset total count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     cacheRef.current.clear(); // Clear cache
@@ -303,6 +406,7 @@ const Search: React.FC = () => {
     setCat(c);
     setSub(sc);
     setCurrentPage(1); // Reset to first page
+    setTotalCount(null); // Reset total count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     cacheRef.current.clear(); // Clear cache
@@ -531,40 +635,11 @@ const Search: React.FC = () => {
                     value={filterSort}
                     onChange={e => setFilterSort(e.target.value)}
                   >
-                    <option value="">Random (Default)</option>
-                    <option value="random">Random</option>
+                    <option value="">Mixed Order (Fair)</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
-                    <option value="newest">Newest</option>
+                    <option value="newest">Newest First</option>
                   </select>
-                  
-                  {/* Refresh Order Button - Only show for random or default sort */}
-                  {(appliedSort === "random" || !appliedSort) && (
-                    <button
-                      onClick={() => {
-                        // Generate new random seed and clear cache to force refresh
-                        setRandomSeed(Math.random());
-                        cacheRef.current.clear();
-                        setCurrentPage(1);
-                        setLastDocMap(new Map());
-                        setMaxKnownPage(1);
-                      }}
-                      className={`mt-2 w-full ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg font-semibold transition-all duration-300 border`}
-                      style={{
-                        backgroundColor: 'rgba(114, 176, 29, 0.1)',
-                        color: '#72b01d',
-                        borderColor: 'rgba(114, 176, 29, 0.3)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.2)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                      }}
-                    >
-                      🎲 Shuffle Items
-                    </button>
-                  )}
                 </div>
                 <div className="border-t" style={{ borderTopColor: 'rgba(114, 176, 29, 0.2)' }} />
                 {/* Free Shipping */}
@@ -588,6 +663,9 @@ const Search: React.FC = () => {
                     onClick={() => {
                       // Clear cache when applying new filters
                       cacheRef.current.clear();
+                      setTotalCount(null); // Reset total count
+                      setLastDocMap(new Map()); // Reset pagination state
+                      setMaxKnownPage(1); // Reset max known page
                       setAppliedMinPrice(filterMinPrice);
                       setAppliedMaxPrice(filterMaxPrice);
                       setAppliedSort(filterSort);
@@ -616,6 +694,9 @@ const Search: React.FC = () => {
                     onClick={() => {
                       // Clear cache when resetting filters
                       cacheRef.current.clear();
+                      setTotalCount(null); // Reset total count
+                      setLastDocMap(new Map()); // Reset pagination state
+                      setMaxKnownPage(1); // Reset max known page
                       setFilterMinPrice("");
                       setFilterMaxPrice("");
                       setFilterSort("");
@@ -651,6 +732,9 @@ const Search: React.FC = () => {
                   e.preventDefault();
                   // Clear cache when performing new search
                   cacheRef.current.clear();
+                  setTotalCount(null); // Reset total count
+                  setLastDocMap(new Map()); // Reset pagination state
+                  setMaxKnownPage(1); // Reset max known page
                   setAppliedSearch(searchInput);
                   setCurrentPage(1); // Reset to first page when searching
                   const params = new URLSearchParams(searchParams);
