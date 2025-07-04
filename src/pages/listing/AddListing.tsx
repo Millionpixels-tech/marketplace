@@ -13,6 +13,7 @@ import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
+import { useSellerVerification } from "../../hooks/useSellerVerification";
 
 // Simple variation interface
 interface SimpleVariation {
@@ -67,6 +68,9 @@ export default function AddListing() {
 
   // Use AuthContext for user and loading
   const { user, loading } = useAuth();
+
+  // Use seller verification hook
+  const { bankTransferEligibility, canUseBankTransfer } = useSellerVerification();
 
   // Helper function to change step and scroll to top
   const goToStep = (newStep: number) => {
@@ -1240,33 +1244,62 @@ Delivery & Important Notes
                     </div>
 
                     {/* Bank Transfer Option */}
-                    <div className={`p-4 md:p-6 rounded-xl border ${bankAccounts.length === 0 ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200'}`}>
+                    <div className={`p-4 md:p-6 rounded-xl border ${
+                      !canUseBankTransfer ? 'bg-yellow-50 border-yellow-200' : 
+                      bankAccounts.length === 0 ? 'bg-gray-50 border-gray-200' : 
+                      'bg-green-50 border-green-200'
+                    }`}>
                       <div className="flex items-start gap-2 md:gap-3">
                         <input
                           id="bank-transfer"
                           type="checkbox"
                           checked={bankTransfer}
                           onChange={e => {
+                            if (e.target.checked && !canUseBankTransfer) {
+                              showToast('error', 'You need to verify your account to enable bank transfer payments for your listings.');
+                              return;
+                            }
                             if (e.target.checked && bankAccounts.length === 0) {
-                              // Don't allow checking if no bank accounts
+                              showToast('error', 'You need to add at least one bank account to enable bank transfers.');
                               return;
                             }
                             setBankTransfer(e.target.checked);
                           }}
-                          disabled={bankAccounts.length === 0}
+                          disabled={!canUseBankTransfer || bankAccounts.length === 0}
                           className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm disabled:opacity-50"
                         />
                         <div className="flex-1">
-                          <label htmlFor="bank-transfer" className={`font-semibold cursor-pointer text-sm md:text-base ${bankAccounts.length === 0 ? 'text-gray-500' : 'text-[#0d0a0b]'}`}>
+                          <label htmlFor="bank-transfer" className={`font-semibold cursor-pointer text-sm md:text-base ${
+                            !canUseBankTransfer || bankAccounts.length === 0 ? 'text-gray-500' : 'text-[#0d0a0b]'
+                          }`}>
                             🏦 Allow Bank Transfer
                           </label>
-                          <p className={`text-xs md:text-sm mt-1 ${bankAccounts.length === 0 ? 'text-gray-400' : 'text-[#454955]'}`}>
-                            {bankAccounts.length === 0 
-                              ? "You need to add at least one bank account to enable bank transfers"
-                              : "Customers transfer money directly to your bank account"
-                            }
-                          </p>
-                          {bankAccounts.length === 0 && (
+                          
+                          {/* Show verification message if not verified */}
+                          {!canUseBankTransfer ? (
+                            <div className="mt-2">
+                              <p className="text-xs md:text-sm text-yellow-700 mb-2">
+                                ⚠️ {bankTransferEligibility.message}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                className="text-xs md:text-sm text-yellow-800 underline hover:text-yellow-900"
+                              >
+                                Go to Dashboard Settings to verify your account
+                              </button>
+                            </div>
+                          ) : (
+                            <p className={`text-xs md:text-sm mt-1 ${bankAccounts.length === 0 ? 'text-gray-400' : 'text-[#454955]'}`}>
+                              {bankAccounts.length === 0 
+                                ? "You need to add at least one bank account to enable bank transfers"
+                                : "Customers transfer money directly to your bank account"
+                              }
+                            </p>
+                          )}
+                          
+                          {/* Show add bank account button */}
+                          {bankAccounts.length === 0 && canUseBankTransfer && (
                             <button
                               type="button"
                               onClick={() => setShowBankAccountModal(true)}
