@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { collection, getDocs, query, where, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
-import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { Button, Input, AddBankAccountModal } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -52,6 +52,7 @@ export default function AddListing() {
   const [deliveryAdditional, setDeliveryAdditional] = useState("");
   const [cashOnDelivery, setCashOnDelivery] = useState(false);
   const [bankTransfer, setBankTransfer] = useState(false);
+  const [nonRefundable, setNonRefundable] = useState(false);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [showBankAccountModal, setShowBankAccountModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -468,6 +469,7 @@ export default function AddListing() {
         createdAt: (await import("firebase/firestore")).Timestamp.now(),
         cashOnDelivery,
         bankTransfer,
+        nonRefundable,
         // SEO fields
         seoTitle: `${name} - ${itemType} ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
         seoDescription: desc.length > 160 ? desc.substring(0, 157) + '...' : desc,
@@ -1320,6 +1322,40 @@ Delivery & Important Notes
                         </p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Order Policy Options */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-[#0d0a0b] text-sm md:text-base mb-3">
+                    📋 Order Policy
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Non-Refundable Option */}
+                    <div className="p-4 md:p-6 rounded-xl border" style={{ 
+                      backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                      borderColor: 'rgba(251, 191, 36, 0.25)' 
+                    }}>
+                      <div className="flex items-start gap-2 md:gap-3">
+                        <input
+                          id="non-refundable"
+                          type="checkbox"
+                          checked={nonRefundable}
+                          onChange={e => setNonRefundable(e.target.checked)}
+                          className="w-4 md:w-5 h-4 md:h-5 rounded mt-0.5 shadow-sm"
+                          style={{ accentColor: '#92400e' }}
+                        />
+                        <div className="flex-1">
+                          <label htmlFor="non-refundable" className="font-semibold cursor-pointer text-sm md:text-base flex items-center gap-2" style={{ color: '#92400e' }}>
+                            <FiInfo size={18} />
+                            Non-Refundable Item
+                          </label>
+                          <p className="text-xs md:text-sm mt-1" style={{ color: '#78350f' }}>
+                            This item cannot be refunded once purchased. Customers will be notified before completing their order.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

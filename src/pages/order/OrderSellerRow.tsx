@@ -5,7 +5,7 @@ import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { formatPrice } from "../../utils/formatters";
-import { FiDollarSign, FiFlag } from "react-icons/fi";
+import { FiDollarSign, FiFlag, FiInfo } from "react-icons/fi";
 import { createOrderNotification } from "../../utils/notifications";
 import ReportBuyerModal from "../../components/UI/ReportBuyerModal";
 import { useAuth } from "../../context/AuthContext";
@@ -317,6 +317,21 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 <span className="font-semibold text-[#3f7d20]">Seller Notes:</span> 
                                 <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                                     {order.sellerNotes}
+                                </div>
+                            </div>
+                        )}
+                        {order.nonRefundable && (
+                            <div className="mt-2">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <FiInfo size={16} style={{ color: '#92400e' }} />
+                                    <span className="font-semibold" style={{ color: '#92400e' }}>Non-Refundable Item:</span>
+                                </div>
+                                <div className="mt-1 p-3 rounded-lg text-sm border" style={{ 
+                                    backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                                    borderColor: 'rgba(251, 191, 36, 0.25)',
+                                    color: '#78350f'
+                                }}>
+                                    This item is not eligible for refunds.
                                 </div>
                             </div>
                         )}

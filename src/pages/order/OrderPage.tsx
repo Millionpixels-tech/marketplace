@@ -6,10 +6,11 @@ import { db, storage } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import { OrderStatus } from "../../types/enums";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
-import { FiChevronDown, FiChevronUp, FiCreditCard, FiDollarSign, FiStar } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp, FiCreditCard, FiDollarSign, FiStar, FiInfo } from "react-icons/fi";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
@@ -27,6 +28,7 @@ export default function OrderPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user, loading: authLoading } = useAuth(); // Get both user and loading state
+    const { showToast } = useToast();
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [review, setReview] = useState("");
@@ -270,6 +272,12 @@ export default function OrderPage() {
 
     const requestRefund = async () => {
         if (!order) return;
+        
+        // Check if the item is non-refundable
+        if (order.nonRefundable) {
+            showToast('error', 'This item is non-refundable and cannot be refunded.');
+            return;
+        }
         
         const confirmed = await showConfirmDialog({
             title: "Request Refund",
@@ -596,6 +604,20 @@ export default function OrderPage() {
                                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                         <div className="text-sm font-medium text-blue-800 mb-1">{isBuyer ? 'Your Notes:' : 'Buyer Notes:'}</div>
                                         <div className="text-sm text-blue-700">{order.buyerNotes}</div>
+                                    </div>
+                                )}
+                                {order.nonRefundable && (
+                                    <div className="p-3 rounded-lg border" style={{ 
+                                        backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                                        borderColor: 'rgba(251, 191, 36, 0.25)' 
+                                    }}>
+                                        <div className="flex items-center gap-2">
+                                            <FiInfo size={18} style={{ color: '#92400e' }} />
+                                            <div>
+                                                <div className="text-sm font-medium mb-1" style={{ color: '#92400e' }}>Non-Refundable Item</div>
+                                                <div className="text-sm" style={{ color: '#78350f' }}>This item is not eligible for refunds.</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -1139,13 +1161,15 @@ export default function OrderPage() {
                                         </span>
                                     )}
                                 </button>
-                                <button
-                                    className="px-6 py-3 text-gray-600 hover:text-red-600 transition focus:outline-none text-sm font-medium"
-                                    onClick={requestRefund}
-                                    disabled={refundSubmitting}
-                                >
-                                    {refundSubmitting ? 'Processing...' : 'Request Refund'}
-                                </button>
+                                {!order.nonRefundable && (
+                                    <button
+                                        className="px-6 py-3 text-gray-600 hover:text-red-600 transition focus:outline-none text-sm font-medium"
+                                        onClick={requestRefund}
+                                        disabled={refundSubmitting}
+                                    >
+                                        {refundSubmitting ? 'Processing...' : 'Request Refund'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

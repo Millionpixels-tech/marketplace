@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { AddBankAccountModal, Button, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -55,6 +55,7 @@ export default function EditListing() {
     const [deliveryAdditional, setDeliveryAdditional] = useState("");
     const [cashOnDelivery, setCashOnDelivery] = useState(false);
     const [bankTransfer, setBankTransfer] = useState(false);
+    const [nonRefundable, setNonRefundable] = useState(false);
     const [bankAccounts, setBankAccounts] = useState<any[]>([]);
     const [showBankAccountModal, setShowBankAccountModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -373,6 +374,7 @@ export default function EditListing() {
             setQuantity(data.quantity ? String(data.quantity) : "");
             setCashOnDelivery(!!data.cashOnDelivery);
             setBankTransfer(!!data.bankTransfer);
+            setNonRefundable(!!data.nonRefundable);
             
             // Load variations if they exist
             if (data.hasVariations && data.variations && Array.isArray(data.variations)) {
@@ -544,6 +546,7 @@ export default function EditListing() {
                 newImageMetadata: newImageMetadata, // Store metadata for new images
                 cashOnDelivery,
                 bankTransfer,
+                nonRefundable,
                 updatedAt: (await import("firebase/firestore")).Timestamp.now(),
                 // Update SEO fields
                 seoTitle: `${name} - ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
@@ -1460,6 +1463,40 @@ export default function EditListing() {
                                                 </p>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+
+                                {/* Order Policy Options */}
+                                <div className="space-y-4">
+                                    <h3 className="font-semibold text-[#0d0a0b] text-sm md:text-base mb-3">
+                                        📋 Order Policy
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {/* Non-Refundable Option */}
+                                        <div className="p-4 md:p-6 rounded-xl border" style={{ 
+                                            backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                                            borderColor: 'rgba(251, 191, 36, 0.25)' 
+                                        }}>
+                                            <div className="flex items-start gap-2 md:gap-3">
+                                                <input
+                                                    id="non-refundable-checkbox"
+                                                    type="checkbox"
+                                                    checked={nonRefundable}
+                                                    onChange={e => setNonRefundable(e.target.checked)}
+                                                    className="w-4 md:w-5 h-4 md:h-5 rounded mt-0.5 shadow-sm"
+                                                    style={{ accentColor: '#92400e' }}
+                                                />
+                                                <div className="flex-1">
+                                                    <label htmlFor="non-refundable-checkbox" className="font-semibold cursor-pointer text-sm md:text-base flex items-center gap-2" style={{ color: '#92400e' }}>
+                                                        <FiInfo size={18} />
+                                                        Non-Refundable Item
+                                                    </label>
+                                                    <p className="text-xs md:text-sm mt-1" style={{ color: '#78350f' }}>
+                                                        This item cannot be refunded once purchased. Customers will be notified before completing their order.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
