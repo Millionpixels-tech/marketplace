@@ -20,7 +20,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   description,
   keywords,
   canonicalUrl,
-  ogImage = '/og-default.jpg',
+  ogImage,
   ogType = 'website',
   structuredData,
   noIndex = false,
@@ -32,7 +32,11 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   const siteName = 'Sina.lk';
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
   const currentUrl = canonicalUrl || window.location.href;
-  const fullImageUrl = ogImage.startsWith('http') ? ogImage : `https://sina.lk${ogImage}`;
+  
+  // Default Open Graph image - use logo.svg as fallback, but prefer custom ogImage for better social sharing
+  const defaultOgImage = '/logo.svg';
+  const imageToUse = ogImage || defaultOgImage;
+  const fullImageUrl = imageToUse.startsWith('http') ? imageToUse : `https://sina.lk${imageToUse}`;
 
   return (
     <Helmet>
@@ -54,6 +58,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta property="og:url" content={currentUrl} />
       <meta property="og:image" content={fullImageUrl} />
       <meta property="og:image:alt" content={`${title} - ${siteName}`} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:locale" content="en_US" />
       {publishedTime && <meta property="article:published_time" content={publishedTime} />}
@@ -64,7 +70,9 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImageUrl} />
+      <meta name="twitter:image:alt" content={`${title} - ${siteName}`} />
       <meta name="twitter:site" content="@SinaLK" />
+      <meta name="twitter:creator" content="@SinaLK" />
       
       {/* Additional Meta Tags */}
       <meta name="author" content={siteName} />
