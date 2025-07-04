@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiPlus, FiPackage, FiDollarSign } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons } from "../../utils/categories";
 import { AddBankAccountModal, Button, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -13,6 +13,7 @@ import Footer from "../../components/UI/Footer";
 import { processImageForUpload, generateImageAltText } from "../../utils/imageUtils";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
+import { useSellerVerification } from "../../hooks/useSellerVerification";
 
 // Simple variation interface
 interface SimpleVariation {
@@ -54,6 +55,7 @@ export default function EditListing() {
     const [deliveryAdditional, setDeliveryAdditional] = useState("");
     const [cashOnDelivery, setCashOnDelivery] = useState(false);
     const [bankTransfer, setBankTransfer] = useState(false);
+    const [nonRefundable, setNonRefundable] = useState(false);
     const [bankAccounts, setBankAccounts] = useState<any[]>([]);
     const [showBankAccountModal, setShowBankAccountModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -67,6 +69,9 @@ export default function EditListing() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
     const { showToast } = useToast();
+    
+    // Use seller verification hook
+    const { bankTransferEligibility, canUseBankTransfer } = useSellerVerification();
 
     // Helper function to change step and scroll to top
     const goToStep = (newStep: number) => {
@@ -369,6 +374,7 @@ export default function EditListing() {
             setQuantity(data.quantity ? String(data.quantity) : "");
             setCashOnDelivery(!!data.cashOnDelivery);
             setBankTransfer(!!data.bankTransfer);
+            setNonRefundable(!!data.nonRefundable);
             
             // Load variations if they exist
             if (data.hasVariations && data.variations && Array.isArray(data.variations)) {
@@ -540,6 +546,7 @@ export default function EditListing() {
                 newImageMetadata: newImageMetadata, // Store metadata for new images
                 cashOnDelivery,
                 bankTransfer,
+                nonRefundable,
                 updatedAt: (await import("firebase/firestore")).Timestamp.now(),
                 // Update SEO fields
                 seoTitle: `${name} - ${cat} ${sub ? `- ${sub}` : ''} | ${shops.find(s => s.id === shopId)?.name || 'Shop'}`,
@@ -1380,33 +1387,62 @@ export default function EditListing() {
                                         </div>
 
                                         {/* Bank Transfer Option */}
-                                        <div className={`p-4 md:p-6 rounded-xl border ${bankAccounts.length === 0 ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200'}`}>
+                                        <div className={`p-4 md:p-6 rounded-xl border ${
+                                          !canUseBankTransfer ? 'bg-yellow-50 border-yellow-200' : 
+                                          bankAccounts.length === 0 ? 'bg-gray-50 border-gray-200' : 
+                                          'bg-green-50 border-green-200'
+                                        }`}>
                                             <div className="flex items-start gap-2 md:gap-3">
                                                 <input
                                                     id="bank-transfer-checkbox"
                                                     type="checkbox"
                                                     checked={bankTransfer}
                                                     onChange={e => {
+                                                        if (e.target.checked && !canUseBankTransfer) {
+                                                            showToast('error', 'You need to verify your account to enable bank transfer payments for your listings.');
+                                                            return;
+                                                        }
                                                         if (e.target.checked && bankAccounts.length === 0) {
-                                                            // Don't allow checking if no bank accounts
+                                                            showToast('error', 'You need to add at least one bank account to enable bank transfers.');
                                                             return;
                                                         }
                                                         setBankTransfer(e.target.checked);
                                                     }}
-                                                    disabled={bankAccounts.length === 0}
+                                                    disabled={!canUseBankTransfer || bankAccounts.length === 0}
                                                     className="w-4 md:w-5 h-4 md:h-5 accent-[#72b01d] rounded mt-0.5 shadow-sm disabled:opacity-50"
                                                 />
                                                 <div className="flex-1">
-                                                    <label htmlFor="bank-transfer-checkbox" className={`font-semibold cursor-pointer text-sm md:text-base ${bankAccounts.length === 0 ? 'text-gray-500' : 'text-[#0d0a0b]'}`}>
+                                                    <label htmlFor="bank-transfer-checkbox" className={`font-semibold cursor-pointer text-sm md:text-base ${
+                                                        !canUseBankTransfer || bankAccounts.length === 0 ? 'text-gray-500' : 'text-[#0d0a0b]'
+                                                    }`}>
                                                         🏦 Allow Bank Transfer
                                                     </label>
-                                                    <p className={`text-xs md:text-sm mt-1 ${bankAccounts.length === 0 ? 'text-gray-400' : 'text-[#454955]'}`}>
-                                                        {bankAccounts.length === 0 
-                                                            ? "You need to add at least one bank account to enable bank transfers"
-                                                            : "Customers transfer money directly to your bank account"
-                                                        }
-                                                    </p>
-                                                    {bankAccounts.length === 0 && (
+                                                    
+                                                    {/* Show verification message if not verified */}
+                                                    {!canUseBankTransfer ? (
+                                                        <div className="mt-2">
+                                                            <p className="text-xs md:text-sm text-yellow-700 mb-2">
+                                                                ⚠️ {bankTransferEligibility.message}
+                                                            </p>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                                                className="text-xs md:text-sm text-yellow-800 underline hover:text-yellow-900"
+                                                            >
+                                                                Go to Dashboard Settings to verify your account
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <p className={`text-xs md:text-sm mt-1 ${bankAccounts.length === 0 ? 'text-gray-400' : 'text-[#454955]'}`}>
+                                                            {bankAccounts.length === 0 
+                                                                ? "You need to add at least one bank account to enable bank transfers"
+                                                                : "Customers transfer money directly to your bank account"
+                                                            }
+                                                        </p>
+                                                    )}
+                                                    
+                                                    {/* Show add bank account button */}
+                                                    {bankAccounts.length === 0 && canUseBankTransfer && (
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowBankAccountModal(true)}
@@ -1427,6 +1463,40 @@ export default function EditListing() {
                                                 </p>
                                             </div>
                                         )}
+                                    </div>
+                                </div>
+
+                                {/* Order Policy Options */}
+                                <div className="space-y-4">
+                                    <h3 className="font-semibold text-[#0d0a0b] text-sm md:text-base mb-3">
+                                        📋 Order Policy
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {/* Non-Refundable Option */}
+                                        <div className="p-4 md:p-6 rounded-xl border" style={{ 
+                                            backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                                            borderColor: 'rgba(251, 191, 36, 0.25)' 
+                                        }}>
+                                            <div className="flex items-start gap-2 md:gap-3">
+                                                <input
+                                                    id="non-refundable-checkbox"
+                                                    type="checkbox"
+                                                    checked={nonRefundable}
+                                                    onChange={e => setNonRefundable(e.target.checked)}
+                                                    className="w-4 md:w-5 h-4 md:h-5 rounded mt-0.5 shadow-sm"
+                                                    style={{ accentColor: '#92400e' }}
+                                                />
+                                                <div className="flex-1">
+                                                    <label htmlFor="non-refundable-checkbox" className="font-semibold cursor-pointer text-sm md:text-base flex items-center gap-2" style={{ color: '#92400e' }}>
+                                                        <FiInfo size={18} />
+                                                        Non-Refundable Item
+                                                    </label>
+                                                    <p className="text-xs md:text-sm mt-1" style={{ color: '#78350f' }}>
+                                                        This item cannot be refunded once purchased. Customers will be notified before completing their order.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

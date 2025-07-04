@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs, limit, startAfter, QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, startAfter, orderBy, QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 import { FiBox } from "react-icons/fi";
 import ShopOwnerName from "./ShopOwnerName";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -94,7 +94,10 @@ export default function ShopPage() {
             try {
                 // Use getCountFromServer if available (Firebase v9.8+)
                 const { getCountFromServer } = await import('firebase/firestore');
-                const countQuery = query(collection(db, "listings"), where("shopId", "==", shop?.id));
+                const countQuery = query(
+                    collection(db, "listings"), 
+                    where("shopId", "==", shop?.id)
+                );
                 const snapshot = await getCountFromServer(countQuery);
                 setTotalCount(snapshot.data().count);
             } catch (error) {
@@ -103,6 +106,7 @@ export default function ShopPage() {
                 const countQuery = query(
                     collection(db, "listings"), 
                     where("shopId", "==", shop?.id),
+                    orderBy("createdAt", "desc"),
                     limit(1000) // Add limit to prevent excessive reads
                 );
                 const allListingsSnap = await getDocs(countQuery);
@@ -165,6 +169,7 @@ export default function ShopPage() {
                 q = query(
                     collection(db, "listings"),
                     where("shopId", "==", shop.id),
+                    orderBy("createdAt", "desc"),
                     limit(PAGE_SIZE)
                 );
             } else {
@@ -173,6 +178,7 @@ export default function ShopPage() {
                 q = query(
                     collection(db, "listings"),
                     where("shopId", "==", shop.id),
+                    orderBy("createdAt", "desc"),
                     startAfter(cursor),
                     limit(PAGE_SIZE)
                 );

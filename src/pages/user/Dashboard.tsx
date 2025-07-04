@@ -20,6 +20,7 @@ import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { useUnreadMessages } from "../../hooks/useUnreadMessages";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
+import { useSellerVerification } from "../../hooks/useSellerVerification";
 
 // Import separate earnings page
 import EarningsPage from "./dashboard/EarningsPage";
@@ -115,6 +116,9 @@ export default function ProfileDashboard() {
 
     // Custom Order Modal state
     const [showCustomOrderModal, setShowCustomOrderModal] = useState(false);
+
+    // Use seller verification hook to check bank transfer eligibility
+    const { bankTransferEligibility, canUseBankTransfer } = useSellerVerification();
 
     // Auto-clear success messages after 5 seconds
     useEffect(() => {
@@ -2056,6 +2060,30 @@ export default function ProfileDashboard() {
                                             + Add Bank Account
                                         </button>
                                     </div>
+
+                                    {/* Verification warning for bank transfer usage */}
+                                    {!canUseBankTransfer && (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                            <div className="flex items-start gap-3">
+                                                <div className="flex-shrink-0">
+                                                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                    </svg>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-medium text-yellow-800 mb-2">
+                                                        Bank Transfer Verification Required
+                                                    </p>
+                                                    <p className="text-sm text-yellow-700">
+                                                        {bankTransferEligibility.message}
+                                                    </p>
+                                                    <p className="text-xs text-yellow-600 mt-2">
+                                                        Complete your verification below to enable bank transfer payments for your listings.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Bank Accounts List */}
                                     {bankAccounts.length > 0 && (

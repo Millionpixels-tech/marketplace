@@ -20,7 +20,7 @@ import { useResponsive } from "../hooks/useResponsive";
 import { useToast } from "../context/ToastContext";
 import { checkBuyerReports, checkBuyerVerification, getBuyerStatusMessage, shouldBlockBuyer, type BuyerReportStatus } from "../utils/buyerVerification";
 import BuyerStatusWarning from "../components/UI/BuyerStatusWarning";
-import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock } from "react-icons/fi";
+import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock, FiInfo } from "react-icons/fi";
 
 type CheckoutItem = {
   id: string;
@@ -34,6 +34,7 @@ type CheckoutItem = {
   deliveryAdditional?: number;
   cashOnDelivery?: boolean;
   bankTransfer?: boolean;
+  nonRefundable?: boolean;
   owner: string;
   shopId?: string;
   shop?: string;
@@ -526,6 +527,7 @@ export default function CheckoutPage() {
         total: total,
         paymentMethod: PaymentMethod.BANK_TRANSFER,
         paymentStatus: PaymentStatus.PENDING,
+        nonRefundable: !!item.nonRefundable,
         // Include variation information if selected
         ...(selectedVariation && {
           variationId: selectedVariation.id,
@@ -601,6 +603,7 @@ export default function CheckoutPage() {
         shipping: shipping,
         total: total,
         paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+        nonRefundable: !!item.nonRefundable,
         // Include variation information if selected
         ...(selectedVariation && {
           variationId: selectedVariation.id,
@@ -687,6 +690,7 @@ export default function CheckoutPage() {
         paymentMethod: PaymentMethod.PAY_NOW,
         paymentStatus: PaymentStatus.PENDING,
         orderId: orderId,
+        nonRefundable: !!item.nonRefundable,
         // Include variation information if selected
         ...(selectedVariation && {
           variationId: selectedVariation.id,
@@ -1401,6 +1405,26 @@ export default function CheckoutPage() {
                       </h5>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#454955' }}>
                         {item.sellerNotes}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Non-Refundable Notice */}
+              {item.nonRefundable && (
+                <div className="mb-6 p-4 rounded-xl border" style={{ 
+                  backgroundColor: 'rgba(251, 191, 36, 0.08)', 
+                  borderColor: 'rgba(251, 191, 36, 0.25)' 
+                }}>
+                  <div className="flex items-start gap-3">
+                    <FiInfo size={20} style={{ color: '#92400e' }} />
+                    <div className="flex-1">
+                      <h5 className="font-semibold text-sm mb-2" style={{ color: '#92400e' }}>
+                        Non-Refundable Item
+                      </h5>
+                      <p className="text-sm leading-relaxed" style={{ color: '#78350f' }}>
+                        This item cannot be refunded once purchased. Please review your order carefully before completing the purchase.
                       </p>
                     </div>
                   </div>
