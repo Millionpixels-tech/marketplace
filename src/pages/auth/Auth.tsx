@@ -266,7 +266,7 @@ const Auth = () => {
             <p className="text-sm md:text-base">
               🎉 You're signing up through a referral! 
               <span className="font-semibold ml-1">
-                Complete your registration to help your friend earn LKR 20!
+                Complete your registration to support your friend and join our community!
               </span>
             </p>
           </div>
