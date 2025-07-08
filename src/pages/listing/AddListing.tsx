@@ -516,7 +516,7 @@ export default function AddListing() {
           'sell online'
         ])}
         canonicalUrl={getCanonicalUrl('/add-listing')}
-        noIndex={true}
+        noIndex={false}
       />
       <ResponsiveHeader />
       <div className="bg-white min-h-screen flex flex-col items-center py-4 md:py-8 px-2 md:px-4">

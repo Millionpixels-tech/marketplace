@@ -1,6 +1,16 @@
 User-agent: *
 Allow: /
 
+# Allow all search pages explicitly (including with query parameters)
+Allow: /search
+Allow: /search?*
+Allow: /search/*
+
+# Allow important pages for SEO
+Allow: /create-shop
+Allow: /add-listing
+Allow: /seller-guide
+
 # Disallow private pages
 Disallow: /dashboard/
 Disallow: /admin/
@@ -9,12 +19,6 @@ Disallow: /auth/
 Disallow: /_auth_actions
 Disallow: /email-verification
 Disallow: /reset-password
-
-# Allow important pages for SEO
-Allow: /search
-Allow: /create-shop
-Allow: /add-listing
-Allow: /seller-guide
 
 # Sitemap
 Sitemap: https://sina.lk/sitemap.xml

@@ -467,7 +467,7 @@ const Search: React.FC = () => {
         description={seoData.description}
         keywords={seoData.keywords}
         canonicalUrl={getCanonicalUrl('/search')}
-        noIndex={!searchQuery && !categoryFilter} // Don't index empty search pages
+        noIndex={false} // Allow indexing of search pages
       />
       <ResponsiveHeader />
       <div className={`w-full min-h-screen ${isMobile ? 'py-4 px-2' : 'py-10 px-1 md:px-4'}`} style={{ backgroundColor: '#ffffff' }}>
