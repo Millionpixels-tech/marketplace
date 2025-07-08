@@ -8,6 +8,8 @@ import { Button, Card, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { compressImage, generateSEOFilename } from "../../utils/imageUtils";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 
 export default function CreateShop() {
   const [shopName, setShopName] = useState("");
@@ -228,6 +230,23 @@ export default function CreateShop() {
   // --- UI starts here ---
   return (
     <>
+      <SEOHead
+        title="Create Your Shop - Start Selling on Sina.lk"
+        description="Create your own shop on Sina.lk and start selling your products to customers across Sri Lanka. Set up your shop profile, add your logo, and start your online business today."
+        keywords={generateKeywords([
+          'create shop',
+          'start selling',
+          'online shop',
+          'sri lanka marketplace',
+          'sell online',
+          'business setup',
+          'seller registration',
+          'e-commerce',
+          'online store'
+        ])}
+        canonicalUrl={getCanonicalUrl('/create-shop')}
+        noIndex={false}
+      />
       <ResponsiveHeader />
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center py-4 md:py-10 px-2 md:px-4">
         <div className="w-full max-w-5xl bg-white rounded-xl md:rounded-3xl shadow-xl border border-gray-100 p-4 md:p-12 flex flex-col items-center">
