@@ -7,7 +7,10 @@ import type { DocumentData } from "firebase/firestore";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import { hasAdminAccess } from "../../utils/adminConfig";
 import { formatPrice } from "../../utils/formatters";
-import { FiSearch, FiTrash2, FiUser, FiPackage, FiShoppingBag, FiAlertTriangle, FiExternalLink, FiCheckCircle, FiXCircle, FiEye, FiClock } from "react-icons/fi";
+import { FiSearch, FiTrash2, FiUser, FiPackage, FiShoppingBag, FiAlertTriangle, FiExternalLink, FiCheckCircle, FiXCircle, FiEye, FiClock, FiDollarSign } from "react-icons/fi";
+import { 
+  type WithdrawalRequest 
+} from "../../utils/referrals";
 
 interface User {
     id: string;
@@ -78,7 +81,7 @@ interface VerificationRequest {
     createdAt?: any;
 }
 
-type SearchType = 'users' | 'listings' | 'shops' | 'buyerReports' | 'verificationRequests';
+type SearchType = 'users' | 'listings' | 'shops' | 'buyerReports' | 'verificationRequests' | 'withdrawalRequests';
 
 interface DeleteModalData {
     isOpen: boolean;
@@ -109,6 +112,9 @@ export default function AdminManagement() {
         item: null,
         itemName: ""
     });
+    
+    // Withdrawal processing state
+    const [processingWithdrawal, setProcessingWithdrawal] = useState<string | null>(null);
 
     // Check if user is logged in
     useEffect(() => {
@@ -150,6 +156,8 @@ export default function AdminManagement() {
                 results = await searchBuyerReports(searchQuery.trim());
             } else if (searchType === 'verificationRequests') {
                 results = await searchVerificationRequests(searchQuery.trim());
+            } else if (searchType === 'withdrawalRequests') {
+                results = await searchWithdrawalRequests(searchQuery.trim());
             }
 
             setSearchResults(results);
@@ -531,6 +539,66 @@ export default function AdminManagement() {
         });
     };
 
+    const searchWithdrawalRequests = async (searchTerm: string = ""): Promise<WithdrawalRequest[]> => {
+        const withdrawals: WithdrawalRequest[] = [];
+        
+        try {
+            let withdrawalsQuery;
+            if (!searchTerm) {
+                // Get all withdrawal requests
+                withdrawalsQuery = query(collection(db, "withdrawalRequests"));
+            } else {
+                // Search by user ID or email (we'll need to get user data)
+                withdrawalsQuery = query(collection(db, "withdrawalRequests"));
+            }
+            
+            const withdrawalsSnap = await getDocs(withdrawalsQuery);
+            
+            for (const docRef of withdrawalsSnap.docs) {
+                const withdrawalData = docRef.data() as DocumentData;
+                const withdrawal = { id: docRef.id, ...withdrawalData } as WithdrawalRequest & { userEmail?: string; userDisplayName?: string };
+                
+                // Get user data to include email and display name
+                const userDoc = await getDoc(doc(db, 'users', withdrawal.userId));
+                let userEmail = 'Unknown';
+                let userDisplayName = 'Unknown User';
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    userEmail = userData.email || 'Unknown';
+                    userDisplayName = userData.displayName || 'Unknown User';
+                }
+                
+                // Add user data to withdrawal object
+                withdrawal.userEmail = userEmail;
+                withdrawal.userDisplayName = userDisplayName;
+                
+                // If searching, filter by user email or ID
+                if (searchTerm) {
+                    const searchTermLower = searchTerm.toLowerCase();
+                    
+                    if (withdrawal.userId.toLowerCase().includes(searchTermLower) ||
+                        userEmail.toLowerCase().includes(searchTermLower) ||
+                        userDisplayName.toLowerCase().includes(searchTermLower)) {
+                        withdrawals.push(withdrawal);
+                    }
+                } else {
+                    withdrawals.push(withdrawal);
+                }
+            }
+        } catch (error) {
+            console.error("Error searching withdrawal requests:", error);
+        }
+
+        return withdrawals.sort((a, b) => {
+            // Sort by request date, newest first
+            if (a.requestedAt && b.requestedAt) {
+                return b.requestedAt.seconds - a.requestedAt.seconds;
+            }
+            return 0;
+        });
+    };
+
     // Load pending verification requests automatically when tab is selected
     useEffect(() => {
         if (searchType === 'verificationRequests') {
@@ -541,6 +609,16 @@ export default function AdminManagement() {
                 setSearching(false);
             }).catch(error => {
                 console.error("Error loading verification requests:", error);
+                setSearching(false);
+            });
+        } else if (searchType === 'withdrawalRequests') {
+            setSearching(true);
+            setHasSearched(true);
+            searchWithdrawalRequests().then(results => {
+                setSearchResults(results);
+                setSearching(false);
+            }).catch(error => {
+                console.error("Error loading withdrawal requests:", error);
                 setSearching(false);
             });
         }
@@ -595,6 +673,77 @@ export default function AdminManagement() {
         } catch (error) {
             console.error('Error updating verification request:', error);
             alert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} verification request. Please try again.`);
+        }
+    };
+
+    const handleWithdrawalAction = async (withdrawalId: string, action: 'approve' | 'reject' | 'paid', notes?: string) => {
+        try {
+            setProcessingWithdrawal(withdrawalId);
+            console.log(`Processing withdrawal action: ${action} for ID: ${withdrawalId}`);
+            
+            const withdrawalRef = doc(db, 'withdrawalRequests', withdrawalId);
+            const withdrawalSnap = await getDoc(withdrawalRef);
+            
+            if (!withdrawalSnap.exists()) {
+                throw new Error('Withdrawal request not found');
+            }
+
+            const withdrawalData = withdrawalSnap.data();
+            console.log('Current withdrawal data:', withdrawalData);
+            
+            // Update withdrawal status
+            await updateDoc(withdrawalRef, {
+                status: action,
+                reviewedAt: serverTimestamp(),
+                reviewedBy: user?.email || 'admin',
+                adminNotes: notes || '',
+                ...(action === 'paid' && { paidAt: serverTimestamp() })
+            });
+
+            console.log(`Withdrawal status updated to: ${action}`);
+
+            // If marked as paid, update user's total withdrawn
+            if (action === 'paid') {
+                const userRef = doc(db, 'referrals', withdrawalData.userId);
+                const userSnap = await getDoc(userRef);
+                
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    await updateDoc(userRef, {
+                        totalWithdrawn: (userData.totalWithdrawn || 0) + withdrawalData.amount,
+                        updatedAt: serverTimestamp()
+                    });
+                    console.log(`Updated user totalWithdrawn: ${(userData.totalWithdrawn || 0) + withdrawalData.amount}`);
+                }
+            }
+            
+            // If rejected, restore the available balance
+            if (action === 'reject') {
+                const userRef = doc(db, 'referrals', withdrawalData.userId);
+                const userSnap = await getDoc(userRef);
+                
+                if (userSnap.exists()) {
+                    await updateDoc(userRef, {
+                        availableBalance: (userSnap.data().availableBalance || 0) + withdrawalData.amount,
+                        updatedAt: serverTimestamp()
+                    });
+                    console.log(`Restored user availableBalance: ${(userSnap.data().availableBalance || 0) + withdrawalData.amount}`);
+                }
+            }
+
+            // Refresh the search results
+            if (searchType === 'withdrawalRequests') {
+                console.log('Refreshing withdrawal requests...');
+                const updatedResults = await searchWithdrawalRequests(searchQuery);
+                console.log('Updated results:', updatedResults);
+                setSearchResults(updatedResults);
+            }
+
+        } catch (error) {
+            console.error('Error updating withdrawal request:', error);
+            alert(`Error ${action === 'approve' ? 'approving' : action === 'reject' ? 'rejecting' : 'marking as paid'} withdrawal request. Please try again.`);
+        } finally {
+            setProcessingWithdrawal(null);
         }
     };
 
@@ -795,7 +944,8 @@ export default function AdminManagement() {
                             { type: 'listings' as SearchType, label: 'Listings', icon: FiPackage },
                             { type: 'shops' as SearchType, label: 'Shops', icon: FiShoppingBag },
                             { type: 'buyerReports' as SearchType, label: 'Buyer Reports', icon: FiAlertTriangle },
-                            { type: 'verificationRequests' as SearchType, label: 'User Verification', icon: FiCheckCircle }
+                            { type: 'verificationRequests' as SearchType, label: 'User Verification', icon: FiCheckCircle },
+                            { type: 'withdrawalRequests' as SearchType, label: 'Withdrawal Requests', icon: FiDollarSign }
                         ].map(({ type, label, icon: Icon }) => (
                             <button
                                 key={type}
@@ -851,15 +1001,21 @@ export default function AdminManagement() {
                 </div>
 
                 {/* Search Results */}
-                {(hasSearched || searchType === 'verificationRequests') && (
+                {(hasSearched || searchType === 'verificationRequests' || searchType === 'withdrawalRequests') && (
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div className="p-6 border-b" style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                             <h2 className="text-xl font-bold" style={{ color: '#0d0a0b' }}>
-                                {searchType === 'verificationRequests' ? 'Pending Verification Requests' : 'Search Results'} ({searchResults.length})
+                                {searchType === 'verificationRequests' ? 'Pending Verification Requests' : 
+                                 searchType === 'withdrawalRequests' ? 'Withdrawal Requests' : 'Search Results'} ({searchResults.length})
                             </h2>
                             {searchType === 'verificationRequests' && (
                                 <p className="text-sm text-gray-600 mt-2">
                                     Review submitted identity documents (ID front/back, selfie) and approve or reject user verification requests. Click the eye icon to view documents.
+                                </p>
+                            )}
+                            {searchType === 'withdrawalRequests' && (
+                                <p className="text-sm text-gray-600 mt-2">
+                                    Review and manage user withdrawal requests. Approve pending requests, then mark as paid once the transfer is complete.
                                 </p>
                             )}
                         </div>
@@ -915,6 +1071,16 @@ export default function AdminManagement() {
                                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Submitted</th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Documents</th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Actions</th>
+                                                </>
+                                            )}
+                                            {searchType === 'withdrawalRequests' && (
+                                                <>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>User</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Amount</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Requested</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Status</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#0d0a0b' }}>Bank Details</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider min-w-[180px]" style={{ color: '#0d0a0b' }}>Actions</th>
                                                 </>
                                             )}
                                         </tr>
@@ -1230,6 +1396,108 @@ export default function AdminManagement() {
                                                                 {item.isVerified !== 'PENDING' && (
                                                                     <span className="text-xs text-gray-500">
                                                                         {item.isVerified === 'COMPLETED' ? 'Approved' : 'Rejected'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {searchType === 'withdrawalRequests' && (
+                                                    <>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-medium" style={{ color: '#0d0a0b' }}>
+                                                                {item.userDisplayName || item.userEmail || 'Unknown User'}
+                                                            </div>
+                                                            <div className="text-xs" style={{ color: '#454955' }}>
+                                                                {item.userEmail || 'Unknown Email'}
+                                                            </div>
+                                                            <div className="text-xs" style={{ color: '#454955' }}>
+                                                                User ID: {item.userId}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm font-medium" style={{ color: '#3f7d20' }}>
+                                                                LKR {item.amount?.toLocaleString()}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm" style={{ color: '#454955' }}>
+                                                                {item.requestedAt?.toDate?.().toLocaleDateString() || 'N/A'}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                item.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                                                                item.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                                'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {item.status?.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm" style={{ color: '#454955' }}>
+                                                                {item.bankAccount?.fullName || 'N/A'}
+                                                            </div>
+                                                            <div className="text-xs" style={{ color: '#454955' }}>
+                                                                {item.bankAccount?.accountNumber || 'N/A'}
+                                                            </div>
+                                                            <div className="text-xs" style={{ color: '#454955' }}>
+                                                                {item.bankAccount?.bankName || 'N/A'}
+                                                            </div>
+                                                            {item.bankAccount?.branch && (
+                                                                <div className="text-xs" style={{ color: '#454955' }}>
+                                                                    Branch: {item.bankAccount.branch}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {item.status === 'pending' && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => handleWithdrawalAction(item.id, 'approve')}
+                                                                            disabled={processingWithdrawal === item.id}
+                                                                            className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 transition duration-200 rounded-md text-xs font-medium disabled:opacity-50"
+                                                                            title="Approve Withdrawal"
+                                                                        >
+                                                                            <FiCheckCircle className="w-3 h-3" />
+                                                                            {processingWithdrawal === item.id ? 'Processing...' : 'Approve'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleWithdrawalAction(item.id, 'paid')}
+                                                                            disabled={processingWithdrawal === item.id}
+                                                                            className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-800 transition duration-200 rounded-md text-xs font-medium disabled:opacity-50"
+                                                                            title="Mark as Paid"
+                                                                        >
+                                                                            <FiDollarSign className="w-3 h-3" />
+                                                                            {processingWithdrawal === item.id ? 'Processing...' : 'Mark Paid'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleWithdrawalAction(item.id, 'reject')}
+                                                                            disabled={processingWithdrawal === item.id}
+                                                                            className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-800 transition duration-200 rounded-md text-xs font-medium disabled:opacity-50"
+                                                                            title="Reject Withdrawal"
+                                                                        >
+                                                                            <FiXCircle className="w-3 h-3" />
+                                                                            {processingWithdrawal === item.id ? 'Processing...' : 'Reject'}
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                                {item.status === 'approved' && (
+                                                                    <button
+                                                                        onClick={() => handleWithdrawalAction(item.id, 'paid')}
+                                                                        disabled={processingWithdrawal === item.id}
+                                                                        className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-800 transition duration-200 rounded-md text-xs font-medium disabled:opacity-50"
+                                                                        title="Mark as Paid"
+                                                                    >
+                                                                        <FiDollarSign className="w-3 h-3" />
+                                                                        {processingWithdrawal === item.id ? 'Processing...' : 'Mark Paid'}
+                                                                    </button>
+                                                                )}
+                                                                {(item.status === 'paid' || item.status === 'rejected') && (
+                                                                    <span className="text-xs text-gray-500 px-2 py-1">
+                                                                        {item.status === 'paid' ? 'Completed' : 'Rejected'}
                                                                     </span>
                                                                 )}
                                                             </div>

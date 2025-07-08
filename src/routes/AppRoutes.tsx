@@ -48,6 +48,7 @@ const AppRoutes = () => (
       {/* All other routes wrapped by EnvModeGuard */}
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/ref/:refCode" element={<Auth />} />
       <Route path="/_auth_actions" element={<AuthActions />} />
       <Route path="/email-verification" element={<EmailVerification />} />
       <Route path="/reset-password" element={<ResetPassword />} />

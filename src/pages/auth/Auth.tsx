@@ -2,13 +2,19 @@ import { useState, useEffect } from "react";
 import { auth, db } from "../../utils/firebase";
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button, Input, Card } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
+import { 
+  getReferralCodeFromUrl, 
+  clearStoredReferralCode, 
+  processReferralSignup,
+  initializeUserReferral
+} from "../../utils/referrals";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -18,8 +24,54 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { refCode } = useParams<{ refCode?: string }>();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  // Check for referral code on component mount
+  useEffect(() => {
+    // Check URL params first (from /ref/:refCode route)
+    if (refCode) {
+      setReferralCode(refCode);
+      // Store in sessionStorage for later use during signup
+      sessionStorage.setItem('referralCode', refCode);
+    } else {
+      // Check query params (?ref=code)
+      const refCodeFromUrl = getReferralCodeFromUrl();
+      if (refCodeFromUrl) {
+        setReferralCode(refCodeFromUrl);
+      }
+    }
+  }, [refCode]);
+
+  // Process referral after successful signup
+  const processReferralAfterSignup = async (userId: string, userEmail: string, signupMethod: 'email' | 'google', userName?: string) => {
+    if (referralCode) {
+      try {
+        await processReferralSignup(referralCode, userId, userEmail, signupMethod, userName);
+        clearStoredReferralCode();
+        console.log('Referral processed successfully');
+      } catch (error) {
+        console.error('Error processing referral:', error);
+        // Don't fail the signup if referral processing fails
+      }
+    }
+
+    // Initialize referral system for the new user
+    try {
+      await initializeUserReferral(userId);
+    } catch (error) {
+      console.error('Error initializing user referral:', error);
+      // Don't fail the signup if referral initialization fails
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -99,6 +151,14 @@ const Auth = () => {
         };
         
         await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+        
+        // Process referral signup
+        await processReferralAfterSignup(
+          userCredential.user.uid,
+          userCredential.user.email || '',
+          'email',
+          displayName.trim() || ''
+        );
         
         await sendEmailVerification(userCredential.user);
         await auth.signOut();
@@ -198,6 +258,20 @@ const Auth = () => {
       />
       
       <ResponsiveHeader />
+
+      {/* Referral Banner */}
+      {referralCode && (
+        <div className="bg-green-600 text-white py-3 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-sm md:text-base">
+              🎉 You're signing up through a referral! 
+              <span className="font-semibold ml-1">
+                Complete your registration to help your friend earn LKR 20!
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="flex flex-1 items-center justify-center p-4 py-16 md:py-24">
         <div className="w-full max-w-sm">
