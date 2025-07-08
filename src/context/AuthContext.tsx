@@ -3,6 +3,12 @@ import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { auth, db } from "../utils/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { 
+  getReferralCodeFromUrl, 
+  clearStoredReferralCode, 
+  processReferralSignup,
+  initializeUserReferral
+} from "../utils/referrals";
 
 interface AuthContextProps {
     user: User | null | undefined;
@@ -40,6 +46,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 
                 await setDoc(userDocRef, userData);
+
+                // Process referral if this is a new Google user
+                if (isGoogleUser) {
+                    const referralCode = getReferralCodeFromUrl();
+                    if (referralCode) {
+                        try {
+                            await processReferralSignup(referralCode, user.uid, user.email || '', 'google', user.displayName || '');
+                            clearStoredReferralCode();
+                            console.log('Google signup referral processed successfully');
+                        } catch (error) {
+                            console.error('Error processing Google signup referral:', error);
+                        }
+                    }
+                }
+
+                // Initialize referral system for the new user
+                try {
+                    await initializeUserReferral(user.uid);
+                } catch (error) {
+                    console.error('Error initializing user referral:', error);
+                }
             }
         } catch (error) {
             console.error('Error creating user document:', error);

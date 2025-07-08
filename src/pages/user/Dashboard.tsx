@@ -8,7 +8,7 @@ import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter, getDoc } from "firebase/firestore";
-import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare, FiUsers } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
@@ -26,6 +26,7 @@ import { useSellerVerification } from "../../hooks/useSellerVerification";
 import EarningsPage from "./dashboard/EarningsPage";
 import StockManagement from "./dashboard/StockManagement";
 import MessagesPage from "./dashboard/MessagesPage";
+import ReferralDashboard from "../../components/referrals/ReferralDashboard";
 import CreateCustomOrderModal from "../../components/UI/CreateCustomOrderModal";
 
 interface VerifyForm {
@@ -56,6 +57,7 @@ const TABS = [
     { key: "orders", label: "Orders", icon: <FiPackage /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
     { key: "messages", label: "Messages", icon: <FiMessageSquare /> },
+    { key: "referrals", label: "Referrals", icon: <FiUsers /> },
     { key: "earnings", label: "Earnings", icon: <FiStar /> },
     { key: "stock", label: "Stock", icon: <FiBox /> },
     { key: "settings", label: "Settings", icon: <FiUser /> },
@@ -435,7 +437,7 @@ export default function ProfileDashboard() {
     };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "messages" | "earnings" | "stock" | "settings">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "messages" | "referrals" | "earnings" | "stock" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1598,6 +1600,11 @@ export default function ProfileDashboard() {
                             </div>
                             <MessagesPage />
                         </div>
+                    )}
+                    
+                    {/* REFERRALS TAB */}
+                    {selectedTab === "referrals" && (
+                        <ReferralDashboard profileUid={profileUid} />
                     )}
                     
                     {/* EARNINGS TAB */}
