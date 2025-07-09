@@ -1,12 +1,31 @@
-const admin = require("firebase-admin");
+let admin;
+let isFirebaseInitialized = false;
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-if (!admin.apps.length) {
-  // Only initialize once
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+// Initialize Firebase Admin only when needed
+async function initializeFirebase() {
+  if (isFirebaseInitialized) return admin;
+  
+  try {
+    admin = require("firebase-admin");
+    
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+    }
+    
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
+    
+    isFirebaseInitialized = true;
+    return admin;
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+    throw error;
+  }
 }
 
 // Utility function to escape HTML
@@ -30,7 +49,11 @@ exports.handler = async function(event, context) {
   const { listingId } = event.queryStringParameters || {};
   const baseUrl = "https://mygold.lk"; // Change to your domain
   
+  console.log("Function called with listingId:", listingId);
+  console.log("User-Agent:", event.headers['user-agent']);
+  
   if (!listingId) {
+    console.log("Missing listingId parameter");
     return {
       statusCode: 400,
       headers: { "Content-Type": "application/json" },
@@ -39,6 +62,10 @@ exports.handler = async function(event, context) {
   }
 
   try {
+    // Initialize Firebase
+    const admin = await initializeFirebase();
+    console.log("Firebase initialized successfully");
+    
     console.log(`Fetching listing: ${listingId}`);
     
     // Get listing data from Firestore
@@ -113,6 +140,7 @@ exports.handler = async function(event, context) {
       baseUrl
     });
 
+    console.log("Returning HTML response");
     return {
       statusCode: 200,
       headers: {
@@ -124,7 +152,21 @@ exports.handler = async function(event, context) {
     };
 
   } catch (error) {
-    console.error("Error fetching listing:", error);
+    console.error("Error in listing-meta function:", error);
+    
+    // Check if this is a Firebase connection error
+    if (error.message.includes('FIREBASE_SERVICE_ACCOUNT')) {
+      console.error("Firebase service account configuration error");
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          error: "Firebase configuration error",
+          details: "FIREBASE_SERVICE_ACCOUNT environment variable is not properly configured"
+        })
+      };
+    }
+    
     return generateErrorPage(baseUrl, "Error Loading Product", "There was an error loading this product. Please try again later.");
   }
 };

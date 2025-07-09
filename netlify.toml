@@ -2,23 +2,31 @@
   function = "social-meta"
   path = "/listing/*"
 
+[[edge_functions]]
+  function = "social-meta"
+  path = "/shop/*"
+
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
 
 # Redirect social media bots for listing pages
 [[redirects]]
   from = "/listing/:listingId"
   to = "/.netlify/functions/listing-meta?listingId=:listingId"
   status = 200
-  conditions = {User-Agent = ["*bot*", "*crawler*", "*spider*", "*scraper*", "*preview*", "*facebook*", "*twitter*", "*whatsapp*", "*telegram*", "*discord*", "*slack*", "*linkedin*", "*pinterest*", "*facebookexternalhit*", "*twitterbot*"]}
+  conditions = {User-Agent = ["facebookexternalhit*", "Twitterbot*", "WhatsApp*", "*bot*", "*crawler*"]}
 
 # Redirect social media bots for shop pages
 [[redirects]]
   from = "/shop/:shopUsername"
   to = "/.netlify/functions/shop-meta?shopUsername=:shopUsername"
   status = 200
-  conditions = {User-Agent = ["*bot*", "*crawler*", "*spider*", "*scraper*", "*preview*", "*facebook*", "*twitter*", "*whatsapp*", "*telegram*", "*discord*", "*slack*", "*linkedin*", "*pinterest*", "*facebookexternalhit*", "*twitterbot*"]}
+  conditions = {User-Agent = ["facebookexternalhit*", "Twitterbot*", "WhatsApp*", "*bot*", "*crawler*"]}
 
 # Fallback for all other routes
 [[redirects]]
