@@ -10,10 +10,14 @@
 [functions]
   node_bundler = "esbuild"
 
-# Edge Function for listing page routing
+# Edge Function for listing and shop page routing
 [[edge_functions]]
   function = "listing-router"
   path = "/listing/*"
+
+[[edge_functions]]
+  function = "listing-router"
+  path = "/shop/*"
 
 # Fallback for all other routes to SPA
 [[redirects]]
