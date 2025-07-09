@@ -8,9 +8,11 @@ import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import Footer from "../components/UI/Footer";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../components/HOC/WithReviewStats";
-import { SEOHead } from "../components/SEO/SEOHead";
+import { AdvancedSEOHead } from "../components/SEO/AdvancedSEOHead";
 import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl, generateKeywords } from "../utils/seo";
+import { combineSchemas, generateWebsiteSearchSchema, generateMarketplaceSchema } from "../utils/advancedSchemaMarkup";
+import { PRIMARY_KEYWORDS, generateOptimizedKeywords, TITLE_TEMPLATES, META_DESCRIPTION_TEMPLATES } from "../utils/keywordStrategy";
 import { useResponsive } from "../hooks/useResponsive";
 import { useAuth } from "../context/AuthContext";
 import { shuffleArrayWithSeed, generateRandomSeed } from "../utils/randomUtils";
@@ -204,27 +206,23 @@ const Home = () => {
   return (
 
     <>
-      <SEOHead
-        title="Sina.lk - Sri Lankan Marketplace for Authentic Products & Crafts"
-        description="Discover authentic Sri Lankan products, handmade crafts, traditional textiles, Ceylon tea, and unique artisan creations on Sina.lk. Connect with local sellers and support small businesses islandwide."
-        keywords={generateKeywords([
-          'Sina.lk',
-          'Sri Lankan marketplace',
-          'Ceylon crafts',
-          'handmade products',
-          'traditional Sri Lankan goods',
-          'local artisans',
-          'authentic Sri Lankan items',
-          'woodcraft',
-          'jewelry',
-          'textiles',
-          'pottery',
-          'Ceylon tea',
-          'small businesses Sri Lanka'
-        ])}
+      <AdvancedSEOHead
+        title={TITLE_TEMPLATES.home()}
+        description={META_DESCRIPTION_TEMPLATES.general('Home')}
+        keywords={generateOptimizedKeywords('Sri Lankan marketplace')}
         canonicalUrl={getCanonicalUrl('/')}
+        ogImage="https://sina.lk/logo.svg"
         ogType="website"
-        structuredData={getWebsiteStructuredData()}
+        structuredData={combineSchemas(
+          generateWebsiteSearchSchema(),
+          generateMarketplaceSchema(),
+          getWebsiteStructuredData()
+        )}
+        priority="high"
+        changeFreq="daily"
+        breadcrumbs={[
+          { name: 'Home', url: 'https://sina.lk/' }
+        ]}
       />
       <ResponsiveHeader />
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
