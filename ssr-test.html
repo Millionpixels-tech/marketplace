@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSR Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background-color: #72b01d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #5a8f17;
+        }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Sina.lk SSR Testing</h1>
+    
+    <div class="test-section success">
+        <h2>✅ Server-Side Rendering (SSR) Implementation Complete!</h2>
+        <p>Your marketplace now has server-side rendering for listing pages, which means:</p>
+        <ul>
+            <li><strong>Perfect social media previews</strong> - When users share listing URLs on Facebook, Twitter, WhatsApp, etc.</li>
+            <li><strong>SEO optimization</strong> - Search engines can properly crawl and index your product pages</li>
+            <li><strong>Fast loading for crawlers</strong> - Bots get instant HTML with all meta tags</li>
+            <li><strong>Structured data</strong> - Rich snippets in search results</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h2>🧪 Test Your SSR Implementation</h2>
+        
+        <h3>Method 1: Direct Function Test (Works Now)</h3>
+        <p>Test the SSR function directly:</p>
+        <div class="code">curl -H "User-Agent: facebookexternalhit/1.1" http://localhost:8000/.netlify/functions/listing-ssr/test-listing-123</div>
+        <a href="/.netlify/functions/listing-ssr/test-listing-123" class="button" target="_blank">Test SSR Function</a>
+        
+        <h3>Method 2: Production URL Test</h3>
+        <p>After deployment, test with real social media tools:</p>
+        <ul>
+            <li><strong>Facebook Debugger:</strong> <a href="https://developers.facebook.com/tools/debug/" target="_blank">https://developers.facebook.com/tools/debug/</a></li>
+            <li><strong>Twitter Card Validator:</strong> <a href="https://cards-dev.twitter.com/validator" target="_blank">https://cards-dev.twitter.com/validator</a></li>
+            <li><strong>LinkedIn Post Inspector:</strong> <a href="https://www.linkedin.com/post-inspector/" target="_blank">https://www.linkedin.com/post-inspector/</a></li>
+        </ul>
+        
+        <h3>Method 3: Browser User-Agent Test</h3>
+        <p>Change your browser's user agent to simulate a bot:</p>
+        <div class="code">
+        1. Open Chrome DevTools (F12)<br>
+        2. Go to Network tab<br>
+        3. Click gear icon → More tools → Network conditions<br>
+        4. Uncheck "Use browser default"<br>
+        5. Set User Agent to: "facebookexternalhit/1.1"<br>
+        6. Visit: /listing/test-listing-123
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔧 How It Works</h2>
+        <ol>
+            <li><strong>Bot Detection:</strong> The system detects when a social media bot or crawler visits a listing page</li>
+            <li><strong>SSR Activation:</strong> Instead of serving the React app, it triggers the Netlify function</li>
+            <li><strong>Data Fetching:</strong> The function fetches listing data from Firebase (or uses mock data if not connected)</li>
+            <li><strong>HTML Generation:</strong> It generates a complete HTML page with all meta tags and structured data</li>
+            <li><strong>Fast Response:</strong> The bot gets the fully rendered page immediately</li>
+        </ol>
+    </div>
+
+    <div class="test-section info">
+        <h2>📝 What's Included in the SSR</h2>
+        <ul>
+            <li><strong>Open Graph Tags:</strong> For Facebook, LinkedIn, Discord previews</li>
+            <li><strong>Twitter Cards:</strong> For Twitter previews</li>
+            <li><strong>WhatsApp Meta Tags:</strong> For WhatsApp link previews</li>
+            <li><strong>Product Schema:</strong> For Google rich snippets</li>
+            <li><strong>Breadcrumb Schema:</strong> For search engine navigation</li>
+            <li><strong>Product Preview:</strong> Visual preview with image, price, description</li>
+            <li><strong>Shop Information:</strong> Seller details and branding</li>
+            <li><strong>Mobile Responsive:</strong> Works on all devices</li>
+        </ul>
+    </div>
+
+    <div class="test-section info">
+        <h2>🚀 Deployment Instructions</h2>
+        <ol>
+            <li><strong>Add Environment Variable:</strong> In your Netlify dashboard, add <code>FIREBASE_SERVICE_ACCOUNT</code> with your Firebase service account JSON</li>
+            <li><strong>Deploy:</strong> Push your code to trigger a new Netlify deployment</li>
+            <li><strong>Test:</strong> Use the social media debugging tools above to test your live listing URLs</li>
+        </ol>
+        
+        <h3>Environment Variable Setup:</h3>
+        <div class="code">
+        1. Go to Netlify Dashboard → Your Site → Site Settings<br>
+        2. Click "Environment Variables"<br>
+        3. Add Key: FIREBASE_SERVICE_ACCOUNT<br>
+        4. Add Value: Your complete Firebase service account JSON<br>
+        5. Save and redeploy
+        </div>
+    </div>
+
+    <div class="test-section success">
+        <h2>🎉 Next Steps</h2>
+        <p>Your SSR implementation is ready! Here's what you should do:</p>
+        <ol>
+            <li><strong>Deploy to production</strong> with the Firebase environment variable</li>
+            <li><strong>Test with real listing URLs</strong> using social media debugging tools</li>
+            <li><strong>Share a listing</strong> on social media to see the beautiful preview</li>
+            <li><strong>Monitor performance</strong> - your listings will now appear better in search results</li>
+        </ol>
+    </div>
+
+    <script>
+        // Add some interactivity for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.backgroundColor = '#3f7d20';
+                    setTimeout(() => {
+                        this.style.backgroundColor = '#72b01d';
+                    }, 200);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+
+[functions]
+  node_bundler = "esbuild"
+
+# SSR for listing pages - serve from function for bots/crawlers
+[[redirects]]
+  from = "/listing/:id"
+  to = "/.netlify/functions/listing-ssr/:id"
+  status = 200
+  force = false
+  headers = {x-from = "netlify-toml"}
+  conditions = {Role = ["bot"]}
+
+# Alternative: Direct bot detection via User-Agent
+[[redirects]]
+  from = "/listing/*"
+  to = "/.netlify/functions/listing-ssr/:splat"
+  status = 200
+  force = false
+  condition = "Header=user-agent: *bot*,*crawler*,*spider*,*facebook*,*twitter*,*whatsapp*,*linkedin*,*google*,*bing*,*yahoo*,*duckduck*,*slack*,*skype*,*apple*"
+
+# Fallback for all other routes to SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
