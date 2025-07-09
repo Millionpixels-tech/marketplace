@@ -4,8 +4,10 @@ const admin = require('firebase-admin');
 let firebaseInitialized = false;
 if (!admin.apps.length) {
   try {
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    // Check for both prefixed and non-prefixed environment variables
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.VITE_FIREBASE_SERVICE_ACCOUNT;
     if (serviceAccountJson) {
+      console.log('📝 Found Firebase service account, attempting to parse...');
       const serviceAccount = JSON.parse(serviceAccountJson);
       
       if (serviceAccount.project_id && serviceAccount.private_key && serviceAccount.client_email) {
@@ -14,15 +16,19 @@ if (!admin.apps.length) {
           projectId: serviceAccount.project_id
         });
         firebaseInitialized = true;
-        console.log('✅ Firebase Admin initialized successfully');
+        console.log('✅ Firebase Admin initialized successfully with project:', serviceAccount.project_id);
       } else {
-        console.log('⚠️ Firebase service account missing required fields');
+        console.log('⚠️ Firebase service account missing required fields:', {
+          project_id: !!serviceAccount.project_id,
+          private_key: !!serviceAccount.private_key,
+          client_email: !!serviceAccount.client_email
+        });
       }
     } else {
-      console.log('⚠️ FIREBASE_SERVICE_ACCOUNT environment variable not set');
+      console.log('⚠️ Firebase service account environment variable not found (checked FIREBASE_SERVICE_ACCOUNT and VITE_FIREBASE_SERVICE_ACCOUNT)');
     }
   } catch (error) {
-    console.error('Failed to initialize Firebase Admin:', error);
+    console.error('❌ Failed to initialize Firebase Admin:', error.message);
   }
 }
 
