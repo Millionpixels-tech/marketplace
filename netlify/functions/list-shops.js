@@ -12,7 +12,7 @@ if (!admin.apps.length) {
   const serviceAccount = JSON.parse(serviceAccountKey);
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: 'marketplace-bd270'
+    projectId: serviceAccount.project_id // Use project ID from service account
   });
 }
 
