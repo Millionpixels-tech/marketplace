@@ -55,14 +55,9 @@ export default async (request, context) => {
   console.log(`[Enhanced Universal Router]`, JSON.stringify(botInfo));
   
   if (!isBot) {
-    // For regular users, add performance headers and continue to SPA
-    return new Response(null, {
-      headers: {
-        'X-User-Type': 'human',
-        'X-Cache-Status': 'spa-route',
-        'Link': '</css/critical.css>; rel=preload; as=style, </js/app.js>; rel=preload; as=script'
-      }
-    });
+    // For regular users, let the request pass through to normal routing
+    // Don't return a response - this allows Netlify to serve the SPA normally
+    return;
   }
   
   // For bots, determine optimal SSR strategy
