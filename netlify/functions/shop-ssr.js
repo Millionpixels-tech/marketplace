@@ -5,7 +5,11 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.VITE_FIREBASE_SERVICE_ACCOUNT;
+  if (!serviceAccountKey) {
+    throw new Error('Firebase service account key not found in environment variables');
+  }
+  const serviceAccount = JSON.parse(serviceAccountKey);
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     projectId: 'marketplace-bd270'
