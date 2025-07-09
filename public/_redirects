@@ -1,21 +1,3 @@
-# SSR for bots/crawlers on listing pages
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: facebookexternalhit*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *facebook*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: Googlebot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *google*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: bingbot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *bing*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: Twitterbot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *twitter*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: WhatsApp*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *whatsapp*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: LinkedInBot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *linkedin*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: Slackbot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *slack*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *bot*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *crawler*
-/listing/*  /.netlify/functions/listing-ssr/:splat  200  User-Agent: *spider*
-
-# Fallback SPA for all other routes
+# Fallback SPA for all routes (Edge Function handles /listing/* routing)
+/*  /index.html  200
 /*  /index.html  200
