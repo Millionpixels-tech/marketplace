@@ -5,9 +5,11 @@ exports.handler = async (event, context) => {
   const debug = [];
   
   try {
-    // Check environment variable
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-    debug.push(`ENV VAR EXISTS: ${!!serviceAccountJson}`);
+    // Check environment variable (both with and without VITE_ prefix)
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.VITE_FIREBASE_SERVICE_ACCOUNT;
+    debug.push(`FIREBASE_SERVICE_ACCOUNT EXISTS: ${!!process.env.FIREBASE_SERVICE_ACCOUNT}`);
+    debug.push(`VITE_FIREBASE_SERVICE_ACCOUNT EXISTS: ${!!process.env.VITE_FIREBASE_SERVICE_ACCOUNT}`);
+    debug.push(`USING: ${serviceAccountJson ? (process.env.FIREBASE_SERVICE_ACCOUNT ? 'FIREBASE_SERVICE_ACCOUNT' : 'VITE_FIREBASE_SERVICE_ACCOUNT') : 'NONE'}`);
     
     if (serviceAccountJson) {
       debug.push(`ENV VAR LENGTH: ${serviceAccountJson.length}`);
