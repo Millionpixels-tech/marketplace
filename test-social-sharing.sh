@@ -8,9 +8,12 @@ echo "🧪 Testing SSR for Social Media Sharing"
 echo "======================================="
 echo ""
 
-echo "📱 Testing Facebook Bot (should get SSR):"
+echo "📱 Testing Facebook Bot (should get SSR via Edge Function):"
 echo "curl -H 'User-Agent: facebookexternalhit/1.1' '$LISTING_URL'"
-curl -s -H "User-Agent: facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)" "$LISTING_URL" | grep -E "(og:|twitter:|title)" | head -10
+RESPONSE=$(curl -s -I -H "User-Agent: facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)" "$LISTING_URL")
+echo "$RESPONSE" | grep -E "(x-edge-function|x-bot-detected|content-type)"
+echo ""
+curl -s -H "User-Agent: facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)" "$LISTING_URL" | grep -E "(og:|twitter:|title)" | head -5
 echo ""
 echo ""
 
@@ -41,8 +44,10 @@ echo "4. Clear Facebook's cache at: https://developers.facebook.com/tools/debug/
 echo "5. Test sharing the listing URL on Facebook"
 echo ""
 echo "💡 Changes made:"
-echo "   - Added SSR redirects to public/_redirects (more reliable than netlify.toml)"
-echo "   - Covers all major bots: Facebook, Google, Twitter, LinkedIn, WhatsApp, etc."
+echo "   - Created Edge Function for reliable bot routing"
+echo "   - Edge Function intercepts /listing/* requests and routes bots to SSR"
+echo "   - More reliable than redirect-based routing"
+echo "   - Should show X-Edge-Function and X-Bot-Detected headers"
 echo ""
 echo "🔗 URLs to test:"
 echo "   Listing: $LISTING_URL"
