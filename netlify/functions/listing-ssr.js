@@ -334,13 +334,31 @@ function generateListingHTML(listing, shop, listingId) {
 
 exports.handler = async (event, context) => {
   try {
-    // Get listing ID from path
-    const listingId = event.path.split('/').pop();
+    // Get listing ID from path - handle both direct calls and redirects
+    let listingId;
+    if (event.path.includes('/.netlify/functions/listing-ssr/')) {
+      // Direct function call: /.netlify/functions/listing-ssr/LISTING_ID
+      listingId = event.path.split('/.netlify/functions/listing-ssr/')[1];
+    } else {
+      // Redirect call: /listing/LISTING_ID
+      listingId = event.path.split('/listing/')[1];
+    }
+    
+    // Clean up any query parameters
+    if (listingId && listingId.includes('?')) {
+      listingId = listingId.split('?')[0];
+    }
+    
+    console.log('Processing listing ID:', listingId);
     
     if (!listingId || listingId.length < 10) {
+      console.log('Invalid listing ID:', listingId);
       return {
         statusCode: 404,
-        body: 'Listing not found'
+        headers: {
+          'Content-Type': 'text/html'
+        },
+        body: '<h1>Listing not found</h1>'
       };
     }
 
@@ -350,9 +368,9 @@ exports.handler = async (event, context) => {
     
     console.log('Request from:', userAgent, 'isBot:', isBot);
 
-    // Always serve SSR for bots and crawlers
+    // Always serve SSR for bots and crawlers, or if explicitly requested
     if (!isBot && !event.queryStringParameters?.ssr) {
-      // For regular users, serve the normal SPA
+      // For regular users, serve a redirect to the main app
       return {
         statusCode: 200,
         headers: {
@@ -378,6 +396,7 @@ exports.handler = async (event, context) => {
     const { listing, shop } = await fetchListingData(listingId);
     
     if (!listing) {
+      console.log('Listing not found in database:', listingId);
       return {
         statusCode: 404,
         headers: {
@@ -396,7 +415,8 @@ exports.handler = async (event, context) => {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=300, s-maxage=600',
         'X-Served-By': 'Netlify Function',
-        'X-Listing-ID': listingId
+        'X-Listing-ID': listingId,
+        'X-Firebase-Connected': firebaseInitialized ? 'true' : 'false'
       },
       body: html
     };
