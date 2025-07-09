@@ -1,11 +1,31 @@
-const admin = require("firebase-admin");
+let admin;
+let isFirebaseInitialized = false;
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+// Initialize Firebase Admin only when needed
+async function initializeFirebase() {
+  if (isFirebaseInitialized) return admin;
+  
+  try {
+    admin = require("firebase-admin");
+    
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+    }
+    
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
+    
+    isFirebaseInitialized = true;
+    return admin;
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+    throw error;
+  }
 }
 
 function escapeHtml(text) {
@@ -22,6 +42,9 @@ exports.handler = async function(event, context) {
   const { shopUsername } = event.queryStringParameters || {};
   const baseUrl = "https://mygold.lk"; // Change to your domain
   
+  console.log("Shop function called with username:", shopUsername);
+  console.log("User-Agent:", event.headers['user-agent']);
+  
   if (!shopUsername) {
     return {
       statusCode: 400,
@@ -31,6 +54,10 @@ exports.handler = async function(event, context) {
   }
 
   try {
+    // Initialize Firebase
+    const admin = await initializeFirebase();
+    console.log("Firebase initialized successfully");
+    
     console.log(`Fetching shop: ${shopUsername}`);
     
     // Get shop data from Firestore by username
@@ -202,6 +229,7 @@ exports.handler = async function(event, context) {
 </body>
 </html>`;
 
+    console.log("Returning shop HTML response");
     return {
       statusCode: 200,
       headers: {
@@ -213,7 +241,21 @@ exports.handler = async function(event, context) {
     };
 
   } catch (error) {
-    console.error("Error fetching shop:", error);
+    console.error("Error in shop-meta function:", error);
+    
+    // Check if this is a Firebase connection error
+    if (error.message.includes('FIREBASE_SERVICE_ACCOUNT')) {
+      console.error("Firebase service account configuration error");
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          error: "Firebase configuration error",
+          details: "FIREBASE_SERVICE_ACCOUNT environment variable is not properly configured"
+        })
+      };
+    }
+    
     return generateErrorPage(baseUrl);
   }
 };
