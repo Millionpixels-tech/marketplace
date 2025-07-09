@@ -68,8 +68,8 @@ async function getShopData(username) {
 
 // Generate HTML for shop page
 function generateShopHTML(shop, username) {
-  const siteName = 'SINA Marketplace';
-  const siteUrl = 'https://sinamarketplace.com';
+  const siteName = 'Sina.lk';
+  const siteUrl = 'https://sina.lk';
   
   if (!shop) {
     // Shop not found - generate 404 page
@@ -105,7 +105,7 @@ function generateShopHTML(shop, username) {
 <body>
   <h1>Shop Not Found</h1>
   <p>The shop "${escapeHtml(username)}" could not be found.</p>
-  <p><a href="${siteUrl}">Return to SINA Marketplace</a></p>
+  <p><a href="${siteUrl}">Return to Sina.lk</a></p>
 </body>
 </html>`;
   }
@@ -192,7 +192,7 @@ function generateShopHTML(shop, username) {
         <p style="margin: 0; color: #555;">This is a server-rendered preview for social media sharing.</p>
         <p style="margin: 10px 0 0 0;">
           <a href="${shopUrl}" style="color: #0066cc; text-decoration: none; font-weight: bold;">
-            Visit ${escapeHtml(shop.name)}'s Shop on SINA Marketplace →
+            Visit ${escapeHtml(shop.name)}'s Shop on Sina.lk →
           </a>
         </p>
       </div>
@@ -200,7 +200,7 @@ function generateShopHTML(shop, username) {
     
     <footer style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
       <p style="color: #999; font-size: 14px;">
-        <a href="${siteUrl}" style="color: #0066cc; text-decoration: none;">SINA Marketplace</a> - 
+        <a href="${siteUrl}" style="color: #0066cc; text-decoration: none;">Sina.lk</a> - 
         Supporting Sri Lankan artisans and craftspeople
       </p>
     </footer>
@@ -235,7 +235,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 302,
         headers: {
-          'Location': `https://sinamarketplace.com/shop/${username}`,
+          'Location': `https://sina.lk/shop/${username}`,
           'Cache-Control': 'no-cache'
         }
       };

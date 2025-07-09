@@ -228,10 +228,10 @@ export default function WishlistPage() {
         return (
             <>
                 <SEOHead
-                    title="My Wishlist - SinaMarketplace"
-                    description="View and manage your saved items on SinaMarketplace. Keep track of your favorite products and never miss out on great deals."
+                    title="My Wishlist - Sina.lk"
+                    description="View and manage your saved items on Sina.lk. Keep track of your favorite products and never miss out on great deals."
                     keywords="wishlist, saved items, favorites, Sri Lanka marketplace, online shopping, wish list"
-                    canonicalUrl="https://sinamarketplace.com/wishlist"
+                    canonicalUrl="https://sina.lk/wishlist"
                     noIndex={true}
                 />
                 <ResponsiveHeader />
@@ -244,10 +244,10 @@ export default function WishlistPage() {
     return (
         <>
             <SEOHead
-                title="My Wishlist - SinaMarketplace"
-                description="View and manage your saved items on SinaMarketplace. Keep track of your favorite products and never miss out on great deals."
+                title="My Wishlist - Sina.lk"
+                description="View and manage your saved items on Sina.lk. Keep track of your favorite products and never miss out on great deals."
                 keywords="wishlist, saved items, favorites, Sri Lanka marketplace, online shopping, wish list"
-                canonicalUrl="https://sinamarketplace.com/wishlist"
+                canonicalUrl="https://sina.lk/wishlist"
                 noIndex={true}
             />
             <ResponsiveHeader />

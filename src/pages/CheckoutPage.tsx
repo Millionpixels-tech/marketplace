@@ -867,10 +867,10 @@ export default function CheckoutPage() {
   return (
     <>
       <SEOHead
-        title="Checkout - SinaMarketplace"
-        description="Complete your purchase securely on SinaMarketplace. Choose from Cash on Delivery or Bank Transfer payment options."
+        title="Checkout - Sina.lk"
+        description="Complete your purchase securely on sina.lk. Choose from Cash on Delivery or Bank Transfer payment options."
         keywords="checkout, payment, secure purchase, Sri Lanka, online shopping, cash on delivery, bank transfer"
-        canonicalUrl="https://sinamarketplace.com/checkout"
+        canonicalUrl="https://sina.lk/checkout"
         noIndex={true}
       />
       <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>

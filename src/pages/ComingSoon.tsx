@@ -8,7 +8,7 @@ const ComingSoon = () => {
   return (
     <>
       <SEOHead
-        title="Coming Soon | Sina Marketplace"
+        title="Coming Soon | Sina.lk"
         description="Sri Lanka's premier marketplace is launching soon. Stay tuned for authentic local products and crafts."
         keywords="coming soon, Sri Lankan marketplace, launch, Sina"
         canonicalUrl={getCanonicalUrl('/coming-soon')}
