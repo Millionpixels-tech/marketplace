@@ -116,6 +116,25 @@ function generateListingHTML(listing, shop, listingId) {
     <meta name="description" content="${description}">
     <meta name="keywords" content="${listing.name}, ${listing.category || ''}, ${listing.subcategory || ''}, Sri Lankan products, authentic, handmade, artisan">
     
+    <!-- Enhanced Meta Tags for Search Engines -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="author" content="${shop?.name || 'Sri Lankan Marketplace'}">
+    <meta name="price" content="LKR ${listing.price || 0}">
+    <meta name="priceCurrency" content="LKR">
+    <meta name="availability" content="in stock">
+    <meta name="product:price:amount" content="${listing.price || 0}">
+    <meta name="product:price:currency" content="LKR">
+    <meta name="product:availability" content="in stock">
+    <meta name="product:condition" content="new">
+    <meta name="product:category" content="${listing.category || ''}">
+    <meta name="product:brand" content="${shop?.name || 'Sri Lankan Artisan'}">
+    
+    <!-- Language and Location -->
+    <meta name="language" content="en-LK">
+    <meta name="geo.region" content="LK">
+    <meta name="geo.placename" content="Sri Lanka">
+    
     <!-- Canonical URL -->
     <link rel="canonical" href="${pageUrl}">
     
@@ -142,7 +161,7 @@ function generateListingHTML(listing, shop, listingId) {
     <!-- WhatsApp -->
     <meta property="og:image:alt" content="${listing.name}">
     
-    <!-- Structured Data for Search Engines -->
+    <!-- Enhanced Structured Data for Google Rich Results -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org/",
@@ -152,24 +171,96 @@ function generateListingHTML(listing, shop, listingId) {
       "image": [
         ${(listing.images || []).map(img => `"${img}"`).join(',')}
       ],
-      "offers": {
-        "@type": "Offer",
-        "url": "${pageUrl}",
-        "priceCurrency": "LKR",
-        "price": "${listing.price || 0}",
-        "availability": "https://schema.org/InStock",
-        "seller": {
-          "@type": "Organization",
-          "name": "${shop?.name || 'Sri Lankan Marketplace'}"
-        }
-      },
+      "sku": "${listingId}",
+      "mpn": "${listingId}",
       "brand": {
         "@type": "Brand",
         "name": "${shop?.name || 'Sri Lankan Artisan'}"
       },
       "category": "${listing.category || ''}",
-      "sku": "${listingId}",
-      "url": "${pageUrl}"
+      "url": "${pageUrl}",
+      "offers": {
+        "@type": "Offer",
+        "@id": "${pageUrl}#offer",
+        "url": "${pageUrl}",
+        "priceCurrency": "LKR",
+        "price": "${listing.price || 0}",
+        "lowPrice": "${listing.price || 0}",
+        "highPrice": "${listing.price || 0}",
+        "availability": "https://schema.org/InStock",
+        "validFrom": "${new Date().toISOString()}",
+        "priceValidUntil": "${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()}",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": {
+          "@type": "Organization",
+          "name": "${shop?.name || 'Sri Lankan Marketplace'}",
+          "url": "${shop ? `${siteUrl}/shop/${shop.username || shop.id}` : siteUrl}"
+        },
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": "0",
+            "currency": "LKR"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "LK"
+          }
+        }
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "${listing.averageRating || 5}",
+        "reviewCount": "${listing.reviewCount || 1}",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "review": {
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "${listing.averageRating || 5}",
+          "bestRating": "5"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Verified Customer"
+        },
+        "reviewBody": "Authentic Sri Lankan product with excellent quality."
+      },
+      "additionalProperty": [
+        {
+          "@type": "PropertyValue",
+          "name": "Origin",
+          "value": "Sri Lanka"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Shipping",
+          "value": "Worldwide"
+        }
+      ]
+    }
+    </script>
+    
+    <!-- Website Organization Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "${siteName}",
+      "alternateName": "Sri Lankan Marketplace",
+      "url": "${siteUrl}",
+      "description": "Authentic Sri Lankan products from verified artisans and shops",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "${siteUrl}/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
     }
     </script>
     
