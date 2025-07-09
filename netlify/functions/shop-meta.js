@@ -40,7 +40,7 @@ function escapeHtml(text) {
 
 exports.handler = async function(event, context) {
   const { shopUsername } = event.queryStringParameters || {};
-  const baseUrl = "https://sina.lk"; // Updated to your actual domain
+  const baseUrl = "https://mygold.lk"; // Change to your domain
   
   console.log("Shop function called with username:", shopUsername);
   console.log("User-Agent:", event.headers['user-agent']);
