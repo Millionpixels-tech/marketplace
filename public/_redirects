@@ -1,1 +1,8 @@
+# Handle social media bots for listing pages
+/listing/:listingId  /.netlify/functions/listing-meta?listingId=:listingId  200  User-Agent: *bot*,*crawler*,*spider*,*scraper*,*preview*,*facebook*,*twitter*,*whatsapp*,*telegram*,*discord*,*slack*,*linkedin*,*pinterest*,*facebookexternalhit*,*twitterbot*
+
+# Handle social media bots for shop pages
+/shop/:shopUsername  /.netlify/functions/shop-meta?shopUsername=:shopUsername  200  User-Agent: *bot*,*crawler*,*spider*,*scraper*,*preview*,*facebook*,*twitter*,*whatsapp*,*telegram*,*discord*,*slack*,*linkedin*,*pinterest*,*facebookexternalhit*,*twitterbot*
+
+# Fallback for all other routes
 /*  /index.html  200
