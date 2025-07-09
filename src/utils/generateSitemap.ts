@@ -1,5 +1,5 @@
 /**
- * Sitemap Generator for SinaMarketplace
+ * Sitemap Generator for Sina.lk
  * Generates sitemap.xml with all SEO-optimized pages
  */
 

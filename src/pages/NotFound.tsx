@@ -11,7 +11,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <SEOHead
-        title="Page Not Found - SinaMarketplace"
+        title="Page Not Found - Sina.lk"
         description="The page you're looking for doesn't exist. Browse our marketplace for amazing products from local sellers."
         noIndex={true}
       />

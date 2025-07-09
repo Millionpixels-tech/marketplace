@@ -1,5 +1,5 @@
 /**
- * Image SEO Utilities for SinaMarketplace
+ * Image SEO Utilities for Sina.lk
  * Provides functions for optimizing images for SEO and performance
  */
 
@@ -61,7 +61,7 @@ export function generateShopImageAlt(shopName: string, type: 'logo' | 'banner' |
     profile: 'profile picture'
   };
   
-  return `${shopName} ${typeText[type]} - Sri Lankan artisan shop on SinaMarketplace`;
+  return `${shopName} ${typeText[type]} - Sri Lankan artisan shop on Sina.lk`;
 }
 
 /**
@@ -120,7 +120,7 @@ export function createProductImageProps(
   const imageProps: ImageSEOData = {
     src,
     alt,
-    title: `${productName} - Available on SinaMarketplace`,
+    title: `${productName} - Available on Sina.lk`,
     loading: options.loading || (options.imageIndex === 0 ? 'eager' : 'lazy'),
   };
   

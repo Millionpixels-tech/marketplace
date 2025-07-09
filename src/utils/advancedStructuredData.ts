@@ -1,5 +1,5 @@
 /**
- * Advanced Structured Data Utilities for SinaMarketplace
+ * Advanced Structured Data Utilities for Sina.lk
  * Provides comprehensive structured data generation for various content types
  */
 
@@ -72,7 +72,7 @@ export function generateProductStructuredData(product: Product): object {
       price: product.price.toString(),
       priceCurrency: product.currency,
       availability: `https://schema.org/${product.availability}`,
-      url: `https://sinamarketplace.com/listing/${product.id}`,
+      url: `https://sina.lk/listing/${product.id}`,
       seller: {
         '@type': 'Organization',
         name: product.seller.name,
@@ -195,10 +195,10 @@ export function generateArticleStructuredData(
     datePublished,
     publisher: {
       '@type': 'Organization',
-      name: 'SinaMarketplace',
+      name: 'Sina.lk',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://sinamarketplace.com/logo.png',
+        url: 'https://sina.lk/logo.png',
       },
     },
   };
@@ -228,12 +228,12 @@ export function generateSearchActionStructuredData(): object {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    url: 'https://sinamarketplace.com',
+    url: 'https://sina.lk',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://sinamarketplace.com/search?q={search_term_string}',
+        urlTemplate: 'https://sina.lk/search?q={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
@@ -282,10 +282,10 @@ export function generateWebPageStructuredData(
     url,
     publisher: {
       '@type': 'Organization',
-      name: 'SinaMarketplace',
+      name: 'Sina.lk',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://sinamarketplace.com/logo.png',
+        url: 'https://sina.lk/logo.png',
       },
     },
   };
@@ -337,8 +337,8 @@ export function generateEventStructuredData(
     },
     organizer: {
       '@type': 'Organization',
-      name: 'SinaMarketplace',
-      url: 'https://sinamarketplace.com',
+      name: 'Sina.lk',
+      url: 'https://sina.lk',
     },
   };
 

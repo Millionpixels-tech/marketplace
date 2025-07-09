@@ -229,7 +229,7 @@ const EarlyLaunchPromotion = () => {
     return (
       <>
         <SEOHead
-          title="Early Launch Promotion | Sina Marketplace"
+          title="Early Launch Promotion | Sina.lk"
           description="Join our exclusive early launch promotion for Sri Lankan sellers. Create your shop and listings to qualify for amazing rewards!"
           keywords="early launch, promotion, Sri Lankan sellers, marketplace rewards"
           canonicalUrl={getCanonicalUrl('/early-launch-promotion')}
@@ -262,7 +262,7 @@ const EarlyLaunchPromotion = () => {
   return (
     <>
       <SEOHead
-        title="Early Launch Promotion | Sina Marketplace"
+        title="Early Launch Promotion | Sina.lk"
         description="Join our exclusive early launch promotion for Sri Lankan sellers. Create your shop and listings to qualify for amazing rewards!"
         keywords="early launch, promotion, Sri Lankan sellers, marketplace rewards"
         canonicalUrl={getCanonicalUrl('/early-launch-promotion')}
