@@ -4,20 +4,74 @@
  * Sitemap Generation Script
  * 
  * This script generates a comprehensive sitemap.xml file for the marketplace.
- * It includes all static routes, category pages, search filters, and dynamic content.
+ * It includes all static routes, category pages, search filters, and dynamic content
+ * from Firebase including listings, shops, and public profiles.
  * 
  * Usage:
- * node scripts/generate-sitemap.js [baseUrl]
+ * node scripts/generate-sitemap.cjs [baseUrl]
  * 
  * Example:
- * node scripts/generate-sitemap.js https://yourmarketplace.com
+ * node scripts/generate-sitemap.cjs https://sina.lk
  */
 
 const fs = require('fs');
 const path = require('path');
+const admin = require('firebase-admin');
+
+// Load environment variables from .env file
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // Base URL - can be passed as command line argument or set default
-const baseUrl = process.argv[2] || 'https://yourmarketplace.com';
+const baseUrl = process.argv[2] || 'https://sina.lk';
+
+// Initialize Firebase Admin SDK
+let db;
+try {
+  let credential;
+  
+  // Try to use VITE_FIREBASE_SERVICE_ACCOUNT environment variable first
+  if (process.env.VITE_FIREBASE_SERVICE_ACCOUNT) {
+    console.log('🔑 Using service account from VITE_FIREBASE_SERVICE_ACCOUNT environment variable');
+    try {
+      // Remove any surrounding quotes and parse JSON
+      let serviceAccountString = process.env.VITE_FIREBASE_SERVICE_ACCOUNT.trim();
+      if (serviceAccountString.startsWith('"') && serviceAccountString.endsWith('"')) {
+        serviceAccountString = serviceAccountString.slice(1, -1);
+      }
+      // Replace escaped quotes
+      serviceAccountString = serviceAccountString.replace(/\\"/g, '"');
+      
+      const serviceAccountJson = JSON.parse(serviceAccountString);
+      credential = admin.credential.cert(serviceAccountJson);
+    } catch (parseError) {
+      console.warn('❌ Failed to parse VITE_FIREBASE_SERVICE_ACCOUNT JSON:', parseError.message);
+      throw parseError;
+    }
+  } else {
+    // Try to initialize with service account key file if available
+    const serviceAccountPath = path.join(__dirname, '..', 'firebase-service-account.json');
+    if (fs.existsSync(serviceAccountPath)) {
+      console.log('🔑 Using service account from firebase-service-account.json file');
+      const serviceAccount = require(serviceAccountPath);
+      credential = admin.credential.cert(serviceAccount);
+    } else {
+      // Initialize with application default credentials
+      console.log('🔑 Using application default credentials');
+      credential = admin.credential.applicationDefault();
+    }
+  }
+  
+  admin.initializeApp({
+    credential: credential
+  });
+  
+  db = admin.firestore();
+  console.log('✅ Firebase Admin initialized successfully');
+} catch (error) {
+  console.warn('⚠️ Firebase Admin initialization failed. Will generate sitemap without dynamic content.');
+  console.warn('Error:', error.message);
+  db = null;
+}
 
 // Categories from your categories.ts file
 const categories = [
@@ -98,6 +152,71 @@ const popularSubcategories = {
   'Art & Collectibles': ['Painting', 'Sculpture', 'Photography']
 };
 
+// Fetch dynamic URLs from Firebase
+async function fetchDynamicUrls() {
+  const dynamicUrls = [];
+  
+  if (!db) {
+    console.log('📝 Skipping dynamic content (Firebase not available)');
+    return dynamicUrls;
+  }
+
+  try {
+    // Fetch all listings
+    console.log('📦 Fetching listings...');
+    const listingsSnapshot = await db.collection('listings')
+      .limit(5000) // Limit to prevent memory issues
+      .get();
+    
+    listingsSnapshot.forEach(doc => {
+      dynamicUrls.push({
+        url: `/listing/${doc.id}`,
+        priority: '0.8',
+        changefreq: 'weekly'
+      });
+    });
+    console.log(`✓ Added ${listingsSnapshot.size} listings`);
+
+    // Fetch all shops
+    console.log('🏪 Fetching shops...');
+    const shopsSnapshot = await db.collection('shops')
+      .limit(1000)
+      .get();
+    
+    shopsSnapshot.forEach(doc => {
+      const shopData = doc.data();
+      if (shopData.username) {
+        dynamicUrls.push({
+          url: `/shop/${shopData.username}`,
+          priority: '0.7',
+          changefreq: 'weekly'
+        });
+      }
+    });
+    console.log(`✓ Added ${shopsSnapshot.size} shops`);
+
+    // Fetch all user profiles
+    console.log('👤 Fetching user profiles...');
+    const usersSnapshot = await db.collection('users')
+      .limit(1000)
+      .get();
+    
+    usersSnapshot.forEach(doc => {
+      dynamicUrls.push({
+        url: `/profile/${doc.id}`,
+        priority: '0.6',
+        changefreq: 'monthly'
+      });
+    });
+    console.log(`✓ Added ${usersSnapshot.size} user profiles`);
+
+  } catch (error) {
+    console.error('❌ Error fetching dynamic URLs:', error);
+  }
+
+  return dynamicUrls;
+}
+
 // Generate URL entry
 function generateUrlEntry(url, priority = '0.5', changefreq = 'monthly') {
   const currentDate = new Date().toISOString().split('T')[0];
@@ -114,7 +233,7 @@ function generateUrlEntry(url, priority = '0.5', changefreq = 'monthly') {
 }
 
 // Generate sitemap content
-function generateSitemap() {
+async function generateSitemap() {
   const urls = [];
   
   // Add static routes
@@ -160,6 +279,7 @@ function generateSitemap() {
     const encodedTerm = encodeURIComponent(term);
     urls.push(generateUrlEntry(`/search?q=${encodedTerm}`, '0.7', 'weekly'));
   });
+  
   Object.entries(popularSubcategories).forEach(([category, subcategories]) => {
     const encodedCategory = encodeURIComponent(category);
     subcategories.forEach(subcategory => {
@@ -176,6 +296,12 @@ function generateSitemap() {
       urls.push(generateUrlEntry(`/search?cat=${encodedCategory}&q=${encodedTerm}`, '0.6', 'weekly'));
     });
   });
+
+  // Add dynamic URLs from Firebase
+  const dynamicUrls = await fetchDynamicUrls();
+  dynamicUrls.forEach(({ url, priority, changefreq }) => {
+    urls.push(generateUrlEntry(url, priority, changefreq));
+  });
   
   // Generate XML structure
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -187,8 +313,8 @@ ${urls.join('\n')}
 }
 
 // Write sitemap to file
-function writeSitemap() {
-  const sitemapContent = generateSitemap();
+async function writeSitemap() {
+  const sitemapContent = await generateSitemap();
   const outputPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
   
   try {
@@ -202,44 +328,26 @@ function writeSitemap() {
   }
 }
 
-// Generate robots.txt
-function generateRobotsTxt() {
-  const robotsContent = `User-agent: *
-Allow: /
-
-# Disallow private pages
-Disallow: /dashboard/
-Disallow: /admin/
-Disallow: /api/
-Disallow: /auth/
-Disallow: /_auth_actions
-Disallow: /email-verification
-Disallow: /reset-password
-
-# Allow important pages for SEO
-Allow: /search
-Allow: /create-shop
-Allow: /add-listing
-Allow: /seller-guide
-
-# Sitemap
-Sitemap: ${baseUrl}/sitemap.xml
-
-# Crawl delay (be nice to servers)
-Crawl-delay: 1`;
-
-  const robotsPath = path.join(__dirname, '..', 'public', 'robots.txt');
-  
+// Main execution
+async function main() {
+  console.log('🚀 Generating sitemap...');
   try {
-    fs.writeFileSync(robotsPath, robotsContent, 'utf8');
-    console.log(`✅ robots.txt generated successfully at: ${robotsPath}`);
+    await writeSitemap();
+    console.log('✨ Sitemap generation completed!');
   } catch (error) {
-    console.error('❌ Error writing robots.txt:', error);
+    console.error('❌ Error generating sitemap:', error);
+    process.exit(1);
+  } finally {
+    // Clean up Firebase connection
+    if (db) {
+      try {
+        await admin.app().delete();
+      } catch (err) {
+        // Ignore cleanup errors
+      }
+    }
   }
 }
 
-// Main execution
-console.log('🚀 Generating sitemap and robots.txt...');
-writeSitemap();
-generateRobotsTxt();
-console.log('✨ Done!');
+// Run the script
+main();
