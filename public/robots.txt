@@ -11,14 +11,29 @@ Allow: /create-shop
 Allow: /add-listing
 Allow: /seller-guide
 
+# Allow dynamic content pages
+Allow: /listing/*
+Allow: /shop/*
+Allow: /profile/*
+
+# Allow auth pages (except private actions)
+Allow: /auth
+Allow: /ref/*
+
 # Disallow private pages
 Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /api/
-Disallow: /auth/
 Disallow: /_auth_actions
 Disallow: /email-verification
 Disallow: /reset-password
+Disallow: /checkout
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /order/
+Disallow: /custom-order/
+Disallow: /edit-shop/
+Disallow: /listing/*/edit
 
 # Sitemap
 Sitemap: https://sina.lk/sitemap.xml
