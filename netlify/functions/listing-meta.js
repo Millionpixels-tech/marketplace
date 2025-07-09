@@ -47,7 +47,7 @@ function truncateText(text, maxLength = 160) {
 
 exports.handler = async function(event, context) {
   const { listingId } = event.queryStringParameters || {};
-  const baseUrl = "https://mygold.lk"; // Change to your domain
+  const baseUrl = "https://sina.lk"; // Updated to your actual domain
   
   console.log("Function called with listingId:", listingId);
   console.log("User-Agent:", event.headers['user-agent']);
