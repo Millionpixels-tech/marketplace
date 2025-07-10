@@ -104,6 +104,8 @@ const Search: React.FC = () => {
   
   // Total count for accurate pagination
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  // Track total search results for search pagination
+  const [totalSearchResults, setTotalSearchResults] = useState<number>(0);
   // Removed countLoading as it's not currently used in the UI
   
   // Server-side pagination state
@@ -127,6 +129,7 @@ const Search: React.FC = () => {
     setAppliedSort(searchParams.get("sort") || "");
     setAppliedFreeShipping(freeParam === "1");
     setCurrentPage(parseInt(searchParams.get("page") || "1"));
+    setTotalSearchResults(0); // Reset search results count when params change
     // Scroll to top when search params change (i.e., when user comes to search page or changes filters/page)
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [searchParams]);
@@ -233,9 +236,14 @@ const Search: React.FC = () => {
       const snapshot = await getCountFromServer(baseQuery);
       let count = snapshot.data().count;
       
-      // Estimate for text search (since it's done client-side)
+      // For text search, we need to do a more accurate count
+      // Since text search is done client-side, we can't get exact count easily
+      // Instead, we'll use the actual results we've seen so far for better accuracy
       if (appliedSearch) {
-        count = Math.floor(count * 0.4); // Conservative estimate
+        // Don't set a fixed estimated count for text searches
+        // Let the pagination be based on actual results discovered
+        setTotalCount(null); // This will make pagination use the fallback logic
+        return;
       }
       
       setTotalCount(count);
@@ -274,11 +282,20 @@ const Search: React.FC = () => {
       setSearching(true);
       const baseQuery = buildPaginatedQuery();
       
-      // Get the last document for the previous page (for pagination)
-      const startAfter = page > 1 ? lastDocMap.get(page - 1) : null;
+      // For text search, we need special handling since filtering is client-side
+      let startAfter = null;
+      let effectiveItemsPerPage = itemsPerPage;
       
-      // If we have a text search, fetch more items to account for client-side filtering
-      const effectiveItemsPerPage = appliedSearch ? itemsPerPage * 3 : itemsPerPage;
+      if (appliedSearch) {
+        // For text search, always fetch from the beginning and paginate client-side
+        // This ensures we don't miss any results due to server-side pagination
+        startAfter = null;
+        effectiveItemsPerPage = 1000; // Fetch enough to cover all possible search results
+      } else {
+        // Normal pagination for category/filter browsing
+        startAfter = page > 1 ? lastDocMap.get(page - 1) : null;
+        effectiveItemsPerPage = itemsPerPage;
+      }
       
       // Use the paginateQuery utility
       const { docs, lastDoc, hasMore } = await paginateQuery(
@@ -300,8 +317,11 @@ const Search: React.FC = () => {
           item.description?.toLowerCase().includes(appliedSearch.toLowerCase())
         );
         
-        // Limit results to the actual page size after filtering
-        results = results.slice(0, itemsPerPage);
+        // Store total search results immediately after filtering
+        setTotalSearchResults(results.length);
+      } else {
+        // Reset search results count when not searching
+        setTotalSearchResults(0);
       }
 
       // Additional client-side free shipping filter as fallback
@@ -312,11 +332,34 @@ const Search: React.FC = () => {
 
       // Price range filters are now handled server-side in the query
 
-      // Apply fair mixing for default sort only
+      // For text search, we need to recalculate hasMore based on filtered results
+      let actualHasMore = hasMore;
+      let displayResults;
+      
+      if (appliedSearch) {
+        // For text search, implement client-side pagination
+        const totalFilteredResults = results.length;
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        
+        // Get the slice for this page
+        displayResults = results.slice(startIndex, endIndex);
+        
+        // Check if there are more pages
+        actualHasMore = endIndex < totalFilteredResults;
+      } else {
+        // Normal category/filter browsing: paginate normally
+        displayResults = results.slice(0, itemsPerPage);
+        actualHasMore = hasMore;
+      }
+
+      // Apply fair mixing for default sort only (on display results)
       if (!appliedSort || appliedSort === "") {
         // Create a unique seed combining page refresh seed + page offset for fair distribution
         const pageSeed = shuffleSeed + (page * 31); // 31 is prime for better distribution
-        results = shuffleWithSeed(results, pageSeed);
+        results = shuffleWithSeed(displayResults, pageSeed);
+      } else {
+        results = displayResults;
       }
 
       // Update pagination state
@@ -327,10 +370,18 @@ const Search: React.FC = () => {
       });
       
       // Update max known page based on whether there are more results
-      if (hasMore) {
-        setMaxKnownPage(prev => Math.max(prev, page + 1));
+      if (appliedSearch) {
+        // For search results, calculate total pages based on filtered results
+        const totalFilteredResults = results.length;
+        const totalPages = Math.ceil(totalFilteredResults / itemsPerPage);
+        setMaxKnownPage(Math.max(totalPages, 1));
       } else {
-        setMaxKnownPage(page); // This is the last page
+        // Normal pagination logic
+        if (actualHasMore && displayResults.length === itemsPerPage) {
+          setMaxKnownPage(prev => Math.max(prev, page + 1));
+        } else {
+          setMaxKnownPage(page); // This is the last page
+        }
       }
 
       // Cache the results (limit cache size to prevent memory issues)
@@ -340,9 +391,9 @@ const Search: React.FC = () => {
           cacheRef.current.delete(firstKey);
         }
       }
-      cacheRef.current.set(cacheKey, results);
+      cacheRef.current.set(cacheKey, displayResults);
 
-      setItems(results);
+      setItems(displayResults);
     } catch (error) {
       console.error("Error fetching listings:", error);
       setItems([]);
@@ -366,6 +417,7 @@ const Search: React.FC = () => {
     // Clear cache when refreshing to ensure fresh data
     cacheRef.current.clear();
     setTotalCount(null); // Reset total count
+    setTotalSearchResults(0); // Reset search results count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     await fetchPaginatedListings(currentPage);
@@ -374,13 +426,36 @@ const Search: React.FC = () => {
 
   // Calculate total pages based on actual count or fallback
   const totalPages = useMemo(() => {
+    
     if (totalCount !== null && totalCount > 0) {
       return Math.ceil(totalCount / itemsPerPage);
     }
-    // Fallback to the old logic if count is not available yet
+    
+    // For text searches, calculate pages directly from total search results
+    if (appliedSearch && totalSearchResults > 0) {
+      const calculatedPages = Math.ceil(totalSearchResults / itemsPerPage);
+      // Debug log to check pagination calculation
+      return calculatedPages;
+    }
+    
+    // Additional fallback: if we're searching and have items, calculate from current items
+    if (appliedSearch && items.length > 0) {
+      // This is a fallback in case totalSearchResults hasn't been set yet
+      const fallbackPages = items.length === itemsPerPage ? Math.max(currentPage, maxKnownPage) : 1;
+      return fallbackPages;
+    }
+    
+    // Fallback logic for when total count is not available (e.g., text searches)
     if (items.length === 0 && currentPage === 1) return 1;
+    
+    // If we're on a page with results but maxKnownPage suggests no more pages,
+    // and we have fewer than itemsPerPage results, this should be the last page
+    if (items.length > 0 && items.length < itemsPerPage && maxKnownPage === currentPage) {
+      return currentPage;
+    }
+    
     return Math.max(currentPage, maxKnownPage);
-  }, [totalCount, itemsPerPage, items.length, currentPage, maxKnownPage]);
+  }, [totalCount, itemsPerPage, items.length, currentPage, maxKnownPage, appliedSearch, totalSearchResults]);
 
   // Optimized category/subcategory handlers with better performance
   const handleCategoryClick = useCallback((c: string) => {
@@ -389,6 +464,7 @@ const Search: React.FC = () => {
     setSub("");
     setCurrentPage(1); // Reset to first page
     setTotalCount(null); // Reset total count
+    setTotalSearchResults(0); // Reset search results count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     cacheRef.current.clear(); // Clear cache
@@ -407,6 +483,7 @@ const Search: React.FC = () => {
     setSub(sc);
     setCurrentPage(1); // Reset to first page
     setTotalCount(null); // Reset total count
+    setTotalSearchResults(0); // Reset search results count
     setLastDocMap(new Map()); // Reset pagination state
     setMaxKnownPage(1); // Reset max known page
     cacheRef.current.clear(); // Clear cache
@@ -664,6 +741,7 @@ const Search: React.FC = () => {
                       // Clear cache when applying new filters
                       cacheRef.current.clear();
                       setTotalCount(null); // Reset total count
+                      setTotalSearchResults(0); // Reset search results count
                       setLastDocMap(new Map()); // Reset pagination state
                       setMaxKnownPage(1); // Reset max known page
                       setAppliedMinPrice(filterMinPrice);
@@ -695,6 +773,7 @@ const Search: React.FC = () => {
                       // Clear cache when resetting filters
                       cacheRef.current.clear();
                       setTotalCount(null); // Reset total count
+                      setTotalSearchResults(0); // Reset search results count
                       setLastDocMap(new Map()); // Reset pagination state
                       setMaxKnownPage(1); // Reset max known page
                       setFilterMinPrice("");
@@ -733,6 +812,7 @@ const Search: React.FC = () => {
                   // Clear cache when performing new search
                   cacheRef.current.clear();
                   setTotalCount(null); // Reset total count
+                  setTotalSearchResults(0); // Reset search results count
                   setLastDocMap(new Map()); // Reset pagination state
                   setMaxKnownPage(1); // Reset max known page
                   setAppliedSearch(searchInput);
@@ -891,7 +971,9 @@ const Search: React.FC = () => {
             )}
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
+            {(() => {
+              return totalPages > 1;
+            })() && (
               <div className={`${isMobile ? 'mt-8' : 'mt-12'} flex items-center justify-center`}>
                 <Pagination
                   currentPage={currentPage}
