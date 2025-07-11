@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import WishlistButton from './WishlistButton';
-import { FiTruck, FiPackage } from 'react-icons/fi';
+import { FiTruck, FiPackage, FiDownload } from 'react-icons/fi';
 import type { DeliveryType as DeliveryTypeType } from '../../types/enums';
+import { ItemType } from '../../utils/categories';
 
 interface ReviewStats {
   avg: number | null;
@@ -16,6 +17,7 @@ interface Listing {
   images?: string[];
   description?: string;
   createdAt?: any;
+  itemType?: string; // Add itemType for digital product support
   deliveryType?: DeliveryTypeType;
   cashOnDelivery?: boolean;
   wishlist?: Array<{ ip?: string; ownerId?: string; }>;
@@ -123,7 +125,12 @@ const ListingTile: React.FC<ListingTileProps> = ({
 
       {/* Delivery & Payment badges */}
       <div className="flex items-center gap-2 mb-2">
-        {listing.deliveryType === "free" ? (
+        {listing.itemType === ItemType.DIGITAL ? (
+          <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
+            <FiDownload className="w-4 h-4" />
+            Instant download
+          </span>
+        ) : listing.deliveryType === "free" ? (
           <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-green-700 text-xs font-semibold">
             <FiTruck className="w-4 h-4" />
             Free Delivery
@@ -134,7 +141,7 @@ const ListingTile: React.FC<ListingTileProps> = ({
             Delivery Fee will apply
           </span>
         )}
-        {listing.cashOnDelivery && (
+        {listing.cashOnDelivery && listing.itemType !== ItemType.DIGITAL && (
           <span className="inline-flex items-center gap-2 py-0.5 rounded-full text-xs font-semibold ml-2 px-2" 
             style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
             <svg

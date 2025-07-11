@@ -189,21 +189,27 @@ export async function createOrderNotification(
   userId: string,
   type: 'new_order' | 'order_status_change' | 'order_shipped' | 'order_delivered' | 'order_cancelled',
   orderId: string,
-  orderDetails: { buyerName?: string; sellerName?: string; itemName?: string; amount?: number }
+  orderDetails: { buyerName?: string; sellerName?: string; itemName?: string; amount?: number; isDigital?: boolean }
 ) {
+  const isDigital = orderDetails.isDigital;
+
   const titles = {
     new_order: 'New Order Received',
     order_status_change: 'Order Status Updated',
-    order_shipped: 'Order Shipped',
-    order_delivered: 'Order Delivered',
+    order_shipped: isDigital ? 'Digital Product Available' : 'Order Shipped',
+    order_delivered: isDigital ? 'Download Delivered' : 'Order Delivered',
     order_cancelled: 'Order Cancelled'
   };
 
   const messages = {
-    new_order: `You have a new order from ${orderDetails.buyerName} for ${orderDetails.itemName}`,
+    new_order: `You have a new ${isDigital ? 'digital product ' : ''}order from ${orderDetails.buyerName} for ${orderDetails.itemName}`,
     order_status_change: `Your order status for ${orderDetails.itemName} has been updated`,
-    order_shipped: `Your order for ${orderDetails.itemName} has been shipped`,
-    order_delivered: `Your order for ${orderDetails.itemName} has been delivered`,
+    order_shipped: isDigital 
+      ? `Your digital product "${orderDetails.itemName}" is now available for download`
+      : `Your order for ${orderDetails.itemName} has been shipped`,
+    order_delivered: isDigital 
+      ? `Thank you for downloading "${orderDetails.itemName}"`
+      : `Your order for ${orderDetails.itemName} has been delivered`,
     order_cancelled: `Order for ${orderDetails.itemName} has been cancelled`
   };
 
