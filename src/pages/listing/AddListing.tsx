@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { collection, getDocs, query, where, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
-import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo, FiDownload } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons, ItemType } from "../../utils/categories";
 import { Button, Input, AddBankAccountModal } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -681,7 +681,7 @@ export default function AddListing() {
               </div>
               
               {steps.map((s, idx) => (
-                <div key={s.label} className="flex flex-col items-center relative z-10">
+                <div key={s.label} className="flex flex-col items-center relative z-10 min-w-0">
                   <div
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-lg mb-3
                     ${step === idx + 1
@@ -709,13 +709,13 @@ export default function AddListing() {
                     </span>
                     <span className="text-xs text-[#454955]/70 mt-1 block">
                       {idx === 0 && "Shop"}
-                      {idx === 1 && "Item Type"}
+                      {idx === 1 && "Type"}
                       {idx === 2 && "Category"}
                       {idx === 3 && "Subcategory"}
                       {idx === 4 && "Details"}
                       {idx === 5 && "Variations"}
                       {idx === 6 && "Images"}
-                      {idx === 7 && "Delivery"}
+                      {idx === 7 && "Shipping"}
                     </span>
                   </div>
                 </div>
@@ -809,7 +809,9 @@ export default function AddListing() {
                       : "bg-white border-[#45495522] hover:bg-gray-50 text-[#0d0a0b] hover:border-[#72b01d]/30"}
                   `}
                 >
-                  <div className="text-4xl md:text-5xl">📦</div>
+                  <div className={`text-4xl md:text-5xl ${itemType === ItemType.PHYSICAL ? "text-white" : "text-[#72b01d]"}`}>
+                    <FiPackage className="w-12 h-12 md:w-16 md:h-16" />
+                  </div>
                   <div className="text-center">
                     <h3 className="text-lg md:text-xl font-bold">Physical Product</h3>
                     <p className="text-sm opacity-90 mt-1">Tangible items that need shipping</p>
@@ -826,7 +828,9 @@ export default function AddListing() {
                       : "bg-white border-[#45495522] hover:bg-gray-50 text-[#0d0a0b] hover:border-[#72b01d]/30"}
                   `}
                 >
-                  <div className="text-4xl md:text-5xl">💾</div>
+                  <div className={`text-4xl md:text-5xl ${itemType === ItemType.DIGITAL ? "text-white" : "text-[#72b01d]"}`}>
+                    <FiDownload className="w-12 h-12 md:w-16 md:h-16" />
+                  </div>
                   <div className="text-center">
                     <h3 className="text-lg md:text-xl font-bold">Digital Product</h3>
                     <p className="text-sm opacity-90 mt-1">Digital files for instant download</p>

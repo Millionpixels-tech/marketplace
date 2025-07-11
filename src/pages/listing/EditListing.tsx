@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { doc, getDoc, updateDoc, getDocs, query, where, collection } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo } from "react-icons/fi";
+import { FiX, FiPlus, FiPackage, FiDollarSign, FiInfo, FiDownload } from "react-icons/fi";
 import { categories, categoryIcons, subCategoryIcons, ItemType } from "../../utils/categories";
 import { AddBankAccountModal, Button, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -790,12 +790,13 @@ export default function EditListing() {
                                         </span>
                                         <span className="text-xs text-[#454955]/70 mt-1 block">
                                             {idx === 0 && "Shop"}
-                                            {idx === 1 && "Category"}
-                                            {idx === 2 && "Subcategory"}
-                                            {idx === 3 && "Details"}
-                                            {idx === 4 && "Variations"}
-                                            {idx === 5 && "Images"}
-                                            {idx === 6 && "Delivery"}
+                                            {idx === 1 && "Type"}
+                                            {idx === 2 && "Category"}
+                                            {idx === 3 && "Subcategory"}
+                                            {idx === 4 && "Details"}
+                                            {idx === 5 && "Variations"}
+                                            {idx === 6 && "Images"}
+                                            {idx === 7 && "Shipping"}
                                         </span>
                                     </div>
                                 </div>
@@ -884,7 +885,9 @@ export default function EditListing() {
                                     }`}
                                 >
                                     <div className="text-center">
-                                        <div className="text-3xl mb-3">📦</div>
+                                        <div className={`text-3xl mb-3 flex justify-center ${itemType === ItemType.PHYSICAL ? "text-[#72b01d]" : "text-gray-400"}`}>
+                                            <FiPackage className="w-8 h-8" />
+                                        </div>
                                         <h3 className="font-bold text-lg text-[#0d0a0b] mb-2">Physical Product</h3>
                                         <p className="text-sm text-[#454955]">
                                             A tangible item that needs to be shipped to the buyer
@@ -902,7 +905,9 @@ export default function EditListing() {
                                     }`}
                                 >
                                     <div className="text-center">
-                                        <div className="text-3xl mb-3">💾</div>
+                                        <div className={`text-3xl mb-3 flex justify-center ${itemType === ItemType.DIGITAL ? "text-[#72b01d]" : "text-gray-400"}`}>
+                                            <FiDownload className="w-8 h-8" />
+                                        </div>
                                         <h3 className="font-bold text-lg text-[#0d0a0b] mb-2">Digital Product</h3>
                                         <p className="text-sm text-[#454955]">
                                             A downloadable file, software, or digital content
