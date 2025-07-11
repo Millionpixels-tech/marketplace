@@ -8,8 +8,10 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../utils/firebase";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
-import { FiPackage, FiCreditCard, FiAlertCircle, FiArrowLeft, FiCheckCircle, FiEye, FiUpload, FiX, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiPackage, FiCreditCard, FiAlertCircle, FiArrowLeft, FiCheckCircle, FiEye, FiUpload, FiX, FiChevronDown, FiChevronUp, FiDownload } from "react-icons/fi";
 import type { CustomOrder } from "../../utils/customOrders";
+import { ItemType } from "../../utils/categories";
+import { OrderStatus } from "../../types/enums";
 
 interface BankAccount {
   id: string;
@@ -210,7 +212,7 @@ export default function CustomOrderSummaryPage() {
         updateDoc(doc(db, "orders", order.id), {
           paymentSlipUrl: downloadURL,
           paymentSlipUploadedAt: new Date(),
-          status: 'pending'
+          status: OrderStatus.PENDING
         })
       );
       
@@ -220,7 +222,7 @@ export default function CustomOrderSummaryPage() {
         ...order,
         paymentSlipUrl: downloadURL,
         paymentSlipUploadedAt: new Date(),
-        status: 'pending'
+        status: OrderStatus.PENDING
       }));
       setOrders(updatedOrders);
       
@@ -601,12 +603,14 @@ export default function CustomOrderSummaryPage() {
                             <span className="text-gray-500">Unit Price:</span>
                             <div className="font-medium text-gray-900">LKR {formatCurrency(order.price / order.quantity)}</div>
                           </div>
-                          <div>
-                            <span className="text-gray-500">Shipping:</span>
-                            <div className="font-medium text-gray-900">
-                              {order.shipping === 0 ? 'Free' : `LKR ${formatCurrency(order.shipping)}`}
+                          {customOrder.itemType !== ItemType.DIGITAL && (
+                            <div>
+                              <span className="text-gray-500">Shipping:</span>
+                              <div className="font-medium text-gray-900">
+                                {order.shipping === 0 ? 'Free' : `LKR ${formatCurrency(order.shipping)}`}
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div>
                             <span className="text-gray-500">Total:</span>
                             <div className="font-semibold text-gray-900">LKR {formatCurrency(order.total)}</div>
@@ -676,15 +680,17 @@ export default function CustomOrderSummaryPage() {
                   <span className="font-semibold text-gray-900 break-all">LKR {formatCurrency(getTotalOrderValue() - getTotalShipping())}</span>
                 </div>
                 
-                {/* Shipping */}
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-600">Shipping</span>
+                {/* Shipping - only show for physical items */}
+                {customOrder.itemType !== ItemType.DIGITAL && (
+                  <div className="flex justify-between items-center py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600">Shipping</span>
+                    </div>
+                    <span className={`font-semibold break-all ${getTotalShipping() === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                      {getTotalShipping() > 0 ? `LKR ${formatCurrency(getTotalShipping())}` : 'Free'}
+                    </span>
                   </div>
-                  <span className={`font-semibold break-all ${getTotalShipping() === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                    {getTotalShipping() > 0 ? `LKR ${formatCurrency(getTotalShipping())}` : 'Free'}
-                  </span>
-                </div>
+                )}
                 
                 {/* Divider */}
                 <div className="border-t border-gray-200"></div>
@@ -695,14 +701,24 @@ export default function CustomOrderSummaryPage() {
                   <span className="text-xl sm:text-2xl font-bold text-green-600 break-all">LKR {formatCurrency(getTotalOrderValue())}</span>
                 </div>
                 
-                {/* Free Shipping Badge */}
-                {getTotalShipping() === 0 && (
+                {/* Free Shipping Badge - only for physical items */}
+                {customOrder.itemType !== ItemType.DIGITAL && getTotalShipping() === 0 && (
                   <div className="flex justify-center pt-2">
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       Free Shipping
+                    </span>
+                  </div>
+                )}
+                
+                {/* Digital Product Badge */}
+                {customOrder.itemType === ItemType.DIGITAL && (
+                  <div className="flex justify-center pt-2">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                      <FiDownload className="w-4 h-4" />
+                      Digital Product - No Shipping Required
                     </span>
                   </div>
                 )}
@@ -733,11 +749,19 @@ export default function CustomOrderSummaryPage() {
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <span className="text-gray-600">Product Type:</span>
+                <span className="font-medium">
+                  {customOrder.itemType === ItemType.DIGITAL ? 'Digital Product' : 'Physical Product'}
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                 <span className="text-gray-600">Delivery Method:</span>
-                <span className="font-medium">Standard Delivery</span>
+                <span className="font-medium">
+                  {customOrder.itemType === ItemType.DIGITAL ? 'Digital Download' : 'Standard Delivery'}
+                </span>
               </div>
               
-              {orders[0]?.buyerInfo && (
+              {orders[0]?.buyerInfo && customOrder.itemType !== ItemType.DIGITAL && (
                 <div className="pt-4 border-t border-gray-200">
                   <div className="text-gray-600 mb-2">Delivery Address:</div>
                   <div className="text-gray-900 leading-relaxed break-words">
@@ -745,6 +769,15 @@ export default function CustomOrderSummaryPage() {
                     {orders[0].buyerInfo.address}<br />
                     {orders[0].buyerInfo.city} {orders[0].buyerInfo.postalCode}<br />
                     {orders[0].buyerInfo.phone}
+                  </div>
+                </div>
+              )}
+              
+              {customOrder.itemType === ItemType.DIGITAL && (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="text-gray-600 mb-2">Digital Delivery:</div>
+                  <div className="text-gray-900 leading-relaxed">
+                    Download instructions will be provided after payment confirmation.
                   </div>
                 </div>
               )}
