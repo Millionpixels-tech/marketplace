@@ -1,6 +1,7 @@
-// Category types for marketplace - Etsy.com structure (Physical products only)
+// Category types for marketplace - supports both Physical and Digital products
 export const ItemType = {
-  PHYSICAL: 'Physical'
+  PHYSICAL: 'Physical',
+  DIGITAL: 'Digital'
 } as const;
 
 export type ItemType = typeof ItemType[keyof typeof ItemType];
@@ -25,6 +26,22 @@ export const EtsyCategory = {
 } as const;
 
 export type EtsyCategory = typeof EtsyCategory[keyof typeof EtsyCategory];
+
+// Digital Product Categories
+export const DigitalCategory = {
+  SOFTWARE_APPS: 'Software & Apps',
+  DIGITAL_ART_GRAPHICS: 'Digital Art & Graphics',
+  MUSIC_AUDIO: 'Music & Audio',
+  VIDEO_CONTENT: 'Video Content',
+  EBOOKS_DOCUMENTS: 'eBooks & Documents',
+  PHOTOGRAPHY_PRESETS: 'Photography & Presets',
+  TEMPLATES_PRINTABLES: 'Templates & Printables',
+  COURSES_EDUCATION: 'Courses & Education',
+  FONTS_TYPOGRAPHY: 'Fonts & Typography',
+  DIGITAL_CRAFT_SUPPLIES: 'Digital Craft Supplies'
+} as const;
+
+export type DigitalCategory = typeof DigitalCategory[keyof typeof DigitalCategory];
 
 // Subcategories for each main category
 
@@ -266,10 +283,152 @@ export const WeddingsSubcategory = {
 
 export type WeddingsSubcategory = typeof WeddingsSubcategory[keyof typeof WeddingsSubcategory];
 
+// Digital Product Subcategories
+
+// Software & Apps Subcategories
+export const SoftwareAppsSubcategory = {
+  MOBILE_APPS: 'Mobile Apps',
+  DESKTOP_SOFTWARE: 'Desktop Software',
+  WEB_APPLICATIONS: 'Web Applications',
+  PLUGINS_EXTENSIONS: 'Plugins & Extensions',
+  SCRIPTS_AUTOMATION: 'Scripts & Automation',
+  GAMES: 'Games',
+  PRODUCTIVITY_TOOLS: 'Productivity Tools',
+  DEVELOPMENT_TOOLS: 'Development Tools'
+} as const;
+
+export type SoftwareAppsSubcategory = typeof SoftwareAppsSubcategory[keyof typeof SoftwareAppsSubcategory];
+
+// Digital Art & Graphics Subcategories
+export const DigitalArtGraphicsSubcategory = {
+  ILLUSTRATIONS: 'Illustrations',
+  DIGITAL_PAINTINGS: 'Digital Paintings',
+  VECTOR_GRAPHICS: 'Vector Graphics',
+  ICONS_SYMBOLS: 'Icons & Symbols',
+  CLIPART: 'Clipart',
+  BACKGROUNDS_TEXTURES: 'Backgrounds & Textures',
+  LOGOS_BRANDING: 'Logos & Branding',
+  DIGITAL_SCRAPBOOK: 'Digital Scrapbook Elements'
+} as const;
+
+export type DigitalArtGraphicsSubcategory = typeof DigitalArtGraphicsSubcategory[keyof typeof DigitalArtGraphicsSubcategory];
+
+// Music & Audio Subcategories
+export const MusicAudioSubcategory = {
+  BACKGROUND_MUSIC: 'Background Music',
+  SOUND_EFFECTS: 'Sound Effects',
+  AUDIO_LOOPS: 'Audio Loops',
+  PODCAST_INTROS: 'Podcast Intros',
+  MEDITATION_SOUNDS: 'Meditation Sounds',
+  VOICEOVERS: 'Voiceovers',
+  MUSIC_BEATS: 'Music Beats',
+  AUDIO_BOOKS: 'Audio Books'
+} as const;
+
+export type MusicAudioSubcategory = typeof MusicAudioSubcategory[keyof typeof MusicAudioSubcategory];
+
+// Video Content Subcategories
+export const VideoContentSubcategory = {
+  STOCK_FOOTAGE: 'Stock Footage',
+  MOTION_GRAPHICS: 'Motion Graphics',
+  VIDEO_TEMPLATES: 'Video Templates',
+  ANIMATIONS: 'Animations',
+  INTRO_OUTROS: 'Intro & Outros',
+  TUTORIALS: 'Tutorials',
+  DOCUMENTARIES: 'Documentaries',
+  SHORT_FILMS: 'Short Films'
+} as const;
+
+export type VideoContentSubcategory = typeof VideoContentSubcategory[keyof typeof VideoContentSubcategory];
+
+// eBooks & Documents Subcategories
+export const EbooksDocumentsSubcategory = {
+  FICTION_BOOKS: 'Fiction Books',
+  NON_FICTION: 'Non-Fiction',
+  TECHNICAL_MANUALS: 'Technical Manuals',
+  GUIDES_HOWTOS: 'Guides & How-tos',
+  RESEARCH_PAPERS: 'Research Papers',
+  BUSINESS_PLANS: 'Business Plans',
+  LEGAL_DOCUMENTS: 'Legal Documents',
+  ACADEMIC_CONTENT: 'Academic Content'
+} as const;
+
+export type EbooksDocumentsSubcategory = typeof EbooksDocumentsSubcategory[keyof typeof EbooksDocumentsSubcategory];
+
+// Photography & Presets Subcategories
+export const PhotographyPresetsSubcategory = {
+  LIGHTROOM_PRESETS: 'Lightroom Presets',
+  PHOTOSHOP_ACTIONS: 'Photoshop Actions',
+  STOCK_PHOTOS: 'Stock Photos',
+  CAMERA_RAW_PRESETS: 'Camera Raw Presets',
+  MOBILE_PRESETS: 'Mobile Presets',
+  VIDEO_LUTS: 'Video LUTs',
+  PHOTOGRAPHY_OVERLAYS: 'Photography Overlays',
+  PHOTO_FILTERS: 'Photo Filters'
+} as const;
+
+export type PhotographyPresetsSubcategory = typeof PhotographyPresetsSubcategory[keyof typeof PhotographyPresetsSubcategory];
+
+// Templates & Printables Subcategories
+export const TemplatesPrintablesSubcategory = {
+  BUSINESS_TEMPLATES: 'Business Templates',
+  SOCIAL_MEDIA_TEMPLATES: 'Social Media Templates',
+  PRESENTATION_TEMPLATES: 'Presentation Templates',
+  WEBSITE_TEMPLATES: 'Website Templates',
+  PRINTABLE_PLANNERS: 'Printable Planners',
+  INVITATIONS_CARDS: 'Invitations & Cards',
+  POSTERS_FLYERS: 'Posters & Flyers',
+  RESUME_TEMPLATES: 'Resume Templates'
+} as const;
+
+export type TemplatesPrintablesSubcategory = typeof TemplatesPrintablesSubcategory[keyof typeof TemplatesPrintablesSubcategory];
+
+// Courses & Education Subcategories
+export const CoursesEducationSubcategory = {
+  ONLINE_COURSES: 'Online Courses',
+  TUTORIALS_LESSONS: 'Tutorials & Lessons',
+  EDUCATIONAL_VIDEOS: 'Educational Videos',
+  STUDY_MATERIALS: 'Study Materials',
+  WEBINARS: 'Webinars',
+  WORKSHOPS: 'Workshops',
+  SKILL_DEVELOPMENT: 'Skill Development',
+  CERTIFICATION_PREP: 'Certification Prep'
+} as const;
+
+export type CoursesEducationSubcategory = typeof CoursesEducationSubcategory[keyof typeof CoursesEducationSubcategory];
+
+// Fonts & Typography Subcategories
+export const FontsTypographySubcategory = {
+  SERIF_FONTS: 'Serif Fonts',
+  SANS_SERIF_FONTS: 'Sans Serif Fonts',
+  SCRIPT_FONTS: 'Script Fonts',
+  DISPLAY_FONTS: 'Display Fonts',
+  HANDWRITTEN_FONTS: 'Handwritten Fonts',
+  VINTAGE_FONTS: 'Vintage Fonts',
+  MODERN_FONTS: 'Modern Fonts',
+  FONT_BUNDLES: 'Font Bundles'
+} as const;
+
+export type FontsTypographySubcategory = typeof FontsTypographySubcategory[keyof typeof FontsTypographySubcategory];
+
+// Digital Craft Supplies Subcategories
+export const DigitalCraftSuppliesSubcategory = {
+  DIGITAL_PAPERS: 'Digital Papers',
+  DIGITAL_STICKERS: 'Digital Stickers',
+  DIGITAL_STAMPS: 'Digital Stamps',
+  CRAFTING_TEMPLATES: 'Crafting Templates',
+  CUTTING_FILES: 'Cutting Files (SVG, DXF)',
+  EMBROIDERY_PATTERNS: 'Embroidery Patterns',
+  KNITTING_PATTERNS: 'Knitting Patterns',
+  CROCHET_PATTERNS: 'Crochet Patterns'
+} as const;
+
+export type DigitalCraftSuppliesSubcategory = typeof DigitalCraftSuppliesSubcategory[keyof typeof DigitalCraftSuppliesSubcategory];
+
 // Category interface
 export interface Category {
   type: ItemType;
-  name: EtsyCategory;
+  name: EtsyCategory | DigitalCategory;
   subcategories: string[];
 }
 
@@ -349,11 +508,62 @@ export const categories: Category[] = [
     type: ItemType.PHYSICAL,
     name: EtsyCategory.WEDDINGS,
     subcategories: Object.values(WeddingsSubcategory)
+  },
+  // Digital Product Categories
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.SOFTWARE_APPS,
+    subcategories: Object.values(SoftwareAppsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.DIGITAL_ART_GRAPHICS,
+    subcategories: Object.values(DigitalArtGraphicsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.MUSIC_AUDIO,
+    subcategories: Object.values(MusicAudioSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.VIDEO_CONTENT,
+    subcategories: Object.values(VideoContentSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.EBOOKS_DOCUMENTS,
+    subcategories: Object.values(EbooksDocumentsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.PHOTOGRAPHY_PRESETS,
+    subcategories: Object.values(PhotographyPresetsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.TEMPLATES_PRINTABLES,
+    subcategories: Object.values(TemplatesPrintablesSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.COURSES_EDUCATION,
+    subcategories: Object.values(CoursesEducationSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.FONTS_TYPOGRAPHY,
+    subcategories: Object.values(FontsTypographySubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.DIGITAL_CRAFT_SUPPLIES,
+    subcategories: Object.values(DigitalCraftSuppliesSubcategory)
   }
 ];
 
 // Category icons mapping
-export const categoryIcons: Record<EtsyCategory, string> = {
+export const categoryIcons: Record<EtsyCategory | DigitalCategory, string> = {
   [EtsyCategory.ACCESSORIES]: "👜",
   [EtsyCategory.ART_COLLECTIBLES]: "🎨",
   [EtsyCategory.BAGS_PURSES]: "👛",
@@ -368,7 +578,18 @@ export const categoryIcons: Record<EtsyCategory, string> = {
   [EtsyCategory.PET_SUPPLIES]: "🐾",
   [EtsyCategory.SHOES]: "👟",
   [EtsyCategory.TOYS_GAMES]: "🧸",
-  [EtsyCategory.WEDDINGS]: "💒"
+  [EtsyCategory.WEDDINGS]: "💒",
+  // Digital Category Icons
+  [DigitalCategory.SOFTWARE_APPS]: "💻",
+  [DigitalCategory.DIGITAL_ART_GRAPHICS]: "🎨",
+  [DigitalCategory.MUSIC_AUDIO]: "🎵",
+  [DigitalCategory.VIDEO_CONTENT]: "🎬",
+  [DigitalCategory.EBOOKS_DOCUMENTS]: "📚",
+  [DigitalCategory.PHOTOGRAPHY_PRESETS]: "📸",
+  [DigitalCategory.TEMPLATES_PRINTABLES]: "📄",
+  [DigitalCategory.COURSES_EDUCATION]: "🎓",
+  [DigitalCategory.FONTS_TYPOGRAPHY]: "🔤",
+  [DigitalCategory.DIGITAL_CRAFT_SUPPLIES]: "✨"
 };
 
 // Subcategory icons mapping
@@ -549,5 +770,107 @@ export const subCategoryIcons: Record<string, string> = {
   [WeddingsSubcategory.WEDDING_FAVORS_GIFTS]: "🎁",
   [WeddingsSubcategory.WEDDING_INVITATIONS_PAPER]: "💌",
   [WeddingsSubcategory.WEDDING_JEWELRY]: "💍",
-  [WeddingsSubcategory.WEDDING_SHOES]: "👠"
+  [WeddingsSubcategory.WEDDING_SHOES]: "👠",
+  
+  // Digital Product Subcategory Icons
+  
+  // Software & Apps
+  [SoftwareAppsSubcategory.MOBILE_APPS]: "📱",
+  [SoftwareAppsSubcategory.DESKTOP_SOFTWARE]: "🖥️",
+  [SoftwareAppsSubcategory.WEB_APPLICATIONS]: "🌐",
+  [SoftwareAppsSubcategory.PLUGINS_EXTENSIONS]: "🔌",
+  [SoftwareAppsSubcategory.SCRIPTS_AUTOMATION]: "⚙️",
+  [SoftwareAppsSubcategory.GAMES]: "🎮",
+  [SoftwareAppsSubcategory.PRODUCTIVITY_TOOLS]: "📊",
+  [SoftwareAppsSubcategory.DEVELOPMENT_TOOLS]: "🛠️",
+  
+  // Digital Art & Graphics
+  [DigitalArtGraphicsSubcategory.ILLUSTRATIONS]: "🖼️",
+  [DigitalArtGraphicsSubcategory.DIGITAL_PAINTINGS]: "🎨",
+  [DigitalArtGraphicsSubcategory.VECTOR_GRAPHICS]: "📐",
+  [DigitalArtGraphicsSubcategory.ICONS_SYMBOLS]: "🔰",
+  [DigitalArtGraphicsSubcategory.CLIPART]: "✂️",
+  [DigitalArtGraphicsSubcategory.BACKGROUNDS_TEXTURES]: "🌈",
+  [DigitalArtGraphicsSubcategory.LOGOS_BRANDING]: "🏷️",
+  [DigitalArtGraphicsSubcategory.DIGITAL_SCRAPBOOK]: "📑",
+  
+  // Music & Audio
+  [MusicAudioSubcategory.BACKGROUND_MUSIC]: "🎼",
+  [MusicAudioSubcategory.SOUND_EFFECTS]: "🔊",
+  [MusicAudioSubcategory.AUDIO_LOOPS]: "🔄",
+  [MusicAudioSubcategory.PODCAST_INTROS]: "🎙️",
+  [MusicAudioSubcategory.MEDITATION_SOUNDS]: "🧘",
+  [MusicAudioSubcategory.VOICEOVERS]: "🗣️",
+  [MusicAudioSubcategory.MUSIC_BEATS]: "🥁",
+  [MusicAudioSubcategory.AUDIO_BOOKS]: "📖",
+  
+  // Video Content
+  [VideoContentSubcategory.STOCK_FOOTAGE]: "🎞️",
+  [VideoContentSubcategory.MOTION_GRAPHICS]: "🎭",
+  [VideoContentSubcategory.VIDEO_TEMPLATES]: "🎬",
+  [VideoContentSubcategory.ANIMATIONS]: "🎪",
+  [VideoContentSubcategory.INTRO_OUTROS]: "🎯",
+  [VideoContentSubcategory.TUTORIALS]: "📺",
+  [VideoContentSubcategory.DOCUMENTARIES]: "🎥",
+  [VideoContentSubcategory.SHORT_FILMS]: "🎦",
+  
+  // eBooks & Documents
+  [EbooksDocumentsSubcategory.FICTION_BOOKS]: "📖",
+  [EbooksDocumentsSubcategory.NON_FICTION]: "📚",
+  [EbooksDocumentsSubcategory.TECHNICAL_MANUALS]: "📋",
+  [EbooksDocumentsSubcategory.GUIDES_HOWTOS]: "📘",
+  [EbooksDocumentsSubcategory.RESEARCH_PAPERS]: "📝",
+  [EbooksDocumentsSubcategory.BUSINESS_PLANS]: "📊",
+  [EbooksDocumentsSubcategory.LEGAL_DOCUMENTS]: "⚖️",
+  [EbooksDocumentsSubcategory.ACADEMIC_CONTENT]: "🎓",
+  
+  // Photography & Presets
+  [PhotographyPresetsSubcategory.LIGHTROOM_PRESETS]: "📸",
+  [PhotographyPresetsSubcategory.PHOTOSHOP_ACTIONS]: "🖌️",
+  [PhotographyPresetsSubcategory.STOCK_PHOTOS]: "🖼️",
+  [PhotographyPresetsSubcategory.CAMERA_RAW_PRESETS]: "📷",
+  [PhotographyPresetsSubcategory.MOBILE_PRESETS]: "📱",
+  [PhotographyPresetsSubcategory.VIDEO_LUTS]: "🎨",
+  [PhotographyPresetsSubcategory.PHOTOGRAPHY_OVERLAYS]: "🌟",
+  [PhotographyPresetsSubcategory.PHOTO_FILTERS]: "🔍",
+  
+  // Templates & Printables
+  [TemplatesPrintablesSubcategory.BUSINESS_TEMPLATES]: "💼",
+  [TemplatesPrintablesSubcategory.SOCIAL_MEDIA_TEMPLATES]: "📱",
+  [TemplatesPrintablesSubcategory.PRESENTATION_TEMPLATES]: "📊",
+  [TemplatesPrintablesSubcategory.WEBSITE_TEMPLATES]: "🌐",
+  [TemplatesPrintablesSubcategory.PRINTABLE_PLANNERS]: "📅",
+  [TemplatesPrintablesSubcategory.INVITATIONS_CARDS]: "💌",
+  [TemplatesPrintablesSubcategory.POSTERS_FLYERS]: "📰",
+  [TemplatesPrintablesSubcategory.RESUME_TEMPLATES]: "📄",
+  
+  // Courses & Education
+  [CoursesEducationSubcategory.ONLINE_COURSES]: "💻",
+  [CoursesEducationSubcategory.TUTORIALS_LESSONS]: "📚",
+  [CoursesEducationSubcategory.EDUCATIONAL_VIDEOS]: "🎥",
+  [CoursesEducationSubcategory.STUDY_MATERIALS]: "📖",
+  [CoursesEducationSubcategory.WEBINARS]: "💻",
+  [CoursesEducationSubcategory.WORKSHOPS]: "🛠️",
+  [CoursesEducationSubcategory.SKILL_DEVELOPMENT]: "🎯",
+  [CoursesEducationSubcategory.CERTIFICATION_PREP]: "🏆",
+  
+  // Fonts & Typography
+  [FontsTypographySubcategory.SERIF_FONTS]: "🔤",
+  [FontsTypographySubcategory.SANS_SERIF_FONTS]: "🔡",
+  [FontsTypographySubcategory.SCRIPT_FONTS]: "✍️",
+  [FontsTypographySubcategory.DISPLAY_FONTS]: "🎭",
+  [FontsTypographySubcategory.HANDWRITTEN_FONTS]: "✏️",
+  [FontsTypographySubcategory.VINTAGE_FONTS]: "📜",
+  [FontsTypographySubcategory.MODERN_FONTS]: "🔮",
+  [FontsTypographySubcategory.FONT_BUNDLES]: "📦",
+  
+  // Digital Craft Supplies
+  [DigitalCraftSuppliesSubcategory.DIGITAL_PAPERS]: "📄",
+  [DigitalCraftSuppliesSubcategory.DIGITAL_STICKERS]: "⭐",
+  [DigitalCraftSuppliesSubcategory.DIGITAL_STAMPS]: "🏷️",
+  [DigitalCraftSuppliesSubcategory.CRAFTING_TEMPLATES]: "📐",
+  [DigitalCraftSuppliesSubcategory.CUTTING_FILES]: "✂️",
+  [DigitalCraftSuppliesSubcategory.EMBROIDERY_PATTERNS]: "🧵",
+  [DigitalCraftSuppliesSubcategory.KNITTING_PATTERNS]: "🧶",
+  [DigitalCraftSuppliesSubcategory.CROCHET_PATTERNS]: "🪝"
 };

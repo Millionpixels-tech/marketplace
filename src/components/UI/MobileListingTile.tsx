@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FiMapPin } from "react-icons/fi";
 import WishlistButton from "./WishlistButton";
 import type { DeliveryType as DeliveryTypeType } from "../../types/enums";
+import { ItemType } from "../../utils/categories";
 
 export interface Listing {
   id: string;
@@ -13,6 +14,7 @@ export interface Listing {
   category: string;
   subcategory: string;
   quantity: number;
+  itemType?: string; // Add itemType for digital product support
   deliveryType: DeliveryTypeType;
   deliveryPerItem: number;
   deliveryAdditional: number;
@@ -70,6 +72,7 @@ const MobileListingTile: React.FC<MobileListingTileProps> = ({ listing, shopInfo
   };
 
   const getDeliveryText = () => {
+    if (listing.itemType === ItemType.DIGITAL) return "Instant download";
     if (listing.deliveryType === "free") return "Free delivery";
     if (listing.deliveryType === "paid") return `Rs. ${listing.deliveryPerItem} delivery`;
     return "Pickup only";
@@ -161,7 +164,7 @@ const MobileListingTile: React.FC<MobileListingTileProps> = ({ listing, shopInfo
 
         {/* Payment Method Badge */}
         <div className="mb-2 flex-shrink-0">
-          {listing.cashOnDelivery && (
+          {listing.cashOnDelivery && listing.itemType !== ItemType.DIGITAL && (
             <span className="inline-flex items-center gap-1 py-1 px-2 rounded-full text-xs font-semibold" 
               style={{ backgroundColor: 'rgba(114, 176, 29, 0.15)', color: '#3f7d20' }}>
               <svg

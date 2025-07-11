@@ -1,4 +1,5 @@
 import type { Order } from '../orders';
+import { ItemType } from '../categories';
 
 const FROM_NAME = 'Sina.lk';
 
@@ -6,9 +7,16 @@ export const generateOrderStatusChangeEmail = (order: Order & { id: string }, ne
     const subject = `Order Update - ${order.itemName}`;
     
     const getStatusInfo = (status: string) => {
+        const isDigital = order.itemType === ItemType.DIGITAL;
+        
         switch (status) {
             case 'SHIPPED':
-                return {
+                return isDigital ? {
+                    title: 'Your Digital Product is Ready!',
+                    message: 'Great news! Your digital product is now available for download.',
+                    color: '#72b01d',
+                    icon: '📥'
+                } : {
                     title: 'Your Order Has Been Shipped',
                     message: 'Good news! Your order is on its way to you.',
                     color: '#72b01d',
@@ -22,11 +30,28 @@ export const generateOrderStatusChangeEmail = (order: Order & { id: string }, ne
                     icon: '💰'
                 };
             case 'CONFIRMED':
-                return {
+                return isDigital ? {
+                    title: 'Your Digital Order is Confirmed',
+                    message: 'Your order has been confirmed and will be available soon.',
+                    color: '#72b01d',
+                    icon: '✅'
+                } : {
                     title: 'Your Order Has Been Confirmed',
                     message: 'Your order has been confirmed and is being prepared.',
                     color: '#72b01d',
                     icon: '✅'
+                };
+            case 'RECEIVED':
+                return isDigital ? {
+                    title: 'Download Confirmed',
+                    message: 'Thank you for confirming your digital product download!',
+                    color: '#72b01d',
+                    icon: '🎉'
+                } : {
+                    title: 'Order Completed',
+                    message: 'Thank you for confirming receipt of your order!',
+                    color: '#72b01d',
+                    icon: '🎉'
                 };
             default:
                 return {
@@ -157,7 +182,7 @@ export const generateOrderStatusChangeEmail = (order: Order & { id: string }, ne
                                         <tr>
                                             <td style="background: linear-gradient(135deg, #72b01d, #5a8c17); border-radius: 6px; text-align: center;">
                                                 <a href="${typeof window !== 'undefined' ? window.location.origin : 'https://sina.lk'}/order/${order.id}" style="display: inline-block; padding: 15px 30px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; line-height: 1;">
-                                                    View Order Details
+                                                    ${order.itemType === ItemType.DIGITAL && newStatus === 'SHIPPED' ? 'Download Your Product' : 'View Order Details'}
                                                 </a>
                                             </td>
                                         </tr>

@@ -8,6 +8,7 @@ import Footer from "../../components/UI/Footer";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { OrderStatus } from "../../types/enums";
+import { ItemType } from "../../utils/categories";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { FiChevronDown, FiChevronUp, FiCreditCard, FiDollarSign, FiStar, FiInfo } from "react-icons/fi";
@@ -54,6 +55,9 @@ export default function OrderPage() {
     const [customOrderId, setCustomOrderId] = useState<string | null>(null);
     const [customOrderData, setCustomOrderData] = useState<any>(null);
     const [customOrderLoading, setCustomOrderLoading] = useState(false);
+
+    // Listing data for digital products
+    const [listingData, setListingData] = useState<any>(null);
 
     // Custom confirmation dialog hook
     const { isOpen, confirmDialog, showConfirmDialog, handleConfirm, handleCancel } = useConfirmDialog();
@@ -108,6 +112,41 @@ export default function OrderPage() {
         }
     };
 
+    // Function to fetch listing data for digital products
+    const fetchListingData = async (itemId: string) => {
+        try {
+            const listingRef = doc(db, "listings", itemId);
+            const listingSnap = await getDoc(listingRef);
+            
+            if (listingSnap.exists()) {
+                const listing = { ...listingSnap.data(), id: listingSnap.id };
+                setListingData(listing);
+            }
+        } catch (error) {
+            console.error("Error fetching listing data:", error);
+        }
+    };
+
+    // Function to handle digital product download
+    const handleDigitalProductDownload = () => {
+        if (!listingData?.digitalProduct) {
+            showToast("error", "Download not available. Please contact the seller.");
+            return;
+        }
+
+        const digitalProduct = listingData.digitalProduct;
+        
+        if (digitalProduct.type === 'file' && digitalProduct.fileUrl) {
+            // For uploaded files, open the Firebase Storage URL
+            window.open(digitalProduct.fileUrl, '_blank');
+        } else if (digitalProduct.type === 'link' && digitalProduct.downloadLink) {
+            // For external links, open the provided URL
+            window.open(digitalProduct.downloadLink, '_blank');
+        } else {
+            showToast("error", "Download link is not available. Please contact the seller.");
+        }
+    };
+
     // Single useEffect to handle order fetching, role determination, and authorization
     useEffect(() => {
         const fetchOrderAndDetermineAccess = async () => {
@@ -144,6 +183,11 @@ export default function OrderPage() {
                 
                 const orderData: any = { ...docSnap.data(), id: docSnap.id };
                 setOrder(orderData);
+
+                // Fetch listing data for digital products
+                if (orderData.itemType === ItemType.DIGITAL && orderData.itemId) {
+                    await fetchListingData(orderData.itemId);
+                }
 
                 // Set custom order ID if this order came from a custom order
                 if (orderData.customOrderId) {
@@ -312,9 +356,11 @@ export default function OrderPage() {
         if (!order) return;
         
         const confirmed = await showConfirmDialog({
-            title: "Mark as Received",
-            message: "Are you sure you want to mark this order as received? This will complete the order and finalize the transaction.",
-            confirmText: "Mark as Received",
+            title: order.itemType === ItemType.DIGITAL ? "Confirm Download" : "Mark as Received",
+            message: order.itemType === ItemType.DIGITAL 
+                ? "Are you sure you want to confirm that you have successfully downloaded your digital product? This will complete the order and finalize the transaction."
+                : "Are you sure you want to mark this order as received? This will complete the order and finalize the transaction.",
+            confirmText: order.itemType === ItemType.DIGITAL ? "Confirm Download" : "Mark as Received",
             cancelText: "Cancel",
             type: "info"
         });
@@ -568,9 +614,19 @@ export default function OrderPage() {
                                 />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                                    {order.itemName}
-                                </h2>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <h2 className="text-xl font-semibold text-gray-900">
+                                        {order.itemName}
+                                    </h2>
+                                    {order.itemType === ItemType.DIGITAL && (
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4" />
+                                            </svg>
+                                            Digital Product
+                                        </span>
+                                    )}
+                                </div>
                                 
                                 <div className="space-y-3 text-sm">
                                     <div className="flex justify-between">
@@ -786,6 +842,31 @@ export default function OrderPage() {
                                 {/* Collapsible Content */}
                                 {isPaymentSectionExpanded && (
                                     <div className="mt-6 space-y-6">
+                                        {/* Digital Product Download Notice */}
+                                        {order.itemType === ItemType.DIGITAL && (
+                                            <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+                                                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-green-800 mb-2">🎉 Digital Product - Instant Access After Payment!</div>
+                                                        <div className="text-sm text-green-700 space-y-1">
+                                                            <p><strong>After you complete payment and upload your slip:</strong></p>
+                                                            <ul className="list-disc list-inside space-y-1 ml-2">
+                                                                <li>The seller will confirm your payment</li>
+                                                                <li>Your download link/button will appear on this page</li>
+                                                                <li>You'll get instant access to your digital product</li>
+                                                                <li>No shipping delays - get your purchase immediately!</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
                                         {/* Step 1: Bank Transfer */}
                                         <div>
                                             <div className="flex items-center gap-2 mb-4">
@@ -799,7 +880,7 @@ export default function OrderPage() {
                                                 <FiDollarSign className="w-5 h-5 inline mr-2" />Transfer Amount: <span className="text-lg font-bold">LKR {formatCurrency(getTransferAmount())}</span>
                                             </div>
                                             <div className="text-xs text-blue-700">
-                                                Include order ID ({order.id}) in transfer reference
+                                                Include your phone number ({order.buyerInfo?.phone || 'N/A'}) as payment reference
                                             </div>
                                             {customOrderData && (
                                                 <div className="text-xs text-blue-700 mt-1 font-medium">
@@ -868,7 +949,7 @@ export default function OrderPage() {
                                                     <div className="font-medium text-amber-800 mb-2">Transfer Tips:</div>
                                                     <ul className="text-sm text-amber-700 space-y-1">
                                                         <li>• Choose a bank account that matches your own bank for faster transfers</li>
-                                                        <li>• Always include the order ID ({order.id}) as reference</li>
+                                                        <li>• Always include your phone number ({order.buyerInfo?.phone || 'N/A'}) as reference</li>
                                                         <li>• Contact the seller after transfer to confirm payment</li>
                                                         <li>• Keep your transfer receipt for records</li>
                                                         {customOrderData && (
@@ -915,12 +996,22 @@ export default function OrderPage() {
                                                         </div>
                                                         <p className="text-sm text-green-700">
                                                             Your payment slip is being reviewed by the seller.
+                                                            {order.itemType === ItemType.DIGITAL && (
+                                                                <span className="block mt-2 font-medium">
+                                                                    🎯 Once confirmed, your download link will appear on this page!
+                                                                </span>
+                                                            )}
                                                         </p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         <p className="text-sm text-gray-600">
                                                             Upload your payment slip or screenshot as proof of payment.
+                                                            {order.itemType === ItemType.DIGITAL && (
+                                                                <span className="block mt-1 text-green-600 font-medium">
+                                                                    After upload, you'll get instant access to your digital product once the seller confirms!
+                                                                </span>
+                                                            )}
                                                         </p>
                                                         
                                                         {!paymentSlip ? (
@@ -1037,7 +1128,14 @@ export default function OrderPage() {
                                         </svg>
                                     </div>
                                     <h4 className="font-bold text-amber-800 mb-1">Awaiting Payment</h4>
-                                    <p className="text-sm text-amber-700">Complete bank transfer and upload payment slip</p>
+                                    <p className="text-sm text-amber-700">
+                                        Complete bank transfer and upload payment slip
+                                        {order.itemType === ItemType.DIGITAL && (
+                                            <span className="block mt-1 font-medium">
+                                                🚀 Your digital product will be available immediately after payment confirmation!
+                                            </span>
+                                        )}
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -1069,12 +1167,14 @@ export default function OrderPage() {
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className={`font-medium ${isActive ? "text-gray-900" : "text-gray-400"}`}>
-                                                            {step.charAt(0) + step.slice(1).toLowerCase()}
+                                                            {step === OrderStatus.PENDING && (order.itemType === ItemType.DIGITAL ? "Processing" : "Pending")}
+                                                            {step === OrderStatus.SHIPPED && (order.itemType === ItemType.DIGITAL ? "Available" : "Shipped")}
+                                                            {step === OrderStatus.RECEIVED && (order.itemType === ItemType.DIGITAL ? "Downloaded" : "Received")}
                                                         </div>
                                                         <div className={`text-sm ${isActive ? "text-gray-600" : "text-gray-400"}`}>
-                                                            {step === OrderStatus.PENDING && "Order confirmed, preparing for shipment"}
-                                                            {step === OrderStatus.SHIPPED && "Order is on its way to you"}
-                                                            {step === OrderStatus.RECEIVED && "Order delivered and confirmed"}
+                                                            {step === OrderStatus.PENDING && (order.itemType === ItemType.DIGITAL ? "Order confirmed, preparing download" : "Order confirmed, preparing for shipment")}
+                                                            {step === OrderStatus.SHIPPED && (order.itemType === ItemType.DIGITAL ? "Download link sent" : "Order is on its way to you")}
+                                                            {step === OrderStatus.RECEIVED && (order.itemType === ItemType.DIGITAL ? "Product downloaded successfully" : "Order delivered and confirmed")}
                                                         </div>
                                                     </div>
                                                     {isCurrent && order.status === OrderStatus.PENDING && (
@@ -1134,6 +1234,133 @@ export default function OrderPage() {
                     </div>
                 )}
 
+                {/* Digital Product - Waiting for Payment Confirmation */}
+                {order.itemType === ItemType.DIGITAL && isBuyer && 
+                 order.paymentMethod === 'bankTransfer' && 
+                 order.status === OrderStatus.PENDING_PAYMENT && 
+                 order.paymentSlipUrl && (
+                    <div className="max-w-4xl mx-auto mt-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0 w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">⏳ Waiting for Payment Confirmation</h3>
+                                    <div className="space-y-2 text-sm text-gray-600 mb-4">
+                                        <p>Your payment slip has been uploaded successfully!</p>
+                                        <p className="font-medium text-amber-700">
+                                            🔒 <strong>Your download will be available immediately</strong> after the seller confirms your payment.
+                                        </p>
+                                        <p>The seller is reviewing your payment confirmation. This usually takes a few hours during business hours.</p>
+                                    </div>
+                                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="flex items-start gap-2">
+                                            <svg className="w-4 h-4 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div className="text-xs text-blue-700">
+                                                <div className="font-medium mb-1">What happens next:</div>
+                                                <ul className="space-y-1">
+                                                    <li>• Seller verifies your payment in their bank account</li>
+                                                    <li>• Once confirmed, your download button will appear here</li>
+                                                    <li>• You'll get instant access to your digital product</li>
+                                                    <li>• No shipping required - immediate download!</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Digital Product Download Section */}
+                {order.itemType === ItemType.DIGITAL && isBuyer && (
+                    // Only show download when seller has confirmed payment by marking as available:
+                    // - For bank transfer: only after seller clicks "Mark as Available" (status becomes SHIPPED)
+                    // - Also allow for DELIVERED and RECEIVED (later stages)
+                    // - Never show for PENDING_PAYMENT (waiting for seller to confirm), CANCELLED, REFUND_REQUESTED, or REFUNDED
+                    order.status !== OrderStatus.CANCELLED && 
+                    order.status !== OrderStatus.REFUND_REQUESTED && 
+                    order.status !== OrderStatus.REFUNDED &&
+                    order.status !== OrderStatus.PENDING_PAYMENT &&
+                    order.status !== OrderStatus.PENDING && // Don't show during PENDING - seller hasn't confirmed yet
+                    order.status !== OrderStatus.CONFIRMED && // Don't show during CONFIRMED - seller hasn't made available yet
+                    (order.status === OrderStatus.SHIPPED || 
+                     order.status === OrderStatus.DELIVERED ||
+                     order.status === OrderStatus.RECEIVED)
+                ) && (
+                    <div className="max-w-4xl mx-auto mt-6">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0 w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Download Your Digital Product</h3>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        Your digital product is ready for download. Click the button below to access your purchase.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <button 
+                                            onClick={handleDigitalProductDownload}
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Download Product
+                                        </button>
+                                        <button className="inline-flex items-center gap-2 px-4 py-3 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                            </svg>
+                                            Share Download
+                                        </button>
+                                    </div>
+                                    {listingData?.digitalProduct && (
+                                        <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div className="text-xs text-gray-600">
+                                                <div className="font-medium mb-1">Product Details:</div>
+                                                {listingData.digitalProduct.type === 'file' && listingData.digitalProduct.fileName && (
+                                                    <div>File: {listingData.digitalProduct.fileName}</div>
+                                                )}
+                                                {listingData.digitalProduct.type === 'file' && listingData.digitalProduct.fileSize && (
+                                                    <div>Size: {(listingData.digitalProduct.fileSize / (1024 * 1024)).toFixed(2)} MB</div>
+                                                )}
+                                                {listingData.digitalProduct.type === 'link' && (
+                                                    <div>Type: External Download Link</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="flex items-start gap-2">
+                                            <svg className="w-4 h-4 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div className="text-xs text-blue-700">
+                                                <div className="font-medium mb-1">Download Instructions:</div>
+                                                <ul className="space-y-1">
+                                                    <li>• Save the downloaded file to a secure location</li>
+                                                    <li>• Keep your download link private and secure</li>
+                                                    <li>• Contact the seller if you encounter any issues</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Action Buttons */}
                 {isBuyer && order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.REFUND_REQUESTED && order.status !== OrderStatus.REFUNDED && order.status !== OrderStatus.PENDING_PAYMENT && (
                     <div className="max-w-4xl mx-auto mt-6">
@@ -1157,7 +1384,7 @@ export default function OrderPage() {
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            Mark as Received
+                                            {order.itemType === ItemType.DIGITAL ? 'Confirm Download' : 'Mark as Received'}
                                         </span>
                                     )}
                                 </button>
