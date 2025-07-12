@@ -48,7 +48,9 @@ export type NotificationType =
   | 'stock_low'
   | 'custom_order_request'
   | 'custom_order_accepted'
-  | 'custom_order_declined';
+  | 'custom_order_declined'
+  | 'service_request'
+  | 'service_request_update';
 
 /**
  * Create a notification for a user

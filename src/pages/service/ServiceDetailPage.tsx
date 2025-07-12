@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { FiMapPin, FiClock, FiStar, FiCheck, FiArrowLeft } from "react-icons/fi";
-import { serviceCategoryIcons } from "../../utils/serviceCategories";
+import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import type { Service } from "../../types/service";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
@@ -15,6 +14,7 @@ export default function ServiceDetailPage() {
   const navigate = useNavigate();
   const [service, setService] = useState<Service | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string>("");
+  const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +50,25 @@ export default function ServiceDetailPage() {
 
   const getSelectedPackageData = () => {
     return service?.packages.find(pkg => pkg.id === selectedPackage);
+  };
+
+  const handleRequestInquiry = () => {
+    if (!serviceId) return;
+    
+    const packageParam = selectedPackage ? `?package=${selectedPackage}` : "";
+    navigate(`/service/${serviceId}/inquiry${packageParam}`);
+  };
+
+  const togglePackageExpansion = (packageId: string) => {
+    setExpandedPackages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(packageId)) {
+        newSet.delete(packageId);
+      } else {
+        newSet.add(packageId);
+      }
+      return newSet;
+    });
   };
 
   if (loading) {
@@ -104,76 +123,96 @@ export default function ServiceDetailPage() {
       <ResponsiveHeader />
       
       <div className="min-h-screen bg-gray-50">
-        {/* Back Button */}
-        <div className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <button
-              onClick={() => navigate('/services')}
-              className="flex items-center gap-2 text-gray-600 hover:text-[#72b01d] transition-colors"
-            >
-              <FiArrowLeft className="w-4 h-4" />
-              Back to Services
-            </button>
-          </div>
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              {/* Service Header */}
+              {/* Service Main Card */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-[#72b01d] to-[#3f7d20] rounded-xl flex items-center justify-center text-white text-2xl">
-                    {serviceCategoryIcons[service.category] || "🔧"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                        {service.category}
-                      </span>
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                        {service.subcategory}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        service.deliveryType === 'Online' 
-                          ? 'bg-blue-100 text-blue-700'
-                          : service.deliveryType === 'Onsite'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {service.deliveryType}
-                      </span>
-                    </div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                      {service.title}
-                    </h1>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      {service.location && (
-                        <div className="flex items-center gap-1">
-                          <FiMapPin className="w-4 h-4" />
-                          <span>{service.location}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1">
-                        <FiClock className="w-4 h-4" />
-                        <span>{service.responseTime}</span>
+                {/* Breadcrumb Navigation */}
+                <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                  <button 
+                    onClick={() => navigate('/services')}
+                    className="hover:text-[#72b01d] transition-colors"
+                  >
+                    Services
+                  </button>
+                  <span>›</span>
+                  <button 
+                    onClick={() => navigate(`/services?cat=${encodeURIComponent(service.category)}`)}
+                    className="hover:text-[#72b01d] transition-colors"
+                  >
+                    {service.category}
+                  </button>
+                  <span>›</span>
+                  <button 
+                    onClick={() => navigate(`/services?cat=${encodeURIComponent(service.category)}&sub=${encodeURIComponent(service.subcategory)}`)}
+                    className="hover:text-[#72b01d] transition-colors"
+                  >
+                    {service.subcategory}
+                  </button>
+                  <span>›</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    service.deliveryType === 'Online' 
+                      ? 'bg-blue-100 text-blue-700'
+                      : service.deliveryType === 'Onsite'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-purple-100 text-purple-700'
+                  }`}>
+                    {service.deliveryType}
+                  </span>
+                </nav>
+
+                {/* Title */}
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  {service.title}
+                </h1>
+
+                {/* Description */}
+                <div className="prose max-w-none mb-6">
+                  <p className="text-gray-700 whitespace-pre-wrap">{service.description}</p>
+                </div>
+
+                {/* Service Info Grid */}
+                <div className="mb-6">
+
+                  {/* Service Locations */}
+                  {service.serviceArea && service.serviceArea.length > 0 && service.deliveryType !== 'Online' && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold text-gray-900 mb-2">Service Locations</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {service.serviceArea.map((location, index) => (
+                          <span 
+                            key={index}
+                            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm"
+                          >
+                            {location}
+                          </span>
+                        ))}
                       </div>
-                      {service.rating && (
-                        <div className="flex items-center gap-1">
-                          <FiStar className="w-4 h-4 text-yellow-400 fill-current" />
-                          <span>{service.rating.toFixed(1)}</span>
-                          {service.reviewCount && (
-                            <span>({service.reviewCount} reviews)</span>
-                          )}
-                        </div>
-                      )}
                     </div>
+                  )}
+
+                  {/* Requirements and Additional Info */}
+                  <div>
+                    {service.requirements && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-gray-900 mb-2">Requirements</h3>
+                        <p className="text-gray-700 text-sm">{service.requirements}</p>
+                      </div>
+                    )}
+
+                    {service.additionalInfo && (
+                      <div className="mb-4">
+                        <h3 className="font-semibold text-gray-900 mb-2">Additional Information</h3>
+                        <p className="text-gray-700 text-sm">{service.additionalInfo}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Service Images */}
+              {/* Service Images - Moved Here */}
               {service.images && service.images.length > 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-4">Service Gallery</h2>
@@ -187,30 +226,6 @@ export default function ServiceDetailPage() {
                       />
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Service Description */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">About This Service</h2>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{service.description}</p>
-                </div>
-              </div>
-
-              {/* Requirements */}
-              {service.requirements && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Requirements</h2>
-                  <p className="text-gray-700">{service.requirements}</p>
-                </div>
-              )}
-
-              {/* Additional Information */}
-              {service.additionalInfo && (
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Additional Information</h2>
-                  <p className="text-gray-700">{service.additionalInfo}</p>
                 </div>
               )}
 
@@ -238,110 +253,133 @@ export default function ServiceDetailPage() {
                   
                   {/* Package Selection */}
                   <div className="space-y-3 mb-6">
-                    {service.packages.map((pkg) => (
-                      <div
-                        key={pkg.id}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                          selectedPackage === pkg.id
-                            ? 'border-[#72b01d] bg-[#72b01d]/5'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={() => setSelectedPackage(pkg.id)}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
-                          {pkg.isPopular && (
-                            <span className="px-2 py-1 bg-[#72b01d] text-white text-xs rounded-full">
-                              Popular
-                            </span>
+                    {service.packages.map((pkg) => {
+                      const isExpanded = expandedPackages.has(pkg.id);
+                      const isSelected = selectedPackage === pkg.id;
+                      
+                      return (
+                        <div
+                          key={pkg.id}
+                          className={`border-2 rounded-lg transition-all ${
+                            isSelected
+                              ? 'border-[#72b01d] bg-[#72b01d]/5'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {/* Package Header - Always Visible */}
+                          <div 
+                            className="p-4 cursor-pointer"
+                            onClick={() => setSelectedPackage(pkg.id)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="font-semibold text-gray-900">{pkg.name}</h4>
+                                  {pkg.isPopular && (
+                                    <span className="px-2 py-1 bg-[#72b01d] text-white text-xs rounded-full">
+                                      Popular
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xl font-bold text-[#72b01d]">
+                                  LKR {pkg.price.toLocaleString()}
+                                </div>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePackageExpansion(pkg.id);
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                              >
+                                {isExpanded ? (
+                                  <FiChevronUp className="w-5 h-5 text-gray-500" />
+                                ) : (
+                                  <FiChevronDown className="w-5 h-5 text-gray-500" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Package Details - Expandable */}
+                          {isExpanded && (
+                            <div className="px-4 pb-4 border-t border-gray-100">
+                              <p className="text-gray-600 text-sm mb-3 mt-3">{pkg.description}</p>
+                              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+                                <span>Duration: {pkg.duration}</span>
+                                <span>Delivery: {pkg.deliveryTime}</span>
+                              </div>
+                              {pkg.features.length > 0 && (
+                                <div className="space-y-2">
+                                  <h5 className="font-medium text-gray-900 text-sm">Included features:</h5>
+                                  <div className="space-y-1">
+                                    {pkg.features.map((feature, index) => (
+                                      <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                                        <FiCheck className="w-4 h-4 text-[#72b01d]" />
+                                        {feature}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
-                        <p className="text-gray-600 text-sm mb-3">{pkg.description}</p>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-xl font-bold text-[#72b01d]">
-                            Rs. {pkg.price.toLocaleString()}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {pkg.duration} • {pkg.deliveryTime}
-                          </span>
-                        </div>
-                        {pkg.features.length > 0 && (
-                          <div className="space-y-1">
-                            {pkg.features.slice(0, 3).map((feature, index) => (
-                              <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                                <FiCheck className="w-4 h-4 text-[#72b01d]" />
-                                {feature}
-                              </div>
-                            ))}
-                            {pkg.features.length > 3 && (
-                              <div className="text-xs text-gray-500">
-                                +{pkg.features.length - 3} more features
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Selected Package Summary */}
                   {selectedPackageData && (
-                    <div className="border-t pt-4 mb-6">
-                      <h4 className="font-semibold text-gray-900 mb-2">Package Summary</h4>
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">Package Summary</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span>Package:</span>
+                          <span className="text-gray-600">Package:</span>
                           <span className="font-medium">{selectedPackageData.name}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Duration:</span>
+                          <span className="text-gray-600">Duration:</span>
                           <span>{selectedPackageData.duration}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Delivery:</span>
+                          <span className="text-gray-600">Delivery:</span>
                           <span>{selectedPackageData.deliveryTime}</span>
                         </div>
-                        <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                        <div className="flex justify-between items-center font-semibold text-lg pt-2 mt-3 border-t border-gray-200">
                           <span>Total:</span>
-                          <span className="text-[#72b01d]">Rs. {selectedPackageData.price.toLocaleString()}</span>
+                          <span className="text-[#72b01d]">LKR {selectedPackageData.price.toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Contact Buttons */}
-                  <div className="space-y-3">
-                    <button className="w-full bg-[#72b01d] text-white py-3 rounded-lg font-medium hover:bg-[#3f7d20] transition-colors">
-                      Book Now
+                  {/* Send Request to Contact */}
+                  <div className="space-y-3 mb-6">
+                    <button 
+                      onClick={handleRequestInquiry}
+                      className="w-full bg-[#72b01d] text-white py-3 rounded-lg font-medium hover:bg-[#3f7d20] transition-colors"
+                    >
+                      Send Request to Contact
                     </button>
-                    <button className="w-full border-2 border-[#72b01d] text-[#72b01d] py-3 rounded-lg font-medium hover:bg-[#72b01d] hover:text-white transition-colors">
-                      Contact Provider
-                    </button>
+                    <div className="text-center space-y-1">
+                      <p className="text-sm text-gray-600">
+                        No payment required to send request
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Service provider will contact you after request
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Service Features */}
-                  <div className="mt-6 pt-6 border-t">
-                    <h4 className="font-semibold text-gray-900 mb-3">Service Features</h4>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      {service.acceptsInstantBooking && (
-                        <div className="flex items-center gap-2">
-                          <FiCheck className="w-4 h-4 text-[#72b01d]" />
-                          Instant Booking Available
-                        </div>
-                      )}
-                      {service.requiresConsultation && (
-                        <div className="flex items-center gap-2">
-                          <FiCheck className="w-4 h-4 text-[#72b01d]" />
-                          Free Consultation
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
+                  {/* Service Info Cards */}
+                  <div className="space-y-4">
+                    {/* Response Time */}
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-900 mb-2">Response Time</h4>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FiCheck className="w-4 h-4 text-[#72b01d]" />
-                        Professional Service Provider
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FiCheck className="w-4 h-4 text-[#72b01d]" />
-                        Secure Payment
+                        <span>{service.responseTime}</span>
                       </div>
                     </div>
                   </div>

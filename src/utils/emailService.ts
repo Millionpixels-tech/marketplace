@@ -686,6 +686,142 @@ export const debugEmailConfiguration = async () => {
     };
 };
 
+/**
+ * Generate HTML template for service request notification email
+ */
+export const generateServiceRequestEmailTemplate = (
+  serviceTitle: string,
+  packageName: string,
+  packagePrice: number,
+  customerName: string,
+  customerEmail: string,
+  customerInfo: string,
+  attachedFileName?: string
+): string => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>New Service Request</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #10b981; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background-color: #f9f9f9; }
+        .section { margin-bottom: 20px; }
+        .label { font-weight: bold; color: #555; }
+        .value { margin-left: 10px; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .button { display: inline-block; padding: 10px 20px; background-color: #10b981; color: white; text-decoration: none; border-radius: 5px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New Service Request</h1>
+        </div>
+        
+        <div class="content">
+          <div class="section">
+            <p>Hello,</p>
+            <p>You have received a new service request for your service on Marketplace.</p>
+          </div>
+          
+          <div class="section">
+            <p><span class="label">Service:</span><span class="value">${serviceTitle}</span></p>
+            <p><span class="label">Package:</span><span class="value">${packageName}</span></p>
+            <p><span class="label">Price:</span><span class="value">LKR ${packagePrice.toLocaleString()}</span></p>
+          </div>
+          
+          <div class="section">
+            <h3>Customer Information</h3>
+            <p><span class="label">Name:</span><span class="value">${customerName}</span></p>
+            <p><span class="label">Email:</span><span class="value">${customerEmail}</span></p>
+            <p><span class="label">Requirements:</span></p>
+            <p style="margin-left: 10px; background-color: white; padding: 10px; border-left: 3px solid #10b981;">${customerInfo}</p>
+            ${attachedFileName ? `<p><span class="label">Attached File:</span><span class="value">${attachedFileName}</span></p>` : ''}
+          </div>
+          
+          <div class="section" style="text-align: center;">
+            <p>Please log in to your dashboard to view the full request details and respond to the customer.</p>
+            <a href="${window.location.origin}/dashboard" class="button">View Dashboard</a>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>This email was sent automatically by Marketplace. Please do not reply to this email.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+/**
+ * Send service request notification email to service provider
+ */
+export const sendServiceRequestNotificationEmail = async (
+  providerEmail: string,
+  serviceTitle: string,
+  packageName: string,
+  packagePrice: number,
+  customerName: string,
+  customerEmail: string,
+  customerInfo: string,
+  attachedFileName?: string
+): Promise<boolean> => {
+  try {
+    const emailHtml = generateServiceRequestEmailTemplate(
+      serviceTitle,
+      packageName,
+      packagePrice,
+      customerName,
+      customerEmail,
+      customerInfo,
+      attachedFileName
+    );
+
+    const emailData = {
+      emails: [
+        {
+          to: providerEmail,
+          subject: `New Service Request: ${serviceTitle}`,
+          html: emailHtml
+        }
+      ],
+      smtpConfig: {
+        host: import.meta.env.VITE_SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(import.meta.env.VITE_SMTP_PORT || '587'),
+        secure: import.meta.env.VITE_SMTP_SECURE === 'true',
+        user: import.meta.env.VITE_SMTP_USER || '',
+        pass: import.meta.env.VITE_SMTP_PASS || '',
+        fromEmail: import.meta.env.VITE_FROM_EMAIL || 'noreply@marketplace.com',
+        fromName: FROM_NAME
+      }
+    };
+
+    const response = await fetch('https://us-central1-marketplace-bd270.cloudfunctions.net/sendEmail', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send service request notification email:', response.statusText);
+      return false;
+    }
+
+    const result = await response.json();
+    return result.success;
+  } catch (error) {
+    console.error('Error sending service request notification email:', error);
+    return false;
+  }
+};
+
 // Re-export template functions for backwards compatibility
 export { 
     generateBuyerOrderConfirmationEmail,

@@ -43,6 +43,7 @@ import AddService from "../pages/service/AddService";
 import EditService from "../pages/service/EditService";
 import ServicesPage from "../pages/service/ServicesPage";
 import ServiceDetailPage from "../pages/service/ServiceDetailPage";
+import ServiceInquiryPage from "../pages/service/ServiceInquiryPage";
 
 const AppRoutes = () => (
     <Routes>
@@ -62,6 +63,7 @@ const AppRoutes = () => (
       <Route path="/edit-service/:id" element={<ProtectedRoute><EditService /></ProtectedRoute>} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/service/:serviceId" element={<ServiceDetailPage />} />
+      <Route path="/service/:id/inquiry" element={<ProtectedRoute><ServiceInquiryPage /></ProtectedRoute>} />
       <Route path="/listing/:id" element={<ListingPage />} />
       <Route path="/listing/:listingId/edit" element={<EditListing />} />
       <Route path="/checkout" element={<CheckoutPage />} />

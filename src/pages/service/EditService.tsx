@@ -19,6 +19,7 @@ import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import ErrorBoundary from "../../components/common/ErrorBoundary";
 import ServicePackages from "../../components/service/ServicePackages";
+import { processImageForUpload } from "../../utils/imageUtils";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -108,6 +109,7 @@ const EditService = () => {
         }
         
         const service = serviceDoc.data() as Service;
+        service.id = serviceDoc.id; // Ensure the ID is set
         
         // Check ownership
         if (service.owner !== user.uid) {
@@ -116,6 +118,7 @@ const EditService = () => {
           return;
         }
         
+        console.log('Loaded service:', service); // Debug log
         setOriginalService(service);
         
         // Load shops
@@ -178,7 +181,15 @@ const EditService = () => {
 
   // Save updated service
   const handleUpdateService = async () => {
-    if (!originalService || !selectedShop) return;
+    if (!originalService || !selectedShop) {
+      showToast("error", "Missing service or shop data");
+      return;
+    }
+    
+    if (!originalService.id) {
+      showToast("error", "Service ID is missing");
+      return;
+    }
     
     setSubmitting(true);
     try {
@@ -200,30 +211,87 @@ const EditService = () => {
         imageUrls = [...imageUrls, ...newImageUrls];
       }
       
-      // Prepare updated service data
+      // Ensure serviceAreas is properly defined
+      const safeServiceAreas = Array.isArray(serviceAreas) ? serviceAreas.filter(area => area != null && area !== undefined && area !== '') : [];
+      
+      // Clean keywords array
+      const safeKeywords = Array.isArray(keywords) ? keywords.filter(kw => kw != null && kw !== undefined && kw !== '') : [];
+      
+      // Clean images array
+      const safeImageUrls = Array.isArray(imageUrls) ? imageUrls.filter(url => url != null && url !== undefined && url !== '') : [];
+      
+      // Validate and clean packages data
+      const safePackages = Array.isArray(packages) ? packages.map(pkg => ({
+        ...pkg,
+        id: pkg.id || '',
+        name: String(pkg.name || ''),
+        description: String(pkg.description || ''),
+        price: Number(pkg.price) || 0,
+        duration: String(pkg.duration || ''),
+        deliveryTime: String(pkg.deliveryTime || ''),
+        features: Array.isArray(pkg.features) ? pkg.features.filter(f => f != null && f !== undefined && f !== '') : []
+      })) : [];
+      
+      // Clean availability object
+      const safeAvailability = availability && typeof availability === 'object' ? availability : {};
+      
+      // Prepare updated service data with safe values
       const updatedData = {
-        shopId: selectedShop.id,
-        title: title.trim(),
-        description: description.trim(),
+        shopId: String(selectedShop.id),
+        title: String(title).trim(),
+        description: String(description).trim(),
         category: selectedCategory,
-        subcategory: selectedSubcategory,
-        deliveryType,
-        serviceArea: deliveryType === 'online' ? [] : serviceAreas, // FIXED: Save as serviceArea
-        packages,
-        requirements: requirements.trim() || undefined,
-        additionalInfo: additionalInfo.trim() || undefined,
-        images: imageUrls,
-        availability,
-        acceptsInstantBooking,
-        requiresConsultation,
-        responseTime,
-        isActive,
-        isPaused,
-        keywords,
-        updatedAt: Timestamp.now()
+        subcategory: String(selectedSubcategory),
+        deliveryType: String(deliveryType),
+        serviceArea: deliveryType === 'online' ? [] : safeServiceAreas,
+        packages: safePackages,
+        requirements: requirements?.trim() || "",
+        additionalInfo: additionalInfo?.trim() || "",
+        images: safeImageUrls,
+        availability: safeAvailability,
+        acceptsInstantBooking: Boolean(acceptsInstantBooking),
+        requiresConsultation: Boolean(requiresConsultation),
+        responseTime: String(responseTime) || "Within 24 hours",
+        isActive: Boolean(isActive),
+        isPaused: Boolean(isPaused),
+        keywords: safeKeywords,
+        updatedAt: Timestamp.fromDate(new Date())
       };
       
-      await updateDoc(doc(db, "services", originalService.id!), updatedData);
+      console.log('Final updatedData:', JSON.stringify(updatedData, null, 2));
+      console.log('originalService.id:', originalService.id);
+      
+      // Final validation before update
+      if (!originalService.id) {
+        throw new Error('Service ID is undefined');
+      }
+      
+      try {
+        const serviceRef = doc(db, "services", originalService.id);
+        console.log('Service reference:', serviceRef);
+        
+        // Convert complex objects to simple objects to avoid Firebase serialization issues
+        const firebaseUpdatedData = {
+          ...updatedData,
+          packages: JSON.parse(JSON.stringify(safePackages)), // Deep clone to remove any prototypes
+          availability: JSON.parse(JSON.stringify(safeAvailability)), // Deep clone
+          updatedAt: Timestamp.fromDate(new Date())
+        };
+        
+        console.log('Attempting Firebase update with cleaned data...');
+        await updateDoc(serviceRef, firebaseUpdatedData);
+        console.log('Service updated successfully in Firebase');
+      } catch (updateError) {
+        console.error('Firebase updateDoc error:', updateError);
+        if (updateError instanceof Error) {
+          console.error('Error details:', {
+            name: updateError.name,
+            message: updateError.message,
+            stack: updateError.stack
+          });
+        }
+        throw updateError; // Re-throw to be caught by outer catch
+      }
       
       showToast("success", "Service updated successfully!");
       navigate("/dashboard?tab=services");
@@ -247,24 +315,52 @@ const EditService = () => {
       return;
     }
 
-    const validFiles = files.filter(file => {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("error", `${file.name} is too large. Please use images under 5MB.`);
-        return false;
-      }
-      return true;
-    });
+    try {
+      // Process each image with compression
+      const newFiles = files.slice(0, 5 - images.length);
+      const processedFiles: File[] = [];
 
-    if (validFiles.length > 0) {
-      setImages(prev => [...prev, ...validFiles]);
+      for (let index = 0; index < newFiles.length; index++) {
+        const file = newFiles[index];
+        try {
+          if (file.size > 5 * 1024 * 1024) {
+            showToast("error", `${file.name} is too large. Please use images under 5MB.`);
+            continue;
+          }
+
+          const processedFile = await processImageForUpload(
+            file,
+            title || 'service',
+            selectedCategory || 'service',
+            selectedSubcategory,
+            images.length + index, // current index
+            selectedShop?.name
+          );
+          processedFiles.push(processedFile);
+        } catch (error) {
+          console.error('Error processing image:', error);
+          showToast("error", `Error processing ${file.name}`);
+        }
+      }
+
+      setImages(prev => [...prev, ...processedFiles]);
       
-      validFiles.forEach(file => {
+      // Create previews for the processed images
+      processedFiles.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          setImagePreviews(prev => [...prev, e.target?.result as string]);
+        reader.onload = (event) => {
+          setImagePreviews(prev => [...prev, event.target?.result as string]);
         };
         reader.readAsDataURL(file);
       });
+
+      // Reset the file input to allow selecting the same files again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error handling image upload:', error);
+      showToast("error", "Error uploading images");
     }
   };
 
@@ -275,6 +371,11 @@ const EditService = () => {
       const newIndex = index - existingImages.length;
       setImages(prev => prev.filter((_, i) => i !== newIndex));
       setImagePreviews(prev => prev.filter((_, i) => i !== newIndex));
+    }
+    
+    // Reset file input to allow re-selecting files
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -487,7 +588,7 @@ const EditService = () => {
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                   {(Object.keys(serviceCategoryIcons) as ServiceCategory[]).map((category) => {
-                    const IconComponent = serviceCategoryIcons[category];
+                    const iconEmoji = serviceCategoryIcons[category];
                     return (
                       <div
                         key={category}
@@ -498,16 +599,9 @@ const EditService = () => {
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <ErrorBoundary fallback={
-                          <div className="w-12 h-12 mx-auto mb-3 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">Icon</span>
-                          </div>
-                        }>
-                          {IconComponent && React.createElement(IconComponent, { 
-                            className: "w-12 h-12 mx-auto mb-3 text-[#72b01d]",
-                            'aria-label': category 
-                          })}
-                        </ErrorBoundary>
+                        <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center text-3xl">
+                          {iconEmoji}
+                        </div>
                         <h3 className="font-semibold text-gray-900 capitalize">
                           {category.replace(/([A-Z])/g, ' $1').trim()}
                         </h3>

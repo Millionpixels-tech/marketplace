@@ -266,9 +266,9 @@ export default function ServicesPage() {
                 <div>
                   <span className="text-xs text-gray-500">Starting from</span>
                   <div className="font-bold text-lg text-[#72b01d]">
-                    Rs. {minPrice.toLocaleString()}
+                    LKR {minPrice.toLocaleString()}
                     {minPrice !== maxPrice && (
-                      <span className="text-sm text-gray-500"> - Rs. {maxPrice.toLocaleString()}</span>
+                      <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>
                     )}
                   </div>
                 </div>
@@ -694,14 +694,14 @@ export default function ServicesPage() {
                     {appliedMinPrice && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Min: Rs.{appliedMinPrice}
+                        Min: LKR {appliedMinPrice}
                       </span>
                     )}
                     
                     {appliedMaxPrice && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Max: Rs.{appliedMaxPrice}
+                        Max: LKR {appliedMaxPrice}
                       </span>
                     )}
                     
