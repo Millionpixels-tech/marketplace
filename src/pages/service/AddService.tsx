@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db, storage } from "../../utils/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -9,6 +9,7 @@ import {
   serviceCategories, 
   ServiceCategory, 
   serviceCategoryIcons,
+  serviceSubcategoryIcons,
   getServiceSubcategories
 } from "../../utils/serviceCategories";
 import { sriLankanProvinces, getAllDistricts } from "../../utils/sriLankanDistricts";
@@ -21,7 +22,7 @@ import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { processImageForUpload } from "../../utils/imageUtils";
-import { FiCheck, FiX } from "react-icons/fi";
+import { FiCheck, FiX, FiTool } from "react-icons/fi";
 
 const steps = [
   { label: "Shop" },
@@ -457,8 +458,13 @@ export default function AddService() {
                         : "border-[#e5e7eb] hover:border-[#72b01d]/30 hover:bg-gray-50"}
                     `}
                   >
-                    <div className="text-3xl md:text-4xl mb-2">{serviceCategoryIcons[cat.name]}</div>
-                    <div className="font-semibold text-sm md:text-base">{cat.name}</div>
+                    <div className="text-2xl md:text-3xl mb-2">
+                      {(() => {
+                        const IconComponent = serviceCategoryIcons[cat.name];
+                        return IconComponent ? <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" /> : null;
+                      })()}
+                    </div>
+                    <div className="font-semibold text-xs md:text-sm">{cat.name}</div>
                   </button>
                 ))}
               </div>
@@ -494,13 +500,20 @@ export default function AddService() {
                     key={sub}
                     type="button"
                     onClick={() => setSubcategory(sub)}
-                    className={`p-3 md:p-4 rounded-lg border transition text-left text-sm md:text-base
+                    className={`p-4 md:p-6 rounded-xl border-2 transition text-center
                       ${subcategory === sub
-                        ? "border-[#72b01d] bg-[#72b01d]/5 font-semibold"
+                        ? "border-[#72b01d] bg-[#72b01d]/5 shadow-md"
                         : "border-[#e5e7eb] hover:border-[#72b01d]/30 hover:bg-gray-50"}
                     `}
                   >
-                    {sub}
+                    <div className="text-2xl md:text-3xl mb-2">
+                      {serviceSubcategoryIcons[sub] ? (
+                        React.createElement(serviceSubcategoryIcons[sub], { className: "w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" })
+                      ) : (
+                        <FiTool className="w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" />
+                      )}
+                    </div>
+                    <div className="font-semibold text-xs md:text-sm">{sub}</div>
                   </button>
                 ))}
               </div>

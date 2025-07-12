@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { db, storage } from "../../utils/firebase";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -953,7 +953,13 @@ export default function EditListing() {
                                                 : "bg-white border border-[#45495522] hover:bg-white text-[#0d0a0b]"}
                     `}
                                     >
-                                        <span className="text-lg md:text-xl">{categoryIcons[c.name] || <FiPackage className="w-5 h-5" />}</span>
+                                        <span className="text-lg md:text-xl">
+                                          {categoryIcons[c.name] ? (
+                                            React.createElement(categoryIcons[c.name], { className: "w-5 h-5" })
+                                          ) : (
+                                            <FiPackage className="w-5 h-5" />
+                                          )}
+                                        </span>
                                         <span className="font-medium text-xs text-center">{c.name}</span>
                                     </button>
                                 ))}
@@ -994,7 +1000,12 @@ export default function EditListing() {
                                                 : "bg-white border border-[#45495522] hover:bg-white text-[#0d0a0b]"}
                     `}
                                     >
-                                        <span className="text-lg md:text-xl">{subCategoryIcons[sc] || <FiPackage className="w-5 h-5" />}</span>
+                                        <div className="flex items-center justify-center text-lg md:text-xl mb-1 w-5 h-5 md:w-6 md:h-6 mx-auto">
+                                          {subCategoryIcons[sc] ? 
+                                            React.createElement(subCategoryIcons[sc]) : 
+                                            <FiPackage />
+                                          }
+                                        </div>
                                         <span className="font-medium text-xs text-center">{sc}</span>
                                     </button>
                                 ))}

@@ -1,3 +1,11 @@
+import React from 'react';
+import { 
+  FiBriefcase, FiTrendingUp, FiShield, FiDollarSign, FiUsers, FiPenTool,
+  FiMonitor, FiEdit3, FiVideo, FiCamera, FiMusic, FiTool, FiCode,
+  FiBarChart, FiLock, FiActivity, FiHeart, FiStar, FiBookOpen,
+  FiGlobe, FiHome, FiSmile, FiCalendar, FiCoffee, FiMic, FiMapPin, FiTarget
+} from 'react-icons/fi';
+
 // Service Categories for marketplace - completely separate from products
 export const ServiceDeliveryType = {
   ONSITE: 'Onsite',
@@ -407,39 +415,223 @@ export const serviceCategories: ServiceCategoryInterface[] = [
 ];
 
 // Service category icons mapping
-export const serviceCategoryIcons: Record<ServiceCategory, string> = {
-  [ServiceCategory.BUSINESS_CONSULTING]: "💼",
-  [ServiceCategory.MARKETING_ADVERTISING]: "📈",
-  [ServiceCategory.LEGAL_SERVICES]: "⚖️",
-  [ServiceCategory.ACCOUNTING_FINANCE]: "💰",
-  [ServiceCategory.HR_RECRUITMENT]: "👥",
-  [ServiceCategory.GRAPHIC_DESIGN]: "🎨",
-  [ServiceCategory.WEB_DEVELOPMENT]: "💻",
-  [ServiceCategory.CONTENT_WRITING]: "✍️",
-  [ServiceCategory.VIDEO_PRODUCTION]: "🎬",
-  [ServiceCategory.PHOTOGRAPHY]: "📸",
-  [ServiceCategory.MUSIC_AUDIO_SERVICES]: "🎵",
-  [ServiceCategory.IT_SUPPORT]: "🔧",
-  [ServiceCategory.SOFTWARE_DEVELOPMENT]: "👨‍💻",
-  [ServiceCategory.DATA_ANALYTICS]: "📊",
-  [ServiceCategory.CYBERSECURITY]: "🔐",
-  [ServiceCategory.FITNESS_TRAINING]: "💪",
-  [ServiceCategory.NUTRITION_COACHING]: "🥗",
-  [ServiceCategory.LIFE_COACHING]: "🌟",
-  [ServiceCategory.TUTORING_EDUCATION]: "🎓",
-  [ServiceCategory.LANGUAGE_TRANSLATION]: "🌍",
-  [ServiceCategory.CLEANING_SERVICES]: "🧹",
-  [ServiceCategory.REPAIR_MAINTENANCE]: "🔨",
-  [ServiceCategory.GARDENING_LANDSCAPING]: "🌿",
-  [ServiceCategory.INTERIOR_DESIGN]: "🏠",
-  [ServiceCategory.HEALTHCARE_SERVICES]: "🏥",
-  [ServiceCategory.THERAPY_COUNSELING]: "🧠",
-  [ServiceCategory.BEAUTY_SERVICES]: "💄",
-  [ServiceCategory.MASSAGE_THERAPY]: "💆",
-  [ServiceCategory.EVENT_PLANNING]: "🎉",
-  [ServiceCategory.CATERING_SERVICES]: "🍽️",
-  [ServiceCategory.ENTERTAINMENT]: "🎭",
-  [ServiceCategory.TRAVEL_SERVICES]: "✈️"
+// Service category icons mapping - Using React Icons
+export const serviceCategoryIcons: Record<ServiceCategory, React.ComponentType<any>> = {
+  [ServiceCategory.BUSINESS_CONSULTING]: FiBriefcase,
+  [ServiceCategory.MARKETING_ADVERTISING]: FiTrendingUp,
+  [ServiceCategory.LEGAL_SERVICES]: FiShield,
+  [ServiceCategory.ACCOUNTING_FINANCE]: FiDollarSign,
+  [ServiceCategory.HR_RECRUITMENT]: FiUsers,
+  [ServiceCategory.GRAPHIC_DESIGN]: FiPenTool,
+  [ServiceCategory.WEB_DEVELOPMENT]: FiMonitor,
+  [ServiceCategory.CONTENT_WRITING]: FiEdit3,
+  [ServiceCategory.VIDEO_PRODUCTION]: FiVideo,
+  [ServiceCategory.PHOTOGRAPHY]: FiCamera,
+  [ServiceCategory.MUSIC_AUDIO_SERVICES]: FiMusic,
+  [ServiceCategory.IT_SUPPORT]: FiTool,
+  [ServiceCategory.SOFTWARE_DEVELOPMENT]: FiCode,
+  [ServiceCategory.DATA_ANALYTICS]: FiBarChart,
+  [ServiceCategory.CYBERSECURITY]: FiLock,
+  [ServiceCategory.FITNESS_TRAINING]: FiActivity,
+  [ServiceCategory.NUTRITION_COACHING]: FiHeart,
+  [ServiceCategory.LIFE_COACHING]: FiStar,
+  [ServiceCategory.TUTORING_EDUCATION]: FiBookOpen,
+  [ServiceCategory.LANGUAGE_TRANSLATION]: FiGlobe,
+  [ServiceCategory.CLEANING_SERVICES]: FiHome,
+  [ServiceCategory.REPAIR_MAINTENANCE]: FiTool,
+  [ServiceCategory.GARDENING_LANDSCAPING]: FiTarget,
+  [ServiceCategory.INTERIOR_DESIGN]: FiHome,
+  [ServiceCategory.HEALTHCARE_SERVICES]: FiHeart,
+  [ServiceCategory.THERAPY_COUNSELING]: FiSmile,
+  [ServiceCategory.BEAUTY_SERVICES]: FiStar,
+  [ServiceCategory.MASSAGE_THERAPY]: FiActivity,
+  [ServiceCategory.EVENT_PLANNING]: FiCalendar,
+  [ServiceCategory.CATERING_SERVICES]: FiCoffee,
+  [ServiceCategory.ENTERTAINMENT]: FiMic,
+  [ServiceCategory.TRAVEL_SERVICES]: FiMapPin
+};
+
+// Service subcategory icons mapping
+export const serviceSubcategoryIcons: Record<string, React.ComponentType<any>> = {
+  // Business Consulting Subcategories
+  'Strategy & Planning': FiTarget,
+  'Business Development': FiTrendingUp,
+  'Operations Consulting': FiTool,
+  'Management Consulting': FiBriefcase,
+  'Startup Consulting': FiActivity,
+  'Process Improvement': FiBarChart,
+  'Risk Management': FiShield,
+  'Change Management': FiUsers,
+
+  // Marketing & Advertising Subcategories  
+  'Digital Marketing': FiMonitor,
+  'Social Media Marketing': FiUsers,
+  'SEO & SEM': FiTrendingUp,
+  'Content Marketing': FiEdit3,
+  'Email Marketing': FiMic,
+  'Brand Strategy': FiStar,
+  'Market Research': FiBarChart,
+  'Advertising Campaigns': FiTarget,
+
+  // Legal Services Subcategories
+  'Corporate Law': FiBriefcase,
+  'Contract Law': FiEdit3,
+  'Intellectual Property': FiShield,
+  'Employment Law': FiUsers,
+  'Family Law': FiHeart,
+  'Real Estate Law': FiHome,
+  'Tax Law': FiDollarSign,
+  'Immigration Law': FiGlobe,
+
+  // Accounting & Finance Subcategories
+  'Bookkeeping': FiEdit3,
+  'Tax Preparation': FiDollarSign,
+  'Financial Planning': FiBarChart,
+  'Auditing': FiShield,
+  'Payroll Services': FiUsers,
+  'Investment Advisory': FiTrendingUp,
+  'Business Valuation': FiBriefcase,
+  'Forensic Accounting': FiLock,
+
+  // HR & Recruitment Subcategories
+  'Talent Acquisition': FiUsers,
+  'HR Consulting': FiBriefcase,
+  'Performance Management': FiBarChart,
+  'Training & Development': FiBookOpen,
+  'Compensation Planning': FiDollarSign,
+  'Employee Relations': FiHeart,
+  'HR Technology': FiMonitor,
+  'Organizational Development': FiActivity,
+
+  // Graphic Design Subcategories
+  'Logo Design': FiStar,
+  'Brand Identity': FiBriefcase,
+  'Print Design': FiEdit3,
+  'Web Design': FiMonitor,
+  'Packaging Design': FiTarget,
+  'Illustration': FiPenTool,
+  'UI/UX Design': FiMonitor,
+  'Motion Graphics': FiVideo,
+
+  // Web Development Subcategories
+  'Frontend Development': FiMonitor,
+  'Backend Development': FiCode,
+  'Full Stack Development': FiTool,
+  'E-commerce Development': FiDollarSign,
+  'CMS Development': FiEdit3,
+  'Mobile App Development': FiSmile,
+  'API Development': FiCode,
+  'Website Maintenance': FiTool,
+
+  // Content Writing Subcategories
+  'Blog Writing': FiEdit3,
+  'Copywriting': FiPenTool,
+  'Technical Writing': FiCode,
+  'SEO Writing': FiTrendingUp,
+  'Social Media Content': FiUsers,
+  'Email Marketing Content': FiMic,
+  'Product Descriptions': FiTarget,
+  'Academic Writing': FiBookOpen,
+
+  // Video Production Subcategories
+  'Corporate Videos': FiBriefcase,
+  'Promotional Videos': FiTarget,
+  'Event Videography': FiCalendar,
+  'Documentary': FiCamera,
+  'Animation': FiActivity,
+  'Video Editing': FiVideo,
+  'Live Streaming': FiMic,
+  'Tutorial Videos': FiBookOpen,
+
+  // Photography Subcategories
+  'Portrait Photography': FiCamera,
+  'Event Photography': FiCalendar,
+  'Product Photography': FiTarget,
+  'Real Estate Photography': FiHome,
+  'Wedding Photography': FiHeart,
+  'Fashion Photography': FiStar,
+  'Corporate Photography': FiBriefcase,
+  'Photo Editing': FiEdit3,
+
+  // Music & Audio Services Subcategories
+  'Audio Production': FiMusic,
+  'Voice Over': FiMic,
+  'Music Composition': FiHeart,
+  'Sound Design': FiActivity,
+  'Podcast Production': FiMic,
+  'Audio Editing': FiEdit3,
+  'Mixing & Mastering': FiTool,
+  'Jingle Creation': FiStar,
+
+  // IT Support Subcategories
+  'Help Desk Support': FiTool,
+  'Network Administration': FiGlobe,
+  'System Administration': FiMonitor,
+  'Hardware Support': FiTool,
+  'Software Support': FiCode,
+  'Cloud Services': FiActivity,
+  'Database Management': FiBarChart,
+  'IT Consulting': FiBriefcase,
+
+  // Software Development Subcategories
+  'Custom Software': FiCode,
+  'Mobile Apps': FiSmile,
+  'Desktop Applications': FiMonitor,
+  'Database Development': FiBarChart,
+  'Integration Services': FiTool,
+  'Software Testing': FiShield,
+  'DevOps': FiTool,
+  'Software Maintenance': FiTool,
+
+  // Data Analytics Subcategories
+  'Data Analysis': FiBarChart,
+  'Business Intelligence': FiTrendingUp,
+  'Data Visualization': FiActivity,
+  'Statistical Analysis': FiTarget,
+  'Machine Learning': FiCode,
+  'Data Mining': FiTool,
+  'Predictive Analytics': FiTrendingUp,
+  'Database Design': FiBarChart,
+
+  // Cybersecurity Subcategories
+  'Security Audits': FiShield,
+  'Penetration Testing': FiLock,
+  'Security Consulting': FiBriefcase,
+  'Compliance': FiEdit3,
+  'Incident Response': FiActivity,
+  'Security Training': FiBookOpen,
+  'Risk Assessment': FiTarget,
+  'Vulnerability Assessment': FiShield,
+
+  // Fitness & Training Subcategories
+  'Personal Training': FiActivity,
+  'Group Fitness': FiUsers,
+  'Nutrition Coaching': FiHeart,
+  'Weight Loss Coaching': FiTarget,
+  'Strength Training': FiActivity,
+  'Yoga Instruction': FiHeart,
+  'Sports Coaching': FiActivity,
+  'Online Fitness': FiMonitor,
+
+  // Additional subcategories that might be missing
+  'Pilates': FiActivity,
+  'Cardio Training': FiHeart,
+  
+  // Nutrition Coaching subcategories (if they exist)
+  'Meal Planning': FiCalendar,
+  'Diet Consultation': FiBriefcase,
+  
+  // Life Coaching subcategories (if they exist)
+  'Career Coaching': FiBriefcase,
+  'Relationship Coaching': FiHeart,
+  
+  // Additional common subcategories
+  'Consultation': FiBriefcase,
+  'Implementation': FiTool,
+  'Maintenance': FiTool,
+  'Support': FiUsers,
+  'Training': FiBookOpen,
+  'Analysis': FiBarChart
 };
 
 // Helper function to get available delivery types for a category

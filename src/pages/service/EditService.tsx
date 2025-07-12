@@ -5,10 +5,11 @@ import { useToast } from "../../context/ToastContext";
 import { collection, getDocs, query, where, doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiCheck } from "react-icons/fi";
+import { FiX, FiCheck, FiTool } from "react-icons/fi";
 import { 
   ServiceCategory, 
   serviceCategoryIcons,
+  serviceSubcategoryIcons,
   getServiceSubcategories
 } from "../../utils/serviceCategories";
 import { sriLankanProvinces, getAllDistricts } from "../../utils/sriLankanDistricts";
@@ -586,26 +587,27 @@ const EditService = () => {
               <div className="animate-fade-in">
                 <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">What category does your service belong to?</h2>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {(Object.keys(serviceCategoryIcons) as ServiceCategory[]).map((category) => {
-                    const iconEmoji = serviceCategoryIcons[category];
+                    const IconComponent = serviceCategoryIcons[category];
                     return (
-                      <div
+                      <button
                         key={category}
+                        type="button"
                         onClick={() => setSelectedCategory(category)}
-                        className={`p-6 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                        className={`p-4 md:p-6 rounded-xl border-2 transition text-center ${
                           selectedCategory === category
-                            ? 'border-[#72b01d] bg-green-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-[#72b01d] bg-[#72b01d]/5 shadow-md'
+                            : 'border-[#e5e7eb] hover:border-[#72b01d]/30 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center text-3xl">
-                          {iconEmoji}
+                        <div className="text-2xl md:text-3xl mb-2">
+                          {IconComponent ? <IconComponent className="w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" /> : null}
                         </div>
-                        <h3 className="font-semibold text-gray-900 capitalize">
+                        <div className="font-semibold text-xs md:text-sm">
                           {category.replace(/([A-Z])/g, ' $1').trim()}
-                        </h3>
-                      </div>
+                        </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -635,19 +637,27 @@ const EditService = () => {
               <div className="animate-fade-in">
                 <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-[#0d0a0b]">Choose a specific subcategory</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {getServiceSubcategories(selectedCategory).map((subcategory) => (
-                    <div
+                    <button
                       key={subcategory}
+                      type="button"
                       onClick={() => setSelectedSubcategory(subcategory)}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedSubcategory === subcategory
-                          ? 'border-[#72b01d] bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-4 md:p-6 rounded-xl border-2 transition text-center
+                        ${selectedSubcategory === subcategory
+                          ? 'border-[#72b01d] bg-[#72b01d]/5 shadow-md'
+                          : 'border-[#e5e7eb] hover:border-[#72b01d]/30 hover:bg-gray-50'}
+                      `}
                     >
-                      <h3 className="font-medium text-gray-900">{subcategory}</h3>
-                    </div>
+                      <div className="text-2xl md:text-3xl mb-2">
+                        {serviceSubcategoryIcons[subcategory] ? (
+                          React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" })
+                        ) : (
+                          <FiTool className="w-6 h-6 md:w-8 md:h-8 mx-auto text-[#72b01d]" />
+                        )}
+                      </div>
+                      <div className="font-semibold text-xs md:text-sm">{subcategory}</div>
+                    </button>
                   ))}
                 </div>
                 

@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
-import { db } from "../../utils/firebase";
-import { collection, getDocs, query, orderBy, limit, where } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { FiStar } from "react-icons/fi";
-import { serviceCategories, serviceCategoryIcons, ServiceCategory, getServiceSubcategories } from "../../utils/serviceCategories";
+import { serviceCategories, serviceCategoryIcons, serviceSubcategoryIcons, ServiceCategory, getServiceSubcategories } from "../../utils/serviceCategories";
 import { getAllDistricts } from "../../utils/sriLankanDistricts";
 import type { Service } from "../../types/service";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
@@ -12,61 +10,91 @@ import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { useResponsive } from "../../hooks/useResponsive";
 import { Button, Input } from "../../components/UI";
+import Pagination from "../../components/UI/Pagination";
+import { useServices } from "../../hooks/useServices";
+import type { ServiceFilters } from "../../hooks/useServices";
 
 export default function ServicesPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   
-  // Search and filter states
+  // Filter input states (what user types/selects)
   const [searchInput, setSearchInput] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | 'all'>('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [deliveryTypeFilter, setDeliveryTypeFilter] = useState<'all' | 'onsite' | 'online'>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
-  const [appliedLocation, setAppliedLocation] = useState<string>('all');
   const [minPriceFilter, setMinPriceFilter] = useState("");
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
   const [sortFilter, setSortFilter] = useState("");
   
-  // Applied filters
+  // Applied filter states (what's actually applied to the query)
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [appliedCategory, setAppliedCategory] = useState<ServiceCategory | 'all'>('all');
+  const [appliedSubcategory, setAppliedSubcategory] = useState<string>('');
+  const [appliedDeliveryType, setAppliedDeliveryType] = useState<'all' | 'onsite' | 'online'>('all');
+  const [appliedLocation, setAppliedLocation] = useState<string>('all');
   const [appliedMinPrice, setAppliedMinPrice] = useState("");
   const [appliedMaxPrice, setAppliedMaxPrice] = useState("");
   const [appliedSort, setAppliedSort] = useState("");
-  const [appliedDeliveryType, setAppliedDeliveryType] = useState<'all' | 'onsite' | 'online'>('all');
+  
+  // Build filters for the hook using applied states
+  const filters: ServiceFilters = {
+    category: appliedCategory,
+    subcategory: appliedSubcategory || undefined,
+    deliveryType: appliedDeliveryType,
+    location: appliedLocation === 'all' ? undefined : appliedLocation,
+    minPrice: appliedMinPrice ? parseFloat(appliedMinPrice) : undefined,
+    maxPrice: appliedMaxPrice ? parseFloat(appliedMaxPrice) : undefined,
+    search: appliedSearch || undefined,
+    sortBy: appliedSort as ServiceFilters['sortBy'] || undefined
+  };
+
+  // Use the services hook
+  const { services, loading, pagination, loadPage } = useServices(filters);
 
   // Sync with URL params
   useEffect(() => {
-    setSelectedCategory((searchParams.get("cat") as ServiceCategory) || 'all');
-    setSelectedSubcategory(searchParams.get("sub") || '');
-    setSearchInput(searchParams.get("q") || "");
-    setAppliedSearch(searchParams.get("q") || "");
-    setMinPriceFilter(searchParams.get("min") || "");
-    setMaxPriceFilter(searchParams.get("max") || "");
-    setSortFilter(searchParams.get("sort") || "");
-    setDeliveryTypeFilter((searchParams.get("delivery") as 'all' | 'onsite' | 'online') || 'all');
-    setLocationFilter(searchParams.get("location") || 'all');
-    setAppliedMinPrice(searchParams.get("min") || "");
-    setAppliedMaxPrice(searchParams.get("max") || "");
-    setAppliedSort(searchParams.get("sort") || "");
-    setAppliedDeliveryType((searchParams.get("delivery") as 'all' | 'onsite' | 'online') || 'all');
-    setAppliedLocation(searchParams.get("location") || 'all');
+    const cat = (searchParams.get("cat") as ServiceCategory) || 'all';
+    const sub = searchParams.get("sub") || '';
+    const search = searchParams.get("q") || "";
+    const minPrice = searchParams.get("min") || "";
+    const maxPrice = searchParams.get("max") || "";
+    const sort = searchParams.get("sort") || "";
+    const delivery = (searchParams.get("delivery") as 'all' | 'onsite' | 'online') || 'all';
+    const location = searchParams.get("location") || 'all';
+    
+    // Set input states
+    setSelectedCategory(cat);
+    setSelectedSubcategory(sub);
+    setSearchInput(search);
+    setMinPriceFilter(minPrice);
+    setMaxPriceFilter(maxPrice);
+    setSortFilter(sort);
+    setDeliveryTypeFilter(delivery);
+    setLocationFilter(location);
+    
+    // Set applied states
+    setAppliedCategory(cat);
+    setAppliedSubcategory(sub);
+    setAppliedSearch(search);
+    setAppliedMinPrice(minPrice);
+    setAppliedMaxPrice(maxPrice);
+    setAppliedSort(sort);
+    setAppliedDeliveryType(delivery);
+    setAppliedLocation(location);
   }, [searchParams]);
-
-  useEffect(() => {
-    fetchServices();
-  }, [selectedCategory, selectedSubcategory, appliedDeliveryType, appliedLocation, appliedMinPrice, appliedMaxPrice, appliedSort]);
 
   const handleCategoryClick = (categoryName: string) => {
     const newCategory = selectedCategory === categoryName ? 'all' : (categoryName as ServiceCategory);
     setSelectedCategory(newCategory);
     setSelectedSubcategory('');
+    setAppliedCategory(newCategory);
+    setAppliedSubcategory('');
     setExpanded(null);
     updateUrlParams({
       cat: newCategory === 'all' ? null : newCategory,
@@ -77,6 +105,8 @@ export default function ServicesPage() {
   const handleSubcategoryClick = (categoryName: string, subcategoryName: string) => {
     setSelectedCategory(categoryName as ServiceCategory);
     setSelectedSubcategory(subcategoryName);
+    setAppliedCategory(categoryName as ServiceCategory);
+    setAppliedSubcategory(subcategoryName);
     updateUrlParams({
       cat: categoryName,
       sub: subcategoryName
@@ -95,94 +125,68 @@ export default function ServicesPage() {
     navigate({ pathname: "/services", search: params.toString() });
   };
 
-  const fetchServices = async () => {
-    setLoading(true);
-    try {
-      const constraints: any[] = [
-        where("isActive", "==", true),
-        where("isPaused", "==", false)
-      ];
-      
-      // Add category filter
-      if (selectedCategory !== 'all') {
-        constraints.push(where("category", "==", selectedCategory));
-      }
-      
-      // Add subcategory filter
-      if (selectedSubcategory) {
-        constraints.push(where("subcategory", "==", selectedSubcategory));
-      }
-      
-      // Add delivery type filter
-      if (appliedDeliveryType !== 'all') {
-        constraints.push(where("deliveryType", "==", appliedDeliveryType));
-      }
-      
-      // Add sorting
-      if (appliedSort === 'newest') {
-        constraints.push(orderBy("createdAt", "desc"));
-      } else if (appliedSort === 'oldest') {
-        constraints.push(orderBy("createdAt", "asc"));
-      } else {
-        constraints.push(orderBy("createdAt", "desc"));
-      }
-      
-      constraints.push(limit(100));
-      
-      const servicesQuery = query(collection(db, "services"), ...constraints);
-
-      const snapshot = await getDocs(servicesQuery);
-      let servicesList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...(doc.data() as Omit<Service, 'id'>)
-      })) as Service[];
-
-      // Apply client-side price filtering
-      if (appliedMinPrice || appliedMaxPrice) {
-        servicesList = servicesList.filter(service => {
-          const minPrice = Math.min(...service.packages.map(pkg => pkg.price));
-          const minPriceNum = appliedMinPrice ? parseFloat(appliedMinPrice) : 0;
-          const maxPriceNum = appliedMaxPrice ? parseFloat(appliedMaxPrice) : Infinity;
-          return minPrice >= minPriceNum && minPrice <= maxPriceNum;
-        });
-      }
-
-      // Apply client-side location filtering
-      if (appliedLocation !== 'all') {
-        servicesList = servicesList.filter(service => {
-          return service.serviceArea && service.serviceArea.includes(appliedLocation);
-        });
-      }
-
-      // Apply client-side price sorting if needed
-      if (appliedSort === 'price-asc') {
-        servicesList.sort((a, b) => {
-          const aMinPrice = Math.min(...a.packages.map(pkg => pkg.price));
-          const bMinPrice = Math.min(...b.packages.map(pkg => pkg.price));
-          return aMinPrice - bMinPrice;
-        });
-      } else if (appliedSort === 'price-desc') {
-        servicesList.sort((a, b) => {
-          const aMinPrice = Math.min(...a.packages.map(pkg => pkg.price));
-          const bMinPrice = Math.min(...b.packages.map(pkg => pkg.price));
-          return bMinPrice - aMinPrice;
-        });
-      }
-
-      setServices(servicesList);
-    } catch (error) {
-      console.error("Error fetching services:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAppliedSearch(searchInput);
+    updateUrlParams({ q: searchInput || null });
   };
 
-  const filteredServices = services.filter(service =>
-    appliedSearch === "" || 
-    service.title.toLowerCase().includes(appliedSearch.toLowerCase()) ||
-    service.description.toLowerCase().includes(appliedSearch.toLowerCase()) ||
-    service.category.toLowerCase().includes(appliedSearch.toLowerCase())
-  );
+  const applyFilters = () => {
+    // Set applied states
+    setAppliedMinPrice(minPriceFilter);
+    setAppliedMaxPrice(maxPriceFilter);
+    setAppliedSort(sortFilter);
+    setAppliedDeliveryType(deliveryTypeFilter);
+    setAppliedLocation(locationFilter);
+    
+    updateUrlParams({
+      min: minPriceFilter || null,
+      max: maxPriceFilter || null,
+      sort: sortFilter || null,
+      delivery: deliveryTypeFilter === 'all' ? null : deliveryTypeFilter,
+      location: locationFilter === 'all' ? null : locationFilter
+    });
+    if (isMobile) setShowFilters(false);
+  };
+
+  const resetFilters = () => {
+    // Reset input states
+    setMinPriceFilter("");
+    setMaxPriceFilter("");
+    setSortFilter("");
+    setDeliveryTypeFilter('all');
+    setLocationFilter('all');
+    setSelectedCategory('all');
+    setSelectedSubcategory('');
+    setSearchInput('');
+    
+    // Reset applied states
+    setAppliedMinPrice("");
+    setAppliedMaxPrice("");
+    setAppliedSort("");
+    setAppliedDeliveryType('all');
+    setAppliedLocation('all');
+    setAppliedCategory('all');
+    setAppliedSubcategory('');
+    setAppliedSearch('');
+    
+    updateUrlParams({
+      min: null,
+      max: null,
+      sort: null,
+      delivery: null,
+      location: null,
+      cat: null,
+      sub: null,
+      q: null
+    });
+    if (isMobile) setShowFilters(false);
+  };
+
+  const clearSearchFilter = () => {
+    setSearchInput('');
+    updateUrlParams({ q: null });
+  };
 
   const ServiceCard = ({ service }: { service: Service }) => {
     // Safety check for packages
@@ -206,7 +210,10 @@ export default function ServicesPage() {
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#72b01d] to-[#3f7d20]">
               <span className="text-4xl text-white">
-                {serviceCategoryIcons[service.category] || "🔧"}
+                {(() => {
+                  const IconComponent = serviceCategoryIcons[service.category];
+                  return IconComponent ? <IconComponent className="w-8 h-8" /> : <span className="text-2xl">🔧</span>;
+                })()}
               </span>
             </div>
           )}
@@ -370,15 +377,20 @@ export default function ServicesPage() {
                     <li key={category.name} className="flex flex-col">
                       <div className="flex items-center w-full group">
                         <button
-                          className={`flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === category.name ? "text-white shadow-lg" : ""}`}
+                          className={`flex items-center flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === category.name ? "text-white shadow-lg" : ""}`}
                           style={{
                             backgroundColor: selectedCategory === category.name ? '#72b01d' : 'transparent',
                             color: selectedCategory === category.name ? '#ffffff' : '#0d0a0b'
                           }}
                           onClick={() => handleCategoryClick(category.name)}
                         >
-                          <span className="mr-2">{serviceCategoryIcons[category.name]}</span>
-                          {category.name}
+                          <span className="mr-2 flex-shrink-0">
+                            {(() => {
+                              const IconComponent = serviceCategoryIcons[category.name];
+                              return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
+                            })()}
+                          </span>
+                          <span className="flex-1">{category.name}</span>
                         </button>
                         {subcategories.length > 0 && (
                           <button
@@ -403,14 +415,21 @@ export default function ServicesPage() {
                           {subcategories.map(subcategory => (
                             <li key={subcategory}>
                               <button
-                                className={`w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${selectedSubcategory === subcategory ? "text-white shadow-lg" : ""}`}
+                                className={`flex items-center w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${selectedSubcategory === subcategory ? "text-white shadow-lg" : ""}`}
                                 style={{
                                   backgroundColor: selectedSubcategory === subcategory ? '#3f7d20' : 'transparent',
                                   color: selectedSubcategory === subcategory ? '#ffffff' : '#454955'
                                 }}
                                 onClick={() => handleSubcategoryClick(category.name, subcategory)}
                               >
-                                {subcategory}
+                                <span className="mr-2 flex-shrink-0">
+                                  {serviceSubcategoryIcons[subcategory] ? (
+                                    React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-3 h-3" })
+                                  ) : (
+                                    <div className="w-3 h-3"></div>
+                                  )}
+                                </span>
+                                <span className="flex-1">{subcategory}</span>
                               </button>
                             </li>
                           ))}
@@ -536,60 +555,26 @@ export default function ServicesPage() {
                     className={`flex-1 ${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5`}
                     style={{
                       background: 'linear-gradient(to right, #72b01d, #3f7d20)'
-                    }}
-                    onClick={() => {
-                      setAppliedMinPrice(minPriceFilter);
-                      setAppliedMaxPrice(maxPriceFilter);
-                      setAppliedSort(sortFilter);
-                      setAppliedDeliveryType(deliveryTypeFilter);
-                      setAppliedLocation(locationFilter);
-                      updateUrlParams({
-                        min: minPriceFilter || null,
-                        max: maxPriceFilter || null,
-                        sort: sortFilter || null,
-                        delivery: deliveryTypeFilter === 'all' ? null : deliveryTypeFilter,
-                        location: locationFilter === 'all' ? null : locationFilter
-                      });
-                      if (isMobile) setShowFilters(false);
-                    }}
-                  >
-                    Apply Filters
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className={`flex-1 ${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-semibold transition-all duration-300 border`}
-                    style={{
-                      backgroundColor: 'rgba(114, 176, 29, 0.1)',
-                      color: '#72b01d',
-                      borderColor: 'rgba(114, 176, 29, 0.3)'
-                    }}
-                    onClick={() => {
-                      setMinPriceFilter("");
-                      setMaxPriceFilter("");
-                      setSortFilter("");
-                      setDeliveryTypeFilter('all');
-                      setLocationFilter('all');
-                      setAppliedMinPrice("");
-                      setAppliedMaxPrice("");
-                      setAppliedSort("");
-                      setAppliedDeliveryType('all');
-                      setAppliedLocation('all');
-                      setSelectedCategory('all');
-                      setSelectedSubcategory('');
-                      updateUrlParams({
-                        min: null,
-                        max: null,
-                        sort: null,
-                        delivery: null,
-                        location: null,
-                        cat: null,
-                        sub: null
-                      });
-                      if (isMobile) setShowFilters(false);
-                    }}
-                  >
-                    Reset
-                  </Button>
+                    }}                onClick={() => {
+                  applyFilters();
+                }}
+              >
+                Apply Filters
+              </Button>
+              <Button
+                variant="outline"
+                className={`flex-1 ${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-semibold transition-all duration-300 border`}
+                style={{
+                  backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                  color: '#72b01d',
+                  borderColor: 'rgba(114, 176, 29, 0.3)'
+                }}
+                onClick={() => {
+                  resetFilters();
+                }}
+              >
+                Reset
+              </Button>
                 </div>
               </div>
             </div>
@@ -601,11 +586,7 @@ export default function ServicesPage() {
             <div className={`${isMobile ? 'mb-4' : 'mb-8'}`}>
               <form
                 className="flex w-full gap-0"
-                onSubmit={e => {
-                  e.preventDefault();
-                  setAppliedSearch(searchInput);
-                  updateUrlParams({ q: searchInput || null });
-                }}
+                onSubmit={handleSearch}
               >
                 <Input
                   className={`flex-1 outline-none ${isMobile ? 'px-3 py-2 text-base' : 'px-5 py-3 text-lg'} rounded-l-xl rounded-r-none font-medium transition border border-r-0`}
@@ -640,20 +621,16 @@ export default function ServicesPage() {
             </div>
 
             {/* Active Filters Display */}
-            {(appliedSearch || selectedCategory !== 'all' || selectedSubcategory || appliedMinPrice || appliedMaxPrice || appliedSort || appliedDeliveryType !== 'all' || appliedLocation !== 'all') && (
+            {(searchInput || selectedCategory !== 'all' || selectedSubcategory || minPriceFilter || maxPriceFilter || sortFilter || deliveryTypeFilter !== 'all' || locationFilter !== 'all') && (
               <div className={`${isMobile ? 'mb-4' : 'mb-6'}`}>
                 <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-col sm:flex-row sm:items-center sm:justify-between gap-4'}`}>
                   <div className={`flex flex-wrap ${isMobile ? 'gap-1' : 'gap-2'}`}>
-                    {appliedSearch && (
+                    {searchInput && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Search: "{appliedSearch}"
+                        Search: "{searchInput}"
                         <button 
-                          onClick={() => {
-                            setSearchInput('');
-                            setAppliedSearch('');
-                            updateUrlParams({ q: null });
-                          }}
+                          onClick={clearSearchFilter}
                           className="ml-1 hover:bg-red-100 rounded-full p-0.5"
                         >
                           <svg width={isMobile ? "10" : "12"} height={isMobile ? "10" : "12"} fill="none" viewBox="0 0 24 24">
@@ -677,38 +654,38 @@ export default function ServicesPage() {
                       </span>
                     )}
                     
-                    {appliedDeliveryType !== 'all' && (
+                    {deliveryTypeFilter !== 'all' && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        {appliedDeliveryType === 'onsite' ? 'On-site' : 'Online'}
+                        {deliveryTypeFilter === 'onsite' ? 'On-site' : 'Online'}
                       </span>
                     )}
                     
-                    {appliedLocation !== 'all' && (
+                    {locationFilter !== 'all' && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        {appliedLocation}
+                        {locationFilter}
                       </span>
                     )}
                     
-                    {appliedMinPrice && (
+                    {minPriceFilter && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Min: LKR {appliedMinPrice}
+                        Min: LKR {minPriceFilter}
                       </span>
                     )}
                     
-                    {appliedMaxPrice && (
+                    {maxPriceFilter && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Max: LKR {appliedMaxPrice}
+                        Max: LKR {maxPriceFilter}
                       </span>
                     )}
                     
-                    {appliedSort && (
+                    {sortFilter && (
                       <span className={`inline-flex items-center gap-1 ${isMobile ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium border`} 
                             style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)', borderColor: 'rgba(114, 176, 29, 0.3)', color: '#72b01d' }}>
-                        Sort: {appliedSort === 'price-asc' ? 'Price ↑' : appliedSort === 'price-desc' ? 'Price ↓' : appliedSort === 'newest' ? 'Newest' : appliedSort === 'oldest' ? 'Oldest' : appliedSort}
+                        Sort: {sortFilter === 'price-asc' ? 'Price ↑' : sortFilter === 'price-desc' ? 'Price ↓' : sortFilter === 'newest' ? 'Newest' : sortFilter === 'oldest' ? 'Oldest' : sortFilter}
                       </span>
                     )}
                   </div>
@@ -727,7 +704,7 @@ export default function ServicesPage() {
                   </div>
                 ))}
               </div>
-            ) : filteredServices.length === 0 ? (
+            ) : services.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No services found</h3>
@@ -738,32 +715,7 @@ export default function ServicesPage() {
                   }
                 </p>
                 <button
-                  onClick={() => {
-                    setMinPriceFilter("");
-                    setMaxPriceFilter("");
-                    setSortFilter("");
-                    setDeliveryTypeFilter('all');
-                    setLocationFilter('all');
-                    setAppliedMinPrice("");
-                    setAppliedMaxPrice("");
-                    setAppliedSort("");
-                    setAppliedDeliveryType('all');
-                    setAppliedLocation('all');
-                    setSelectedCategory('all');
-                    setSelectedSubcategory('');
-                    setSearchInput('');
-                    setAppliedSearch('');
-                    updateUrlParams({
-                      min: null,
-                      max: null,
-                      sort: null,
-                      delivery: null,
-                      location: null,
-                      cat: null,
-                      sub: null,
-                      q: null
-                    });
-                  }}
+                  onClick={resetFilters}
                   className="bg-[#72b01d] text-white px-6 py-3 rounded-lg hover:bg-[#3f7d20] transition-colors font-medium"
                 >
                   Clear All Filters
@@ -773,9 +725,22 @@ export default function ServicesPage() {
               <>
                 {/* Services Grid */}
                 <div className={`w-full grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'}`}>
-                  {filteredServices.map((service) => (
+                  {services.map((service) => (
                     <ServiceCard key={service.id} service={service} />
                   ))}
+                </div>
+                
+                {/* Pagination */}
+                <div className="mt-12">
+                  <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={loadPage}
+                    totalItems={pagination.totalItems}
+                    showInfo={true}
+                    showJumpTo={false}
+                    maxVisiblePages={5}
+                  />
                 </div>
               </>
             )}

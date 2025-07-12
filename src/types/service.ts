@@ -76,6 +76,7 @@ export interface Service {
   bookingCount?: number;
   rating?: number;
   reviewCount?: number;
+  minPrice?: number; // Calculated minimum price from packages
 }
 
 // Service Booking interface
