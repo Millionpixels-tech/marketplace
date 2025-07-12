@@ -212,6 +212,15 @@ const MobileHeader = () => {
                                 </span>
                             </Link>
                             
+                            {/* Services Link */}
+                            <Link
+                                to="/services"
+                                className="block text-lg font-medium text-gray-900 hover:text-green-600"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Services
+                            </Link>
+
                             {/* Categories */}
                             <div>
                                 <button
