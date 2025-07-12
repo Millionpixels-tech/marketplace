@@ -1,18 +1,29 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiCheck, FiChevronDown, FiChevronUp, FiShoppingBag } from "react-icons/fi";
 import type { Service } from "../../types/service";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
+import ShopOwnerName from "../shop/ShopOwnerName";
+import { useResponsive } from "../../hooks/useResponsive";
+
+type Shop = {
+  name: string;
+  username: string;
+  logo?: string;
+  owner: string;
+};
 
 export default function ServiceDetailPage() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
+  const { isMobile } = useResponsive();
   const [service, setService] = useState<Service | null>(null);
+  const [shop, setShop] = useState<Shop | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<string>("");
   const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -37,6 +48,12 @@ export default function ServiceDetailPage() {
         if (serviceData.packages.length > 0) {
           setSelectedPackage(serviceData.packages[0].id);
         }
+
+        // Fetch shop info if available
+        if (serviceData.shopId) {
+          const shopSnap = await getDoc(doc(db, "shops", serviceData.shopId));
+          if (shopSnap.exists()) setShop(shopSnap.data() as Shop);
+        }
       } else {
         navigate('/services');
       }
@@ -46,6 +63,14 @@ export default function ServiceDetailPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to sort days from Monday to Sunday
+  const sortDaysByWeek = (availability: Record<string, any>) => {
+    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    return dayOrder
+      .filter(day => availability[day])
+      .map(day => [day, availability[day]]);
   };
 
   const getSelectedPackageData = () => {
@@ -168,6 +193,34 @@ export default function ServiceDetailPage() {
                   {service.title}
                 </h1>
 
+                {/* Shop Info */}
+                {shop && (
+                  <div className={`inline-flex items-center ${isMobile ? 'gap-1.5 px-2 py-1.5' : 'gap-2 px-3 py-2'} rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all mb-4`}>
+                    {/* Shop Logo */}
+                    <div className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} rounded-full overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-50`}>
+                      {shop.logo ? (
+                        <img src={shop.logo} alt={shop.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <FiShoppingBag className={`text-gray-400 ${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                      )}
+                    </div>
+                    
+                    {/* Shop Name (clickable) */}
+                    <Link
+                      to={`/shop/${shop.username}`}
+                      className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-900 hover:text-green-600 transition-colors`}
+                    >
+                      {shop.name}
+                    </Link>
+                    
+                    {/* Separator */}
+                    <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-400`}>•</span>
+                    
+                    {/* Owner Name (clickable) */}
+                    <ShopOwnerName ownerId={shop.owner} username={shop.username} showUsername={false} compact={true} disableLink={false} />
+                  </div>
+                )}
+
                 {/* Description */}
                 <div className="prose max-w-none mb-6">
                   <p className="text-gray-700 whitespace-pre-wrap">{service.description}</p>
@@ -233,7 +286,7 @@ export default function ServiceDetailPage() {
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Availability</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Object.entries(service.availability).map(([day, data]) => (
+                  {sortDaysByWeek(service.availability).map(([day, data]) => (
                     <div key={day} className="flex items-center justify-between p-3 border rounded-lg">
                       <span className="font-medium capitalize">{day}</span>
                       <span className={`text-sm ${data.available ? 'text-green-600' : 'text-gray-400'}`}>
@@ -306,8 +359,10 @@ export default function ServiceDetailPage() {
                             <div className="px-4 pb-4 border-t border-gray-100">
                               <p className="text-gray-600 text-sm mb-3 mt-3">{pkg.description}</p>
                               <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-                                <span>Duration: {pkg.duration}</span>
-                                <span>Delivery: {pkg.deliveryTime}</span>
+                                <span>Duration: {pkg.durationType === "Project Based" 
+                                  ? "Based on project requirements"
+                                  : `${pkg.duration} ${pkg.durationType === "Minutely" ? "minute" : pkg.durationType === "Hourly" ? "hour" : pkg.durationType === "Daily" ? "day" : pkg.durationType === "Weekly" ? "week" : "month"}${parseInt(pkg.duration) > 1 ? "s" : ""}`
+                                }</span>
                               </div>
                               {pkg.features.length > 0 && (
                                 <div className="space-y-2">
@@ -340,11 +395,10 @@ export default function ServiceDetailPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Duration:</span>
-                          <span>{selectedPackageData.duration}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Delivery:</span>
-                          <span>{selectedPackageData.deliveryTime}</span>
+                          <span>{selectedPackageData.durationType === "Project Based" 
+                            ? "Based on project requirements"
+                            : `${selectedPackageData.duration} ${selectedPackageData.durationType === "Minutely" ? "minute" : selectedPackageData.durationType === "Hourly" ? "hour" : selectedPackageData.durationType === "Daily" ? "day" : selectedPackageData.durationType === "Weekly" ? "week" : "month"}${parseInt(selectedPackageData.duration) > 1 ? "s" : ""}`
+                          }</span>
                         </div>
                         <div className="flex justify-between items-center font-semibold text-lg pt-2 mt-3 border-t border-gray-200">
                           <span>Total:</span>

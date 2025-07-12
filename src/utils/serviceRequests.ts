@@ -8,7 +8,10 @@ import {
   doc, 
   updateDoc,
   getDoc,
-  serverTimestamp 
+  serverTimestamp,
+  limit,
+  startAfter,
+  DocumentSnapshot
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
@@ -197,5 +200,110 @@ export const updateServiceRequestStatus = async (
   } catch (error) {
     console.error("Error updating service request:", error);
     throw new Error("Failed to update service request");
+  }
+};
+
+// Paginated service request functions
+export const getServiceRequestsForProviderPaginated = async (
+  providerId: string,
+  pageSize: number = 5,
+  lastVisible?: DocumentSnapshot
+): Promise<{ requests: ServiceRequest[]; hasMore: boolean; lastVisible?: DocumentSnapshot }> => {
+  try {
+    // Fetch one extra document to determine if there are more pages
+    const queryLimit = pageSize + 1;
+    
+    let q = query(
+      collection(db, "serviceRequests"),
+      where("providerId", "==", providerId),
+      orderBy("createdAt", "desc"),
+      limit(queryLimit)
+    );
+
+    if (lastVisible) {
+      q = query(
+        collection(db, "serviceRequests"),
+        where("providerId", "==", providerId),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(queryLimit)
+      );
+    }
+    
+    const querySnapshot = await getDocs(q);
+    
+    // Take only the requested number of documents
+    const docs = querySnapshot.docs.slice(0, pageSize);
+    const requests = docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    } as ServiceRequest));
+
+    // hasMore is true if we got more documents than requested
+    const hasMore = querySnapshot.docs.length > pageSize;
+    const newLastVisible = docs[docs.length - 1];
+
+    return {
+      requests,
+      hasMore,
+      lastVisible: newLastVisible
+    };
+  } catch (error) {
+    console.error("Error fetching paginated service requests for provider:", error);
+    throw new Error("Failed to fetch service requests");
+  }
+};
+
+export const getServiceRequestsForCustomerPaginated = async (
+  customerId: string,
+  pageSize: number = 5,
+  lastVisible?: DocumentSnapshot
+): Promise<{ requests: ServiceRequest[]; hasMore: boolean; lastVisible?: DocumentSnapshot }> => {
+  try {
+    // Fetch one extra document to determine if there are more pages
+    const queryLimit = pageSize + 1;
+    
+    let q = query(
+      collection(db, "serviceRequests"),
+      where("customerId", "==", customerId),
+      orderBy("createdAt", "desc"),
+      limit(queryLimit)
+    );
+
+    if (lastVisible) {
+      q = query(
+        collection(db, "serviceRequests"),
+        where("customerId", "==", customerId),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(queryLimit)
+      );
+    }
+    
+    const querySnapshot = await getDocs(q);
+    
+    // Take only the requested number of documents
+    const docs = querySnapshot.docs.slice(0, pageSize);
+    const requests = docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    } as ServiceRequest));
+
+    // hasMore is true if we got more documents than requested
+    const hasMore = querySnapshot.docs.length > pageSize;
+    const newLastVisible = docs[docs.length - 1];
+
+    return {
+      requests,
+      hasMore,
+      lastVisible: newLastVisible
+    };
+  } catch (error) {
+    console.error("Error fetching paginated service requests for customer:", error);
+    throw new Error("Failed to fetch service requests");
   }
 };

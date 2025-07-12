@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { getServiceRequestsForProvider, getServiceRequestsForCustomer, updateServiceRequestStatus } from "../../../utils/serviceRequests";
+import { getServiceRequestsForProviderPaginated, getServiceRequestsForCustomerPaginated, updateServiceRequestStatus } from "../../../utils/serviceRequests";
 import type { ServiceRequest } from "../../../types/serviceRequest";
 import { FiClock, FiUser, FiMail, FiFileText, FiDownload, FiPhone, FiX } from "react-icons/fi";
 import { useResponsive } from "../../../hooks/useResponsive";
 import { useConfirmDialog } from "../../../hooks/useConfirmDialog";
-import { ConfirmDialog } from "../../../components/UI";
+import { ConfirmDialog, Pagination } from "../../../components/UI";
+import type { DocumentSnapshot } from "firebase/firestore";
 
 const SERVICE_REQUEST_SUBTABS = [
   { key: "sent", label: "Sent Requests" },
@@ -21,30 +22,127 @@ export default function ServiceRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
   const [activeTab, setActiveTab] = useState<"sent" | "received">("sent");
+  
+  // Pagination state
+  const [sentPage, setSentPage] = useState(1);
+  const [receivedPage, setReceivedPage] = useState(1);
+  const [sentLastVisible, setSentLastVisible] = useState<DocumentSnapshot>();
+  const [receivedLastVisible, setReceivedLastVisible] = useState<DocumentSnapshot>();
+  const [sentHasMore, setSentHasMore] = useState(false);
+  const [receivedHasMore, setReceivedHasMore] = useState(false);
+  
+  const REQUESTS_PER_PAGE = 5;
 
   useEffect(() => {
     if (user) {
-      fetchServiceRequests();
+      fetchServiceRequests(1); // Load first page
     }
   }, [user]);
 
-  const fetchServiceRequests = async () => {
+  useEffect(() => {
+    if (user) {
+      fetchServiceRequestsPage(1); // Load first page when tab changes
+    }
+  }, [activeTab, user]);
+
+  const fetchServiceRequests = async (page: number) => {
     if (!user) return;
     
     try {
-      // Fetch both sent and received requests
-      const [sentData, receivedData] = await Promise.all([
-        getServiceRequestsForCustomer(user.uid),
-        getServiceRequestsForProvider(user.uid)
-      ]);
+      const isFirstPage = page === 1;
       
-      setSentRequests(sentData);
-      setReceivedRequests(receivedData);
+      if (activeTab === "sent") {
+        const lastVisible = isFirstPage ? undefined : sentLastVisible;
+        const result = await getServiceRequestsForCustomerPaginated(
+          user.uid,
+          REQUESTS_PER_PAGE,
+          lastVisible
+        );
+        
+        setSentRequests(result.requests);
+        setSentLastVisible(result.lastVisible);
+        setSentHasMore(result.hasMore);
+      } else {
+        const lastVisible = isFirstPage ? undefined : receivedLastVisible;
+        const result = await getServiceRequestsForProviderPaginated(
+          user.uid,
+          REQUESTS_PER_PAGE,
+          lastVisible
+        );
+        
+        setReceivedRequests(result.requests);
+        setReceivedLastVisible(result.lastVisible);
+        setReceivedHasMore(result.hasMore);
+      }
     } catch (error) {
       console.error("Error fetching service requests:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch service requests for a specific page
+  const fetchServiceRequestsPage = async (page: number) => {
+    console.log('=== FETCH PAGE DEBUG ===');
+    console.log('Fetching page:', page, 'for tab:', activeTab);
+    
+    try {
+      setLoading(true);
+      
+      if (activeTab === "sent") {
+        console.log('Fetching sent requests - current sentPage:', sentPage, 'requested page:', page);
+        
+        // If going to page 1, reset cursor
+        if (page === 1) {
+          console.log('Resetting to page 1 for sent requests');
+          const result = await getServiceRequestsForCustomerPaginated(user!.uid, REQUESTS_PER_PAGE);
+          console.log('Page 1 result:', result);
+          setSentRequests(result.requests);
+          setSentLastVisible(result.lastVisible);
+          setSentHasMore(result.hasMore);
+          setSentPage(1);
+        } else if (page > sentPage) {
+          console.log('Fetching next page for sent requests, using cursor:', sentLastVisible);
+          const result = await getServiceRequestsForCustomerPaginated(user!.uid, REQUESTS_PER_PAGE, sentLastVisible);
+          console.log('Next page result:', result);
+          setSentRequests(result.requests);
+          setSentLastVisible(result.lastVisible);
+          setSentHasMore(result.hasMore);
+          setSentPage(page);
+        } else {
+          console.log('Cannot navigate backwards in cursor-based pagination');
+        }
+      } else {
+        console.log('Fetching received requests - current receivedPage:', receivedPage, 'requested page:', page);
+        
+        // If going to page 1, reset cursor
+        if (page === 1) {
+          console.log('Resetting to page 1 for received requests');
+          const result = await getServiceRequestsForProviderPaginated(user!.uid, REQUESTS_PER_PAGE);
+          console.log('Page 1 result:', result);
+          setReceivedRequests(result.requests);
+          setReceivedLastVisible(result.lastVisible);
+          setReceivedHasMore(result.hasMore);
+          setReceivedPage(1);
+        } else if (page > receivedPage) {
+          console.log('Fetching next page for received requests, using cursor:', receivedLastVisible);
+          const result = await getServiceRequestsForProviderPaginated(user!.uid, REQUESTS_PER_PAGE, receivedLastVisible);
+          console.log('Next page result:', result);
+          setReceivedRequests(result.requests);
+          setReceivedLastVisible(result.lastVisible);
+          setReceivedHasMore(result.hasMore);
+          setReceivedPage(page);
+        } else {
+          console.log('Cannot navigate backwards in cursor-based pagination');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching service requests:', error);
+    } finally {
+      setLoading(false);
+    }
+    
+    console.log('=== FETCH COMPLETE ===');
   };
 
   const handleStatusUpdate = async (requestId: string, status: ServiceRequest['status']) => {
@@ -63,7 +161,8 @@ export default function ServiceRequestsPage() {
       }
       
       await updateServiceRequestStatus(requestId, status);
-      await fetchServiceRequests(); // Refresh both lists
+      const currentPage = activeTab === "sent" ? sentPage : receivedPage;
+      await fetchServiceRequestsPage(currentPage); // Refresh current page
       setSelectedRequest(null);
     } catch (error) {
       console.error("Error updating status:", error);
@@ -99,8 +198,18 @@ export default function ServiceRequestsPage() {
     document.body.removeChild(link);
   };
 
-  // Get current requests based on active tab
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    fetchServiceRequestsPage(page);
+  };
+
+  // Get current pagination data
+  const currentPage = activeTab === "sent" ? sentPage : receivedPage;
+  const currentHasMore = activeTab === "sent" ? sentHasMore : receivedHasMore;
   const currentRequests = activeTab === "sent" ? sentRequests : receivedRequests;
+  
+  // Simple pagination: show next page button only if there are more results
+  const totalPages = currentHasMore ? currentPage + 1 : currentPage;
   const currentRequestsCount = currentRequests.length;
 
   if (loading) {
@@ -226,6 +335,22 @@ export default function ServiceRequestsPage() {
               </div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                totalItems={currentRequestsCount}
+                startIndex={currentRequestsCount > 0 ? (currentPage - 1) * REQUESTS_PER_PAGE + 1 : 0}
+                endIndex={currentRequestsCount > 0 ? (currentPage - 1) * REQUESTS_PER_PAGE + currentRequestsCount : 0}
+                showInfo={true}
+                showJumpTo={totalPages > 10}
+              />
+            </div>
+          )}
 
           {/* Request Details Modal */}
           {selectedRequest && (

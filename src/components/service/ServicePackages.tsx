@@ -14,8 +14,8 @@ export const createDefaultPackage = (): ServicePackage => ({
   name: "",
   description: "",
   price: 0,
-  duration: "",
-  durationType: "Project Based" as any,
+  duration: "1",
+  durationType: "Minutely" as any,
   features: [""],
   deliveryTime: "1 week",
   isPopular: false
@@ -162,23 +162,8 @@ export default function ServicePackages({ packages, onChange, maxPackages = 3 }:
             {editingPackage === pkg.id && tempPackage ? (
               // Edit Mode
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div>
                   <h4 className="font-semibold text-[#0d0a0b]">Edit Package</h4>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={savePackage}
-                      className="p-1 text-green-600 hover:bg-green-50 rounded"
-                      disabled={!tempPackage.name || !tempPackage.description || tempPackage.price <= 0 || !tempPackage.deliveryTime}
-                    >
-                      <FiCheck className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={cancelEditing}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
-                    >
-                      <FiX className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Package Name and Description */}
@@ -228,14 +213,77 @@ export default function ServicePackages({ packages, onChange, maxPackages = 3 }:
                   <label className="block text-xs font-medium text-[#0d0a0b] mb-1">
                     How long will you work on this?
                   </label>
-                  <input
-                    type="text"
-                    value={tempPackage.duration}
-                    onChange={(e) => setTempPackage({ ...tempPackage, duration: e.target.value })}
-                    placeholder="e.g., 5 hours, 3 days, 1 week, until complete"
-                    className="w-full px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
-                  />
-                  <p className="text-xs text-[#454955] mt-1">Describe the time you'll spend working on this package</p>
+                  
+                  {/* Project Based Option */}
+                  <div className="mb-3">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name={`duration-type-${pkg.id}`}
+                        checked={tempPackage.durationType === "Project Based"}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTempPackage({ 
+                              ...tempPackage, 
+                              durationType: "Project Based" as any,
+                              duration: "Based on project requirements"
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 text-[#72b01d] border-gray-300 focus:ring-0 focus:ring-offset-0"
+                      />
+                      <span className="text-sm text-[#0d0a0b]">Based on project</span>
+                    </label>
+                  </div>
+
+                  {/* Time-based Option */}
+                  <div className="mb-3">
+                    <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                      <input
+                        type="radio"
+                        name={`duration-type-${pkg.id}`}
+                        checked={tempPackage.durationType !== "Project Based"}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTempPackage({ 
+                              ...tempPackage, 
+                              durationType: "Minutely" as any,
+                              duration: "1"
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 text-[#72b01d] border-gray-300 focus:ring-0 focus:ring-offset-0"
+                      />
+                      <span className="text-sm text-[#0d0a0b]">Specific time duration</span>
+                    </label>
+                    
+                    {/* Number and Unit inputs - only shown when time-based is selected */}
+                    {tempPackage.durationType !== "Project Based" && (
+                      <div className="flex gap-2 ml-6">
+                        <input
+                          type="number"
+                          value={tempPackage.duration}
+                          onChange={(e) => setTempPackage({ ...tempPackage, duration: e.target.value })}
+                          placeholder="1"
+                          min="1"
+                          className="w-20 px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                        />
+                        <select
+                          value={tempPackage.durationType}
+                          onChange={(e) => setTempPackage({ ...tempPackage, durationType: e.target.value as any })}
+                          className="flex-1 px-3 py-2 text-sm border border-[#e5e7eb] rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                        >
+                          <option value="Minutely">Minutes</option>
+                          <option value="Hourly">Hours</option>
+                          <option value="Daily">Days</option>
+                          <option value="Weekly">Weeks</option>
+                          <option value="Monthly">Months</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-[#454955] mt-1">Specify how long you'll spend working on this package</p>
                 </div>
 
                 {/* Features */}
@@ -297,6 +345,25 @@ export default function ServicePackages({ packages, onChange, maxPackages = 3 }:
                   </label>
                   <p className="text-xs text-[#454955] mt-1">Popular packages are highlighted to customers (only one can be popular)</p>
                 </div>
+
+                {/* Save and Cancel Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#e5e7eb]">
+                  <button
+                    onClick={cancelEditing}
+                    className="px-4 py-2 text-sm text-[#454955] hover:text-red-600 hover:bg-red-50 rounded-lg transition flex items-center gap-2"
+                  >
+                    <FiX className="w-4 h-4" />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={savePackage}
+                    className="px-4 py-2 text-sm bg-[#72b01d] text-white hover:bg-[#5a8a15] rounded-lg transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!tempPackage.name || !tempPackage.description || tempPackage.price <= 0 || !tempPackage.deliveryTime}
+                  >
+                    <FiCheck className="w-4 h-4" />
+                    Save Package
+                  </button>
+                </div>
               </div>
             ) : (
               // View Mode
@@ -325,7 +392,12 @@ export default function ServicePackages({ packages, onChange, maxPackages = 3 }:
                     {pkg.duration && (
                       <div className="text-sm">
                         <span className="font-medium text-[#0d0a0b]">Work Time:</span>
-                        <span className="text-[#454955] ml-2">{pkg.duration}</span>
+                        <span className="text-[#454955] ml-2">
+                          {pkg.durationType === "Project Based" 
+                            ? "Based on project requirements"
+                            : `${pkg.duration} ${pkg.durationType === "Minutely" ? "minute" : pkg.durationType === "Hourly" ? "hour" : pkg.durationType === "Daily" ? "day" : pkg.durationType === "Weekly" ? "week" : "month"}${parseInt(pkg.duration) > 1 ? "s" : ""}`
+                          }
+                        </span>
                       </div>
                     )}
                   </div>

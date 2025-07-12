@@ -139,9 +139,9 @@ export default function ServiceInquiryPage() {
 
       await submitServiceRequest(formData, user, service, selectedPackage);
       
-      // Show success message and redirect
-      alert("Request sent successfully! The service provider will contact you soon.");
-      navigate("/services");
+      // Redirect to success page with service title
+      const serviceTitle = encodeURIComponent(service.title);
+      navigate(`/service-request-success?serviceTitle=${serviceTitle}`);
       
     } catch (err) {
       console.error("Error sending request:", err);
@@ -252,8 +252,10 @@ export default function ServiceInquiryPage() {
                     <p className="text-gray-600 text-sm mb-3">{selectedPackage.description}</p>
                     
                     <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-                      <span>Duration: {selectedPackage.duration}</span>
-                      <span>Delivery: {selectedPackage.deliveryTime}</span>
+                      <span>Duration: {selectedPackage.durationType === "Project Based" 
+                        ? "Based on project requirements"
+                        : `${selectedPackage.duration} ${selectedPackage.durationType === "Minutely" ? "minute" : selectedPackage.durationType === "Hourly" ? "hour" : selectedPackage.durationType === "Daily" ? "day" : selectedPackage.durationType === "Weekly" ? "week" : "month"}${parseInt(selectedPackage.duration) > 1 ? "s" : ""}`
+                      }</span>
                     </div>
                     
                     {selectedPackage.features.length > 0 && (

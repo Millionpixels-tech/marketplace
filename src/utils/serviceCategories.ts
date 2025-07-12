@@ -9,6 +9,7 @@ export type ServiceDeliveryType = typeof ServiceDeliveryType[keyof typeof Servic
 
 // Service Duration Types
 export const ServiceDurationType = {
+  MINUTELY: 'Minutely',
   HOURLY: 'Hourly',
   DAILY: 'Daily',
   WEEKLY: 'Weekly',
