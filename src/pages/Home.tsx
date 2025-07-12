@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -1287,7 +1287,11 @@ const Home = () => {
 
                       {/* Icon */}
                       <div className="text-3xl mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
-                        {categoryIcons[cat.name] || <FiPackage className="w-8 h-8 text-gray-400" />}
+                        {categoryIcons[cat.name] ? (
+                          React.createElement(categoryIcons[cat.name], { className: "w-8 h-8 text-gray-400" })
+                        ) : (
+                          <FiPackage className="w-8 h-8 text-gray-400" />
+                        )}
                       </div>
 
                       {/* Category name */}

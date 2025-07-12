@@ -26,6 +26,8 @@ import { useSellerVerification } from "../../hooks/useSellerVerification";
 import EarningsPage from "./dashboard/EarningsPage";
 import StockManagement from "./dashboard/StockManagement";
 import MessagesPage from "./dashboard/MessagesPage";
+import ServicesPage from "./dashboard/ServicesPage";
+import ServiceRequestsPage from "./dashboard/ServiceRequestsPage";
 import ReferralDashboard from "../../components/referrals/ReferralDashboard";
 import CreateCustomOrderModal from "../../components/UI/CreateCustomOrderModal";
 
@@ -54,6 +56,8 @@ interface BankAccount {
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
+    { key: "services", label: "Services", icon: <FiList /> },
+    { key: "service-requests", label: "Service Requests", icon: <FiMessageSquare /> },
     { key: "orders", label: "Orders", icon: <FiPackage /> },
     { key: "listings", label: "Listings", icon: <FiList /> },
     { key: "messages", label: "Messages", icon: <FiMessageSquare /> },
@@ -437,7 +441,7 @@ export default function ProfileDashboard() {
     };
 
     // Dashboard state
-    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "orders" | "listings" | "messages" | "referrals" | "earnings" | "stock" | "settings">("profile");
+    const [selectedTab, setSelectedTab] = useState<"profile" | "shops" | "services" | "service-requests" | "orders" | "listings" | "messages" | "referrals" | "earnings" | "stock" | "settings">("profile");
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -1207,6 +1211,16 @@ export default function ProfileDashboard() {
                                 </div>
                             )}
                         </div>
+                    )}
+
+                    {/* SERVICES TAB */}
+                    {selectedTab === "services" && (
+                        <ServicesPage />
+                    )}
+
+                    {/* SERVICE REQUESTS TAB */}
+                    {selectedTab === "service-requests" && (
+                        <ServiceRequestsPage />
                     )}
 
                     {/* ORDERS TAB */}

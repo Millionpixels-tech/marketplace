@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { collection, query, where, orderBy, getCountFromServer, type QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { categories } from "../utils/categories";
+import { categories, categoryIcons } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button, Input, Pagination, BackToTop } from "../components/UI";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
@@ -34,6 +34,9 @@ interface Listing {
   };
   [key: string]: any;
 }
+
+// Sort categories alphabetically A to Z (mix digital and physical)
+const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
 
 // Random shuffle seed - changes on each page refresh for dynamic browsing
 const getRandomSeed = () => {
@@ -580,18 +583,24 @@ const Search: React.FC = () => {
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
               <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
-                {categories.map((c) => (
+                {sortedCategories.map((c) => (
                   <li key={c.name} className="flex flex-col">
                     <div className="flex items-center w-full group">
                       <button
-                        className={`flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
+                        className={`flex items-center flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
                         style={{
                           backgroundColor: cat === c.name ? '#72b01d' : 'transparent',
                           color: cat === c.name ? '#ffffff' : '#0d0a0b'
                         }}
                         onClick={() => handleCategoryClick(c.name)}
                       >
-                        {c.name}
+                        <span className="mr-2 flex-shrink-0">
+                          {(() => {
+                            const IconComponent = categoryIcons[c.name];
+                            return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
+                          })()}
+                        </span>
+                        <span className="flex-1">{c.name}</span>
                       </button>
                       <button
                         className="ml-1 p-1 rounded transition-all duration-300"

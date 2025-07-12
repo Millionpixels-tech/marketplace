@@ -180,6 +180,23 @@ const Header = () => {
                 </div>
                 {/* Menu (Right) */}
                 <div className="hidden md:flex items-center gap-2 lg:gap-4">
+                    {/* Services - New section */}
+                    <Link
+                        to="/services"
+                        className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
+                        style={{ color: '#0d0a0b' }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
+                            e.currentTarget.style.color = '#72b01d';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#0d0a0b';
+                        }}
+                    >
+                        Services
+                    </Link>
+                    
                     {/* Browse Items - Hide on medium screens, show on large */}
                     <Link
                         to="/search"
