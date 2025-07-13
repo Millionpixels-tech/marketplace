@@ -156,6 +156,7 @@ export interface ServiceReview {
   title?: string;
   comment: string;
   serviceTitle: string; // Title of the service being reviewed
+  serviceImage?: string; // Service image for display in reviews
   
   // Media
   images?: string[];

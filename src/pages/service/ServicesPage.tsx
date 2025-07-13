@@ -3,12 +3,12 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { serviceCategories, serviceCategoryIcons, serviceSubcategoryIcons, ServiceCategory, getServiceSubcategories } from "../../utils/serviceCategories";
 import { getAllDistricts } from "../../utils/sriLankanDistricts";
 import type { Service } from "../../types/service";
+import { Button, Input, CategoryNavigation } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { useResponsive } from "../../hooks/useResponsive";
-import { Button, Input } from "../../components/UI";
 import Pagination from "../../components/UI/Pagination";
 import { useServices } from "../../hooks/useServices";
 import type { ServiceFilters } from "../../hooks/useServices";
@@ -373,87 +373,50 @@ export default function ServicesPage() {
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Service Categories</h2>
               </div>
-              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
-                <li className="flex flex-col">
-                  <button
-                    className={`text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === 'all' ? "text-white shadow-lg" : ""}`}
-                    style={{
-                      backgroundColor: selectedCategory === 'all' ? '#72b01d' : 'transparent',
-                      color: selectedCategory === 'all' ? '#ffffff' : '#0d0a0b'
-                    }}
-                    onClick={() => handleCategoryClick('all')}
-                  >
-                    All Services
-                  </button>
-                </li>
-                {serviceCategories.map((category) => {
-                  const subcategories = getServiceSubcategories(category.name);
-                  return (
-                    <li key={category.name} className="flex flex-col">
-                      <div className="flex items-center w-full group">
-                        <button
-                          className={`flex items-center flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === category.name ? "text-white shadow-lg" : ""}`}
-                          style={{
-                            backgroundColor: selectedCategory === category.name ? '#72b01d' : 'transparent',
-                            color: selectedCategory === category.name ? '#ffffff' : '#0d0a0b'
-                          }}
-                          onClick={() => handleCategoryClick(category.name)}
-                        >
-                          <span className="mr-2 flex-shrink-0">
-                            {(() => {
-                              const IconComponent = serviceCategoryIcons[category.name];
-                              return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
-                            })()}
-                          </span>
-                          <span className="flex-1">{category.name}</span>
-                        </button>
-                        {subcategories.length > 0 && (
-                          <button
-                            className="ml-1 p-1 rounded transition-all duration-300"
-                            style={{ color: '#72b01d' }}
-                            aria-label={expanded === category.name ? `Collapse ${category.name}` : `Expand ${category.name}`}
-                            onClick={e => {
-                              e.stopPropagation();
-                              setExpanded(expanded === category.name ? null : category.name);
-                            }}
-                          >
-                            {expanded === category.name ? (
-                              <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
-                            ) : (
-                              <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                      {expanded === category.name && subcategories.length > 0 && (
-                        <ul className={`${isMobile ? 'pl-4 py-2' : 'pl-6 py-2'} flex flex-col gap-1`}>
-                          {subcategories.map(subcategory => (
-                            <li key={subcategory}>
-                              <button
-                                className={`flex items-center w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${selectedSubcategory === subcategory ? "text-white shadow-lg" : ""}`}
-                                style={{
-                                  backgroundColor: selectedSubcategory === subcategory ? '#3f7d20' : 'transparent',
-                                  color: selectedSubcategory === subcategory ? '#ffffff' : '#454955'
-                                }}
-                                onClick={() => handleSubcategoryClick(category.name, subcategory)}
-                              >
-                                <span className="mr-2 flex-shrink-0">
-                                  {serviceSubcategoryIcons[subcategory] ? (
-                                    React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-3 h-3" })
-                                  ) : (
-                                    <div className="w-3 h-3"></div>
-                                  )}
-                                </span>
-                                <span className="flex-1">{subcategory}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              
+              <CategoryNavigation
+                categories={[
+                  {
+                    key: 'all',
+                    label: 'All Services',
+                    icon: <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" strokeLinecap="round" />
+                    </svg>,
+                    isSelected: selectedCategory === 'all',
+                    onClick: () => handleCategoryClick('all')
+                  },
+                  ...serviceCategories.map((category) => {
+                    const subcategories = getServiceSubcategories(category.name);
+                    return {
+                      key: category.name,
+                      label: category.name,
+                      icon: (() => {
+                        const IconComponent = serviceCategoryIcons[category.name];
+                        return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
+                      })(),
+                      isSelected: selectedCategory === category.name,
+                      onClick: () => handleCategoryClick(category.name),
+                      hasSubcategories: subcategories.length > 0,
+                      isExpanded: expanded === category.name,
+                      onToggleExpand: (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setExpanded(expanded === category.name ? null : category.name);
+                      }
+                    };
+                  })
+                ]}
+                subcategories={expanded ? getServiceSubcategories(expanded as ServiceCategory).map(subcategory => ({
+                  key: subcategory,
+                  label: subcategory,
+                  icon: serviceSubcategoryIcons[subcategory] ? 
+                    React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-3 h-3" }) : 
+                    <div className="w-3 h-3"></div>,
+                  isSelected: selectedSubcategory === subcategory,
+                  onClick: () => handleSubcategoryClick(expanded, subcategory)
+                })) : undefined}
+                isMobile={isMobile}
+                className="px-2 py-2"
+              />
             </div>
 
             {/* Additional Filters */}

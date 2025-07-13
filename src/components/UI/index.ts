@@ -15,6 +15,7 @@ export { default as BackToTop } from './BackToTop';
 export { default as ScrollToTop } from './ScrollToTop';
 export { default as NotificationDropdown } from './NotificationDropdown';
 export { default as MobileNotificationDropdown } from './MobileNotificationDropdown';
+export { default as CategoryNavigation } from './CategoryNavigation';
 
 // Export types
 export type { ButtonProps } from './Button';

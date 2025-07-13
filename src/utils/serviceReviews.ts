@@ -32,12 +32,19 @@ export const createServiceReview = async (
   try {
     // If shopId is not provided, fetch it from the service
     let shopId = reviewData.shopId;
-    if (!shopId) {
+    let serviceImage = '';
+    
+    if (!shopId || !serviceImage) {
       const serviceDoc = await getDoc(doc(db, "services", serviceId));
       if (serviceDoc.exists()) {
         const serviceData = serviceDoc.data();
-        shopId = serviceData.shopId;
-        console.log("Fetched shopId from service:", shopId);
+        if (!shopId) {
+          shopId = serviceData.shopId;
+          console.log("Fetched shopId from service:", shopId);
+        }
+        // Also get the service image
+        serviceImage = serviceData.images && serviceData.images.length > 0 ? serviceData.images[0] : '';
+        console.log("Fetched serviceImage from service:", serviceImage);
       }
       
       if (!shopId) {
@@ -54,6 +61,7 @@ export const createServiceReview = async (
       reviewerId: reviewData.reviewerId,
       reviewerName: reviewData.reviewerName,
       serviceTitle: reviewData.serviceTitle,
+      serviceImage, // Store the service image for display
       shopId,
       isVerified: true, // Reviews from completed service requests are verified
       createdAt: Timestamp.now(),
@@ -156,15 +164,57 @@ export const getShopReviews = async (shopId: string): Promise<any[]> => {
     );
     
     const serviceReviewsSnapshot = await getDocs(serviceReviewsQuery);
-    const serviceReviews = serviceReviewsSnapshot.docs.map(doc => ({
+    const serviceReviewsData = serviceReviewsSnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data(),
-      type: "service",
-      // Map service review fields to match product review structure
-      reviewedAt: doc.data().createdAt,
-      review: doc.data().comment,
-      itemName: doc.data().serviceTitle
-    }));
+      ...doc.data()
+    })) as any[];
+    
+    // Batch fetch service data for service reviews that don't have images stored
+    const serviceReviewsNeedingImages = serviceReviewsData.filter((review: any) => !review.serviceImage && review.serviceId);
+    const uniqueServiceIds = [...new Set(serviceReviewsNeedingImages.map((review: any) => review.serviceId).filter(Boolean))] as string[];
+    const serviceDataMap = new Map();
+    
+    if (uniqueServiceIds.length > 0) {
+      try {
+        // Fetch all services in parallel
+        const servicePromises = uniqueServiceIds.map(serviceId => 
+          getDoc(doc(db, "services", serviceId))
+        );
+        const serviceDocs = await Promise.all(servicePromises);
+        
+        serviceDocs.forEach((serviceDoc, index) => {
+          if (serviceDoc.exists()) {
+            const serviceData = serviceDoc.data();
+            serviceDataMap.set(uniqueServiceIds[index], {
+              images: serviceData.images || []
+            });
+          }
+        });
+      } catch (error) {
+        console.warn("Error fetching service data for reviews:", error);
+      }
+    }
+    
+    // Map service reviews with fetched service data
+    const serviceReviews = serviceReviewsData.map((reviewData: any) => {
+      // Use stored serviceImage if available, otherwise use fetched service data
+      let serviceImage = reviewData.serviceImage || '';
+      if (!serviceImage) {
+        const serviceData = serviceDataMap.get(reviewData.serviceId);
+        serviceImage = serviceData?.images && serviceData.images.length > 0 ? serviceData.images[0] : '';
+      }
+      
+      return {
+        id: reviewData.id,
+        ...reviewData,
+        type: "service",
+        // Map service review fields to match product review structure
+        reviewedAt: reviewData.createdAt,
+        review: reviewData.comment,
+        itemName: reviewData.serviceTitle,
+        itemImage: serviceImage // Add the service image
+      };
+    });
 
     // Combine and sort all reviews by date
     const allReviews = [...productReviews, ...serviceReviews];
