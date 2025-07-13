@@ -18,12 +18,14 @@ An online marketplace for unique Sri Lankan creations, built with React, TypeScr
 ---
 
 ## Overview
-This project is a modern, full-featured online marketplace where users can buy and sell unique Sri Lankan products. It supports user authentication, shop and product management, wishlists, reviews, and more.
+This project is a modern, full-featured online platform where Sri Lankan entrepreneurs can sell products, services, and digital content. It supports user authentication, shop and service management, product listings, service bookings, wishlists, reviews, and more.
 
 ## Features
 - User authentication (sign up, login, password reset)
 - Shop creation and management
-- Product listing and search
+- Product, service, and digital content listings and search
+- Service booking and management
+- Digital product delivery system
 - Shopping cart and checkout
 - Wishlist functionality
 - Product and shop reviews

@@ -517,12 +517,12 @@ const Search: React.FC = () => {
   
   const generateSearchSEO = () => {
     let title = "Search Results";
-    let description = "Find authentic Sri Lankan products and crafts on Sina.lk";
+    let description = "Find products, services, and digital content from Sri Lankan entrepreneurs on Sina.lk";
     let keywords = ['search', 'Sri Lankan products', 'marketplace', 'Sina.lk'];
     
     if (searchQuery) {
       title = `Search: ${searchQuery}`;
-      description = `Search results for "${searchQuery}" - Find authentic Sri Lankan products and crafts on Sina.lk`;
+      description = `Search results for "${searchQuery}" - Find products, services, and digital content from Sri Lankan entrepreneurs on Sina.lk`;
       keywords.push(searchQuery);
     }
     

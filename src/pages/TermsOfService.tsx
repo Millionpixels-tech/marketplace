@@ -52,15 +52,15 @@ export default function TermsOfService() {
       content: [
         {
           subtitle: "Product Listings",
-          details: "Sellers are responsible for accurate product descriptions, pricing, and availability. All products must comply with applicable laws and our community guidelines."
+          details: "Sellers are responsible for accurate product/service descriptions, pricing, and availability. All offerings must comply with applicable laws and our community guidelines. Service providers must deliver as promised."
         },
         {
           subtitle: "Purchase Process",
-          details: "By placing an order, you enter into a direct contractual relationship with the seller. Sina.lk facilitates the transaction but is not a party to the sale. Custom orders may require additional communication between buyers and sellers."
+          details: "By placing an order or booking a service, you enter into a direct contractual relationship with the seller/service provider. Sina.lk facilitates the transaction but is not a party to the sale. Custom orders and service bookings may require additional communication between buyers and providers."
         },
         {
           subtitle: "Order Fulfillment",
-          details: "Sellers are responsible for fulfilling orders in a timely manner and as described. Buyers can communicate with sellers directly through our messaging system to discuss order details and requirements."
+          details: "Sellers and service providers are responsible for fulfilling orders and service bookings in a timely manner and as described. Buyers can communicate directly through our messaging system to discuss details and requirements."
         },
         {
           subtitle: "Returns and Refunds",

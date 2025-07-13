@@ -92,10 +92,10 @@ function generateListingHTML(listing, shop, listingId) {
   const siteName = "Sina.lk";
   const siteUrl = "https://sina.lk"; // Update with your actual domain
   
-  const title = `${listing.name} - Buy Authentic Sri Lankan Products | ${siteName}`;
+  const title = `${listing.name} - Buy from Sri Lankan Entrepreneurs | ${siteName}`;
   const description = listing.description && listing.description.length > 160 
     ? listing.description.substring(0, 157) + '...' 
-    : (listing.description || 'Authentic Sri Lankan product');
+    : (listing.description || 'Quality product or service from Sri Lankan entrepreneur');
   
   const imageUrl = listing.images && listing.images.length > 0 
     ? listing.images[0] 
@@ -114,12 +114,12 @@ function generateListingHTML(listing, shop, listingId) {
     <title>${title}</title>
     <meta name="title" content="${title}">
     <meta name="description" content="${description}">
-    <meta name="keywords" content="${listing.name}, ${listing.category || ''}, ${listing.subcategory || ''}, Sri Lankan products, authentic, handmade, artisan">
+    <meta name="keywords" content="${listing.name}, ${listing.category || ''}, ${listing.subcategory || ''}, Sri Lankan entrepreneurs, quality products, professional services">
     
     <!-- Enhanced Meta Tags for Search Engines -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    <meta name="author" content="${shop?.name || 'Sri Lankan Marketplace'}">
+    <meta name="author" content="${shop?.name || 'Sri Lankan Entrepreneur Platform'}">>
     <meta name="price" content="LKR ${listing.price || 0}">
     <meta name="priceCurrency" content="LKR">
     <meta name="availability" content="in stock">
@@ -128,7 +128,7 @@ function generateListingHTML(listing, shop, listingId) {
     <meta name="product:availability" content="in stock">
     <meta name="product:condition" content="new">
     <meta name="product:category" content="${listing.category || ''}">
-    <meta name="product:brand" content="${shop?.name || 'Sri Lankan Artisan'}">
+    <meta name="product:brand" content="${shop?.name || 'Sri Lankan Entrepreneur'}">
     
     <!-- Language and Location -->
     <meta name="language" content="en-LK">

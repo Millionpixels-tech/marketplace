@@ -480,10 +480,17 @@ export default function ServiceRequestsPage() {
                     {/* Contact Instructions */}
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <h4 className="text-lg font-semibold text-blue-900 mb-2">Next Steps</h4>
-                      <p className="text-blue-800">
-                        Contact the customer directly using the phone number or email above to discuss their requirements 
-                        and provide your service. You can mark this request as completed once you've handled it.
-                      </p>
+                      {activeTab === "received" ? (
+                        <p className="text-blue-800">
+                          Contact the customer directly using the phone number or email above to discuss their requirements 
+                          and provide your service. You can mark this request as completed once you've handled it.
+                        </p>
+                      ) : (
+                        <p className="text-blue-800">
+                          Your request has been sent to the service provider. They will contact you directly using the 
+                          contact information you provided to discuss your requirements and provide a quote for their service.
+                        </p>
+                      )}
                     </div>
 
                     {/* Status Update - Only show for received requests */}

@@ -272,7 +272,7 @@ export default function ServicesPage() {
               {hasPackages && minPrice > 0 ? (
                 <div>
                   <span className="text-xs text-gray-500">Starting from</span>
-                  <div className="font-bold text-lg text-[#72b01d]">
+                  <div className="font-bold text-lg">
                     LKR {minPrice.toLocaleString()}
                     {minPrice !== maxPrice && (
                       <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>

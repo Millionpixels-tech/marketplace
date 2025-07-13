@@ -232,17 +232,19 @@ export default function CreateShop() {
     <>
       <SEOHead
         title="Create Your Shop - Start Selling on Sina.lk"
-        description="Create your own shop on Sina.lk and start selling your products to customers across Sri Lanka. Set up your shop profile, add your logo, and start your online business today."
+        description="Create your own shop on Sina.lk and start selling your products, services, or digital content to customers across Sri Lanka. Set up your business profile and start your entrepreneurial journey today."
         keywords={generateKeywords([
           'create shop',
           'start selling',
           'online shop',
-          'sri lanka marketplace',
+          'sri lanka platform',
           'sell online',
           'business setup',
-          'seller registration',
+          'entrepreneur registration',
           'e-commerce',
-          'online store'
+          'online store',
+          'services',
+          'digital products'
         ])}
         canonicalUrl={getCanonicalUrl('/create-shop')}
         noIndex={false}
