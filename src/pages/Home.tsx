@@ -61,91 +61,158 @@ function HeroSearch() {
   return (
     <form
       onSubmit={handleSearch}
-      className="w-full max-w-3xl mx-auto relative group z-50"
+      className={`w-full ${isMobile ? 'max-w-full hero-search-container' : 'max-w-3xl'} mx-auto relative group z-50`}
     >
-      <div className={`relative backdrop-blur-md rounded-2xl shadow-2xl border group-focus-within:shadow-xl transition-all duration-500 ${
-        isMobile ? 'rounded-xl' : 'rounded-2xl'
+      <div className={`relative backdrop-blur-md shadow-2xl border group-focus-within:shadow-xl transition-all duration-500 ${
+        isMobile ? 'rounded-xl mx-2' : 'rounded-2xl'
       }`}
         style={{
           backgroundColor: '#ffffff',
           borderColor: 'rgba(114, 176, 29, 0.3)'
         }}>
-        <div className={`flex items-center ${isMobile ? 'px-4 py-4' : 'px-8 py-6'}`}>
-          <FiSearch className={`${isMobile ? 'text-xl mr-3' : 'text-3xl mr-4'} group-focus-within:opacity-80 transition-colors`}
-            style={{ color: '#72b01d' }} />
+        {/* Mobile-first responsive layout */}
+        <div className={`${isMobile ? 'flex flex-col gap-3 p-3' : 'flex items-center px-8 py-6'}`}>
           
-          {/* Custom Dropdown for search type */}
-          <div className="relative search-dropdown">
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`${isMobile ? 'text-sm px-3 py-2 mr-2' : 'text-base px-4 py-2 mr-4'} border-r-2 bg-transparent outline-none flex items-center gap-2 hover:bg-gray-50 transition-colors duration-200 rounded-l-lg`}
+          {/* Mobile: Top row with search icon and dropdown */}
+          {isMobile ? (
+            <div className="flex items-center gap-3">
+              <FiSearch className="text-lg flex-shrink-0" style={{ color: '#72b01d' }} />
+              
+              {/* Custom Dropdown for search type - Mobile optimized */}
+              <div className="relative search-dropdown flex-1">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full text-sm px-3 py-2 bg-gray-50 outline-none flex items-center justify-between gap-2 hover:bg-gray-100 transition-colors duration-200 rounded-lg border"
+                  style={{
+                    color: '#0d0a0b',
+                    borderColor: 'rgba(114, 176, 29, 0.2)'
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{currentType?.icon}</span>
+                    <span className="font-medium">{currentType?.label}</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                
+                {/* Mobile Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="dropdown-menu search-dropdown-mobile absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
+                    style={{ zIndex: 99999 }}>
+                    {searchTypes.map((type) => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => {
+                          setSearchType(type.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 hover:bg-green-50 transition-colors duration-200 flex items-center gap-3 ${
+                          searchType === type.value ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <span className="text-sm">{type.icon}</span>
+                        <span className="font-medium">{type.label}</span>
+                        {searchType === type.value && (
+                          <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="m9 12 2 2 4-4" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Desktop layout (unchanged)
+            <>
+              <FiSearch className="text-3xl mr-4 group-focus-within:opacity-80 transition-colors" style={{ color: '#72b01d' }} />
+              
+              {/* Custom Dropdown for search type */}
+              <div className="relative search-dropdown">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="text-base px-4 py-2 mr-4 border-r-2 bg-transparent outline-none flex items-center gap-2 hover:bg-gray-50 transition-colors duration-200 rounded-l-lg"
+                  style={{
+                    color: '#0d0a0b',
+                    borderRightColor: 'rgba(114, 176, 29, 0.3)'
+                  }}
+                >
+                  <span className="text-base">{currentType?.icon}</span>
+                  <span className="font-medium">{currentType?.label}</span>
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="dropdown-menu absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden min-w-[160px]"
+                    style={{ zIndex: 99999 }}>
+                    {searchTypes.map((type) => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => {
+                          setSearchType(type.value);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 hover:bg-green-50 transition-colors duration-200 flex items-center gap-3 ${
+                          searchType === type.value ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                        }`}
+                      >
+                        <span className="text-base">{type.icon}</span>
+                        <span className="font-medium">{type.label}</span>
+                        {searchType === type.value && (
+                          <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="m9 12 2 2 4-4" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+          
+          {/* Input and Search Button Row */}
+          <div className={`flex items-center ${isMobile ? 'gap-2' : 'flex-1'}`}>
+            <input
+              className={`hero-search-input ${isMobile ? 'flex-1 text-base px-3 py-3 rounded-lg border' : 'flex-1 bg-transparent outline-none border-none text-xl px-2 py-2'} placeholder-gray-500 transition-all duration-200 focus:ring-2 focus:ring-green-100`}
               style={{
                 color: '#0d0a0b',
-                borderRightColor: 'rgba(114, 176, 29, 0.3)'
+                ...(isMobile ? {
+                  borderColor: 'rgba(114, 176, 29, 0.3)',
+                  backgroundColor: '#f9fafb'
+                } : {})
+              }}
+              type="text"
+              placeholder={isMobile ? "Search..." : "Search for products & services..."}
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              aria-label={`Search for ${searchType}`}
+            />
+            <button
+              type="submit"
+              className={`hero-search-button ${isMobile ? 'px-4 py-3 rounded-lg text-sm min-w-[70px]' : 'ml-4 px-8 py-3 rounded-xl text-lg'} text-white font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105 flex-shrink-0`}
+              style={{
+                background: `linear-gradient(to right, #72b01d, #3f7d20)`,
               }}
             >
-              <span className="text-base">{currentType?.icon}</span>
-              <span className="font-medium">{currentType?.label}</span>
-              <svg className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
+              {isMobile ? "Go" : "Search"}
             </button>
-            
-            {/* Dropdown Menu */}
-            {isDropdownOpen && (
-              <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden ${isMobile ? 'min-w-[140px]' : 'min-w-[160px]'}`}
-                style={{ zIndex: 99999 }}>
-                {searchTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() => {
-                      setSearchType(type.value);
-                      setIsDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 hover:bg-green-50 transition-colors duration-200 flex items-center gap-3 ${
-                      searchType === type.value ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                    }`}
-                  >
-                    <span className="text-base">{type.icon}</span>
-                    <span className="font-medium">{type.label}</span>
-                    {searchType === type.value && (
-                      <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-          
-          <input
-            className={`flex-1 bg-transparent outline-none border-none ${isMobile ? 'text-base px-1 py-2' : 'text-xl px-2 py-2'} placeholder-gray-500`}
-            style={{
-              color: '#0d0a0b'
-            }}
-            type="text"
-            placeholder="Search for products & services..."
-            value={q}
-            onChange={e => setQ(e.target.value)}
-            aria-label={`Search for ${searchType}`}
-          />
-          <button
-            type="submit"
-            className={`${isMobile ? 'ml-2 px-4 py-2 rounded-lg text-sm' : 'ml-4 px-8 py-3 rounded-xl text-lg'} text-white font-bold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-105`}
-            style={{
-              background: `linear-gradient(to right, #72b01d, #3f7d20)`,
-            }}
-          >
-            {isMobile ? "Go" : "Search"}
-          </button>
         </div>
       </div>
 
-      {/* Popular searches */}
-      <div className={`flex flex-wrap gap-2 ${isMobile ? 'gap-2 mt-4' : 'gap-3 mt-6'} justify-center`}>
+      {/* Popular searches - Enhanced mobile responsiveness */}
+      <div className={`popular-search-tags flex flex-wrap ${isMobile ? 'gap-1.5 mt-3 px-2' : 'gap-3 mt-6'} justify-center`}>
         {searchType === "products" 
           ? ["Woodcraft", "Jewelry", "Textiles", "Pottery", "Tea"].map(term => (
               <button
@@ -154,7 +221,7 @@ function HeroSearch() {
                 onClick={() => {
                   setQ(term);
                 }}
-                className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
+                className={`popular-search-tag ${isMobile ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105 whitespace-nowrap`}
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#72b01d',
@@ -171,7 +238,7 @@ function HeroSearch() {
                 onClick={() => {
                   setQ(term);
                 }}
-                className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
+                className={`popular-search-tag ${isMobile ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105 whitespace-nowrap`}
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#72b01d',
@@ -432,7 +499,7 @@ const Home = () => {
             </style>
 
             {/* Search bar */}
-            <div className="mb-8 md:mb-12 px-4">
+            <div className={`${isMobile ? 'mb-6 px-0' : 'mb-8 md:mb-12 px-4'}`}>
               <HeroSearch />
             </div>
 
