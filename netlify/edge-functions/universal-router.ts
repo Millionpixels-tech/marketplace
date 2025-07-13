@@ -52,8 +52,6 @@ export default async (request, context) => {
     ip: request.headers.get('cf-connecting-ip') || request.headers.get('x-forwarded-for') || 'unknown'
   };
   
-  console.log(`[Enhanced Universal Router]`, JSON.stringify(botInfo));
-  
   if (!isBot) {
     // For regular users, let the request pass through to normal routing
     // Don't return a response - this allows Netlify to serve the SPA normally
@@ -85,8 +83,6 @@ export default async (request, context) => {
     resourceType = 'general';
     cacheHeaders = 'public, max-age=1800, s-maxage=3600'; // 30min/1hr cache
   }
-  
-  console.log(`[Enhanced Universal Router] Bot routing: ${functionUrl} (type: ${resourceType})`);
   
   try {
     // Fetch from the appropriate SSR function with enhanced headers

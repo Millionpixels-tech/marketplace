@@ -307,23 +307,8 @@ export default function CreateCustomOrderModal({
   };
 
   const handleSubmit = async () => {
-    console.log('🚀 handleSubmit called', {
-      user: !!user,
-      isFormValid: isFormValid(),
-      selectedItemType,
-      items: items.length,
-      paymentMethod,
-      shippingCost
-    });
     
     if (!user || !isFormValid()) {
-      console.log('❌ Validation failed', {
-        hasUser: !!user,
-        isValid: isFormValid(),
-        selectedItemType,
-        itemsValid: items.every(item => item.name.trim() && item.unitPrice > 0 && item.quantity > 0),
-        hasPaymentMethod: !!paymentMethod
-      });
       return;
     }
 
@@ -342,8 +327,6 @@ export default function CreateCustomOrderModal({
         selectedItemType || ItemType.PHYSICAL,
         notes.trim() || undefined
       );
-
-      console.log('✅ Custom order created successfully', { orderId, source });
 
       if (source === 'messages' && conversationId && buyerId) {
         // Send message with custom order link (original behavior)
@@ -372,7 +355,6 @@ export default function CreateCustomOrderModal({
         onClose();
       } else {
         // From dashboard - show step 5 with order link (success page)
-        console.log('📋 Setting step to 5 and orderId to', orderId);
         setCreatedOrderId(orderId);
         setCurrentStep(5);
       }

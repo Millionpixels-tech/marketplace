@@ -22,7 +22,7 @@ import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { processImageForUpload } from "../../utils/imageUtils";
-import { FiCheck, FiX, FiTool } from "react-icons/fi";
+import { FiX, FiTool } from "react-icons/fi";
 
 const steps = [
   { label: "Shop" },

@@ -57,7 +57,6 @@ const Auth = () => {
       try {
         await processReferralSignup(referralCode, userId, userEmail, signupMethod, userName);
         clearStoredReferralCode();
-        console.log('Referral processed successfully');
       } catch (error) {
         console.error('Error processing referral:', error);
         // Don't fail the signup if referral processing fails

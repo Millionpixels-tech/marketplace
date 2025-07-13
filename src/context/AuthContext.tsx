@@ -54,7 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         try {
                             await processReferralSignup(referralCode, user.uid, user.email || '', 'google', user.displayName || '');
                             clearStoredReferralCode();
-                            console.log('Google signup referral processed successfully');
                         } catch (error) {
                             console.error('Error processing Google signup referral:', error);
                         }

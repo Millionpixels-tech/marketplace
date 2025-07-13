@@ -5,7 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { collection, getDocs, query, where, doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate, useParams } from "react-router-dom";
-import { FiX, FiCheck, FiTool } from "react-icons/fi";
+import { FiX, FiTool } from "react-icons/fi";
 import { 
   ServiceCategory, 
   serviceCategoryIcons,
@@ -121,8 +121,6 @@ const EditService = () => {
           navigate("/dashboard?tab=services");
           return;
         }
-        
-        console.log('Loaded service:', service); // Debug log
         setOriginalService(service);
         
         // Load shops
@@ -258,9 +256,6 @@ const EditService = () => {
         updatedAt: Timestamp.fromDate(new Date())
       };
       
-      console.log('Final updatedData:', JSON.stringify(updatedData, null, 2));
-      console.log('originalService.id:', originalService.id);
-      
       // Final validation before update
       if (!originalService.id) {
         throw new Error('Service ID is undefined');
@@ -268,7 +263,6 @@ const EditService = () => {
       
       try {
         const serviceRef = doc(db, "services", originalService.id);
-        console.log('Service reference:', serviceRef);
         
         // Convert complex objects to simple objects to avoid Firebase serialization issues
         const firebaseUpdatedData = {
@@ -278,9 +272,7 @@ const EditService = () => {
           updatedAt: Timestamp.fromDate(new Date())
         };
         
-        console.log('Attempting Firebase update with cleaned data...');
         await updateDoc(serviceRef, firebaseUpdatedData);
-        console.log('Service updated successfully in Firebase');
       } catch (updateError) {
         console.error('Firebase updateDoc error:', updateError);
         if (updateError instanceof Error) {

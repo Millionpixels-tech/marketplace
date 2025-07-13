@@ -40,11 +40,9 @@ export const createServiceReview = async (
         const serviceData = serviceDoc.data();
         if (!shopId) {
           shopId = serviceData.shopId;
-          console.log("Fetched shopId from service:", shopId);
         }
         // Also get the service image
         serviceImage = serviceData.images && serviceData.images.length > 0 ? serviceData.images[0] : '';
-        console.log("Fetched serviceImage from service:", serviceImage);
       }
       
       if (!shopId) {

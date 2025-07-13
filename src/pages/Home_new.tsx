@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
-  FiSearch, 
   FiPackage, 
   FiTool,
   FiZap,
@@ -15,22 +14,17 @@ import Footer from "../components/UI/Footer";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../components/HOC/WithReviewStats";
 import { AdvancedSEOHead } from "../components/SEO/AdvancedSEOHead";
-import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
-import { getUserIP } from "../utils/ipUtils";
 import { getWebsiteStructuredData, getCanonicalUrl } from "../utils/seo";
 import { combineSchemas, generateWebsiteSearchSchema, generateMarketplaceSchema } from "../utils/advancedSchemaMarkup";
 import { generateOptimizedKeywords, TITLE_TEMPLATES, META_DESCRIPTION_TEMPLATES } from "../utils/keywordStrategy";
-import { useResponsive } from "../hooks/useResponsive";
-import { useAuth } from "../context/AuthContext";
-import { shuffleArrayWithSeed, generateRandomSeed } from "../utils/randomUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
 // Product Search Component (searches only products)
 function ProductSearch() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
-  const { isMobile } = useResponsive();
 
   const handleSearch = (e: any) => {
     e.preventDefault();
@@ -68,7 +62,6 @@ function ProductSearch() {
 function ServiceSearch() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
-  const { isMobile } = useResponsive();
 
   const handleSearch = (e: any) => {
     e.preventDefault();
@@ -130,7 +123,6 @@ type Service = {
 };
 
 const Home = () => {
-  const { isMobile } = useResponsive();
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [latestServices, setLatestServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);

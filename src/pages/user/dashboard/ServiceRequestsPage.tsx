@@ -93,28 +93,21 @@ export default function ServiceRequestsPage() {
 
   // Fetch service requests for a specific page
   const fetchServiceRequestsPage = async (page: number) => {
-    console.log('=== FETCH PAGE DEBUG ===');
-    console.log('Fetching page:', page, 'for tab:', activeTab);
     
     try {
       setLoading(true);
       
       if (activeTab === "sent") {
-        console.log('Fetching sent requests - current sentPage:', sentPage, 'requested page:', page);
         
         // If going to page 1, reset cursor
         if (page === 1) {
-          console.log('Resetting to page 1 for sent requests');
           const result = await getServiceRequestsForCustomerPaginated(user!.uid, REQUESTS_PER_PAGE);
-          console.log('Page 1 result:', result);
           setSentRequests(result.requests);
           setSentLastVisible(result.lastVisible);
           setSentHasMore(result.hasMore);
           setSentPage(1);
         } else if (page > sentPage) {
-          console.log('Fetching next page for sent requests, using cursor:', sentLastVisible);
           const result = await getServiceRequestsForCustomerPaginated(user!.uid, REQUESTS_PER_PAGE, sentLastVisible);
-          console.log('Next page result:', result);
           setSentRequests(result.requests);
           setSentLastVisible(result.lastVisible);
           setSentHasMore(result.hasMore);
@@ -123,21 +116,16 @@ export default function ServiceRequestsPage() {
           console.log('Cannot navigate backwards in cursor-based pagination');
         }
       } else {
-        console.log('Fetching received requests - current receivedPage:', receivedPage, 'requested page:', page);
         
         // If going to page 1, reset cursor
         if (page === 1) {
-          console.log('Resetting to page 1 for received requests');
           const result = await getServiceRequestsForProviderPaginated(user!.uid, REQUESTS_PER_PAGE);
-          console.log('Page 1 result:', result);
           setReceivedRequests(result.requests);
           setReceivedLastVisible(result.lastVisible);
           setReceivedHasMore(result.hasMore);
           setReceivedPage(1);
         } else if (page > receivedPage) {
-          console.log('Fetching next page for received requests, using cursor:', receivedLastVisible);
           const result = await getServiceRequestsForProviderPaginated(user!.uid, REQUESTS_PER_PAGE, receivedLastVisible);
-          console.log('Next page result:', result);
           setReceivedRequests(result.requests);
           setReceivedLastVisible(result.lastVisible);
           setReceivedHasMore(result.hasMore);
@@ -151,8 +139,6 @@ export default function ServiceRequestsPage() {
     } finally {
       setLoading(false);
     }
-    
-    console.log('=== FETCH COMPLETE ===');
   };
 
   const handleStatusUpdate = async (requestId: string, status: ServiceRequest['status']) => {

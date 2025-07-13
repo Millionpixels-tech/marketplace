@@ -44,16 +44,6 @@ export const submitServiceRequest = async (
       throw new Error("User information is incomplete");
     }
 
-    console.log("Submitting service request with data:", {
-      serviceId: formData.serviceId,
-      serviceTitle: service.title,
-      packageId: formData.packageId,
-      packageName: selectedPackage.name,
-      providerId: service.owner,
-      customerId: user.uid,
-      customerEmail: user.email
-    });
-
     let attachedFileUrl = "";
     let attachedFileName = "";
 
@@ -115,7 +105,6 @@ export const submitServiceRequest = async (
             formData.customerInfo,
             attachedFileName
           );
-          console.log("Service request notification email sent successfully");
         } catch (error) {
           console.error("Failed to send service request notification email:", error);
           // Don't fail the entire request if email fails
