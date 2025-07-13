@@ -398,3 +398,43 @@ export const getServiceAvailabilityStatus = (service: Service): {
   
   return { isAvailable: false };
 };
+
+// Get services by shopId with pagination support
+export const getServicesByShop = async (shopId: string, limitCount?: number): Promise<Service[]> => {
+  try {
+    let q = query(
+      collection(db, "services"),
+      where("shopId", "==", shopId),
+      orderBy("createdAt", "desc")
+    );
+    
+    if (limitCount) {
+      q = query(q, limit(limitCount));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Service[];
+  } catch (error) {
+    console.error("Error fetching services by shop:", error);
+    throw new Error("Failed to fetch services by shop");
+  }
+};
+
+// Get total count of services for a shop
+export const getServicesCountByShop = async (shopId: string): Promise<number> => {
+  try {
+    const q = query(
+      collection(db, "services"),
+      where("shopId", "==", shopId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error("Error fetching services count by shop:", error);
+    return 0;
+  }
+};

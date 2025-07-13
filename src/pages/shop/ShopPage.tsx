@@ -1,22 +1,26 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, limit, startAfter, orderBy, QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
-import { FiBox } from "react-icons/fi";
+import { FiBox, FiPlus, FiTool } from "react-icons/fi";
 import ShopOwnerName from "./ShopOwnerName";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import ContactSellerButton from "../../components/UI/ContactSellerButton";
 import ShopReviews from "../../components/UI/ShopReviews";
 import ResponsiveListingTile from "../../components/UI/ResponsiveListingTile";
+import ResponsiveServiceTiles from "../../components/UI/ResponsiveServiceTiles";
 import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getUserIP } from "../../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { useResponsive } from "../../hooks/useResponsive";
+import { getServicesCountByShop } from "../../utils/serviceUtils";
+import { calculateShopRating } from "../../utils/serviceReviews";
 import type { DeliveryType as DeliveryTypeType } from "../../types/enums";
+import type { Service } from "../../types/service";
 
 type Shop = {
     id: string;
@@ -56,6 +60,13 @@ export default function ShopPage() {
     const [totalCount, setTotalCount] = useState(0);
     const [pageCursors, setPageCursors] = useState<Array<QueryDocumentSnapshot<DocumentData> | null>>([null]); // First page starts at null
     const [ip, setIp] = useState<string | null>(null);
+    
+    // Services state
+    const [services, setServices] = useState<Service[]>([]);
+    const [servicesLoading, setServicesLoading] = useState(false);
+    const [servicesPage, setServicesPage] = useState(1);
+    const [servicesTotalCount, setServicesTotalCount] = useState(0);
+    const [servicesPageCursors, setServicesPageCursors] = useState<Array<QueryDocumentSnapshot<DocumentData> | null>>([null]);
     
     // Reviews state for rating calculation
     const [shopRating, setShopRating] = useState<number | null>(null);
@@ -122,26 +133,10 @@ export default function ShopPage() {
         
         async function fetchShopReviews() {
             try {
-                const reviewsQuery = query(
-                    collection(db, "reviews"),
-                    where("shopId", "==", shop!.id) // We know shop is not null here due to the check above
-                );
-                const reviewsSnap = await getDocs(reviewsQuery);
-                const reviews = reviewsSnap.docs.map(doc => ({ 
-                    id: doc.id, 
-                    ...doc.data() 
-                })) as any[];
-                
-                // Calculate average rating and count
-                if (reviews.length > 0) {
-                    const totalRating = reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
-                    const averageRating = totalRating / reviews.length;
-                    setShopRating(Math.round(averageRating * 100) / 100); // Round to 2 decimal places
-                    setShopRatingCount(reviews.length);
-                } else {
-                    setShopRating(null);
-                    setShopRatingCount(0);
-                }
+                // Use the new combined rating calculation that includes both product and service reviews
+                const ratingData = await calculateShopRating(shop!.id);
+                setShopRating(ratingData.rating);
+                setShopRatingCount(ratingData.count);
             } catch (error) {
                 console.error("Error fetching shop reviews:", error);
                 setShopRating(null);
@@ -218,6 +213,81 @@ export default function ShopPage() {
         // (For full "random access" page jumps, you'd need to store all cursors as you go forward, or load all IDs up front.)
     }
 
+    // Services functions
+    const refreshServices = async () => {
+        if (!shop) return;
+        await fetchServices(servicesPage, servicesPageCursors);
+    };
+
+    // Fetch paginated services
+    const fetchServices = useCallback(
+        async (currentPage: number, cursors: Array<QueryDocumentSnapshot<DocumentData> | null>) => {
+            if (!shop) return;
+            setServicesLoading(true);
+
+            try {
+                let q;
+                if (currentPage === 1) {
+                    q = query(
+                        collection(db, "services"),
+                        where("shopId", "==", shop.id),
+                        orderBy("createdAt", "desc"),
+                        limit(PAGE_SIZE)
+                    );
+                } else {
+                    const cursor = cursors[currentPage - 2]; // previous page's last doc
+                    if (!cursor) return;
+                    q = query(
+                        collection(db, "services"),
+                        where("shopId", "==", shop.id),
+                        orderBy("createdAt", "desc"),
+                        startAfter(cursor),
+                        limit(PAGE_SIZE)
+                    );
+                }
+                const snap = await getDocs(q);
+                const docs = snap.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                })) as Service[];
+                setServices(docs);
+
+                // Set page cursors for navigation (forwards only)
+                if (snap.docs.length > 0) {
+                    const newCursors = [...cursors];
+                    newCursors[currentPage - 1] = snap.docs[snap.docs.length - 1];
+                    setServicesPageCursors(newCursors);
+                }
+
+                // Get total count (only on first page)
+                if (currentPage === 1) {
+                    const totalServicesCount = await getServicesCountByShop(shop.id);
+                    setServicesTotalCount(totalServicesCount);
+                }
+                
+                setServicesLoading(false);
+            } catch (error) {
+                console.error("Error fetching services:", error);
+                setServicesLoading(false);
+            }
+        },
+        [shop]
+    );
+
+    // Fetch services when shop, servicesPage, or servicesPageCursors change
+    useEffect(() => {
+        if (!shop) return;
+        fetchServices(servicesPage, servicesPageCursors);
+    }, [shop, servicesPage]); // eslint-disable-line
+
+    // Services pagination 
+    const servicesTotalPages = Math.ceil(servicesTotalCount / PAGE_SIZE);
+
+    // Handle services page navigation
+    function handleServicesPageChange(newPage: number) {
+        setServicesPage(newPage);
+    }
+
     // 7. Loading and not found states
     if (loading && !shop) {
         return (
@@ -241,19 +311,20 @@ export default function ShopPage() {
     // Generate SEO data
     const generateShopSEO = () => {
         const shopName = shop.name || 'Shop';
-        const description = shop.description || `Discover authentic Sri Lankan products from ${shopName}`;
+        const description = shop.description || `Discover products, services, and digital content from ${shopName}`;
         const rating = shopRating || 0;
         const ratingCount = shopRatingCount || 0;
         
         return {
-            title: `${shopName} - Authentic Sri Lankan Products & Crafts`,
+            title: `${shopName} - Products, Services & Digital Content`,
             description: description.length > 160 ? description.substring(0, 157) + '...' : description,
             keywords: generateKeywords([
                 shopName,
                 'Sri Lankan shop',
                 'authentic products',
-                'local artisan',
-                'handmade crafts'
+                'local entrepreneur',
+                'online business',
+                'Sri Lankan seller'
             ]),
             structuredData: {
                 '@context': 'https://schema.org',
@@ -445,6 +516,175 @@ export default function ShopPage() {
         );
     }
 
+    // Services Pagination controls
+    function ServicesPagination() {
+        if (servicesTotalPages <= 1) return null;
+
+        return (
+            <div className={`mt-12 flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+                {/* Previous button */}
+                <button
+                    onClick={() => servicesPage > 1 && handleServicesPageChange(servicesPage - 1)}
+                    disabled={servicesPage === 1}
+                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{
+                        backgroundColor: '#ffffff',
+                        color: '#454955',
+                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (servicesPage !== 1) {
+                            e.currentTarget.style.backgroundColor = '#72b01d';
+                            e.currentTarget.style.color = '#ffffff';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (servicesPage !== 1) {
+                            e.currentTarget.style.backgroundColor = '#ffffff';
+                            e.currentTarget.style.color = '#454955';
+                        }
+                    }}
+                    aria-label="Previous page"
+                >
+                    {isMobile ? '←' : '← Previous'}
+                </button>
+
+                {/* Page numbers */}
+                <div className={`flex items-center ${isMobile ? 'gap-0.5' : 'gap-1'}`}>
+                    {/* First page */}
+                    {servicesPage > 3 && !isMobile && (
+                        <>
+                            <button
+                                onClick={() => handleServicesPageChange(1)}
+                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    color: '#454955',
+                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                    e.currentTarget.style.color = '#454955';
+                                }}
+                            >
+                                1
+                            </button>
+                            {servicesPage > 4 && (
+                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                            )}
+                        </>
+                    )}
+
+                    {/* Pages around current */}
+                    {Array.from({ length: Math.min(isMobile ? 3 : 5, servicesTotalPages) }, (_, i) => {
+                        let pageNum;
+                        if (servicesTotalPages <= (isMobile ? 3 : 5)) {
+                            pageNum = i + 1;
+                        } else if (servicesPage <= (isMobile ? 2 : 3)) {
+                            pageNum = i + 1;
+                        } else if (servicesPage >= servicesTotalPages - (isMobile ? 1 : 2)) {
+                            pageNum = servicesTotalPages - (isMobile ? 2 : 4) + i;
+                        } else {
+                            pageNum = servicesPage - (isMobile ? 1 : 2) + i;
+                        }
+
+                        if (pageNum < 1 || pageNum > servicesTotalPages) return null;
+                        if (!isMobile && servicesPage > 3 && pageNum === 1) return null;
+                        if (!isMobile && servicesPage < servicesTotalPages - 2 && pageNum === servicesTotalPages) return null;
+
+                        const isCurrentPage = servicesPage === pageNum;
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handleServicesPageChange(pageNum)}
+                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                style={{
+                                    backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
+                                    color: isCurrentPage ? '#ffffff' : '#454955',
+                                    border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!isCurrentPage) {
+                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                        e.currentTarget.style.color = '#ffffff';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isCurrentPage) {
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                        e.currentTarget.style.color = '#454955';
+                                    }
+                                }}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    {/* Last page */}
+                    {servicesPage < servicesTotalPages - 2 && !isMobile && (
+                        <>
+                            {servicesPage < servicesTotalPages - 3 && (
+                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                            )}
+                            <button
+                                onClick={() => handleServicesPageChange(servicesTotalPages)}
+                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                style={{
+                                    backgroundColor: '#ffffff',
+                                    color: '#454955',
+                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                    e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                    e.currentTarget.style.color = '#454955';
+                                }}
+                            >
+                                {servicesTotalPages}
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Next button */}
+                <button
+                    onClick={() => servicesPage < servicesTotalPages && handleServicesPageChange(servicesPage + 1)}
+                    disabled={servicesPage === servicesTotalPages}
+                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{
+                        backgroundColor: '#ffffff',
+                        color: '#454955',
+                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (servicesPage !== servicesTotalPages) {
+                            e.currentTarget.style.backgroundColor = '#72b01d';
+                            e.currentTarget.style.color = '#ffffff';
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (servicesPage !== servicesTotalPages) {
+                            e.currentTarget.style.backgroundColor = '#ffffff';
+                            e.currentTarget.style.color = '#454955';
+                        }
+                    }}
+                    aria-label="Next page"
+                >
+                    {isMobile ? '→' : 'Next →'}
+                </button>
+            </div>
+        );
+    }
+
     // 9. Render shop page
     return (
         <>
@@ -541,69 +781,221 @@ export default function ShopPage() {
                     </div>
                 </div>
 
-                {/* Listings */}
-                <section className={`w-full ${isMobile ? 'py-4' : 'py-8'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                    <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'}`}>
-                        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'} gap-4`}>
-                            <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold uppercase tracking-wide`} style={{ color: '#0d0a0b' }}>
-                                Shop Listings
-                            </h2>
-                            {user && shop && user.uid === shop.owner && (
-                                <a
-                                    href="/add-listing"
-                                    className={`inline-block ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold uppercase tracking-wide transition`}
-                                    style={{
-                                        backgroundColor: '#72b01d',
-                                        color: '#ffffff'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#3f7d20';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#72b01d';
-                                    }}
-                                >
-                                    + Create New Listing
-                                </a>
-                            )}
-                        </div>
-                        {listings.length === 0 ? (
-                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>No products yet.</div>
-                        ) : (
-                            <WithReviewStats listings={listings}>
-                                {(listingsWithStats) => (
-                                    <>
-                                        {isMobile ? (
-                                            <div className="w-full overflow-x-auto pb-2">
-                                                <div className="flex gap-4 min-w-max">
-                                                    {listingsWithStats.map((item) => (
-                                                        <div key={item.id} className="w-48 flex-shrink-0">
-                                                            <ResponsiveListingTile 
-                                                                listing={item}
-                                                                onRefresh={refreshListings}
-                                                            />
-                                                        </div>
-                                                    ))}
+                {/* Conditional Content Display */}
+                {(() => {
+                    const isOwner = user && shop && user.uid === shop.owner;
+                    const hasListings = listings.length > 0;
+                    const hasServices = services.length > 0;
+                    const hasAnyContent = hasListings || hasServices;
+
+                    // If no content exists
+                    if (!hasAnyContent) {
+                        return (
+                            <section className={`w-full ${isMobile ? 'py-8' : 'py-12'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'} text-center`}>
+                                    <div className={`${isMobile ? 'py-8' : 'py-12'}`} style={{ color: '#454955' }}>
+                                        <div className="flex justify-center gap-4 mb-6">
+                                            <FiBox className="w-16 h-16 opacity-30" />
+                                            <FiTool className="w-16 h-16 opacity-30" />
+                                        </div>
+                                        {isOwner ? (
+                                            <>
+                                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold mb-4`} style={{ color: '#0d0a0b' }}>
+                                                    You don't have any products or services
+                                                </h2>
+                                                <p className={`${isMobile ? 'text-sm' : 'text-base'} mb-8 opacity-70`}>
+                                                    Get started by creating your first listing or service to showcase what you offer
+                                                </p>
+                                                <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-4'} justify-center items-center`}>
+                                                    <Link
+                                                        to="/add-listing"
+                                                        className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full justify-center' : 'px-8 py-3'} rounded-full font-semibold uppercase tracking-wide transition`}
+                                                        style={{
+                                                            backgroundColor: '#72b01d',
+                                                            color: '#ffffff'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        }}
+                                                    >
+                                                        <FiPlus className="w-4 h-4" />
+                                                        Create Product
+                                                    </Link>
+                                                    <Link
+                                                        to="/add-service"
+                                                        className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full justify-center' : 'px-8 py-3'} rounded-full font-semibold uppercase tracking-wide transition`}
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#72b01d',
+                                                            border: '2px solid #72b01d'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#72b01d';
+                                                            e.currentTarget.style.color = '#ffffff';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                            e.currentTarget.style.color = '#72b01d';
+                                                        }}
+                                                    >
+                                                        <FiTool className="w-4 h-4" />
+                                                        Create Service
+                                                    </Link>
                                                 </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold mb-4`} style={{ color: '#0d0a0b' }}>
+                                                    Shop not listed any product or service yet
+                                                </h2>
+                                                <p className={`${isMobile ? 'text-sm' : 'text-base'} opacity-70`}>
+                                                    This shop hasn't added any products or services yet. Check back later!
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+                        );
+                    }
+
+                    // Render sections based on what content exists
+                    return (
+                        <>
+                            {/* Listings Section - Only show if has listings OR (is owner and has no services) */}
+                            {(hasListings || (isOwner && !hasServices)) && (
+                                <section className={`w-full ${isMobile ? 'py-4' : 'py-8'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'}`}>
+                                        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'} gap-4`}>
+                                            <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold uppercase tracking-wide`} style={{ color: '#0d0a0b' }}>
+                                                <FiBox className="inline mr-2" />
+                                                Shop Products
+                                            </h2>
+                                            {isOwner && (
+                                                <Link
+                                                    to="/add-listing"
+                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold uppercase tracking-wide transition`}
+                                                    style={{
+                                                        backgroundColor: '#72b01d',
+                                                        color: '#ffffff'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    }}
+                                                >
+                                                    <FiPlus className="w-4 h-4" />
+                                                    Create New Product
+                                                </Link>
+                                            )}
+                                        </div>
+                                        {listings.length === 0 ? (
+                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>
+                                                <FiBox className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                                                <p className="text-lg font-medium mb-2">No products yet</p>
+                                                {isOwner && (
+                                                    <p className="text-sm">Create your first product to start selling!</p>
+                                                )}
                                             </div>
                                         ) : (
-                                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
-                                                {listingsWithStats.map((item) => (
-                                                    <ResponsiveListingTile 
-                                                        key={item.id}
-                                                        listing={item}
-                                                        onRefresh={refreshListings}
-                                                    />
-                                                ))}
-                                            </div>
+                                            <WithReviewStats listings={listings}>
+                                                {(listingsWithStats) => (
+                                                    <>
+                                                        {isMobile ? (
+                                                            <div className="w-full overflow-x-auto pb-2">
+                                                                <div className="flex gap-4 min-w-max">
+                                                                    {listingsWithStats.map((item) => (
+                                                                        <div key={item.id} className="w-48 flex-shrink-0">
+                                                                            <ResponsiveListingTile 
+                                                                                listing={item}
+                                                                                onRefresh={refreshListings}
+                                                                            />
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
+                                                                {listingsWithStats.map((item) => (
+                                                                    <ResponsiveListingTile 
+                                                                        key={item.id}
+                                                                        listing={item}
+                                                                        onRefresh={refreshListings}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <Pagination />
+                                                    </>
+                                                )}
+                                            </WithReviewStats>
                                         )}
-                                        <Pagination />
-                                    </>
-                                )}
-                            </WithReviewStats>
-                        )}
-                    </div>
-                </section>
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Services Section - Only show if has services OR (is owner and has no listings) */}
+                            {(hasServices || (isOwner && !hasListings)) && (
+                                <section className={`w-full ${isMobile ? 'py-4' : 'py-8'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
+                                    <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'}`}>
+                                        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'} gap-4`}>
+                                            <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold uppercase tracking-wide`} style={{ color: '#0d0a0b' }}>
+                                                <FiTool className="inline mr-2" />
+                                                Shop Services
+                                            </h2>
+                                            {isOwner && (
+                                                <Link
+                                                    to="/add-service"
+                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold uppercase tracking-wide transition`}
+                                                    style={{
+                                                        backgroundColor: '#72b01d',
+                                                        color: '#ffffff'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#3f7d20';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    }}
+                                                >
+                                                    <FiPlus className="w-4 h-4" />
+                                                    Create New Service
+                                                </Link>
+                                            )}
+                                        </div>
+                                        {servicesLoading ? (
+                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`}>
+                                                <LoadingSpinner size="md" />
+                                            </div>
+                                        ) : services.length === 0 ? (
+                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>
+                                                <FiTool className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                                                <p className="text-lg font-medium mb-2">No services yet</p>
+                                                {isOwner && (
+                                                    <p className="text-sm">Create your first service to showcase your expertise!</p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <ResponsiveServiceTiles 
+                                                    services={services} 
+                                                    onRefresh={refreshServices}
+                                                    isLoading={servicesLoading}
+                                                />
+                                                <ServicesPagination />
+                                            </>
+                                        )}
+                                    </div>
+                                </section>
+                            )}
+                        </>
+                    );
+                })()}
             </div>
 
             {/* Shop Reviews Section */}

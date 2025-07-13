@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { FiCheck, FiChevronDown, FiChevronUp, FiShoppingBag } from "react-icons/fi";
-import type { Service } from "../../types/service";
+import { FiCheck, FiChevronDown, FiChevronUp, FiShoppingBag, FiStar } from "react-icons/fi";
+import type { Service, ServiceReview } from "../../types/service";
+import { getServiceReviews } from "../../utils/serviceReviews";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
@@ -27,6 +28,10 @@ export default function ServiceDetailPage() {
   const [selectedPackage, setSelectedPackage] = useState<string>("");
   const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<ServiceReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (serviceId) {
@@ -54,6 +59,9 @@ export default function ServiceDetailPage() {
           const shopSnap = await getDoc(doc(db, "shops", serviceData.shopId));
           if (shopSnap.exists()) setShop(shopSnap.data() as Shop);
         }
+        
+        // Fetch reviews for this service
+        await fetchReviews(serviceId);
       } else {
         navigate('/services');
       }
@@ -62,6 +70,19 @@ export default function ServiceDetailPage() {
       navigate('/services');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async (serviceId: string) => {
+    try {
+      setReviewsLoading(true);
+      const serviceReviews = await getServiceReviews(serviceId, 20); // Fetch up to 20 reviews
+      setReviews(serviceReviews);
+    } catch (error) {
+      console.error("Error fetching service reviews:", error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
@@ -283,7 +304,7 @@ export default function ServiceDetailPage() {
               )}
 
               {/* Availability */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Availability</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {sortDaysByWeek(service.availability).map(([day, data]) => (
@@ -296,6 +317,89 @@ export default function ServiceDetailPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Service Reviews Section */}
+              {reviews.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 p-6" id="reviews-section">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    Customer Reviews ({reviews.length})
+                  </h2>
+                  
+                  {reviewsLoading ? (
+                    <div className="space-y-4">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="p-4 border border-gray-100 rounded-lg animate-pulse">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <div key={star} className="w-4 h-4 bg-gray-200 rounded"></div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                              <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="border-b border-gray-100 pb-6 last:border-b-0 last:pb-0">
+                          <div className="flex items-start gap-4">
+                            {/* Reviewer Avatar */}
+                            <div className="w-10 h-10 bg-[#72b01d] rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                              {review.reviewerName.charAt(0).toUpperCase()}
+                            </div>
+                            
+                            {/* Review Content */}
+                            <div className="flex-1">
+                              {/* Reviewer Name and Rating */}
+                              <div className="flex items-center gap-3 mb-2">
+                                <h4 className="font-semibold text-gray-900">{review.reviewerName}</h4>
+                                <div className="flex items-center gap-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <FiStar
+                                      key={star}
+                                      className={`w-4 h-4 ${
+                                        star <= review.rating 
+                                          ? 'text-yellow-400 fill-current' 
+                                          : 'text-gray-300'
+                                      }`}
+                                    />
+                                  ))}
+                                  <span className="ml-1 text-sm font-medium text-gray-600">
+                                    {review.rating}/5
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              {/* Review Comment */}
+                              <p className="text-gray-700 text-sm leading-relaxed mb-2">
+                                {review.comment}
+                              </p>
+                              
+                              {/* Review Date */}
+                              <p className="text-xs text-gray-500">
+                                Reviewed on {new Date(review.createdAt.seconds * 1000).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Sidebar - Package Selection */}

@@ -143,7 +143,8 @@ export interface ServiceBooking {
 export interface ServiceReview {
   id?: string;
   serviceId: string;
-  bookingId: string;
+  serviceRequestId: string; // Link to the service request that generated this review
+  shopId: string; // Shop ID for easier querying
   
   // Reviewer Information
   reviewerId: string;
@@ -154,6 +155,8 @@ export interface ServiceReview {
   rating: number; // 1-5 stars
   title?: string;
   comment: string;
+  serviceTitle: string; // Title of the service being reviewed
+  serviceImage?: string; // Service image for display in reviews
   
   // Media
   images?: string[];
@@ -163,7 +166,7 @@ export interface ServiceReview {
   updatedAt?: Timestamp;
   
   // Status
-  isVerified: boolean; // Only from actual bookings
+  isVerified: boolean; // Only from actual bookings/service requests
   isHelpful?: number; // Helpfulness count
   
   // Response from service provider

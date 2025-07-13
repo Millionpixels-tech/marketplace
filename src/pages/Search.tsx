@@ -3,7 +3,7 @@ import { collection, query, where, orderBy, getCountFromServer, type QueryDocume
 import { db } from "../utils/firebase";
 import { categories, categoryIcons } from "../utils/categories";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Button, Input, Pagination, BackToTop } from "../components/UI";
+import { Button, Input, Pagination, BackToTop, CategoryNavigation } from "../components/UI";
 import ResponsiveHeader from "../components/UI/ResponsiveHeader";
 import ResponsiveListingTile from "../components/UI/ResponsiveListingTile";
 import WithReviewStats from "../components/HOC/WithReviewStats";
@@ -517,12 +517,12 @@ const Search: React.FC = () => {
   
   const generateSearchSEO = () => {
     let title = "Search Results";
-    let description = "Find authentic Sri Lankan products and crafts on Sina.lk";
+    let description = "Find products, services, and digital content from Sri Lankan entrepreneurs on Sina.lk";
     let keywords = ['search', 'Sri Lankan products', 'marketplace', 'Sina.lk'];
     
     if (searchQuery) {
       title = `Search: ${searchQuery}`;
-      description = `Search results for "${searchQuery}" - Find authentic Sri Lankan products and crafts on Sina.lk`;
+      description = `Search results for "${searchQuery}" - Find products, services, and digital content from Sri Lankan entrepreneurs on Sina.lk`;
       keywords.push(searchQuery);
     }
     
@@ -582,89 +582,69 @@ const Search: React.FC = () => {
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Categories</h2>
               </div>
-              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
-                {sortedCategories.map((c) => (
-                  <li key={c.name} className="flex flex-col">
-                    <div className="flex items-center w-full group">
-                      <button
-                        className={`flex items-center flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${cat === c.name ? "text-white shadow-lg" : ""}`}
-                        style={{
-                          backgroundColor: cat === c.name ? '#72b01d' : 'transparent',
-                          color: cat === c.name ? '#ffffff' : '#0d0a0b'
-                        }}
-                        onClick={() => handleCategoryClick(c.name)}
-                      >
-                        <span className="mr-2 flex-shrink-0">
-                          {(() => {
-                            const IconComponent = categoryIcons[c.name];
-                            return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
-                          })()}
-                        </span>
-                        <span className="flex-1">{c.name}</span>
-                      </button>
-                      <button
-                        className="ml-1 p-1 rounded transition-all duration-300"
-                        style={{
-                          //backgroundColor: 'rgba(114, 176, 29, 0.1)',
-                          color: '#72b01d'
-                        }}
-                        aria-label={expanded === c.name ? `Collapse ${c.name}` : `Expand ${c.name}`}
-                        onClick={e => {
-                          e.stopPropagation();
-                          setExpanded(expanded === c.name ? null : c.name);
-                        }}
-                      >
-                        {expanded === c.name ? (
-                          <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
-                        ) : (
-                          <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
-                        )}
-                      </button>
-                    </div>
-                    {expanded === c.name && c.subcategories && (
-                      <ul className={`${isMobile ? 'pl-4 py-2' : 'pl-6 py-2'} flex flex-col gap-1`}>
-                        {c.subcategories.map(sc => (
-                          <li key={sc}>
-                            <button
-                              className={`w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${sub === sc ? "text-white shadow-lg" : ""}`}
-                              style={{
-                                backgroundColor: sub === sc ? '#3f7d20' : 'transparent',
-                                color: sub === sc ? '#ffffff' : '#454955'
-                              }}
-                              onClick={() => handleSubcategoryClick(c.name, sc)}
-                            >
-                              {sc}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-                {/* Reset filter */}
-                <li className={`${isMobile ? 'pt-1' : 'pt-2'}`}>
-                  <button
-                    className={`w-full ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} rounded-lg text-left font-semibold transition-all duration-300 disabled:opacity-50`}
-                    style={{
-                      backgroundColor: (!cat && !sub) ? 'rgba(114, 176, 29, 0.1)' : 'rgba(114, 176, 29, 0.05)',
-                      color: '#72b01d'
-                    }}
-                    onClick={() => {
-                      // Clear cache when clearing category filters
-                      cacheRef.current.clear();
-                      setCat(""); setSub(""); setExpanded(null); setCurrentPage(1);
-                      const params = new URLSearchParams(searchParams);
-                      params.delete("cat");
-                      params.delete("sub");
-                      params.delete("page");
-                      navigate({ pathname: "/search", search: params.toString() });
-                    }}
-                    disabled={!cat && !sub}
-                  >
-                    Clear Filters
-                  </button>
-                </li>
-              </ul>
+              
+              <CategoryNavigation
+                categories={[
+                  ...sortedCategories.map((c) => ({
+                    key: c.name,
+                    label: c.name,
+                    icon: (() => {
+                      const IconComponent = categoryIcons[c.name];
+                      return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
+                    })(),
+                    isSelected: cat === c.name,
+                    onClick: () => handleCategoryClick(c.name),
+                    hasSubcategories: c.subcategories && c.subcategories.length > 0,
+                    isExpanded: expanded === c.name,
+                    onToggleExpand: (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      setExpanded(expanded === c.name ? null : c.name);
+                    }
+                  }))
+                ]}
+                subcategories={expanded ? sortedCategories.find(c => c.name === expanded)?.subcategories?.map(sc => ({
+                  key: sc,
+                  label: sc,
+                  isSelected: sub === sc,
+                  onClick: () => handleSubcategoryClick(expanded, sc)
+                })) : undefined}
+                isMobile={isMobile}
+                className="px-2 py-2"
+              />
+              
+              {/* Reset filter */}
+              <div className={`${isMobile ? 'px-4 pb-4' : 'px-6 pb-5'}`}>
+                <button
+                  className={`w-full flex items-center gap-3 px-4 py-3 mx-2 rounded-lg font-medium transition-all duration-200 text-left group ${
+                    (!cat && !sub) 
+                      ? 'bg-green-50 text-green-700 shadow-sm border border-green-200'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  } disabled:opacity-50`}
+                  onClick={() => {
+                    // Clear cache when clearing category filters
+                    cacheRef.current.clear();
+                    setCat(""); setSub(""); setExpanded(null); setCurrentPage(1);
+                    const params = new URLSearchParams(searchParams);
+                    params.delete("cat");
+                    params.delete("sub");
+                    params.delete("page");
+                    navigate({ pathname: "/search", search: params.toString() });
+                  }}
+                  disabled={!cat && !sub}
+                >
+                  <span className={`transition-colors group-hover:scale-110 transform duration-200 ${
+                    (!cat && !sub) ? 'text-green-600' : 'text-gray-400'
+                  }`}>
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" d="M6 18L18 6M6 6l12 12" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <span className="text-sm font-medium flex-1">Clear Filters</span>
+                  {(!cat && !sub) && (
+                    <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Additional Filters Card */}

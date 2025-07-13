@@ -151,7 +151,7 @@ export default function SellerGuide() {
     },
     {
       question: "What can I sell on sina.lk?",
-      answer: "You can sell authentic Sri Lankan crafts, handmade items, traditional foods, clothing, jewelry, home decor, and other unique products. We focus on promoting Sri Lankan culture and craftsmanship. All products must be legal and comply with our community guidelines."
+      answer: "You can sell physical products, digital downloads, online services, and onsite services. This includes traditional crafts, modern products, consulting services, design work, digital templates, courses, and any other business offering. All products and services must be legal and comply with our community guidelines."
     },
     {
       question: "How do custom orders work?",
@@ -224,21 +224,22 @@ export default function SellerGuide() {
     <>
       <SEOHead
         title="Seller Guide - How to Start Selling on Sina.lk"
-        description="Complete guide for selling authentic Sri Lankan products online. Learn how to create your shop, list products, manage orders, and grow your small business on Sina.lk."
+        description="Complete guide for entrepreneurs to start selling products, services, and digital content online. Learn how to create your shop, manage offerings, and grow your business on Sina.lk."
         keywords={generateKeywords([
           'seller guide',
           'how to sell online',
           'Sina.lk selling',
           'start online business',
-          'sell crafts online',
-          'small business guide',
+          'sell services online',
+          'digital products',
+          'entrepreneur guide',
           'online selling tips',
           'Sri Lankan marketplace'
         ])}
         canonicalUrl={getCanonicalUrl('/seller-guide')}
         structuredData={getArticleStructuredData({
           title: 'Complete Seller Guide for Sina.lk',
-          description: 'Step-by-step guide to start selling authentic Sri Lankan products online on Sina.lk',
+          description: 'Step-by-step guide to start selling products, services, and digital content online on Sina.lk',
           author: 'Sina.lk Team',
           datePublished: '2025-01-01',
           url: getCanonicalUrl('/seller-guide')
@@ -253,7 +254,7 @@ export default function SellerGuide() {
               Start Selling on Sina.lk
             </h1>
             <p className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} mb-8 opacity-90`}>
-              Complete guide to building your successful Sri Lankan online business with advanced tools and features
+              Complete guide to building your successful Sri Lankan online business with products, services, and digital offerings
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {!user && (

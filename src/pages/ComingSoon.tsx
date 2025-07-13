@@ -9,7 +9,7 @@ const ComingSoon = () => {
     <>
       <SEOHead
         title="Coming Soon | Sina.lk"
-        description="Sri Lanka's premier marketplace is launching soon. Stay tuned for authentic local products and crafts."
+        description="Sri Lanka's premier entrepreneur platform is launching soon. Stay tuned for products, services, and digital content from local entrepreneurs."
         keywords="coming soon, Sri Lankan marketplace, launch, Sina"
         canonicalUrl={getCanonicalUrl('/coming-soon')}
       />
@@ -29,8 +29,8 @@ const ComingSoon = () => {
               Coming Soon
             </h2>
             <p className={`${isMobile ? 'text-lg' : 'text-xl'} leading-relaxed max-w-2xl mx-auto`} style={{ color: '#454955' }}>
-              We're putting the finishing touches on Sri Lanka's premier marketplace for authentic local products and crafts. 
-              Get ready to discover unique creations from talented local artisans.
+              We're putting the finishing touches on Sri Lanka's premier platform for entrepreneurs. 
+              Get ready to discover everything from traditional products to modern services and digital content.
             </p>
           </div>
 
@@ -47,7 +47,7 @@ const ComingSoon = () => {
                 Authentic Products
               </h3>
               <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                Discover unique Sri Lankan crafts and products from verified local sellers
+                Discover products, services, and digital content from verified Sri Lankan entrepreneurs
               </p>
             </div>
 

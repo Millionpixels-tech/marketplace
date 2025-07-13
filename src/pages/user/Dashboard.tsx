@@ -8,7 +8,7 @@ import { getAuth, updateProfile } from "firebase/auth";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "../../utils/firebase";
 import { collection, query, where, getDocs, doc, updateDoc, setDoc, deleteDoc, orderBy, limit, startAfter, getDoc } from "firebase/firestore";
-import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare, FiUsers } from "react-icons/fi";
+import { FiUser, FiShoppingBag, FiList, FiStar, FiMenu, FiX, FiPackage, FiBox, FiMessageSquare, FiUsers, FiSettings, FiGrid, FiMail, FiTool } from "react-icons/fi";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { Pagination } from "../../components/UI";
@@ -56,15 +56,15 @@ interface BankAccount {
 const TABS = [
     { key: "profile", label: "Profile", icon: <FiUser /> },
     { key: "shops", label: "Shops", icon: <FiShoppingBag /> },
-    { key: "services", label: "Services", icon: <FiList /> },
+    { key: "services", label: "Services", icon: <FiTool /> },
     { key: "service-requests", label: "Service Requests", icon: <FiMessageSquare /> },
-    { key: "orders", label: "Orders", icon: <FiPackage /> },
-    { key: "listings", label: "Listings", icon: <FiList /> },
-    { key: "messages", label: "Messages", icon: <FiMessageSquare /> },
+    { key: "orders", label: "Orders for products", icon: <FiPackage /> },
+    { key: "listings", label: "Product listings", icon: <FiGrid /> },
+    { key: "messages", label: "Messages", icon: <FiMail /> },
     { key: "referrals", label: "Referrals", icon: <FiUsers /> },
-    { key: "earnings", label: "Earnings", icon: <FiStar /> },
-    { key: "stock", label: "Stock", icon: <FiBox /> },
-    { key: "settings", label: "Settings", icon: <FiUser /> },
+    { key: "earnings", label: "Earnings from products", icon: <FiStar /> },
+    { key: "stock", label: "Products Stock", icon: <FiBox /> },
+    { key: "settings", label: "Settings", icon: <FiSettings /> },
 ];
 
 // Helper function to validate password strength and provide user-friendly feedback

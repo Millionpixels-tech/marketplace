@@ -2,7 +2,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
 import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
-import { FaGift } from "react-icons/fa";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
@@ -180,7 +179,7 @@ const Header = () => {
                 </div>
                 {/* Menu (Right) */}
                 <div className="hidden md:flex items-center gap-2 lg:gap-4">
-                    {/* Services - New section */}
+                    {/* Browse Services - New section */}
                     <Link
                         to="/services"
                         className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
@@ -194,10 +193,10 @@ const Header = () => {
                             e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
-                        Services
+                        Browse Services
                     </Link>
                     
-                    {/* Browse Items - Hide on medium screens, show on large */}
+                    {/* Browse Products - Hide on medium screens, show on large */}
                     <Link
                         to="/search"
                         className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
@@ -211,48 +210,7 @@ const Header = () => {
                             e.currentTarget.style.color = '#0d0a0b';
                         }}
                     >
-                        Browse Items
-                    </Link>
-                    
-                    {/* Seller Guide - Hide on medium screens, show on large */}
-                    <Link
-                        to="/seller-guide"
-                        className="hidden lg:flex px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 text-sm lg:text-base"
-                        style={{ color: '#0d0a0b' }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                            e.currentTarget.style.color = '#72b01d';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#0d0a0b';
-                        }}
-                    >
-                        Seller Guide
-                    </Link>
-                    
-                    {/* Promotion - Always show but responsive sizing */}
-                    <Link
-                        to="/early-launch-promotion"
-                        className="px-2 md:px-3 lg:px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:scale-105 relative flex items-center gap-1 lg:gap-2 text-xs md:text-sm lg:text-base"
-                        style={{ 
-                            color: '#72b01d'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                            e.currentTarget.style.color = '#3f7d20';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = '#72b01d';
-                        }}
-                    >
-                        <FaGift size={14} className="lg:hidden" />
-                        <FaGift size={16} className="hidden lg:block" />
-                        <span className="hidden md:inline">Promotion</span>
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
-                            HOT
-                        </span>
+                        Browse Products
                     </Link>
                     
                     {/* Wishlist - Responsive sizing */}
@@ -508,10 +466,10 @@ const Header = () => {
                                 }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Browse Items
+                                Browse Products
                             </Link>
                             <Link
-                                to="/seller-guide"
+                                to="/services"
                                 className="py-3 px-4 rounded-lg transition font-semibold"
                                 style={{ color: '#0d0a0b' }}
                                 onMouseEnter={(e) => {
@@ -524,29 +482,7 @@ const Header = () => {
                                 }}
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Seller Guide
-                            </Link>
-                            <Link
-                                to="/early-launch-promotion"
-                                className="py-3 px-4 rounded-lg transition font-semibold relative flex items-center gap-2"
-                                style={{ 
-                                    color: '#72b01d'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'rgba(114, 176, 29, 0.1)';
-                                    e.currentTarget.style.color = '#3f7d20';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                    e.currentTarget.style.color = '#72b01d';
-                                }}
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <FaGift size={16} />
-                                Early Launch Promotion
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
-                                    HOT
-                                </span>
+                                Browse Services
                             </Link>
                             <Link
                                 to="/wishlist"

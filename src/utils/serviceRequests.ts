@@ -69,6 +69,7 @@ export const submitServiceRequest = async (
     const serviceRequestData = {
       serviceId: formData.serviceId,
       serviceTitle: service.title,
+      shopId: service.shopId,
       packageId: formData.packageId,
       packageName: selectedPackage.name,
       packagePrice: selectedPackage.price,

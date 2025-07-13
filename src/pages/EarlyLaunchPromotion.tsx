@@ -230,8 +230,8 @@ const EarlyLaunchPromotion = () => {
       <>
         <SEOHead
           title="Early Launch Promotion | Sina.lk"
-          description="Join our exclusive early launch promotion for Sri Lankan sellers. Create your shop and listings to qualify for amazing rewards!"
-          keywords="early launch, promotion, Sri Lankan sellers, marketplace rewards"
+          description="Join our exclusive early launch promotion for Sri Lankan entrepreneurs. Create your shop and listings to qualify for amazing rewards!"
+          keywords="early launch, promotion, Sri Lankan entrepreneurs, platform rewards"
           canonicalUrl={getCanonicalUrl('/early-launch-promotion')}
         />
         <ResponsiveHeader />
@@ -279,7 +279,7 @@ const EarlyLaunchPromotion = () => {
               </h1>
             </div>
             <p className={`text-base sm:text-lg lg:text-xl max-w-3xl mx-auto px-2 sm:px-0`} style={{ color: '#454955' }}>
-              Be among the first sellers to launch your business on Sri Lanka's newest marketplace and win exclusive rewards!
+              Be among the first entrepreneurs to launch your business on Sri Lanka's newest platform and win exclusive rewards!
             </p>
           </div>
 

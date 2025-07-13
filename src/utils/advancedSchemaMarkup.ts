@@ -239,17 +239,27 @@ export function generateMarketplaceSchema(): object {
         {
           '@type': 'OfferCatalog',
           name: 'Food & Beverages',
-          description: 'Authentic Ceylon tea, spices, and traditional foods'
+          description: 'Ceylon tea, spices, and traditional foods'
         },
         {
           '@type': 'OfferCatalog',
           name: 'Fashion & Textiles',
-          description: 'Traditional clothing, batik, and handwoven textiles'
+          description: 'Clothing, batik, and handwoven textiles'
         },
         {
           '@type': 'OfferCatalog',
-          name: 'Jewelry & Accessories',
-          description: 'Handcrafted jewelry and traditional accessories'
+          name: 'Digital Services',
+          description: 'Web design, graphic design, and digital content'
+        },
+        {
+          '@type': 'OfferCatalog',
+          name: 'Professional Services',
+          description: 'Consulting, photography, and business services'
+        },
+        {
+          '@type': 'OfferCatalog',
+          name: 'Digital Products',
+          description: 'Templates, courses, and downloadable content'
         }
       ]
     },
@@ -257,7 +267,7 @@ export function generateMarketplaceSchema(): object {
       '@type': 'Brand',
       name: 'Sina.lk',
       logo: 'https://sina.lk/logo.svg',
-      description: 'Trusted platform for authentic Sri Lankan products'
+      description: 'Sri Lankan entrepreneur platform for products, services, and digital content'
     },
     foundingDate: '2024',
     foundingLocation: 'Sri Lanka',

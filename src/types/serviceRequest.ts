@@ -2,6 +2,7 @@ export interface ServiceRequest {
   id: string;
   serviceId: string;
   serviceTitle: string;
+  shopId: string;
   packageId: string;
   packageName: string;
   packagePrice: number;

@@ -43,12 +43,12 @@ export default function CustomerService() {
     },
     {
       title: "Seller Support",
-      description: "Questions about selling policies, buyer verification system, reporting buyers, or marketplace features",
+      description: "Questions about selling policies, buyer verification system, reporting buyers, product/service/digital content features, or platform tools",
       needsEmail: true
     },
     {
       title: "General Inquiries",
-      description: "Questions about marketplace policies, Sri Lankan shipping, or platform features",
+      description: "Questions about platform policies, Sri Lankan shipping, digital delivery, service bookings, or platform features",
       needsEmail: true
     }
   ];
@@ -57,13 +57,16 @@ export default function CustomerService() {
     <>
       <SEOHead
         title="Customer Service - Sina.lk Marketplace"
-        description="Get comprehensive email support for orders, custom orders, payment issues, account verification, and all marketplace questions. Contact support@sina.lk for help."
+        description="Get comprehensive email support for orders, custom orders, service bookings, digital downloads, payment issues, account verification, and all platform questions. Contact support@sina.lk for help."
         keywords={generateKeywords([
           'customer service',
           'email support',
           'help',
           'contact',
-          'Sri Lankan marketplace',
+          'Sri Lankan platform',
+          'entrepreneur support',
+          'digital products',
+          'services support',
           'custom orders',
           'payment support',
           'account verification'

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { FiStar } from "react-icons/fi";
 import { serviceCategories, serviceCategoryIcons, serviceSubcategoryIcons, ServiceCategory, getServiceSubcategories } from "../../utils/serviceCategories";
 import { getAllDistricts } from "../../utils/sriLankanDistricts";
 import type { Service } from "../../types/service";
+import { Button, Input, CategoryNavigation } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { useResponsive } from "../../hooks/useResponsive";
-import { Button, Input } from "../../components/UI";
 import Pagination from "../../components/UI/Pagination";
 import { useServices } from "../../hooks/useServices";
 import type { ServiceFilters } from "../../hooks/useServices";
@@ -239,12 +238,12 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* Service Content - Reduced height since no description */}
-        <div className="p-4 flex flex-col justify-between h-48">
+        {/* Service Content */}
+        <div className="p-4 pb-6 flex flex-col">
           {/* Top section with title and packages */}
           <div className="flex-1">
             {/* Title - exactly 2 lines */}
-            <h3 className="font-bold text-lg text-gray-900 mb-4 leading-tight" 
+            <h3 className="font-bold text-lg text-gray-900 mb-1 leading-tight" 
                 style={{
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
@@ -256,9 +255,40 @@ export default function ServicesPage() {
               {service.title}
             </h3>
 
+            {/* Rating - show under title with consistent spacing */}
+            <div className="flex items-center gap-2 mb-2 min-h-[22px]">
+              {service.rating && service.rating > 0 ? (
+                <>
+                  <span className="flex items-center text-[#72b01d]">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <svg
+                        key={i}
+                        width="16"
+                        height="16"
+                        className="inline-block"
+                        fill={i <= Math.round(service.rating!) ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                    <span className="ml-1 text-xs font-bold text-[#3f7d20]">
+                      {service.rating.toFixed(1)}
+                    </span>
+                  </span>
+                  <span className="text-xs text-[#72b01d]">
+                    ({service.reviewCount || 0})
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400">No reviews yet</span>
+              )}
+            </div>
+
             {/* Packages Available */}
             {hasPackages && (
-              <div className="mb-4">
+              <div className="mb-6">
                 <div className="text-sm text-gray-600 font-medium">
                   {service.packages.length} package{service.packages.length !== 1 ? 's' : ''} available
                 </div>
@@ -266,38 +296,23 @@ export default function ServicesPage() {
             )}
           </div>
 
-          {/* Bottom section with price - always at bottom */}
-          <div className="flex-shrink-0">
-            <div className="flex items-center justify-between">
-              {hasPackages && minPrice > 0 ? (
-                <div>
-                  <span className="text-xs text-gray-500">Starting from</span>
-                  <div className="font-bold text-lg text-[#72b01d]">
-                    LKR {minPrice.toLocaleString()}
-                    {minPrice !== maxPrice && (
-                      <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>
-                    )}
-                  </div>
+          {/* Bottom section with price */}
+          <div className="mt-auto">
+            {hasPackages && minPrice > 0 ? (
+              <div>
+                <span className="text-xs text-gray-500">Starting from</span>
+                <div className="font-bold text-lg">
+                  LKR {minPrice.toLocaleString()}
+                  {minPrice !== maxPrice && (
+                    <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>
+                  )}
                 </div>
-              ) : (
-                <div>
-                  <span className="text-sm text-gray-500">Contact for pricing</span>
-                </div>
-              )}
-              
-              {/* Rating - only show if rating exists and is greater than 0 */}
-              <div className="flex items-center">
-                {service.rating && service.rating > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <FiStar className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm font-medium">{service.rating.toFixed(1)}</span>
-                    {service.reviewCount && service.reviewCount > 0 ? (
-                      <span className="text-xs text-gray-500">({service.reviewCount})</span>
-                    ) : null}
-                  </div>
-                ) : null}
               </div>
-            </div>
+            ) : (
+              <div>
+                <span className="text-sm text-gray-500">Contact for pricing</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
@@ -358,87 +373,50 @@ export default function ServicesPage() {
                 <svg width={isMobile ? "18" : "20"} height={isMobile ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="#72b01d" strokeWidth="1.5" d="M4 7h16M6 12h12M8 17h8" strokeLinecap="round" /></svg>
                 <h2 className={`${isMobile ? 'text-sm' : 'text-base'} font-semibold tracking-tight`} style={{ color: '#0d0a0b' }}>Service Categories</h2>
               </div>
-              <ul className={`flex flex-col gap-1 ${isMobile ? 'px-4 py-4' : 'px-6 py-5'}`}>
-                <li className="flex flex-col">
-                  <button
-                    className={`text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === 'all' ? "text-white shadow-lg" : ""}`}
-                    style={{
-                      backgroundColor: selectedCategory === 'all' ? '#72b01d' : 'transparent',
-                      color: selectedCategory === 'all' ? '#ffffff' : '#0d0a0b'
-                    }}
-                    onClick={() => handleCategoryClick('all')}
-                  >
-                    All Services
-                  </button>
-                </li>
-                {serviceCategories.map((category) => {
-                  const subcategories = getServiceSubcategories(category.name);
-                  return (
-                    <li key={category.name} className="flex flex-col">
-                      <div className="flex items-center w-full group">
-                        <button
-                          className={`flex items-center flex-1 text-left ${isMobile ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} rounded-lg font-medium transition-all duration-300 ${selectedCategory === category.name ? "text-white shadow-lg" : ""}`}
-                          style={{
-                            backgroundColor: selectedCategory === category.name ? '#72b01d' : 'transparent',
-                            color: selectedCategory === category.name ? '#ffffff' : '#0d0a0b'
-                          }}
-                          onClick={() => handleCategoryClick(category.name)}
-                        >
-                          <span className="mr-2 flex-shrink-0">
-                            {(() => {
-                              const IconComponent = serviceCategoryIcons[category.name];
-                              return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
-                            })()}
-                          </span>
-                          <span className="flex-1">{category.name}</span>
-                        </button>
-                        {subcategories.length > 0 && (
-                          <button
-                            className="ml-1 p-1 rounded transition-all duration-300"
-                            style={{ color: '#72b01d' }}
-                            aria-label={expanded === category.name ? `Collapse ${category.name}` : `Expand ${category.name}`}
-                            onClick={e => {
-                              e.stopPropagation();
-                              setExpanded(expanded === category.name ? null : category.name);
-                            }}
-                          >
-                            {expanded === category.name ? (
-                              <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M18 15l-6-6-6 6" strokeLinecap="round" /></svg>
-                            ) : (
-                              <svg width={isMobile ? "14" : "16"} height={isMobile ? "14" : "16"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M9 18l6-6-6-6" strokeLinecap="round" /></svg>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                      {expanded === category.name && subcategories.length > 0 && (
-                        <ul className={`${isMobile ? 'pl-4 py-2' : 'pl-6 py-2'} flex flex-col gap-1`}>
-                          {subcategories.map(subcategory => (
-                            <li key={subcategory}>
-                              <button
-                                className={`flex items-center w-full text-left ${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} rounded-lg transition-all duration-300 ${selectedSubcategory === subcategory ? "text-white shadow-lg" : ""}`}
-                                style={{
-                                  backgroundColor: selectedSubcategory === subcategory ? '#3f7d20' : 'transparent',
-                                  color: selectedSubcategory === subcategory ? '#ffffff' : '#454955'
-                                }}
-                                onClick={() => handleSubcategoryClick(category.name, subcategory)}
-                              >
-                                <span className="mr-2 flex-shrink-0">
-                                  {serviceSubcategoryIcons[subcategory] ? (
-                                    React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-3 h-3" })
-                                  ) : (
-                                    <div className="w-3 h-3"></div>
-                                  )}
-                                </span>
-                                <span className="flex-1">{subcategory}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              
+              <CategoryNavigation
+                categories={[
+                  {
+                    key: 'all',
+                    label: 'All Services',
+                    icon: <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" strokeLinecap="round" />
+                    </svg>,
+                    isSelected: selectedCategory === 'all',
+                    onClick: () => handleCategoryClick('all')
+                  },
+                  ...serviceCategories.map((category) => {
+                    const subcategories = getServiceSubcategories(category.name);
+                    return {
+                      key: category.name,
+                      label: category.name,
+                      icon: (() => {
+                        const IconComponent = serviceCategoryIcons[category.name];
+                        return IconComponent ? <IconComponent className="w-4 h-4" /> : null;
+                      })(),
+                      isSelected: selectedCategory === category.name,
+                      onClick: () => handleCategoryClick(category.name),
+                      hasSubcategories: subcategories.length > 0,
+                      isExpanded: expanded === category.name,
+                      onToggleExpand: (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        setExpanded(expanded === category.name ? null : category.name);
+                      }
+                    };
+                  })
+                ]}
+                subcategories={expanded ? getServiceSubcategories(expanded as ServiceCategory).map(subcategory => ({
+                  key: subcategory,
+                  label: subcategory,
+                  icon: serviceSubcategoryIcons[subcategory] ? 
+                    React.createElement(serviceSubcategoryIcons[subcategory], { className: "w-3 h-3" }) : 
+                    <div className="w-3 h-3"></div>,
+                  isSelected: selectedSubcategory === subcategory,
+                  onClick: () => handleSubcategoryClick(expanded, subcategory)
+                })) : undefined}
+                isMobile={isMobile}
+                className="px-2 py-2"
+              />
             </div>
 
             {/* Additional Filters */}

@@ -18,24 +18,52 @@ import { useAuth } from "../context/AuthContext";
 import { shuffleArrayWithSeed, generateRandomSeed } from "../utils/randomUtils";
 import type { DeliveryType as DeliveryTypeType } from "../types/enums";
 
-function ProductHeroSearch() {
+function HeroSearch() {
   const [q, setQ] = useState("");
+  const [searchType, setSearchType] = useState("products"); // "products" or "services"
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.search-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isDropdownOpen]);
 
   const handleSearch = (e: any) => {
     e.preventDefault();
     if (q.trim()) {
-      navigate(`/search?q=${encodeURIComponent(q)}`);
+      if (searchType === "products") {
+        navigate(`/search?q=${encodeURIComponent(q)}`);
+      } else {
+        navigate(`/services?q=${encodeURIComponent(q)}`);
+      }
     }
   };
+
+  const searchTypes = [
+    { value: "products", label: "Products", icon: "📦" },
+    { value: "services", label: "Services", icon: "⚡" }
+  ];
+
+  const currentType = searchTypes.find(type => type.value === searchType);
 
   return (
     <form
       onSubmit={handleSearch}
-      className="w-full max-w-3xl mx-auto relative group"
+      className="w-full max-w-3xl mx-auto relative group z-50"
     >
-      <div className={`relative backdrop-blur-md rounded-2xl shadow-2xl border overflow-hidden group-focus-within:shadow-xl transition-all duration-500 ${
+      <div className={`relative backdrop-blur-md rounded-2xl shadow-2xl border group-focus-within:shadow-xl transition-all duration-500 ${
         isMobile ? 'rounded-xl' : 'rounded-2xl'
       }`}
         style={{
@@ -45,16 +73,64 @@ function ProductHeroSearch() {
         <div className={`flex items-center ${isMobile ? 'px-4 py-4' : 'px-8 py-6'}`}>
           <FiSearch className={`${isMobile ? 'text-xl mr-3' : 'text-3xl mr-4'} group-focus-within:opacity-80 transition-colors`}
             style={{ color: '#72b01d' }} />
+          
+          {/* Custom Dropdown for search type */}
+          <div className="relative search-dropdown">
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`${isMobile ? 'text-sm px-3 py-2 mr-2' : 'text-base px-4 py-2 mr-4'} border-r-2 bg-transparent outline-none flex items-center gap-2 hover:bg-gray-50 transition-colors duration-200 rounded-l-lg`}
+              style={{
+                color: '#0d0a0b',
+                borderRightColor: 'rgba(114, 176, 29, 0.3)'
+              }}
+            >
+              <span className="text-base">{currentType?.icon}</span>
+              <span className="font-medium">{currentType?.label}</span>
+              <svg className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden ${isMobile ? 'min-w-[140px]' : 'min-w-[160px]'}`}
+                style={{ zIndex: 99999 }}>
+                {searchTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => {
+                      setSearchType(type.value);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-green-50 transition-colors duration-200 flex items-center gap-3 ${
+                      searchType === type.value ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                    }`}
+                  >
+                    <span className="text-base">{type.icon}</span>
+                    <span className="font-medium">{type.label}</span>
+                    {searchType === type.value && (
+                      <svg className="w-4 h-4 ml-auto text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <input
-            className={`flex-1 bg-transparent outline-none border-none ${isMobile ? 'text-base px-1 py-1' : 'text-xl px-2 py-1'}`}
+            className={`flex-1 bg-transparent outline-none border-none ${isMobile ? 'text-base px-1 py-2' : 'text-xl px-2 py-2'} placeholder-gray-500`}
             style={{
               color: '#0d0a0b'
             }}
             type="text"
-            placeholder={isMobile ? "Search products..." : "Search for unique Sri Lankan creations..."}
+            placeholder="Search for products & services..."
             value={q}
             onChange={e => setQ(e.target.value)}
-            aria-label="Search for products"
+            aria-label={`Search for ${searchType}`}
           />
           <button
             type="submit"
@@ -70,23 +146,42 @@ function ProductHeroSearch() {
 
       {/* Popular searches */}
       <div className={`flex flex-wrap gap-2 ${isMobile ? 'gap-2 mt-4' : 'gap-3 mt-6'} justify-center`}>
-        {["Woodcraft", "Jewelry", "Textiles", "Pottery", "Tea"].map(term => (
-          <button
-            key={term}
-            type="button"
-            onClick={() => {
-              setQ(term);
-            }}
-            className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
-            style={{
-              backgroundColor: '#ffffff',
-              color: '#72b01d',
-              borderColor: 'rgba(114, 176, 29, 0.3)'
-            }}
-          >
-            {term}
-          </button>
-        ))}
+        {searchType === "products" 
+          ? ["Woodcraft", "Jewelry", "Textiles", "Pottery", "Tea"].map(term => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => {
+                  setQ(term);
+                }}
+                className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#72b01d',
+                  borderColor: 'rgba(114, 176, 29, 0.3)'
+                }}
+              >
+                {term}
+              </button>
+            ))
+          : ["Web Design", "Photography", "Consulting", "Digital Marketing", "Writing"].map(term => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => {
+                  setQ(term);
+                }}
+                className={`${isMobile ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} border rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105`}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#72b01d',
+                  borderColor: 'rgba(114, 176, 29, 0.3)'
+                }}
+              >
+                {term}
+              </button>
+            ))
+        }
       </div>
     </form>
   );
@@ -109,7 +204,7 @@ const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [ip, setIp] = useState<string | null>(null);
-  const [activeFeatureTab, setActiveFeatureTab] = useState<'buyers' | 'sellers'>('buyers');
+  const [activeFeatureTab, setActiveFeatureTab] = useState<'buyers' | 'entrepreneurs'>('buyers');
   const { isMobile } = useResponsive();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -276,24 +371,24 @@ const Home = () => {
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text'
                   }}>
-                    Homemade
+                    Entrepreneur
                   </span>
                 </span>
               </h1>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-none tracking-tighter px-2"
                 style={{ color: '#0d0a0b' }}>
-                Marketplace
+                Platform
               </h1>
             </div>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mx-auto mb-3 md:mb-4 leading-relaxed font-light px-4 max-w-4xl"
               style={{ color: '#454955' }}>
-              Discover Quality & Unique Products From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Small Businesses</span>
+              Discover Quality Products & Professional Services From Sri Lankan <span className="font-semibold" style={{ color: '#72b01d' }}>Entrepreneurs</span>
             </p>
             <p className="text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-4 md:mb-6 font-medium px-4"
               style={{ color: '#3f7d20' }}>
-              🌱 Shop local • Support dreams • Build community 🌱
+              🌱 Physical Products • Digital Products • Professional Services 🌱
             </p>
 
             {/* Compact Free Badge with Animation */}
@@ -338,7 +433,7 @@ const Home = () => {
 
             {/* Search bar */}
             <div className="mb-8 md:mb-12 px-4">
-              <ProductHeroSearch />
+              <HeroSearch />
             </div>
 
             {/* Action buttons */}
@@ -351,7 +446,7 @@ const Home = () => {
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{ background: `linear-gradient(to right, #3f7d20, #72b01d)` }}></div>
                 <span className="relative flex items-center justify-center gap-3">
-                  🌿 Explore Products
+                  🛍️ Explore Products
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="group-hover:translate-x-1 transition-transform lg:w-6 lg:h-6">
                     <path d="M13 7L18 12L13 17M6 12H18" />
                   </svg>
@@ -359,7 +454,7 @@ const Home = () => {
               </Link>
 
               <Link
-                to="/create-shop"
+                to="/services"
                 className="group px-8 lg:px-10 py-4 lg:py-5 backdrop-blur-sm rounded-full font-bold text-lg lg:text-xl border transition-all duration-500 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 w-full sm:w-auto sm:min-w-[220px]"
                 style={{
                   backgroundColor: '#ffffff',
@@ -368,7 +463,7 @@ const Home = () => {
                 }}
               >
                 <span className="flex items-center justify-center gap-3">
-                  <FiZap className="w-5 h-5" /> Start Selling
+                  🔧 Explore Services
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="group-hover:rotate-12 transition-transform lg:w-6 lg:h-6">
                     <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" />
                   </svg>
@@ -383,43 +478,6 @@ const Home = () => {
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 5V19M5 12L12 19L19 12" />
             </svg>
-          </div>
-        </section>
-
-        {/* Early Launch Promotion Banner */}
-        <section className="w-full py-8 md:py-12 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 opacity-90"></div>
-          <div className="relative z-10 max-w-6xl mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <span className="text-2xl">🎉</span>
-                  <span className="bg-white text-orange-600 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">
-                    Limited Time
-                  </span>
-                </div>
-                <h3 className={`font-black text-white ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'} mb-2`}>
-                  Early Launch Promotion
-                </h3>
-                <p className={`text-white ${isMobile ? 'text-sm' : 'text-base'} opacity-90 max-w-md`}>
-                  Create 1 shop + 5 listings and get LKR 500 cash! First 50 eligible sellers only.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  to="/early-launch-promotion"
-                  className="bg-white text-orange-600 px-6 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-lg text-center"
-                >
-                  Check Eligibility
-                </Link>
-                <Link
-                  to="/create-shop"
-                  className="border-2 border-white text-white px-6 py-3 rounded-2xl font-bold hover:bg-white hover:text-orange-600 transition-all duration-300 text-center"
-                >
-                  Start Selling
-                </Link>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -509,7 +567,7 @@ const Home = () => {
                   Support Local Economy
                 </h3>
                 <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                  By removing fees, more money stays in sellers' pockets and circulates within our local Sri Lankan economy.
+                  By removing fees, more money stays in entrepreneurs' pockets and circulates within our local Sri Lankan economy.
                 </p>
               </div>
 
@@ -527,7 +585,7 @@ const Home = () => {
                   Build Strong Community
                 </h3>
                 <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                  When there are no fees, buyers get better prices and sellers earn more - creating a win-win for everyone.
+                  When there are no fees, buyers get better prices and entrepreneurs earn more - creating a win-win for everyone.
                 </p>
               </div>
 
@@ -542,10 +600,10 @@ const Home = () => {
                   <FiHeart className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Preserve Our Heritage
+                  Empower All Entrepreneurs
                 </h3>
                 <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                  Traditional crafts and homemade products carry our culture forward - they deserve a platform without barriers.
+                  From traditional crafts to digital services, every Sri Lankan entrepreneur deserves a platform without barriers.
                 </p>
               </div>
 
@@ -609,6 +667,146 @@ const Home = () => {
           </div>
         </section>
 
+        {/* What You Can Sell Section */}
+        <section className={`w-full border-t border-b ${isMobile ? 'py-12' : 'py-20'}`}
+          style={{
+            borderColor: 'rgba(114, 176, 29, 0.15)',
+            backgroundColor: '#f8fffe'
+          }}>
+          <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
+            <div className={`text-center ${isMobile ? 'mb-8' : 'mb-16'}`}>
+              <div className="inline-flex items-center gap-3 mb-6">
+                <div className={`rounded-full flex items-center justify-center ${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`}
+                  style={{ background: `linear-gradient(135deg, #72b01d, #3f7d20)` }}>
+                  <FiPackage className={`text-white ${isMobile ? 'text-base' : 'text-xl'}`} />
+                </div>
+                <span className={`font-bold uppercase tracking-widest px-3 py-1 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}
+                  style={{
+                    backgroundColor: 'rgba(114, 176, 29, 0.1)',
+                    color: '#3f7d20'
+                  }}>
+                  WHAT YOU CAN SELL
+                </span>
+              </div>
+              <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
+                style={{ color: '#0d0a0b' }}>
+                <span style={{
+                  background: `linear-gradient(to right, #72b01d, #3f7d20)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  Everything
+                </span>
+                {' '}Your Business Offers
+              </h2>
+              <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base mb-6' : 'text-lg mb-8'}`} style={{ color: '#454955' }}>
+                Our platform supports all types of Sri Lankan businesses - from traditional crafts to modern digital services
+              </p>
+            </div>
+
+            <div className={`gap-6 mt-8 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-3'}`}>
+              {/* Physical Products */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-8'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className="relative mb-4">
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                    style={{
+                      background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                      boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                    }}>
+                    <FiPackage className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
+                  </div>
+                </div>
+                <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Physical Products
+                </h3>
+                <ul className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed text-left space-y-2`} style={{ color: '#454955' }}>
+                  <li>• Handmade crafts & jewelry</li>
+                  <li>• Traditional textiles & clothing</li>
+                  <li>• Food products & spices</li>
+                  <li>• Electronics & gadgets</li>
+                  <li>• Books & educational materials</li>
+                  <li>• Home & garden items</li>
+                </ul>
+              </div>
+
+              {/* Digital Products */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-8'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className="relative mb-4">
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                    style={{
+                      background: 'linear-gradient(135deg, #3f7d20, #72b01d)',
+                      boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                    }}>
+                    <FiLayers className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
+                  </div>
+                </div>
+                <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Digital Products
+                </h3>
+                <ul className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed text-left space-y-2`} style={{ color: '#454955' }}>
+                  <li>• E-books & digital guides</li>
+                  <li>• Software & mobile apps</li>
+                  <li>• Digital art & graphics</li>
+                  <li>• Online courses & tutorials</li>
+                  <li>• Music & audio content</li>
+                  <li>• Templates & digital tools</li>
+                </ul>
+              </div>
+
+              {/* Professional Services */}
+              <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-5' : 'p-8'}`}
+                style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
+                <div className="relative mb-4">
+                  <div className={`rounded-2xl flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
+                    style={{
+                      background: 'linear-gradient(135deg, #72b01d, #3f7d20)',
+                      boxShadow: '0 4px 10px rgba(63, 125, 32, 0.2)'
+                    }}>
+                    <svg className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`} fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className={`font-bold mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
+                  Professional Services
+                </h3>
+                <ul className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed text-left space-y-2`} style={{ color: '#454955' }}>
+                  <li>• Web design & development</li>
+                  <li>• Photography & videography</li>
+                  <li>• Digital marketing services</li>
+                  <li>• Business consulting</li>
+                  <li>• Writing & translation</li>
+                  <li>• Professional training</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className={`text-center ${isMobile ? 'mt-10' : 'mt-16'}`}>
+              <p className={`max-w-3xl mx-auto mb-6 font-medium ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: '#454955' }}>
+                Ready to turn your skills and products into a thriving online business?
+              </p>
+              <Link
+                to="/create-shop"
+                className={`inline-flex items-center gap-2 rounded-full font-bold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${isMobile ? 'px-6 py-3 text-sm' : 'px-8 py-4 text-lg'}`}
+                style={{
+                  background: `linear-gradient(135deg, #72b01d, #3f7d20)`,
+                  color: '#ffffff'
+                }}
+              >
+                <FiZap className={`inline ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+                <span>Start Selling Today</span>
+                <svg className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Payment Methods & Trust Section */}
         <section className={`w-full border-t border-b ${isMobile ? 'py-8' : 'py-10'}`}
           style={{
@@ -618,10 +816,10 @@ const Home = () => {
           <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-4'}`}>
             <div className="text-center mb-6">
               <h2 className={`font-bold mb-2 ${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'}`} style={{ color: '#0d0a0b' }}>
-                Shop With Confidence
+                Shop & Hire With Confidence
               </h2>
               <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                Flexible payment options and trusted seller protection
+                Secure payments for products and services, with trusted entrepreneur protection
               </p>
             </div>
 
@@ -644,7 +842,7 @@ const Home = () => {
                   Cash on Delivery
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  Pay when you receive your order. No upfront payment required
+                  Pay when you receive your product or after service completion. No upfront payment required
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
@@ -685,7 +883,7 @@ const Home = () => {
                 </span>
               </div>
 
-              {/* Verified Sellers */}
+              {/* Verified Entrepreneurs */}
               <div className={`bg-white rounded-2xl shadow-sm border flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:shadow-md ${isMobile ? 'p-4' : 'p-6'}`}
                 style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className={`rounded-2xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-16 h-16'}`}
@@ -699,10 +897,10 @@ const Home = () => {
                   </svg>
                 </div>
                 <h3 className={`font-bold mb-2 ${isMobile ? 'text-base' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                  Verified Sellers
+                  Verified Entrepreneurs
                 </h3>
                 <p className={`mb-3 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
-                  All sellers go through our verification process to ensure authentic Sri Lankan products
+                  All entrepreneurs go through our verification process to ensure quality products and services
                 </p>
                 <span className={`font-medium py-1 px-3 rounded-full ${isMobile ? 'text-xs' : 'text-sm'}`}
                   style={{
@@ -845,7 +1043,7 @@ const Home = () => {
               </h2>
               <p className={`max-w-3xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
                 style={{ color: '#454955' }}>
-                Discover powerful features designed for both buyers and sellers in Sri Lanka's premier marketplace
+                Discover powerful features designed for entrepreneurs, buyers, and service seekers in Sri Lanka's premier marketplace
               </p>
             </div>
 
@@ -865,18 +1063,18 @@ const Home = () => {
                   onClick={() => setActiveFeatureTab('buyers')}
                 >
                   <FiShoppingBag className="inline w-4 h-4 mr-2" />
-                  For Buyers
+                  For Customers
                 </button>
                 <button
                   className={`font-semibold rounded-lg transition-all duration-300 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-3'}`}
                   style={{
-                    backgroundColor: activeFeatureTab === 'sellers' ? '#72b01d' : 'transparent',
-                    color: activeFeatureTab === 'sellers' ? '#ffffff' : '#72b01d'
+                    backgroundColor: activeFeatureTab === 'entrepreneurs' ? '#72b01d' : 'transparent',
+                    color: activeFeatureTab === 'entrepreneurs' ? '#ffffff' : '#72b01d'
                   }}
-                  onClick={() => setActiveFeatureTab('sellers')}
+                  onClick={() => setActiveFeatureTab('entrepreneurs')}
                 >
                   <FiTrendingUp className="inline w-4 h-4 mr-2" />
-                  For Sellers
+                  For Entrepreneurs
                 </button>
               </div>
             </div>
@@ -895,7 +1093,7 @@ const Home = () => {
                     Cash on Delivery (COD)
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Buy items risk-free and pay upon delivery. No upfront payment required for maximum security.
+                    Purchase products risk-free and pay upon delivery, or after service completion. No upfront payment required for maximum security.
                   </p>
                 </div>
 
@@ -922,10 +1120,10 @@ const Home = () => {
                     <FiClipboard className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                    Easy Order Management
+                    Easy Order & Service Management
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Say goodbye to WhatsApp orders. Manage and track all your purchases with comprehensive order details.
+                    Say goodbye to WhatsApp orders. Manage and track all your purchases and service bookings with comprehensive details.
                   </p>
                 </div>
 
@@ -940,7 +1138,7 @@ const Home = () => {
                     Wishlist System
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Add items to your wishlist for future purchases and never lose track of products you love.
+                    Add products and services to your wishlist for future purchases and never lose track of items you love.
                   </p>
                 </div>
 
@@ -952,10 +1150,10 @@ const Home = () => {
                     <FiMessageSquare className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                    Direct Chat with Sellers
+                    Direct Chat with Entrepreneurs
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Chat with sellers directly on the platform. No need for external messaging apps.
+                    Chat with entrepreneurs directly on the platform. No need for external messaging apps.
                   </p>
                 </div>
 
@@ -970,7 +1168,7 @@ const Home = () => {
                     Custom Orders
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Request custom orders from sellers to meet your specific needs and preferences.
+                    Request custom orders from entrepreneurs to meet your specific needs and preferences.
                   </p>
                 </div>
 
@@ -985,7 +1183,7 @@ const Home = () => {
                     Reviews & Ratings
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Browse ratings and reviews for shops and products. Compare sellers to find the best deals.
+                    Browse ratings and reviews for shops, products, and services. Compare entrepreneurs to find the best deals.
                   </p>
                 </div>
 
@@ -1015,14 +1213,14 @@ const Home = () => {
                     Verified Buyer Status
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Become a verified buyer to build trust with sellers and enjoy a smoother buying experience.
+                    Become a verified customer to build trust with entrepreneurs and enjoy a smoother shopping experience.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Sellers Features */}
-            {activeFeatureTab === 'sellers' && (
+            {/* Entrepreneurs Features */}
+            {activeFeatureTab === 'entrepreneurs' && (
               <div className={`gap-6 ${isMobile ? 'grid grid-cols-1' : 'grid md:grid-cols-2 lg:grid-cols-3'}`}>
                 {/* Free Listings */}
                 <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
@@ -1032,10 +1230,10 @@ const Home = () => {
                     <FiCheck className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                   </div>
                   <h3 className={`font-bold mb-2 ${isMobile ? 'text-lg' : 'text-xl'}`} style={{ color: '#0d0a0b' }}>
-                    Free Shop Creation
+                    Free Business Setup
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Create and manage unlimited shops and product listings—all for free, with no hidden charges.
+                    Create and manage unlimited shops with product and service listings—all for free, with no hidden charges.
                   </p>
                 </div>
 
@@ -1050,7 +1248,7 @@ const Home = () => {
                     Real-time Management
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Edit product details and manage stock in real-time from your dashboard. Add product variations easily.
+                    Edit product details, manage stock, and update service offerings in real-time from your dashboard.
                   </p>
                 </div>
 
@@ -1095,7 +1293,7 @@ const Home = () => {
                     Professional Shop Profile
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Add logo and cover image to create a professional shop profile. Receive verified seller badges.
+                    Add logo and cover image to create a professional shop profile. Receive verified entrepreneur badges.
                   </p>
                 </div>
 
@@ -1144,7 +1342,7 @@ const Home = () => {
                   </p>
                 </div>
 
-                {/* Email Notifications for Sellers */}
+                {/* Email Notifications for Entrepreneurs */}
                 <div className={`group bg-white rounded-2xl border shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-2 ${isMobile ? 'p-5' : 'p-6'}`}
                   style={{ borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                   <div className={`rounded-xl flex items-center justify-center mb-4 ${isMobile ? 'w-12 h-12' : 'w-14 h-14'}`}
@@ -1185,7 +1383,7 @@ const Home = () => {
                   className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
-                  <FiZap className="w-4 h-4" /> Start Selling
+                  <FiZap className="w-4 h-4" /> Join as Entrepreneur
                 </Link>
               </div>
             </div>
@@ -1223,7 +1421,7 @@ const Home = () => {
                 Browse Categories
               </h2>
               <p className="text-base md:text-lg max-w-2xl mx-auto" style={{ color: '#454955' }}>
-                Explore authentic Sri Lankan crafts across diverse categories
+                Explore high quality physical & digital products across diverse categories
               </p>
             </div>
 
@@ -1367,12 +1565,12 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Seller Benefits Section */}
+        {/* Entrepreneur Benefits Section */}
         <section className={`w-full border-t relative overflow-hidden ${isMobile ? 'py-12' : 'py-20'}`}
           style={{
             borderColor: 'rgba(69, 73, 85, 0.2)'
           }}>
-          {/* Seller Benefits Background Blobs */}
+          {/* Entrepreneur Benefits Background Blobs */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="blob blob2 absolute top-10 left-10 w-60 h-60 opacity-16"
               style={{ backgroundColor: '#72b01d', animationDelay: '0s' }}></div>
@@ -1393,7 +1591,7 @@ const Home = () => {
                     backgroundColor: 'rgba(114, 176, 29, 0.1)',
                     color: '#3f7d20'
                   }}>
-                  FOR SELLERS
+                  FOR ENTREPRENEURS
                 </span>
               </div>
               <h2 className={`font-black mb-4 ${isMobile ? 'text-2xl' : 'text-3xl md:text-4xl lg:text-5xl'}`}
@@ -1412,7 +1610,7 @@ const Home = () => {
               </h2>
               <p className={`max-w-2xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
                 style={{ color: '#454955' }}>
-                Everything you need to start selling online, with zero barriers
+                Everything you need to sell products & services online, with zero barriers
               </p>
             </div>
 
@@ -1443,7 +1641,7 @@ const Home = () => {
                     </div>
                     <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
-                      Zero Listing Fees
+                      Zero Listing Fees. No Hidden Charges
                     </h3>
                     <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       List all your products for free. No hidden charges, no monthly fees.
@@ -1480,7 +1678,7 @@ const Home = () => {
                     </div>
                     <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
-                      Unlimited Shops
+                      Unlimited Shops. Build Your Empire
                     </h3>
                     <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       Create multiple shops for different product categories.
@@ -1517,7 +1715,7 @@ const Home = () => {
                     </div>
                     <h3 className={`font-bold mb-3 ${isMobile ? 'text-lg' : 'text-xl'}`}
                       style={{ color: '#0d0a0b' }}>
-                      Unlimited Products
+                      Unlimited Products & Services
                     </h3>
                     <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
                       Showcase your entire inventory without restrictions.
@@ -1599,7 +1797,7 @@ const Home = () => {
                   </span>
                 </div>
                 <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
-                  "I had a terrible experience selling through WhatsApp groups. Buyers would disappear after agreeing to purchase, and I had no way to verify serious customers. I requested a proper marketplace with seller protection and buyer verification system."
+                  "I had a terrible experience selling through WhatsApp groups. Buyers would disappear after agreeing to purchase, and I had no way to verify serious customers. I requested a proper marketplace with entrepreneur protection and buyer verification system."
                 </p>
                 <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#72b01d' }}>
@@ -1633,7 +1831,7 @@ const Home = () => {
                   </span>
                 </div>
                 <p className={`leading-relaxed ${isMobile ? 'text-sm' : 'text-sm'}`} style={{ color: '#454955' }}>
-                  "I was frustrated with Facebook marketplace where I couldn't properly communicate with sellers or track my orders. I requested a platform with built-in messaging and order tracking so I could follow up on my purchases safely."
+                  "I was frustrated with Facebook marketplace where I couldn't properly communicate with entrepreneurs or track my orders. I requested a platform with built-in messaging and order tracking so I could follow up on my purchases safely."
                 </p>
                 <div className={`absolute -top-2 -right-2 rounded-full flex items-center justify-center ${isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}
                   style={{ backgroundColor: '#3f7d20' }}>
@@ -1723,7 +1921,7 @@ const Home = () => {
               </h2>
               <p className={`max-w-2xl mx-auto ${isMobile ? 'text-base' : 'text-lg md:text-xl'}`}
                 style={{ color: '#454955' }}>
-                Get started in just three simple steps and join our thriving community
+                Start selling products or services in just three simple steps and join our thriving entrepreneur community
               </p>
             </div>
 
@@ -1886,7 +2084,7 @@ const Home = () => {
                   className={`group inline-flex items-center gap-3 rounded-full font-semibold shadow-lg transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 ${isMobile ? 'px-5 py-3 text-sm' : 'px-6 py-3'}`}
                   style={{ background: `linear-gradient(to right, #72b01d, #3f7d20)`, color: '#ffffff' }}
                 >
-                  <FiZap className="w-4 h-4" /> Start Selling
+                  <FiZap className="w-4 h-4" /> Join as Entrepreneur
                 </Link>
               </div>
             </div>
@@ -1906,8 +2104,8 @@ const Home = () => {
             </h3>
             <p className={`font-medium max-w-2xl mx-auto mb-8 ${isMobile ? 'text-base' : 'text-lg'}`}
               style={{ color: '#454955' }}>
-              Every purchase helps a small Sri Lankan business grow.
-              Start shopping or open your own shop today.
+              Every purchase and service booking helps a Sri Lankan entrepreneur grow their business.
+              Start shopping, find services, or launch your own venture today.
             </p>
             <div className={`flex gap-6 justify-center items-center ${isMobile ? 'flex-col gap-4' : 'flex-col sm:flex-row'}`}>
               <Link
@@ -1948,7 +2146,7 @@ const Home = () => {
                   e.currentTarget.style.borderColor = '#3f7d20';
                 }}
               >
-                Become a Seller
+                Become an Entrepreneur
               </Link>
             </div>
           </div>

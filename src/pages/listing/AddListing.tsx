@@ -614,14 +614,16 @@ export default function AddListing() {
     <>
       <SEOHead
         title="Add New Listing - Sina.lk"
-        description="Create a new product listing on Sina.lk. Upload photos, set prices, and start selling your authentic Sri Lankan products to customers islandwide."
+        description="Create a new listing on Sina.lk. Upload products, services, or digital content and start selling to customers across Sri Lanka."
         keywords={generateKeywords([
           'add listing',
           'sell products',
+          'sell services',
+          'sell digital',
           'create listing',
           'upload products',
-          'Sri Lankan marketplace',
-          'small business',
+          'Sri Lankan platform',
+          'entrepreneur',
           'sell online'
         ])}
         canonicalUrl={getCanonicalUrl('/add-listing')}

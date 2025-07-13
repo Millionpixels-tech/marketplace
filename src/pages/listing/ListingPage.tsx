@@ -433,20 +433,20 @@ export default function ListingSingle() {
   // Generate SEO data
   const generateProductSEO = () => {
     const productName = item.name || 'Product';
-    const description = item.description || 'Authentic Sri Lankan product';
+    const description = item.description || 'Quality product or service from Sri Lankan entrepreneur';
     const price = item.price || 0;
     const image = item.images?.[0] || '/default-product.jpg';
     
     return {
-      title: `${productName} - Buy Authentic Sri Lankan Products`,
+      title: `${productName} - Buy from Sri Lankan Entrepreneurs`,
       description: description.length > 160 ? description.substring(0, 157) + '...' : description,
       keywords: generateKeywords([
         productName,
         item.category || '',
         item.subcategory || '',
-        'authentic Sri Lankan product',
-        'handmade',
-        'artisan craft'
+        'quality product',
+        'Sri Lankan entrepreneur',
+        'online business'
       ]),
       structuredData: getProductStructuredData({
         name: productName,
@@ -456,7 +456,7 @@ export default function ListingSingle() {
         image,
         category: item.category,
         brand: shop?.name || 'Sri Lankan Marketplace',
-        seller: shop?.name || 'Local Artisan',
+        seller: shop?.name || 'Local Entrepreneur',
         rating: listingAvgRating || undefined,
         reviewCount: listingReviewCount || undefined
       }),
