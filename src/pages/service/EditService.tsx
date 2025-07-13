@@ -48,6 +48,11 @@ const EditService = () => {
   
   // Multi-step form state
   const [step, setStep] = useState<Step>(1);
+
+  // Auto-scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
   
   // Original service data
   const [originalService, setOriginalService] = useState<Service | null>(null);
@@ -86,8 +91,6 @@ const EditService = () => {
     saturday: { available: false, hours: "" },
     sunday: { available: false, hours: "" }
   });
-  const [acceptsInstantBooking, setAcceptsInstantBooking] = useState(false);
-  const [requiresConsultation, setRequiresConsultation] = useState(false);
   const [responseTime, setResponseTime] = useState("Within 24 hours");
   
   // Settings
@@ -161,8 +164,6 @@ const EditService = () => {
         }, {} as typeof availability);
         setAvailability(normalizedAvailability);
         
-        setAcceptsInstantBooking(service.acceptsInstantBooking || false);
-        setRequiresConsultation(service.requiresConsultation || false);
         setResponseTime(service.responseTime || "Within 24 hours");
         setIsActive(service.isActive !== false);
         setIsPaused(service.isPaused || false);
@@ -250,8 +251,6 @@ const EditService = () => {
         additionalInfo: additionalInfo?.trim() || "",
         images: safeImageUrls,
         availability: safeAvailability,
-        acceptsInstantBooking: Boolean(acceptsInstantBooking),
-        requiresConsultation: Boolean(requiresConsultation),
         responseTime: String(responseTime) || "Within 24 hours",
         isActive: Boolean(isActive),
         isPaused: Boolean(isPaused),
@@ -1102,48 +1101,6 @@ const EditService = () => {
                     </div>
                   </div>
 
-                  {/* Booking Preferences */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#0d0a0b] mb-4">Booking Preferences</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3 p-4 bg-white border border-[#e5e7eb] rounded-xl">
-                        <input
-                          type="checkbox"
-                          id="instant-booking"
-                          checked={acceptsInstantBooking}
-                          onChange={(e) => setAcceptsInstantBooking(e.target.checked)}
-                          className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d] focus:ring-2 mt-1"
-                        />
-                        <div>
-                          <label htmlFor="instant-booking" className="text-sm font-medium text-[#0d0a0b] block">
-                            Accept Instant Bookings
-                          </label>
-                          <p className="text-xs text-[#454955] mt-1">
-                            Customers can book your service immediately without waiting for approval
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3 p-4 bg-white border border-[#e5e7eb] rounded-xl">
-                        <input
-                          type="checkbox"
-                          id="requires-consultation"
-                          checked={requiresConsultation}
-                          onChange={(e) => setRequiresConsultation(e.target.checked)}
-                          className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d] focus:ring-2 mt-1"
-                        />
-                        <div>
-                          <label htmlFor="requires-consultation" className="text-sm font-medium text-[#0d0a0b] block">
-                            Require Consultation Before Booking
-                          </label>
-                          <p className="text-xs text-[#454955] mt-1">
-                            Discuss project details with customers before they can book your service
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Response Time */}
                   <div>
                     <h3 className="text-lg font-semibold text-[#0d0a0b] mb-4">Response Time</h3>
@@ -1343,8 +1300,8 @@ const EditService = () => {
                       </>
                     ) : (
                       <>
-                        <FiCheck className="w-5 h-5 mr-2" />
-                        Update Service
+                        <span>Update Service</span>
+                        
                       </>
                     )}
                   </Button>

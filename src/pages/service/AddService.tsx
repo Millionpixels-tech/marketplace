@@ -66,8 +66,6 @@ export default function AddService() {
     saturday: { available: false, hours: "" },
     sunday: { available: false, hours: "" }
   });
-  const [acceptsInstantBooking, setAcceptsInstantBooking] = useState(false);
-  const [requiresConsultation, setRequiresConsultation] = useState(false);
   const [responseTime, setResponseTime] = useState("Within 24 hours");
   
   // Service Settings state
@@ -85,6 +83,11 @@ export default function AddService() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  // Auto-scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   // Fetch user's shops
   useEffect(() => {
@@ -118,12 +121,14 @@ export default function AddService() {
   const handleNext = () => {
     if (step < steps.length) {
       setStep(step + 1);
+      window.scrollTo(0, 0); // Scroll to top on step change
     }
   };
 
   const handlePrevious = () => {
     if (step > 1) {
       setStep(step - 1);
+      window.scrollTo(0, 0); // Scroll to top on step change
     }
   };
 
@@ -292,8 +297,6 @@ export default function AddService() {
         images: imageUrls,
         imageMetadata,
         availability,
-        acceptsInstantBooking,
-        requiresConsultation,
         responseTime,
         isActive,
         isPaused,
@@ -937,48 +940,6 @@ export default function AddService() {
                   </div>
                 </div>
 
-                {/* Booking Preferences */}
-                <div>
-                  <h3 className="text-lg font-semibold text-[#0d0a0b] mb-4">Booking Preferences</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-4 bg-white border border-[#e5e7eb] rounded-xl">
-                      <input
-                        type="checkbox"
-                        id="instant-booking"
-                        checked={acceptsInstantBooking}
-                        onChange={(e) => setAcceptsInstantBooking(e.target.checked)}
-                        className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d] focus:ring-2 mt-1"
-                      />
-                      <div>
-                        <label htmlFor="instant-booking" className="text-sm font-medium text-[#0d0a0b] block">
-                          Accept Instant Bookings
-                        </label>
-                        <p className="text-xs text-[#454955] mt-1">
-                          Customers can book your service immediately without waiting for approval
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-4 bg-white border border-[#e5e7eb] rounded-xl">
-                      <input
-                        type="checkbox"
-                        id="requires-consultation"
-                        checked={requiresConsultation}
-                        onChange={(e) => setRequiresConsultation(e.target.checked)}
-                        className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d] focus:ring-2 mt-1"
-                      />
-                      <div>
-                        <label htmlFor="requires-consultation" className="text-sm font-medium text-[#0d0a0b] block">
-                          Require Consultation Before Booking
-                        </label>
-                        <p className="text-xs text-[#454955] mt-1">
-                          Discuss project details with customers before they can book your service
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Response Time */}
                 <div>
                   <h3 className="text-lg font-semibold text-[#0d0a0b] mb-4">Response Time</h3>
@@ -1179,8 +1140,8 @@ export default function AddService() {
                     </>
                   ) : (
                     <>
-                      <FiCheck className="w-5 h-5 mr-2" />
-                      Create Service
+                      <span>+ Create Service</span>
+                      
                     </>
                   )}
                 </Button>
