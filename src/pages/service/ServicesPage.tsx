@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { FiStar } from "react-icons/fi";
 import { serviceCategories, serviceCategoryIcons, serviceSubcategoryIcons, ServiceCategory, getServiceSubcategories } from "../../utils/serviceCategories";
 import { getAllDistricts } from "../../utils/sriLankanDistricts";
 import type { Service } from "../../types/service";
@@ -239,12 +238,12 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        {/* Service Content - Reduced height since no description */}
-        <div className="p-4 flex flex-col justify-between h-48">
+        {/* Service Content */}
+        <div className="p-4 pb-6 flex flex-col">
           {/* Top section with title and packages */}
           <div className="flex-1">
             {/* Title - exactly 2 lines */}
-            <h3 className="font-bold text-lg text-gray-900 mb-4 leading-tight" 
+            <h3 className="font-bold text-lg text-gray-900 mb-1 leading-tight" 
                 style={{
                   display: '-webkit-box',
                   WebkitLineClamp: 2,
@@ -256,9 +255,40 @@ export default function ServicesPage() {
               {service.title}
             </h3>
 
+            {/* Rating - show under title with consistent spacing */}
+            <div className="flex items-center gap-2 mb-2 min-h-[22px]">
+              {service.rating && service.rating > 0 ? (
+                <>
+                  <span className="flex items-center text-[#72b01d]">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <svg
+                        key={i}
+                        width="16"
+                        height="16"
+                        className="inline-block"
+                        fill={i <= Math.round(service.rating!) ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                      </svg>
+                    ))}
+                    <span className="ml-1 text-xs font-bold text-[#3f7d20]">
+                      {service.rating.toFixed(1)}
+                    </span>
+                  </span>
+                  <span className="text-xs text-[#72b01d]">
+                    ({service.reviewCount || 0})
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400">No reviews yet</span>
+              )}
+            </div>
+
             {/* Packages Available */}
             {hasPackages && (
-              <div className="mb-4">
+              <div className="mb-6">
                 <div className="text-sm text-gray-600 font-medium">
                   {service.packages.length} package{service.packages.length !== 1 ? 's' : ''} available
                 </div>
@@ -266,38 +296,23 @@ export default function ServicesPage() {
             )}
           </div>
 
-          {/* Bottom section with price - always at bottom */}
-          <div className="flex-shrink-0">
-            <div className="flex items-center justify-between">
-              {hasPackages && minPrice > 0 ? (
-                <div>
-                  <span className="text-xs text-gray-500">Starting from</span>
-                  <div className="font-bold text-lg">
-                    LKR {minPrice.toLocaleString()}
-                    {minPrice !== maxPrice && (
-                      <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>
-                    )}
-                  </div>
+          {/* Bottom section with price */}
+          <div className="mt-auto">
+            {hasPackages && minPrice > 0 ? (
+              <div>
+                <span className="text-xs text-gray-500">Starting from</span>
+                <div className="font-bold text-lg">
+                  LKR {minPrice.toLocaleString()}
+                  {minPrice !== maxPrice && (
+                    <span className="text-sm text-gray-500"> - LKR {maxPrice.toLocaleString()}</span>
+                  )}
                 </div>
-              ) : (
-                <div>
-                  <span className="text-sm text-gray-500">Contact for pricing</span>
-                </div>
-              )}
-              
-              {/* Rating - only show if rating exists and is greater than 0 */}
-              <div className="flex items-center">
-                {service.rating && service.rating > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <FiStar className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm font-medium">{service.rating.toFixed(1)}</span>
-                    {service.reviewCount && service.reviewCount > 0 ? (
-                      <span className="text-xs text-gray-500">({service.reviewCount})</span>
-                    ) : null}
-                  </div>
-                ) : null}
               </div>
-            </div>
+            ) : (
+              <div>
+                <span className="text-sm text-gray-500">Contact for pricing</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>

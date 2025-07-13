@@ -18,6 +18,7 @@ import { getUserIP } from "../../utils/ipUtils";
 import { getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import { useResponsive } from "../../hooks/useResponsive";
 import { getServicesCountByShop } from "../../utils/serviceUtils";
+import { calculateShopRating } from "../../utils/serviceReviews";
 import type { DeliveryType as DeliveryTypeType } from "../../types/enums";
 import type { Service } from "../../types/service";
 
@@ -132,26 +133,10 @@ export default function ShopPage() {
         
         async function fetchShopReviews() {
             try {
-                const reviewsQuery = query(
-                    collection(db, "reviews"),
-                    where("shopId", "==", shop!.id) // We know shop is not null here due to the check above
-                );
-                const reviewsSnap = await getDocs(reviewsQuery);
-                const reviews = reviewsSnap.docs.map(doc => ({ 
-                    id: doc.id, 
-                    ...doc.data() 
-                })) as any[];
-                
-                // Calculate average rating and count
-                if (reviews.length > 0) {
-                    const totalRating = reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
-                    const averageRating = totalRating / reviews.length;
-                    setShopRating(Math.round(averageRating * 100) / 100); // Round to 2 decimal places
-                    setShopRatingCount(reviews.length);
-                } else {
-                    setShopRating(null);
-                    setShopRatingCount(0);
-                }
+                // Use the new combined rating calculation that includes both product and service reviews
+                const ratingData = await calculateShopRating(shop!.id);
+                setShopRating(ratingData.rating);
+                setShopRatingCount(ratingData.count);
             } catch (error) {
                 console.error("Error fetching shop reviews:", error);
                 setShopRating(null);
