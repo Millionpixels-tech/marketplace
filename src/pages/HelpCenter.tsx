@@ -64,7 +64,7 @@ export default function HelpCenter() {
         },
         {
           question: "What can I sell?",
-          answer: "You can sell handmade crafts, local products, art, jewelry, clothing, home decor, traditional Sri Lankan items, and more. Items must comply with our community guidelines and Sri Lankan laws."
+          answer: "You can sell physical products, digital downloads, online services, and onsite services. This includes crafts, clothing, consulting, design work, digital templates, courses, photography services, and more. Items and services must comply with our community guidelines and Sri Lankan laws."
         },
         {
           question: "How do I handle custom order requests?",

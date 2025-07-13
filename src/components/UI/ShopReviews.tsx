@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
-import { db } from "../../utils/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { getShopReviews } from "../../utils/serviceReviews";
 import { useResponsive } from "../../hooks/useResponsive";
 
 type Review = {
     id: string;
-    review: string;
+    review?: string;
+    comment?: string; // Service reviews use 'comment' instead of 'review'
     rating: number;
     buyerEmail?: string;
     reviewedAt?: { seconds: number; nanoseconds: number };
     createdAt?: { seconds: number; nanoseconds: number };
     itemName?: string;
+    serviceTitle?: string; // Service reviews have serviceTitle
     itemImage?: string;
     price?: number;
     quantity?: number;
     itemId?: string;
     shopId?: string;
+    type?: 'product' | 'service'; // To distinguish between product and service reviews
 };
 
 const REVIEWS_PER_PAGE = 8;
@@ -33,27 +35,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
             }
             setLoading(true);
             try {
-                // Query the reviews collection for this shop
-                const q = query(
-                    collection(db, "reviews"),
-                    where("shopId", "==", shopId)
-                );
-
-                const snap = await getDocs(q);
-                
-                const allReviews = snap.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                })) as Review[];
-
-                // Sort by reviewedAt or createdAt (most recent first)
-                const sortedReviews = allReviews.sort((a, b) => {
-                    const aDate = a.reviewedAt?.seconds || a.createdAt?.seconds || 0;
-                    const bDate = b.reviewedAt?.seconds || b.createdAt?.seconds || 0;
-                    return bDate - aDate; // Most recent first
-                });
-
-                setReviews(sortedReviews);
+                // Use the new combined shop reviews function
+                const allReviews = await getShopReviews(shopId);
+                setReviews(allReviews as Review[]);
             } catch (error) {
                 console.error("Error fetching reviews:", error);
                 setReviews([]);
@@ -105,13 +89,20 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                             {/* Item details */}
                             <div className={`flex-shrink-0 ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} rounded-xl overflow-hidden border flex items-center justify-center`} style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
                                 {r.itemImage ? (
-                                    <img src={r.itemImage} alt={r.itemName} className="object-cover w-full h-full" />
+                                    <img src={r.itemImage} alt={r.itemName || r.serviceTitle} className="object-cover w-full h-full" />
                                 ) : (
-                                    <div className={`w-full h-full flex items-center justify-center ${isMobile ? 'text-xs' : ''}`} style={{ color: '#454955' }}>No Image</div>
+                                    <div className={`w-full h-full flex items-center justify-center ${isMobile ? 'text-xs' : ''}`} style={{ color: '#454955' }}>
+                                        {r.type === 'service' ? '🔧' : 'No Image'}
+                                    </div>
                                 )}
                             </div>
                             <div className="flex-1 flex flex-col">
-                                <div className={`font-bold ${isMobile ? 'text-sm' : 'text-base'} mb-1`} style={{ color: '#0d0a0b' }}>{r.itemName || "Item"}</div>
+                                <div className={`font-bold ${isMobile ? 'text-sm' : 'text-base'} mb-1`} style={{ color: '#0d0a0b' }}>
+                                    {r.itemName || r.serviceTitle || "Item"}
+                                    {r.type === 'service' && (
+                                        <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Service</span>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-1 mb-1">
                                     {[1, 2, 3, 4, 5].map(i => (
                                         <svg
@@ -125,7 +116,9 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
                                         </svg>
                                     ))}
                                 </div>
-                                <div className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>{r.review}</div>
+                                <div className={`font-medium mb-2 ${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#454955' }}>
+                                    {r.review || r.comment}
+                                </div>
                                 {(r.reviewedAt || r.createdAt) && (
                                     <div className={`${isMobile ? 'text-xs' : 'text-xs'} mt-1`} style={{ color: '#454955', opacity: 0.7 }}>
                                         Reviewed on: {new Date((r.reviewedAt?.seconds || r.createdAt?.seconds || 0) * 1000).toLocaleDateString()}

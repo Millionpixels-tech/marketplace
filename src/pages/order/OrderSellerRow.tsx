@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../../utils/firebase";
 import { OrderStatus } from "../../types/enums";
+import { ItemType } from "../../utils/categories";
 import { ConfirmDialog } from "../../components/UI";
 import { useConfirmDialog } from "../../hooks/useConfirmDialog";
 import { formatPrice } from "../../utils/formatters";
@@ -260,7 +261,15 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     alt={order.itemName}
                     className="w-16 h-16 object-cover rounded-lg border border-[#45495522] shadow-sm"
                 />
-                <div className="flex-1 min-w-0">                        <div className="font-bold text-lg mb-1 truncate text-[#0d0a0b]">{order.itemName}</div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="font-bold text-lg truncate text-[#0d0a0b]">{order.itemName}</div>
+                        {order.itemType === ItemType.DIGITAL && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">
+                                Digital
+                            </span>
+                        )}
+                    </div>
                         <div className="text-[#454955] text-sm mb-1">
                         Status: <span className="font-semibold">
                             {order.status === OrderStatus.PENDING_PAYMENT && (
@@ -337,7 +346,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         )}
                         <div><span className="font-semibold text-[#3f7d20]">Quantity:</span> {order.quantity}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Price:</span> {formatPrice(order.price)}</div>
-                        <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> {formatPrice(order.shipping)}</div>
+                        {order.itemType !== ItemType.DIGITAL && (
+                            <div><span className="font-semibold text-[#3f7d20]">Shipping:</span> {formatPrice(order.shipping)}</div>
+                        )}
                         <div><span className="font-semibold text-[#3f7d20]">Total:</span> {formatPrice(order.total)}</div>
                         <div><span className="font-semibold text-[#3f7d20]">Status:</span> 
                             {order.status === OrderStatus.PENDING_PAYMENT && (
@@ -412,8 +423,8 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                     
                     {/* Action Buttons */}
                     <div className="flex gap-2 mt-4">
-                        {/* Print Delivery Label Button - Available for all active orders */}
-                        {order.buyerInfo && ![OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status) && (
+                        {/* Print Delivery Label Button - Available for physical products only */}
+                        {order.buyerInfo && order.itemType !== ItemType.DIGITAL && ![OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status) && (
                             <button
                                 className="px-4 py-2 bg-[#454955] text-white rounded-lg font-bold hover:bg-[#0d0a0b] transition text-sm shadow-sm"
                                 onClick={(e) => {
@@ -469,7 +480,8 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                             order.id,
                                             {
                                                 itemName: order.itemName,
-                                                amount: order.total
+                                                amount: order.total,
+                                                isDigital: order.itemType === ItemType.DIGITAL
                                             }
                                         );
                                        // console.log('📨 Refund notification sent to buyer');
@@ -510,7 +522,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                         <FiDollarSign className="w-4 h-4 inline mr-1" />Awaiting customer payment. Customer needs to upload payment slip.
                     </div>
                 ) : order.status === OrderStatus.SHIPPED ? (
-                    <div className="text-xs text-[#454955] py-2 italic">Order Shipped. Waiting for buyer response.</div>
+                    <div className="text-xs text-[#454955] py-2 italic">
+                        {order.itemType === ItemType.DIGITAL ? 'Digital product available. Waiting for buyer response.' : 'Order Shipped. Waiting for buyer response.'}
+                    </div>
                 ) : (
                     <>
                         <button
@@ -518,9 +532,11 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 const confirmed = await showConfirmDialog({
-                                    title: "Mark as Shipped",
-                                    message: "Are you sure you want to mark this order as shipped? This will notify the buyer that their order is on the way.",
-                                    confirmText: "Mark as Shipped",
+                                    title: order.itemType === ItemType.DIGITAL ? "Mark as Available" : "Mark as Shipped",
+                                    message: order.itemType === ItemType.DIGITAL 
+                                        ? "Are you sure you want to mark this digital product as available for download? This will notify the buyer that their download is ready."
+                                        : "Are you sure you want to mark this order as shipped? This will notify the buyer that their order is on the way.",
+                                    confirmText: order.itemType === ItemType.DIGITAL ? "Mark as Available" : "Mark as Shipped",
                                     cancelText: "Cancel",
                                     type: "info"
                                 });
@@ -536,7 +552,8 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                         order.id,
                                         {
                                             itemName: order.itemName,
-                                            sellerName: order.sellerShopName
+                                            sellerName: order.sellerShopName,
+                                            isDigital: order.itemType === ItemType.DIGITAL
                                         }
                                     );
                                    // console.log('📨 Shipped notification sent to buyer');
@@ -550,7 +567,9 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                     await sendOrderStatusChangeNotification(
                                         { ...order, id: order.id }, 
                                         OrderStatus.SHIPPED,
-                                        'Your order has been shipped and is on its way to you. You will receive it within the estimated delivery time.'
+                                        order.itemType === ItemType.DIGITAL 
+                                            ? 'Your digital product is now available for download. You can access it from your order details page.'
+                                            : 'Your order has been shipped and is on its way to you. You will receive it within the estimated delivery time.'
                                     );
                                 } catch (emailError) {
                                     console.error('❌ Error sending shipped notification email:', emailError);
@@ -558,7 +577,7 @@ export default function OrderSellerRow({ order, setSellerOrders }: { order: any,
                                 }
                             }}
                         >
-                            Mark as Shipped
+                            {order.itemType === ItemType.DIGITAL ? 'Mark as Available' : 'Mark as Shipped'}
                         </button>
                         <button
                             className="px-3 py-1.5 text-xs rounded-lg bg-[#454955] text-white border-none hover:bg-[#0d0a0b] transition shadow-sm"

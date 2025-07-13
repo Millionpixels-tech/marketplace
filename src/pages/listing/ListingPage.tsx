@@ -12,12 +12,13 @@ import WithReviewStats from "../../components/HOC/WithReviewStats";
 import { LoadingSpinner, Pagination } from "../../components/UI";
 import { SEOHead } from "../../components/SEO/SEOHead";
 import ShopOwnerName from "../shop/ShopOwnerName";
-import { FiChevronLeft, FiChevronRight, FiMaximize2, FiStar, FiShoppingBag, FiPackage } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiMaximize2, FiStar, FiShoppingBag, FiPackage, FiDownload } from "react-icons/fi";
 import { PaymentMethod } from "../../types/enums";
 import { getProductStructuredData, getBreadcrumbStructuredData, getCanonicalUrl, generateKeywords } from "../../utils/seo";
 import type { PaymentMethod as PaymentMethodType } from "../../types/enums";
 import { useResponsive } from "../../hooks/useResponsive";
 import type { UserProfile } from "../../utils/userProfile";
+import { ItemType } from "../../utils/categories";
 
 // Simple variation interface (matching AddListing)
 interface SimpleVariation {
@@ -128,7 +129,14 @@ export default function ListingSingle() {
 
   useEffect(() => {
     // Set default payment method based on what's available for this listing
-    if (item?.cashOnDelivery && item?.bankTransfer) {
+    // For digital products, never default to COD
+    if (item?.itemType === ItemType.DIGITAL) {
+      if (item?.bankTransfer) {
+        setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+      } else {
+        setPaymentMethod(PaymentMethod.PAY_NOW);
+      }
+    } else if (item?.cashOnDelivery && item?.bankTransfer) {
       // If both are available, default to COD (customer preference)
       setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
     } else if (item?.cashOnDelivery) {
@@ -137,7 +145,7 @@ export default function ListingSingle() {
       setPaymentMethod(PaymentMethod.BANK_TRANSFER);
     }
     // If neither is available, keep the current selection
-  }, [item?.cashOnDelivery, item?.bankTransfer]);
+  }, [item?.cashOnDelivery, item?.bankTransfer, item?.itemType]);
 
   // Fetch listing and shop info with batched IP and data loading
   useEffect(() => {
@@ -404,7 +412,8 @@ export default function ListingSingle() {
   const deliveryPerItem = Number(item.deliveryPerItem || 0);
   const deliveryAdditional = Number(item.deliveryAdditional || 0);
   let shipping = 0;
-  if (deliveryType === "paid") {
+  // Digital products have no shipping costs
+  if (item?.itemType !== ItemType.DIGITAL && deliveryType === "paid") {
     shipping = deliveryPerItem + (qty > 1 ? deliveryAdditional * (qty - 1) : 0);
   }
   const total = price * qty + shipping;
@@ -424,20 +433,20 @@ export default function ListingSingle() {
   // Generate SEO data
   const generateProductSEO = () => {
     const productName = item.name || 'Product';
-    const description = item.description || 'Authentic Sri Lankan product';
+    const description = item.description || 'Quality product or service from Sri Lankan entrepreneur';
     const price = item.price || 0;
     const image = item.images?.[0] || '/default-product.jpg';
     
     return {
-      title: `${productName} - Buy Authentic Sri Lankan Products`,
+      title: `${productName} - Buy from Sri Lankan Entrepreneurs`,
       description: description.length > 160 ? description.substring(0, 157) + '...' : description,
       keywords: generateKeywords([
         productName,
         item.category || '',
         item.subcategory || '',
-        'authentic Sri Lankan product',
-        'handmade',
-        'artisan craft'
+        'quality product',
+        'Sri Lankan entrepreneur',
+        'online business'
       ]),
       structuredData: getProductStructuredData({
         name: productName,
@@ -447,7 +456,7 @@ export default function ListingSingle() {
         image,
         category: item.category,
         brand: shop?.name || 'Sri Lankan Marketplace',
-        seller: shop?.name || 'Local Artisan',
+        seller: shop?.name || 'Local Entrepreneur',
         rating: listingAvgRating || undefined,
         reviewCount: listingReviewCount || undefined
       }),
@@ -611,9 +620,17 @@ export default function ListingSingle() {
               
               {/* Header Section */}
               <div className="mb-6">
-                <h1 className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900 mb-3 leading-tight`}>
-                  {item.name}
-                </h1>
+                <div className="flex items-start gap-3 mb-3">
+                  <h1 className={`${isMobile ? 'text-xl' : 'text-2xl lg:text-3xl'} font-bold text-gray-900 leading-tight flex-1`}>
+                    {item.name}
+                  </h1>
+                  {item?.itemType === ItemType.DIGITAL && (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium">
+                      <FiDownload className="w-3 h-3" />
+                      Digital
+                    </div>
+                  )}
+                </div>
                 
                 {/* Reviews */}
                 {listingReviewCount > 0 && (
@@ -843,15 +860,19 @@ export default function ListingSingle() {
                   {/* Delivery Fee */}
                   <div className="flex items-center justify-between">
                     <span className={`${isMobile ? 'text-sm' : 'text-sm'} text-gray-600`}>
-                      {deliveryType === "free" ? "Delivery" : "Delivery fee"}
-                      {deliveryType === "paid" && qty > 1 && (
+                      {item?.itemType === ItemType.DIGITAL 
+                        ? "Delivery" 
+                        : deliveryType === "free" ? "Delivery" : "Delivery fee"}
+                      {item?.itemType !== ItemType.DIGITAL && deliveryType === "paid" && qty > 1 && (
                         <span className={`block ${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 mt-0.5`}>
                           LKR {deliveryPerItem} + LKR {deliveryAdditional} × {qty - 1}
                         </span>
                       )}
                     </span>
-                    <span className={`${isMobile ? 'text-sm' : 'text-base'} font-medium ${deliveryType === "free" ? "text-green-600" : "text-gray-900"}`}>
-                      {deliveryType === "free" ? "Free" : `LKR ${shipping.toLocaleString()}`}
+                    <span className={`${isMobile ? 'text-sm' : 'text-base'} font-medium ${deliveryType === "free" || item?.itemType === ItemType.DIGITAL ? "text-green-600" : "text-gray-900"}`}>
+                      {item?.itemType === ItemType.DIGITAL 
+                        ? "Digital - No shipping" 
+                        : deliveryType === "free" ? "Free" : `LKR ${shipping.toLocaleString()}`}
                     </span>
                   </div>
 
@@ -865,11 +886,11 @@ export default function ListingSingle() {
                 </div>
 
                 {/* Payment Methods */}
-                {(item.cashOnDelivery || item.bankTransfer) ? (
+                {((item.cashOnDelivery && item?.itemType !== ItemType.DIGITAL) || item.bankTransfer) ? (
                   <div className="space-y-3">
                     <div className="text-sm font-medium text-gray-700">Payment Method:</div>
                     <div className="space-y-2">
-                      {item.cashOnDelivery && (
+                      {item.cashOnDelivery && item?.itemType !== ItemType.DIGITAL && (
                         <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                           <input
                             type="radio"
@@ -936,7 +957,9 @@ export default function ListingSingle() {
                     >
                       {paymentMethod === PaymentMethod.CASH_ON_DELIVERY 
                         ? 'Order with Cash on Delivery' 
-                        : 'Order with Bank Transfer'}
+                        : item?.itemType === ItemType.DIGITAL 
+                          ? 'Purchase Digital Product'
+                          : 'Order with Bank Transfer'}
                     </button>
                   </div>
                 ) : (
@@ -967,10 +990,16 @@ export default function ListingSingle() {
             {/* Delivery Information */}
             {item.sellerNotes && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Delivery Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  {item?.itemType === ItemType.DIGITAL ? 'Product Information' : 'Delivery Information'}
+                </h3>
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <FiPackage className="text-green-600 w-6 h-6" />
+                    {item?.itemType === ItemType.DIGITAL ? (
+                      <FiDownload className="text-green-600 w-6 h-6" />
+                    ) : (
+                      <FiPackage className="text-green-600 w-6 h-6" />
+                    )}
                     <div className="flex-1 text-gray-700 leading-relaxed whitespace-pre-line">
                       {item.sellerNotes}
                     </div>
@@ -989,28 +1018,46 @@ export default function ListingSingle() {
                   <span className="font-semibold text-blue-900">Payment Options</span>
                 </div>
                 <div className="text-sm text-blue-800">
-                  {item.cashOnDelivery && item.bankTransfer ? (
-                    "Cash on Delivery & Bank Transfer available"
-                  ) : item.cashOnDelivery ? (
-                    "Cash on Delivery available"
-                  ) : item.bankTransfer ? (
-                    "Bank Transfer available"
+                  {item?.itemType === ItemType.DIGITAL ? (
+                    // Digital products - no COD
+                    item.bankTransfer ? (
+                      "Bank Transfer available for digital products"
+                    ) : (
+                      "Contact seller for payment options"
+                    )
                   ) : (
-                    "Contact seller for payment options"
+                    // Physical products - normal flow
+                    item.cashOnDelivery && item.bankTransfer ? (
+                      "Cash on Delivery & Bank Transfer available"
+                    ) : item.cashOnDelivery ? (
+                      "Cash on Delivery available"
+                    ) : item.bankTransfer ? (
+                      "Bank Transfer available"
+                    ) : (
+                      "Contact seller for payment options"
+                    )
                   )}
                 </div>
               </div>
               
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                    <path d="M3 4a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zM3 10a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM3 16a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM6 4a1 1 0 000 2h8a1 1 0 100-2H6zM6 10a1 1 0 000 2h8a1 1 0 100-2H6zM6 16a1 1 0 000 2h8a1 1 0 100-2H6z" />
-                  </svg>
-                  <span className="font-semibold text-green-900">Delivery</span>
+                  {item?.itemType === ItemType.DIGITAL ? (
+                    <FiDownload className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                      <path d="M3 4a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zM3 10a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM3 16a1 1 0 00-1 1v1a1 1 0 001 1h1a1 1 0 001-1v-1a1 1 0 00-1-1H3zM6 4a1 1 0 000 2h8a1 1 0 100-2H6zM6 10a1 1 0 000 2h8a1 1 0 100-2H6zM6 16a1 1 0 000 2h8a1 1 0 100-2H6z" />
+                    </svg>
+                  )}
+                  <span className="font-semibold text-green-900">
+                    {item?.itemType === ItemType.DIGITAL ? 'Digital Delivery' : 'Delivery'}
+                  </span>
                 </div>
                 <div className="text-sm text-green-800">
-                  {deliveryType === "free" ? "Free delivery included" : "Delivery charges apply"}
+                  {item?.itemType === ItemType.DIGITAL 
+                    ? "Instant download after payment" 
+                    : deliveryType === "free" ? "Free delivery included" : "Delivery charges apply"}
                 </div>
               </div>
             </div>

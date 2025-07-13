@@ -201,7 +201,7 @@ function generateShopHTML(shop, username) {
     <footer style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
       <p style="color: #999; font-size: 14px;">
         <a href="${siteUrl}" style="color: #0066cc; text-decoration: none;">Sina.lk</a> - 
-        Supporting Sri Lankan artisans and craftspeople
+        Supporting Sri Lankan entrepreneurs across all industries
       </p>
     </footer>
   </div>

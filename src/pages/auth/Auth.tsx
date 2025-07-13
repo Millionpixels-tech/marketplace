@@ -57,7 +57,6 @@ const Auth = () => {
       try {
         await processReferralSignup(referralCode, userId, userEmail, signupMethod, userName);
         clearStoredReferralCode();
-        console.log('Referral processed successfully');
       } catch (error) {
         console.error('Error processing referral:', error);
         // Don't fail the signup if referral processing fails
@@ -240,10 +239,10 @@ const Auth = () => {
       <SEOHead
         title={`${getTitle()} - Sri Lankan Marketplace`}
         description={mode === 'login' 
-          ? "Sign in to your Sri Lankan Marketplace account to access your dashboard, manage listings, and connect with authentic Sri Lankan artisans."
+          ? "Sign in to your Sri Lankan Entrepreneur Platform account to access your dashboard, manage listings, and connect with customers and service providers."
           : mode === 'signup'
-          ? "Create your Sri Lankan Marketplace account to start buying authentic Sri Lankan products or become a seller and showcase your crafts to the world."
-          : "Reset your password to regain access to your Sri Lankan Marketplace account."
+          ? "Create your Sri Lankan Entrepreneur Platform account to start selling products, services, or digital content, or discover offerings from local entrepreneurs."
+          : "Reset your password to regain access to your Sri Lankan Entrepreneur Platform account."
         }
         keywords={generateKeywords([
           mode === 'login' ? 'sign in' : mode === 'signup' ? 'create account' : 'reset password',

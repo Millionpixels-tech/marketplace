@@ -1,11 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { categories } from "../../utils/categories";
-import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser, FiSearch, FiHeart } from "react-icons/fi";
-import { FaGift } from "react-icons/fa";
+import { FiChevronDown, FiChevronRight, FiX, FiMenu, FiLogOut, FiUser } from "react-icons/fi";
 import { getWishlistCount } from "../../utils/wishlist";
 import { useAuth } from "../../context/AuthContext";
 import { auth } from "../../utils/firebase";
+import { FiSearch, FiHeart } from "react-icons/fi";
 import MobileNotificationDropdown from "./MobileNotificationDropdown";
 
 const MobileHeader = () => {
@@ -195,23 +195,25 @@ const MobileHeader = () => {
                             >
                                 Home
                             </Link>
-
-                            {/* Promotion Link */}
+                            
+                            {/* Browse Services Link */}
                             <Link
-                                to="/early-launch-promotion"
-                                className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium relative hover:bg-gray-100 transition-colors"
-                                style={{ 
-                                    color: '#72b01d'
-                                }}
+                                to="/services"
+                                className="block text-lg font-medium text-gray-900 hover:text-green-600"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                <FaGift size={18} />
-                                <span>Early Launch Promotion</span>
-                                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded-full animate-bounce">
-                                    HOT
-                                </span>
+                                Browse Services
                             </Link>
-                            
+
+                            {/* Browse Products Link */}
+                            <Link
+                                to="/search"
+                                className="block text-lg font-medium text-gray-900 hover:text-green-600"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Browse Products
+                            </Link>
+
                             {/* Categories */}
                             <div>
                                 <button

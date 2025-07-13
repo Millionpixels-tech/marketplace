@@ -20,7 +20,8 @@ import { useResponsive } from "../hooks/useResponsive";
 import { useToast } from "../context/ToastContext";
 import { checkBuyerReports, checkBuyerVerification, getBuyerStatusMessage, shouldBlockBuyer, type BuyerReportStatus } from "../utils/buyerVerification";
 import BuyerStatusWarning from "../components/UI/BuyerStatusWarning";
-import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock, FiInfo } from "react-icons/fi";
+import { FiArrowLeft, FiShoppingBag, FiTruck, FiCreditCard, FiDollarSign, FiUser, FiLock, FiInfo, FiDownload } from "react-icons/fi";
+import { ItemType } from "../utils/categories";
 
 type CheckoutItem = {
   id: string;
@@ -199,13 +200,25 @@ export default function CheckoutPage() {
         // Set payment method based on item's available payment options
         if (!paymentMethodParam) {
           // If no payment method specified, choose based on what's available
-          if (itemData.cashOnDelivery && itemData.bankTransfer) {
+          // For digital products, never default to COD
+          if (itemData.itemType === ItemType.DIGITAL) {
+            if (itemData.bankTransfer) {
+              setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+            } else {
+              setPaymentMethod(PaymentMethod.PAY_NOW);
+            }
+          } else if (itemData.cashOnDelivery && itemData.bankTransfer) {
             // If both are available, default to COD (customer preference)
             setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
           } else if (itemData.cashOnDelivery) {
             setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
           } else if (itemData.bankTransfer) {
             setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+          }
+        } else {
+          // If payment method was specified but it's COD for digital product, change to bank transfer
+          if (itemData.itemType === ItemType.DIGITAL && paymentMethodParam === PaymentMethod.CASH_ON_DELIVERY) {
+            setPaymentMethod(itemData.bankTransfer ? PaymentMethod.BANK_TRANSFER : PaymentMethod.PAY_NOW);
           }
         }
         
@@ -403,8 +416,9 @@ export default function CheckoutPage() {
     const price = basePrice + variationPriceChange;
     const subtotal = price * quantity;
     
+    // Digital products have no shipping costs
     let shipping = 0;
-    if (item.deliveryType === DeliveryType.PAID) {
+    if (item.itemType !== ItemType.DIGITAL && item.deliveryType === DeliveryType.PAID) {
       const deliveryPerItem = Number(item.deliveryPerItem || 0);
       const deliveryAdditional = Number(item.deliveryAdditional || 0);
       shipping = deliveryPerItem + (quantity > 1 ? deliveryAdditional * (quantity - 1) : 0);
@@ -421,14 +435,19 @@ export default function CheckoutPage() {
     const errors: Record<string, string> = {};
     setGeneralError('');
 
-    // Required fields validation
+    // Check if this is a digital product
+    const isDigitalProduct = item?.itemType === ItemType.DIGITAL;
+
+    // Required fields validation - address and city not required for digital products
     const requiredFields = [
       { key: 'firstName', label: 'First Name' },
       { key: 'lastName', label: 'Last Name' },
       { key: 'email', label: 'Email Address' },
       { key: 'phone', label: 'Phone Number' },
-      { key: 'address', label: 'Address' },
-      { key: 'city', label: 'City' }
+      ...(isDigitalProduct ? [] : [
+        { key: 'address', label: 'Address' },
+        { key: 'city', label: 'City' }
+      ])
     ];
 
     requiredFields.forEach(field => {
@@ -515,6 +534,7 @@ export default function CheckoutPage() {
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
+        itemType: item.itemType || ItemType.PHYSICAL, // Add itemType for digital product support
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
@@ -592,6 +612,7 @@ export default function CheckoutPage() {
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
+        itemType: item.itemType || ItemType.PHYSICAL, // Add itemType for digital product support
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
@@ -677,6 +698,7 @@ export default function CheckoutPage() {
         itemId: item.id,
         itemName: item.name,
         itemImage: item.images?.[0] || "",
+        itemType: item.itemType || ItemType.PHYSICAL, // Add itemType for digital product support
         buyerId: user.uid,
         buyerEmail: buyerInfo.email,
         buyerInfo: buyerInfo,
@@ -1152,68 +1174,73 @@ export default function CheckoutPage() {
                   )}
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
-                    Address *
-                  </label>
-                  <textarea
-                    required
-                    value={buyerInfo.address}
-                    onChange={(e) => {
-                      setBuyerInfo(prev => ({ ...prev, address: e.target.value }));
-                      clearFieldError('address');
-                    }}
-                    placeholder="Street address, apartment, suite, etc."
-                    rows={3}
-                    className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 resize-none ${
-                      validationErrors.address ? 'border-red-400' : ''
-                    }`}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderColor: validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
-                      color: '#0d0a0b'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = validationErrors.address ? '#ef4444' : '#72b01d'}
-                    onBlur={(e) => e.target.style.borderColor = validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
-                  />
-                  {validationErrors.address && (
-                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
-                      {validationErrors.address}
-                    </p>
-                  )}
-                  <p className="mt-2 text-sm" style={{ color: '#72b01d' }}>
-                    <FiTruck className="inline-block mr-1" size={14} />
-                    The seller will deliver your package to this address for physical items.
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
-                    City *
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    value={buyerInfo.city}
-                    onChange={(e) => {
-                      setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
-                      clearFieldError('city');
-                    }}
-                    className={validationErrors.city ? 'border-red-400' : ''}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
-                      color: '#0d0a0b'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = validationErrors.city ? '#ef4444' : '#72b01d'}
-                    onBlur={(e) => e.target.style.borderColor = validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
-                  />
-                  {validationErrors.city && (
-                    <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
-                      {validationErrors.city}
-                    </p>
-                  )}
-                </div>
+                {/* Address fields - only for physical products */}
+                {item?.itemType !== ItemType.DIGITAL && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                        Address *
+                      </label>
+                      <textarea
+                        required
+                        value={buyerInfo.address}
+                        onChange={(e) => {
+                          setBuyerInfo(prev => ({ ...prev, address: e.target.value }));
+                          clearFieldError('address');
+                        }}
+                        placeholder="Street address, apartment, suite, etc."
+                        rows={3}
+                        className={`w-full px-4 py-3 rounded-xl border transition focus:outline-none focus:border-opacity-100 resize-none ${
+                          validationErrors.address ? 'border-red-400' : ''
+                        }`}
+                        style={{
+                          backgroundColor: '#ffffff',
+                          borderColor: validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
+                          color: '#0d0a0b'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = validationErrors.address ? '#ef4444' : '#72b01d'}
+                        onBlur={(e) => e.target.style.borderColor = validationErrors.address ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
+                      />
+                      {validationErrors.address && (
+                        <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                          {validationErrors.address}
+                        </p>
+                      )}
+                      <p className="mt-2 text-sm" style={{ color: '#72b01d' }}>
+                        <FiTruck className="inline-block mr-1" size={14} />
+                        The seller will deliver your package to this address for physical items.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: '#454955' }}>
+                        City *
+                      </label>
+                      <Input
+                        type="text"
+                        required
+                        value={buyerInfo.city}
+                        onChange={(e) => {
+                          setBuyerInfo(prev => ({ ...prev, city: e.target.value }));
+                          clearFieldError('city');
+                        }}
+                        className={validationErrors.city ? 'border-red-400' : ''}
+                        style={{
+                          backgroundColor: '#ffffff',
+                          borderColor: validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)',
+                          color: '#0d0a0b'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = validationErrors.city ? '#ef4444' : '#72b01d'}
+                        onBlur={(e) => e.target.style.borderColor = validationErrors.city ? '#f87171' : 'rgba(114, 176, 29, 0.3)'}
+                      />
+                      {validationErrors.city && (
+                        <p className="mt-1 text-sm" style={{ color: '#dc2626' }}>
+                          {validationErrors.city}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {/* Buyer Notes Section */}
                 <div>
@@ -1250,7 +1277,7 @@ export default function CheckoutPage() {
               </h3>
               
               <div className="space-y-3">
-                {item.cashOnDelivery && (
+                {item.cashOnDelivery && item?.itemType !== ItemType.DIGITAL && (
                   <label className="flex items-center p-4 rounded-xl border cursor-pointer transition"
                     style={{
                       backgroundColor: paymentMethod === PaymentMethod.CASH_ON_DELIVERY ? 'rgba(114, 176, 29, 0.1)' : '#ffffff',
@@ -1401,7 +1428,7 @@ export default function CheckoutPage() {
                     </span>
                     <div className="flex-1">
                       <h5 className="font-semibold text-sm mb-2" style={{ color: '#0d0a0b' }}>
-                        Delivery Information
+                        Seller Notes
                       </h5>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#454955' }}>
                         {item.sellerNotes}
@@ -1434,10 +1461,20 @@ export default function CheckoutPage() {
               {/* Delivery Information */}
               <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(114, 176, 29, 0.05)', borderColor: 'rgba(114, 176, 29, 0.2)' }}>
                 <div className="flex items-center gap-2 mb-2">
-                  <FiTruck size={18} style={{ color: '#72b01d' }} />
-                  <span className="font-medium" style={{ color: '#0d0a0b' }}>Delivery</span>
+                  {item?.itemType === ItemType.DIGITAL ? (
+                    <FiDownload size={18} style={{ color: '#72b01d' }} />
+                  ) : (
+                    <FiTruck size={18} style={{ color: '#72b01d' }} />
+                  )}
+                  <span className="font-medium" style={{ color: '#0d0a0b' }}>
+                    {item?.itemType === ItemType.DIGITAL ? 'Digital Delivery' : 'Delivery'}
+                  </span>
                 </div>
-                {item.deliveryType === DeliveryType.FREE ? (
+                {item?.itemType === ItemType.DIGITAL ? (
+                  <p className="text-sm font-medium" style={{ color: '#72b01d' }}>
+                    Instant download after payment confirmation
+                  </p>
+                ) : item.deliveryType === DeliveryType.FREE ? (
                   <p className="text-sm font-medium" style={{ color: '#72b01d' }}>Free Delivery</p>
                 ) : (
                   <p className="text-sm" style={{ color: '#454955' }}>
@@ -1453,9 +1490,12 @@ export default function CheckoutPage() {
                   <span style={{ color: '#0d0a0b' }}>LKR {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: '#454955' }}>Shipping</span>
+                  <span style={{ color: '#454955' }}>
+                    {item?.itemType === ItemType.DIGITAL ? 'Delivery' : 'Shipping'}
+                  </span>
                   <span style={{ color: shipping > 0 ? '#0d0a0b' : '#72b01d' }}>
-                    {shipping > 0 ? `LKR ${shipping.toLocaleString()}` : 'Free'}
+                    {item?.itemType === ItemType.DIGITAL ? 'Digital - No shipping' : 
+                     shipping > 0 ? `LKR ${shipping.toLocaleString()}` : 'Free'}
                   </span>
                 </div>
                 <hr style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }} />

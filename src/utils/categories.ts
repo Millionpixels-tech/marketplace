@@ -1,6 +1,23 @@
-// Category types for marketplace - Etsy.com structure (Physical products only)
+import React from 'react';
+import { 
+  FiShoppingBag, FiImage, FiBriefcase, FiHeart, FiBook, FiUser, 
+  FiTool, FiSmartphone, FiHome, FiGift, FiFeather, FiPackage,
+  FiCamera, FiMonitor, FiMusic, FiVideo, FiPlay,
+  FiFileText, FiEdit3, FiStar, FiShield, FiHeadphones,
+  FiZap, FiScissors, FiSettings, FiPenTool, FiDroplet, 
+  FiActivity, FiAward, FiTarget, FiTrendingUp, FiBarChart,
+  FiKey, FiSquare, FiLayers, FiMic, 
+  FiGlobe, FiArchive, FiTag, FiBox, FiWatch, FiPrinter,
+  FiMapPin, FiCoffee, FiAperture,
+  FiSun, FiUmbrella, FiBattery,
+  FiRotateCcw, FiEyeOff, FiEye, FiType, FiCircle,
+  FiMinus
+} from 'react-icons/fi';
+
+// Category types for marketplace - supports both Physical and Digital products
 export const ItemType = {
-  PHYSICAL: 'Physical'
+  PHYSICAL: 'Physical',
+  DIGITAL: 'Digital'
 } as const;
 
 export type ItemType = typeof ItemType[keyof typeof ItemType];
@@ -25,6 +42,22 @@ export const EtsyCategory = {
 } as const;
 
 export type EtsyCategory = typeof EtsyCategory[keyof typeof EtsyCategory];
+
+// Digital Product Categories
+export const DigitalCategory = {
+  SOFTWARE_APPS: 'Software & Apps',
+  DIGITAL_ART_GRAPHICS: 'Digital Art & Graphics',
+  MUSIC_AUDIO: 'Music & Audio',
+  VIDEO_CONTENT: 'Video Content',
+  EBOOKS_DOCUMENTS: 'eBooks & Documents',
+  PHOTOGRAPHY_PRESETS: 'Photography & Presets',
+  TEMPLATES_PRINTABLES: 'Templates & Printables',
+  COURSES_EDUCATION: 'Courses & Education',
+  FONTS_TYPOGRAPHY: 'Fonts & Typography',
+  DIGITAL_CRAFT_SUPPLIES: 'Digital Craft Supplies'
+} as const;
+
+export type DigitalCategory = typeof DigitalCategory[keyof typeof DigitalCategory];
 
 // Subcategories for each main category
 
@@ -266,10 +299,152 @@ export const WeddingsSubcategory = {
 
 export type WeddingsSubcategory = typeof WeddingsSubcategory[keyof typeof WeddingsSubcategory];
 
+// Digital Product Subcategories
+
+// Software & Apps Subcategories
+export const SoftwareAppsSubcategory = {
+  MOBILE_APPS: 'Mobile Apps',
+  DESKTOP_SOFTWARE: 'Desktop Software',
+  WEB_APPLICATIONS: 'Web Applications',
+  PLUGINS_EXTENSIONS: 'Plugins & Extensions',
+  SCRIPTS_AUTOMATION: 'Scripts & Automation',
+  GAMES: 'Games',
+  PRODUCTIVITY_TOOLS: 'Productivity Tools',
+  DEVELOPMENT_TOOLS: 'Development Tools'
+} as const;
+
+export type SoftwareAppsSubcategory = typeof SoftwareAppsSubcategory[keyof typeof SoftwareAppsSubcategory];
+
+// Digital Art & Graphics Subcategories
+export const DigitalArtGraphicsSubcategory = {
+  ILLUSTRATIONS: 'Illustrations',
+  DIGITAL_PAINTINGS: 'Digital Paintings',
+  VECTOR_GRAPHICS: 'Vector Graphics',
+  ICONS_SYMBOLS: 'Icons & Symbols',
+  CLIPART: 'Clipart',
+  BACKGROUNDS_TEXTURES: 'Backgrounds & Textures',
+  LOGOS_BRANDING: 'Logos & Branding',
+  DIGITAL_SCRAPBOOK: 'Digital Scrapbook Elements'
+} as const;
+
+export type DigitalArtGraphicsSubcategory = typeof DigitalArtGraphicsSubcategory[keyof typeof DigitalArtGraphicsSubcategory];
+
+// Music & Audio Subcategories
+export const MusicAudioSubcategory = {
+  BACKGROUND_MUSIC: 'Background Music',
+  SOUND_EFFECTS: 'Sound Effects',
+  AUDIO_LOOPS: 'Audio Loops',
+  PODCAST_INTROS: 'Podcast Intros',
+  MEDITATION_SOUNDS: 'Meditation Sounds',
+  VOICEOVERS: 'Voiceovers',
+  MUSIC_BEATS: 'Music Beats',
+  AUDIO_BOOKS: 'Audio Books'
+} as const;
+
+export type MusicAudioSubcategory = typeof MusicAudioSubcategory[keyof typeof MusicAudioSubcategory];
+
+// Video Content Subcategories
+export const VideoContentSubcategory = {
+  STOCK_FOOTAGE: 'Stock Footage',
+  MOTION_GRAPHICS: 'Motion Graphics',
+  VIDEO_TEMPLATES: 'Video Templates',
+  ANIMATIONS: 'Animations',
+  INTRO_OUTROS: 'Intro & Outros',
+  TUTORIALS: 'Tutorials',
+  DOCUMENTARIES: 'Documentaries',
+  SHORT_FILMS: 'Short Films'
+} as const;
+
+export type VideoContentSubcategory = typeof VideoContentSubcategory[keyof typeof VideoContentSubcategory];
+
+// eBooks & Documents Subcategories
+export const EbooksDocumentsSubcategory = {
+  FICTION_BOOKS: 'Fiction Books',
+  NON_FICTION: 'Non-Fiction',
+  TECHNICAL_MANUALS: 'Technical Manuals',
+  GUIDES_HOWTOS: 'Guides & How-tos',
+  RESEARCH_PAPERS: 'Research Papers',
+  BUSINESS_PLANS: 'Business Plans',
+  LEGAL_DOCUMENTS: 'Legal Documents',
+  ACADEMIC_CONTENT: 'Academic Content'
+} as const;
+
+export type EbooksDocumentsSubcategory = typeof EbooksDocumentsSubcategory[keyof typeof EbooksDocumentsSubcategory];
+
+// Photography & Presets Subcategories
+export const PhotographyPresetsSubcategory = {
+  LIGHTROOM_PRESETS: 'Lightroom Presets',
+  PHOTOSHOP_ACTIONS: 'Photoshop Actions',
+  STOCK_PHOTOS: 'Stock Photos',
+  CAMERA_RAW_PRESETS: 'Camera Raw Presets',
+  MOBILE_PRESETS: 'Mobile Presets',
+  VIDEO_LUTS: 'Video LUTs',
+  PHOTOGRAPHY_OVERLAYS: 'Photography Overlays',
+  PHOTO_FILTERS: 'Photo Filters'
+} as const;
+
+export type PhotographyPresetsSubcategory = typeof PhotographyPresetsSubcategory[keyof typeof PhotographyPresetsSubcategory];
+
+// Templates & Printables Subcategories
+export const TemplatesPrintablesSubcategory = {
+  BUSINESS_TEMPLATES: 'Business Templates',
+  SOCIAL_MEDIA_TEMPLATES: 'Social Media Templates',
+  PRESENTATION_TEMPLATES: 'Presentation Templates',
+  WEBSITE_TEMPLATES: 'Website Templates',
+  PRINTABLE_PLANNERS: 'Printable Planners',
+  INVITATIONS_CARDS: 'Invitations & Cards',
+  POSTERS_FLYERS: 'Posters & Flyers',
+  RESUME_TEMPLATES: 'Resume Templates'
+} as const;
+
+export type TemplatesPrintablesSubcategory = typeof TemplatesPrintablesSubcategory[keyof typeof TemplatesPrintablesSubcategory];
+
+// Courses & Education Subcategories
+export const CoursesEducationSubcategory = {
+  ONLINE_COURSES: 'Online Courses',
+  TUTORIALS_LESSONS: 'Tutorials & Lessons',
+  EDUCATIONAL_VIDEOS: 'Educational Videos',
+  STUDY_MATERIALS: 'Study Materials',
+  WEBINARS: 'Webinars',
+  WORKSHOPS: 'Workshops',
+  SKILL_DEVELOPMENT: 'Skill Development',
+  CERTIFICATION_PREP: 'Certification Prep'
+} as const;
+
+export type CoursesEducationSubcategory = typeof CoursesEducationSubcategory[keyof typeof CoursesEducationSubcategory];
+
+// Fonts & Typography Subcategories
+export const FontsTypographySubcategory = {
+  SERIF_FONTS: 'Serif Fonts',
+  SANS_SERIF_FONTS: 'Sans Serif Fonts',
+  SCRIPT_FONTS: 'Script Fonts',
+  DISPLAY_FONTS: 'Display Fonts',
+  HANDWRITTEN_FONTS: 'Handwritten Fonts',
+  VINTAGE_FONTS: 'Vintage Fonts',
+  MODERN_FONTS: 'Modern Fonts',
+  FONT_BUNDLES: 'Font Bundles'
+} as const;
+
+export type FontsTypographySubcategory = typeof FontsTypographySubcategory[keyof typeof FontsTypographySubcategory];
+
+// Digital Craft Supplies Subcategories
+export const DigitalCraftSuppliesSubcategory = {
+  DIGITAL_PAPERS: 'Digital Papers',
+  DIGITAL_STICKERS: 'Digital Stickers',
+  DIGITAL_STAMPS: 'Digital Stamps',
+  CRAFTING_TEMPLATES: 'Crafting Templates',
+  CUTTING_FILES: 'Cutting Files (SVG, DXF)',
+  EMBROIDERY_PATTERNS: 'Embroidery Patterns',
+  KNITTING_PATTERNS: 'Knitting Patterns',
+  CROCHET_PATTERNS: 'Crochet Patterns'
+} as const;
+
+export type DigitalCraftSuppliesSubcategory = typeof DigitalCraftSuppliesSubcategory[keyof typeof DigitalCraftSuppliesSubcategory];
+
 // Category interface
 export interface Category {
   type: ItemType;
-  name: EtsyCategory;
+  name: EtsyCategory | DigitalCategory;
   subcategories: string[];
 }
 
@@ -349,205 +524,369 @@ export const categories: Category[] = [
     type: ItemType.PHYSICAL,
     name: EtsyCategory.WEDDINGS,
     subcategories: Object.values(WeddingsSubcategory)
+  },
+  // Digital Product Categories
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.SOFTWARE_APPS,
+    subcategories: Object.values(SoftwareAppsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.DIGITAL_ART_GRAPHICS,
+    subcategories: Object.values(DigitalArtGraphicsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.MUSIC_AUDIO,
+    subcategories: Object.values(MusicAudioSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.VIDEO_CONTENT,
+    subcategories: Object.values(VideoContentSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.EBOOKS_DOCUMENTS,
+    subcategories: Object.values(EbooksDocumentsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.PHOTOGRAPHY_PRESETS,
+    subcategories: Object.values(PhotographyPresetsSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.TEMPLATES_PRINTABLES,
+    subcategories: Object.values(TemplatesPrintablesSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.COURSES_EDUCATION,
+    subcategories: Object.values(CoursesEducationSubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.FONTS_TYPOGRAPHY,
+    subcategories: Object.values(FontsTypographySubcategory)
+  },
+  {
+    type: ItemType.DIGITAL,
+    name: DigitalCategory.DIGITAL_CRAFT_SUPPLIES,
+    subcategories: Object.values(DigitalCraftSuppliesSubcategory)
   }
 ];
 
-// Category icons mapping
-export const categoryIcons: Record<EtsyCategory, string> = {
-  [EtsyCategory.ACCESSORIES]: "👜",
-  [EtsyCategory.ART_COLLECTIBLES]: "🎨",
-  [EtsyCategory.BAGS_PURSES]: "👛",
-  [EtsyCategory.BATH_BEAUTY]: "🧴",
-  [EtsyCategory.BOOKS_MOVIES_MUSIC]: "📚",
-  [EtsyCategory.CLOTHING]: "👕",
-  [EtsyCategory.CRAFT_SUPPLIES_TOOLS]: "✂️",
-  [EtsyCategory.ELECTRONICS_ACCESSORIES]: "📱",
-  [EtsyCategory.HOME_LIVING]: "🏠",
-  [EtsyCategory.JEWELRY]: "💍",
-  [EtsyCategory.PAPER_PARTY_SUPPLIES]: "🎉",
-  [EtsyCategory.PET_SUPPLIES]: "🐾",
-  [EtsyCategory.SHOES]: "👟",
-  [EtsyCategory.TOYS_GAMES]: "🧸",
-  [EtsyCategory.WEDDINGS]: "💒"
+// Category icons mapping - Using React Icons
+export const categoryIcons: Record<EtsyCategory | DigitalCategory, React.ComponentType<any>> = {
+  [EtsyCategory.ACCESSORIES]: FiShoppingBag,
+  [EtsyCategory.ART_COLLECTIBLES]: FiImage,
+  [EtsyCategory.BAGS_PURSES]: FiBriefcase,
+  [EtsyCategory.BATH_BEAUTY]: FiHeart,
+  [EtsyCategory.BOOKS_MOVIES_MUSIC]: FiBook,
+  [EtsyCategory.CLOTHING]: FiUser,
+  [EtsyCategory.CRAFT_SUPPLIES_TOOLS]: FiTool,
+  [EtsyCategory.ELECTRONICS_ACCESSORIES]: FiSmartphone,
+  [EtsyCategory.HOME_LIVING]: FiHome,
+  [EtsyCategory.JEWELRY]: FiStar,
+  [EtsyCategory.PAPER_PARTY_SUPPLIES]: FiGift,
+  [EtsyCategory.PET_SUPPLIES]: FiHeart,
+  [EtsyCategory.SHOES]: FiFeather,
+  [EtsyCategory.TOYS_GAMES]: FiPlay,
+  [EtsyCategory.WEDDINGS]: FiHeart,
+  // Digital Category Icons
+  [DigitalCategory.SOFTWARE_APPS]: FiMonitor,
+  [DigitalCategory.DIGITAL_ART_GRAPHICS]: FiImage,
+  [DigitalCategory.MUSIC_AUDIO]: FiMusic,
+  [DigitalCategory.VIDEO_CONTENT]: FiVideo,
+  [DigitalCategory.EBOOKS_DOCUMENTS]: FiBook,
+  [DigitalCategory.PHOTOGRAPHY_PRESETS]: FiCamera,
+  [DigitalCategory.TEMPLATES_PRINTABLES]: FiFileText,
+  [DigitalCategory.COURSES_EDUCATION]: FiBook,
+  [DigitalCategory.FONTS_TYPOGRAPHY]: FiEdit3,
+  [DigitalCategory.DIGITAL_CRAFT_SUPPLIES]: FiPackage
 };
 
-// Subcategory icons mapping
-export const subCategoryIcons: Record<string, string> = {
+// Subcategory icons mapping - React Icons
+export const subCategoryIcons: Record<string, React.ComponentType> = {
   // Accessories
-  [AccessoriesSubcategory.BABY_ACCESSORIES]: "👶",
-  [AccessoriesSubcategory.BELTS_SUSPENDERS]: "🎗️",
-  [AccessoriesSubcategory.BOUQUETS_CORSAGES]: "💐",
-  [AccessoriesSubcategory.COSTUME_ACCESSORIES]: "🎭",
-  [AccessoriesSubcategory.GLOVES_MITTENS]: "🧤",
-  [AccessoriesSubcategory.HAIR_ACCESSORIES]: "🎀",
-  [AccessoriesSubcategory.HAND_FANS]: "🪭",
-  [AccessoriesSubcategory.HATS_CAPS]: "🎩",
-  [AccessoriesSubcategory.KEYCHAINS_LANYARDS]: "🔑",
-  [AccessoriesSubcategory.LATKANS]: "🪅",
-  [AccessoriesSubcategory.PATCHES_PINS]: "📌",
-  [AccessoriesSubcategory.SCARVES_WRAPS]: "🧣",
-  [AccessoriesSubcategory.SUIT_TIE_ACCESSORIES]: "👔",
-  [AccessoriesSubcategory.SUNGLASSES_EYEWEAR]: "🕶️",
-  [AccessoriesSubcategory.UMBRELLAS_RAIN_ACCESSORIES]: "☂️",
+  [AccessoriesSubcategory.BABY_ACCESSORIES]: FiUser,
+  [AccessoriesSubcategory.BELTS_SUSPENDERS]: FiPackage,
+  [AccessoriesSubcategory.BOUQUETS_CORSAGES]: FiHeart,
+  [AccessoriesSubcategory.COSTUME_ACCESSORIES]: FiStar,
+  [AccessoriesSubcategory.GLOVES_MITTENS]: FiShield,
+  [AccessoriesSubcategory.HAIR_ACCESSORIES]: FiFeather,
+  [AccessoriesSubcategory.HAND_FANS]: FiSun,
+  [AccessoriesSubcategory.HATS_CAPS]: FiShield,
+  [AccessoriesSubcategory.KEYCHAINS_LANYARDS]: FiKey,
+  [AccessoriesSubcategory.LATKANS]: FiGift,
+  [AccessoriesSubcategory.PATCHES_PINS]: FiMapPin,
+  [AccessoriesSubcategory.SCARVES_WRAPS]: FiPackage,
+  [AccessoriesSubcategory.SUIT_TIE_ACCESSORIES]: FiBriefcase,
+  [AccessoriesSubcategory.SUNGLASSES_EYEWEAR]: FiEye,
+  [AccessoriesSubcategory.UMBRELLAS_RAIN_ACCESSORIES]: FiUmbrella,
   
   // Art & Collectibles
-  [ArtCollectiblesSubcategory.ARTIST_TRADING_CARDS]: "🃏",
-  [ArtCollectiblesSubcategory.COLLECTIBLES]: "🏺",
-  [ArtCollectiblesSubcategory.DOLLS_MINIATURES]: "🪆",
-  [ArtCollectiblesSubcategory.DRAWING_ILLUSTRATION]: "✏️",
-  [ArtCollectiblesSubcategory.FIBER_ARTS]: "🧵",
-  [ArtCollectiblesSubcategory.FINE_ART_CERAMICS]: "🏺",
-  [ArtCollectiblesSubcategory.GLASS_ART]: "🍷",
-  [ArtCollectiblesSubcategory.MIXED_MEDIA_COLLAGE]: "🎨",
-  [ArtCollectiblesSubcategory.PAINTING]: "🖼️",
-  [ArtCollectiblesSubcategory.PHOTOGRAPHY]: "📸",
-  [ArtCollectiblesSubcategory.PRINTS]: "🖨️",
-  [ArtCollectiblesSubcategory.SCULPTURE]: "🗿",
+  [ArtCollectiblesSubcategory.ARTIST_TRADING_CARDS]: FiImage,
+  [ArtCollectiblesSubcategory.COLLECTIBLES]: FiArchive,
+  [ArtCollectiblesSubcategory.DOLLS_MINIATURES]: FiGift,
+  [ArtCollectiblesSubcategory.DRAWING_ILLUSTRATION]: FiEdit3,
+  [ArtCollectiblesSubcategory.FIBER_ARTS]: FiPackage,
+  [ArtCollectiblesSubcategory.FINE_ART_CERAMICS]: FiAperture,
+  [ArtCollectiblesSubcategory.GLASS_ART]: FiDroplet,
+  [ArtCollectiblesSubcategory.MIXED_MEDIA_COLLAGE]: FiLayers,
+  [ArtCollectiblesSubcategory.PAINTING]: FiImage,
+  [ArtCollectiblesSubcategory.PHOTOGRAPHY]: FiCamera,
+  [ArtCollectiblesSubcategory.PRINTS]: FiPrinter,
+  [ArtCollectiblesSubcategory.SCULPTURE]: FiBox,
   
   // Bags & Purses
-  [BagsPursesSubcategory.ACCESSORY_CASES]: "💼",
-  [BagsPursesSubcategory.BACKPACKS]: "🎒",
-  [BagsPursesSubcategory.CLOTHING_SHOE_BAGS]: "👗",
-  [BagsPursesSubcategory.COSMETIC_TOILETRY_STORAGE]: "💄",
-  [BagsPursesSubcategory.DIAPER_BAGS]: "👶",
-  [BagsPursesSubcategory.FANNY_PACKS]: "🎪",
-  [BagsPursesSubcategory.FOOD_INSULATED_BAGS]: "🧊",
-  [BagsPursesSubcategory.HANDBAGS]: "👜",
-  [BagsPursesSubcategory.LUGGAGE_TRAVEL]: "🧳",
-  [BagsPursesSubcategory.MARKET_BAGS]: "🛍️",
-  [BagsPursesSubcategory.MESSENGER_BAGS]: "📫",
-  [BagsPursesSubcategory.POUCHES_COIN_PURSES]: "👛",
-  [BagsPursesSubcategory.SPORTS_BAGS]: "⚽",
-  [BagsPursesSubcategory.TOTES]: "🛒",
-  [BagsPursesSubcategory.WALLETS_MONEY_CLIPS]: "💰",
+  [BagsPursesSubcategory.ACCESSORY_CASES]: FiPackage,
+  [BagsPursesSubcategory.BACKPACKS]: FiShoppingBag,
+  [BagsPursesSubcategory.CLOTHING_SHOE_BAGS]: FiShoppingBag,
+  [BagsPursesSubcategory.COSMETIC_TOILETRY_STORAGE]: FiPackage,
+  [BagsPursesSubcategory.DIAPER_BAGS]: FiUser,
+  [BagsPursesSubcategory.FANNY_PACKS]: FiShoppingBag,
+  [BagsPursesSubcategory.FOOD_INSULATED_BAGS]: FiShoppingBag,
+  [BagsPursesSubcategory.HANDBAGS]: FiShoppingBag,
+  [BagsPursesSubcategory.LUGGAGE_TRAVEL]: FiShoppingBag,
+  [BagsPursesSubcategory.MARKET_BAGS]: FiShoppingBag,
+  [BagsPursesSubcategory.MESSENGER_BAGS]: FiShoppingBag,
+  [BagsPursesSubcategory.POUCHES_COIN_PURSES]: FiShoppingBag,
+  [BagsPursesSubcategory.SPORTS_BAGS]: FiActivity,
+  [BagsPursesSubcategory.TOTES]: FiShoppingBag,
+  [BagsPursesSubcategory.WALLETS_MONEY_CLIPS]: FiShoppingBag,
   
   // Bath & Beauty
-  [BathBeautySubcategory.BABY_CHILD_CARE]: "👶",
-  [BathBeautySubcategory.BATH_ACCESSORIES]: "🛁",
-  [BathBeautySubcategory.ESSENTIAL_OILS]: "🧴",
-  [BathBeautySubcategory.FRAGRANCES]: "🌸",
-  [BathBeautySubcategory.HAIR_CARE]: "💇‍♀️",
-  [BathBeautySubcategory.MAKEUP_COSMETICS]: "💄",
-  [BathBeautySubcategory.PERSONAL_CARE]: "🧼",
-  [BathBeautySubcategory.SKIN_CARE]: "🧴",
-  [BathBeautySubcategory.SOAPS]: "🧼",
-  [BathBeautySubcategory.SPA_RELAXATION]: "🧘‍♀️",
+  [BathBeautySubcategory.BABY_CHILD_CARE]: FiUser,
+  [BathBeautySubcategory.BATH_ACCESSORIES]: FiDroplet,
+  [BathBeautySubcategory.ESSENTIAL_OILS]: FiDroplet,
+  [BathBeautySubcategory.FRAGRANCES]: FiHeart,
+  [BathBeautySubcategory.HAIR_CARE]: FiScissors,
+  [BathBeautySubcategory.MAKEUP_COSMETICS]: FiStar,
+  [BathBeautySubcategory.PERSONAL_CARE]: FiUser,
+  [BathBeautySubcategory.SKIN_CARE]: FiDroplet,
+  [BathBeautySubcategory.SOAPS]: FiDroplet,
+  [BathBeautySubcategory.SPA_RELAXATION]: FiSun,
   
   // Books, Movies & Music
-  [BooksMoviesMusicSubcategory.BOOKS]: "📖",
-  [BooksMoviesMusicSubcategory.MOVIES]: "🎬",
-  [BooksMoviesMusicSubcategory.MUSIC]: "🎵",
+  [BooksMoviesMusicSubcategory.BOOKS]: FiBook,
+  [BooksMoviesMusicSubcategory.MOVIES]: FiVideo,
+  [BooksMoviesMusicSubcategory.MUSIC]: FiMusic,
   
   // Clothing
-  [ClothingSubcategory.BOYS_CLOTHING]: "👦",
-  [ClothingSubcategory.GENDER_NEUTRAL_ADULT_CLOTHING]: "👤",
-  [ClothingSubcategory.GENDER_NEUTRAL_KIDS_CLOTHING]: "🧒",
-  [ClothingSubcategory.GIRLS_CLOTHING]: "👧",
-  [ClothingSubcategory.MENS_CLOTHING]: "👨",
-  [ClothingSubcategory.WOMENS_CLOTHING]: "👩",
+  [ClothingSubcategory.BOYS_CLOTHING]: FiUser,
+  [ClothingSubcategory.GENDER_NEUTRAL_ADULT_CLOTHING]: FiUser,
+  [ClothingSubcategory.GENDER_NEUTRAL_KIDS_CLOTHING]: FiUser,
+  [ClothingSubcategory.GIRLS_CLOTHING]: FiUser,
+  [ClothingSubcategory.MENS_CLOTHING]: FiUser,
+  [ClothingSubcategory.WOMENS_CLOTHING]: FiUser,
   
   // Craft Supplies & Tools
-  [CraftSuppliesToolsSubcategory.BEADS_GEMS_CABOCHONS]: "📿",
-  [CraftSuppliesToolsSubcategory.BEAUTY_SUPPLIES]: "💄",
-  [CraftSuppliesToolsSubcategory.BLANKS]: "⬜",
-  [CraftSuppliesToolsSubcategory.BRUSHES]: "🖌️",
-  [CraftSuppliesToolsSubcategory.CANVAS_SURFACES]: "🖼️",
-  [CraftSuppliesToolsSubcategory.FABRIC_NOTIONS]: "🧵",
-  [CraftSuppliesToolsSubcategory.PATTERNS_HOW_TOS]: "📝",
-  [CraftSuppliesToolsSubcategory.STAMPS_INKS_PAINTS]: "🎨",
-  [CraftSuppliesToolsSubcategory.TOOLS_EQUIPMENT]: "🔧",
-  [CraftSuppliesToolsSubcategory.YARN_FIBER]: "🧶",
+  [CraftSuppliesToolsSubcategory.BEADS_GEMS_CABOCHONS]: FiGift,
+  [CraftSuppliesToolsSubcategory.BEAUTY_SUPPLIES]: FiStar,
+  [CraftSuppliesToolsSubcategory.BLANKS]: FiSquare,
+  [CraftSuppliesToolsSubcategory.BRUSHES]: FiPenTool,
+  [CraftSuppliesToolsSubcategory.CANVAS_SURFACES]: FiImage,
+  [CraftSuppliesToolsSubcategory.FABRIC_NOTIONS]: FiPackage,
+  [CraftSuppliesToolsSubcategory.PATTERNS_HOW_TOS]: FiFileText,
+  [CraftSuppliesToolsSubcategory.STAMPS_INKS_PAINTS]: FiEdit3,
+  [CraftSuppliesToolsSubcategory.TOOLS_EQUIPMENT]: FiTool,
+  [CraftSuppliesToolsSubcategory.YARN_FIBER]: FiPackage,
   
   // Electronics & Accessories
-  [ElectronicsAccessoriesSubcategory.AUDIO]: "🔊",
-  [ElectronicsAccessoriesSubcategory.BATTERIES_CHARGING]: "🔋",
-  [ElectronicsAccessoriesSubcategory.CABLES_CORDS]: "🔌",
-  [ElectronicsAccessoriesSubcategory.CAMERAS_EQUIPMENT]: "📷",
-  [ElectronicsAccessoriesSubcategory.CAR_PARTS_ACCESSORIES]: "🚗",
-  [ElectronicsAccessoriesSubcategory.CELL_PHONE_ACCESSORIES]: "📱",
-  [ElectronicsAccessoriesSubcategory.COMPUTERS_PERIPHERALS]: "💻",
-  [ElectronicsAccessoriesSubcategory.DECALS_SKINS]: "🏷️",
-  [ElectronicsAccessoriesSubcategory.DOCKING_STANDS]: "📱",
-  [ElectronicsAccessoriesSubcategory.ELECTRONICS_CASES]: "📦",
-  [ElectronicsAccessoriesSubcategory.GADGETS]: "🔧",
-  [ElectronicsAccessoriesSubcategory.MAKER_SUPPLIES]: "🛠️",
-  [ElectronicsAccessoriesSubcategory.PARTS_ELECTRICAL]: "⚡",
-  [ElectronicsAccessoriesSubcategory.TV_PROJECTION]: "📺",
-  [ElectronicsAccessoriesSubcategory.TELEPHONES_HANDSETS]: "☎️",
-  [ElectronicsAccessoriesSubcategory.VIDEO_GAMES]: "🎮",
+  [ElectronicsAccessoriesSubcategory.AUDIO]: FiHeadphones,
+  [ElectronicsAccessoriesSubcategory.BATTERIES_CHARGING]: FiBattery,
+  [ElectronicsAccessoriesSubcategory.CABLES_CORDS]: FiZap,
+  [ElectronicsAccessoriesSubcategory.CAMERAS_EQUIPMENT]: FiCamera,
+  [ElectronicsAccessoriesSubcategory.CAR_PARTS_ACCESSORIES]: FiTool,
+  [ElectronicsAccessoriesSubcategory.CELL_PHONE_ACCESSORIES]: FiSmartphone,
+  [ElectronicsAccessoriesSubcategory.COMPUTERS_PERIPHERALS]: FiMonitor,
+  [ElectronicsAccessoriesSubcategory.DECALS_SKINS]: FiTag,
+  [ElectronicsAccessoriesSubcategory.DOCKING_STANDS]: FiSmartphone,
+  [ElectronicsAccessoriesSubcategory.ELECTRONICS_CASES]: FiPackage,
+  [ElectronicsAccessoriesSubcategory.GADGETS]: FiTool,
+  [ElectronicsAccessoriesSubcategory.MAKER_SUPPLIES]: FiTool,
+  [ElectronicsAccessoriesSubcategory.PARTS_ELECTRICAL]: FiZap,
+  [ElectronicsAccessoriesSubcategory.TV_PROJECTION]: FiMonitor,
+  [ElectronicsAccessoriesSubcategory.TELEPHONES_HANDSETS]: FiSmartphone,
+  [ElectronicsAccessoriesSubcategory.VIDEO_GAMES]: FiPlay,
   
   // Home & Living
-  [HomeLivingSubcategory.BATHROOM]: "🚿",
-  [HomeLivingSubcategory.BEDDING]: "🛏️",
-  [HomeLivingSubcategory.CLEANING_SUPPLIES]: "🧽",
-  [HomeLivingSubcategory.FOOD_DRINK]: "🍽️",
-  [HomeLivingSubcategory.HOME_DECOR]: "🏠",
-  [HomeLivingSubcategory.KITCHEN_DINING]: "🍴",
-  [HomeLivingSubcategory.LIGHTING]: "💡",
-  [HomeLivingSubcategory.OFFICE]: "🏢",
-  [HomeLivingSubcategory.OUTDOOR_GARDENING]: "🌱",
-  [HomeLivingSubcategory.SPIRITUALITY_RELIGION]: "🕯️",
-  [HomeLivingSubcategory.STORAGE_ORGANIZATION]: "📦",
-  [HomeLivingSubcategory.WALL_DECOR_FRAMES]: "🖼️",
-  [HomeLivingSubcategory.FURNITURE]: "🪑",
+  [HomeLivingSubcategory.BATHROOM]: FiDroplet,
+  [HomeLivingSubcategory.BEDDING]: FiHome,
+  [HomeLivingSubcategory.CLEANING_SUPPLIES]: FiTool,
+  [HomeLivingSubcategory.FOOD_DRINK]: FiCoffee,
+  [HomeLivingSubcategory.HOME_DECOR]: FiHome,
+  [HomeLivingSubcategory.KITCHEN_DINING]: FiCoffee,
+  [HomeLivingSubcategory.LIGHTING]: FiSun,
+  [HomeLivingSubcategory.OFFICE]: FiBriefcase,
+  [HomeLivingSubcategory.OUTDOOR_GARDENING]: FiSun,
+  [HomeLivingSubcategory.SPIRITUALITY_RELIGION]: FiSun,
+  [HomeLivingSubcategory.STORAGE_ORGANIZATION]: FiPackage,
+  [HomeLivingSubcategory.WALL_DECOR_FRAMES]: FiImage,
+  [HomeLivingSubcategory.FURNITURE]: FiHome,
   
   // Jewelry
-  [JewelrySubcategory.ANKLETS]: "👣",
-  [JewelrySubcategory.BRACELETS]: "📿",
-  [JewelrySubcategory.BROOCHES]: "📌",
-  [JewelrySubcategory.CUFF_LINKS_TIE_CLIPS]: "👔",
-  [JewelrySubcategory.EARRINGS]: "👂",
-  [JewelrySubcategory.HAIR_JEWELRY]: "💎",
-  [JewelrySubcategory.JEWELRY_SETS]: "💍",
-  [JewelrySubcategory.NECKLACES]: "📿",
-  [JewelrySubcategory.RINGS]: "💍",
-  [JewelrySubcategory.WATCHES]: "⌚",
+  [JewelrySubcategory.ANKLETS]: FiCircle,
+  [JewelrySubcategory.BRACELETS]: FiWatch,
+  [JewelrySubcategory.BROOCHES]: FiMapPin,
+  [JewelrySubcategory.CUFF_LINKS_TIE_CLIPS]: FiBriefcase,
+  [JewelrySubcategory.EARRINGS]: FiCircle,
+  [JewelrySubcategory.HAIR_JEWELRY]: FiFeather,
+  [JewelrySubcategory.JEWELRY_SETS]: FiGift,
+  [JewelrySubcategory.NECKLACES]: FiCircle,
+  [JewelrySubcategory.RINGS]: FiCircle,
+  [JewelrySubcategory.WATCHES]: FiWatch,
   
   // Paper & Party Supplies
-  [PaperPartySuppliesSubcategory.GREETING_CARDS]: "💌",
-  [PaperPartySuppliesSubcategory.INVITATIONS_ANNOUNCEMENTS]: "💌",
-  [PaperPartySuppliesSubcategory.PARTY_DECORATIONS]: "🎊",
-  [PaperPartySuppliesSubcategory.PARTY_FAVORS_GAMES]: "🎁",
-  [PaperPartySuppliesSubcategory.PARTY_SUPPLIES]: "🎉",
-  [PaperPartySuppliesSubcategory.STATIONERY]: "📝",
+  [PaperPartySuppliesSubcategory.GREETING_CARDS]: FiFileText,
+  [PaperPartySuppliesSubcategory.INVITATIONS_ANNOUNCEMENTS]: FiFileText,
+  [PaperPartySuppliesSubcategory.PARTY_DECORATIONS]: FiGift,
+  [PaperPartySuppliesSubcategory.PARTY_FAVORS_GAMES]: FiGift,
+  [PaperPartySuppliesSubcategory.PARTY_SUPPLIES]: FiGift,
+  [PaperPartySuppliesSubcategory.STATIONERY]: FiFileText,
   
   // Pet Supplies
-  [PetSuppliesSubcategory.BIRD_SUPPLIES]: "🐦",
-  [PetSuppliesSubcategory.CAT_SUPPLIES]: "🐱",
-  [PetSuppliesSubcategory.DOG_SUPPLIES]: "🐶",
-  [PetSuppliesSubcategory.FISH_AQUATIC]: "🐠",
-  [PetSuppliesSubcategory.PET_MEMORIALS_URNS]: "⚱️",
-  [PetSuppliesSubcategory.PET_TOYS]: "🧸",
-  [PetSuppliesSubcategory.REPTILE_AMPHIBIAN]: "🦎",
-  [PetSuppliesSubcategory.SMALL_PET_SUPPLIES]: "🐹",
+  [PetSuppliesSubcategory.BIRD_SUPPLIES]: FiFeather,
+  [PetSuppliesSubcategory.CAT_SUPPLIES]: FiHeart,
+  [PetSuppliesSubcategory.DOG_SUPPLIES]: FiHeart,
+  [PetSuppliesSubcategory.FISH_AQUATIC]: FiDroplet,
+  [PetSuppliesSubcategory.PET_MEMORIALS_URNS]: FiArchive,
+  [PetSuppliesSubcategory.PET_TOYS]: FiGift,
+  [PetSuppliesSubcategory.REPTILE_AMPHIBIAN]: FiSun,
+  [PetSuppliesSubcategory.SMALL_PET_SUPPLIES]: FiHeart,
   
   // Shoes
-  [ShoesSubcategory.BABY_SHOES]: "👶",
-  [ShoesSubcategory.BOOTS]: "🥾",
-  [ShoesSubcategory.FLATS_LOAFERS_OXFORDS]: "🥿",
-  [ShoesSubcategory.HEELS]: "👠",
-  [ShoesSubcategory.SANDALS]: "👡",
-  [ShoesSubcategory.SLIPPERS]: "🩴",
-  [ShoesSubcategory.SNEAKERS]: "👟",
-  [ShoesSubcategory.SHOE_CARE_ACCESSORIES]: "🧽",
+  [ShoesSubcategory.BABY_SHOES]: FiUser,
+  [ShoesSubcategory.BOOTS]: FiShield,
+  [ShoesSubcategory.FLATS_LOAFERS_OXFORDS]: FiMinus,
+  [ShoesSubcategory.HEELS]: FiTrendingUp,
+  [ShoesSubcategory.SANDALS]: FiSun,
+  [ShoesSubcategory.SLIPPERS]: FiHome,
+  [ShoesSubcategory.SNEAKERS]: FiActivity,
+  [ShoesSubcategory.SHOE_CARE_ACCESSORIES]: FiTool,
   
   // Toys & Games
-  [ToysGamesSubcategory.BABY_TODDLER_TOYS]: "👶",
-  [ToysGamesSubcategory.DOLLS_ACTION_FIGURES]: "🪆",
-  [ToysGamesSubcategory.GAMES_PUZZLES]: "🧩",
-  [ToysGamesSubcategory.LEARNING_SCHOOL]: "📚",
-  [ToysGamesSubcategory.SPORTS_OUTDOOR_PLAY]: "⚽",
-  [ToysGamesSubcategory.STUFFED_ANIMALS_PLUSHIES]: "🧸",
+  [ToysGamesSubcategory.BABY_TODDLER_TOYS]: FiUser,
+  [ToysGamesSubcategory.DOLLS_ACTION_FIGURES]: FiGift,
+  [ToysGamesSubcategory.GAMES_PUZZLES]: FiTarget,
+  [ToysGamesSubcategory.LEARNING_SCHOOL]: FiBook,
+  [ToysGamesSubcategory.SPORTS_OUTDOOR_PLAY]: FiActivity,
+  [ToysGamesSubcategory.STUFFED_ANIMALS_PLUSHIES]: FiHeart,
   
   // Weddings
-  [WeddingsSubcategory.BRIDAL_ACCESSORIES]: "👰",
-  [WeddingsSubcategory.BRIDAL_PARTY_ACCESSORIES]: "💒",
-  "Bouquets & Corsages (Wedding)": "💐",
-  [WeddingsSubcategory.CAKE_TOPPERS]: "🎂",
-  [WeddingsSubcategory.WEDDING_CLOTHING]: "👗",
-  [WeddingsSubcategory.WEDDING_DECORATIONS]: "🎊",
-  [WeddingsSubcategory.WEDDING_FAVORS_GIFTS]: "🎁",
-  [WeddingsSubcategory.WEDDING_INVITATIONS_PAPER]: "💌",
-  [WeddingsSubcategory.WEDDING_JEWELRY]: "💍",
-  [WeddingsSubcategory.WEDDING_SHOES]: "👠"
+  [WeddingsSubcategory.BRIDAL_ACCESSORIES]: FiHeart,
+  [WeddingsSubcategory.BRIDAL_PARTY_ACCESSORIES]: FiGift,
+  "Bouquets & Corsages (Wedding)": FiHeart,
+  [WeddingsSubcategory.CAKE_TOPPERS]: FiGift,
+  [WeddingsSubcategory.WEDDING_CLOTHING]: FiUser,
+  [WeddingsSubcategory.WEDDING_DECORATIONS]: FiGift,
+  [WeddingsSubcategory.WEDDING_FAVORS_GIFTS]: FiGift,
+  [WeddingsSubcategory.WEDDING_INVITATIONS_PAPER]: FiFileText,
+  [WeddingsSubcategory.WEDDING_JEWELRY]: FiCircle,
+  [WeddingsSubcategory.WEDDING_SHOES]: FiTrendingUp,
+  
+  // Digital Product Subcategory Icons
+  
+  // Software & Apps
+  [SoftwareAppsSubcategory.MOBILE_APPS]: FiSmartphone,
+  [SoftwareAppsSubcategory.DESKTOP_SOFTWARE]: FiMonitor,
+  [SoftwareAppsSubcategory.WEB_APPLICATIONS]: FiGlobe,
+  [SoftwareAppsSubcategory.PLUGINS_EXTENSIONS]: FiSettings,
+  [SoftwareAppsSubcategory.SCRIPTS_AUTOMATION]: FiSettings,
+  [SoftwareAppsSubcategory.GAMES]: FiPlay,
+  [SoftwareAppsSubcategory.PRODUCTIVITY_TOOLS]: FiBarChart,
+  [SoftwareAppsSubcategory.DEVELOPMENT_TOOLS]: FiTool,
+  
+  // Digital Art & Graphics
+  [DigitalArtGraphicsSubcategory.ILLUSTRATIONS]: FiImage,
+  [DigitalArtGraphicsSubcategory.DIGITAL_PAINTINGS]: FiEdit3,
+  [DigitalArtGraphicsSubcategory.VECTOR_GRAPHICS]: FiEdit3,
+  [DigitalArtGraphicsSubcategory.ICONS_SYMBOLS]: FiStar,
+  [DigitalArtGraphicsSubcategory.CLIPART]: FiScissors,
+  [DigitalArtGraphicsSubcategory.BACKGROUNDS_TEXTURES]: FiLayers,
+  [DigitalArtGraphicsSubcategory.LOGOS_BRANDING]: FiTag,
+  [DigitalArtGraphicsSubcategory.DIGITAL_SCRAPBOOK]: FiFileText,
+  
+  // Music & Audio
+  [MusicAudioSubcategory.BACKGROUND_MUSIC]: FiMusic,
+  [MusicAudioSubcategory.SOUND_EFFECTS]: FiHeadphones,
+  [MusicAudioSubcategory.AUDIO_LOOPS]: FiRotateCcw,
+  [MusicAudioSubcategory.PODCAST_INTROS]: FiMic,
+  [MusicAudioSubcategory.MEDITATION_SOUNDS]: FiSun,
+  [MusicAudioSubcategory.VOICEOVERS]: FiMic,
+  [MusicAudioSubcategory.MUSIC_BEATS]: FiMusic,
+  [MusicAudioSubcategory.AUDIO_BOOKS]: FiBook,
+  
+  // Video Content
+  [VideoContentSubcategory.STOCK_FOOTAGE]: FiVideo,
+  [VideoContentSubcategory.MOTION_GRAPHICS]: FiPlay,
+  [VideoContentSubcategory.VIDEO_TEMPLATES]: FiVideo,
+  [VideoContentSubcategory.ANIMATIONS]: FiPlay,
+  [VideoContentSubcategory.INTRO_OUTROS]: FiVideo,
+  [VideoContentSubcategory.TUTORIALS]: FiMonitor,
+  [VideoContentSubcategory.DOCUMENTARIES]: FiVideo,
+  [VideoContentSubcategory.SHORT_FILMS]: FiVideo,
+  
+  // eBooks & Documents
+  [EbooksDocumentsSubcategory.FICTION_BOOKS]: FiBook,
+  [EbooksDocumentsSubcategory.NON_FICTION]: FiBook,
+  [EbooksDocumentsSubcategory.TECHNICAL_MANUALS]: FiFileText,
+  [EbooksDocumentsSubcategory.GUIDES_HOWTOS]: FiBook,
+  [EbooksDocumentsSubcategory.RESEARCH_PAPERS]: FiFileText,
+  [EbooksDocumentsSubcategory.BUSINESS_PLANS]: FiBarChart,
+  [EbooksDocumentsSubcategory.LEGAL_DOCUMENTS]: FiFileText,
+  [EbooksDocumentsSubcategory.ACADEMIC_CONTENT]: FiBook,
+  
+  // Photography & Presets
+  [PhotographyPresetsSubcategory.LIGHTROOM_PRESETS]: FiCamera,
+  [PhotographyPresetsSubcategory.PHOTOSHOP_ACTIONS]: FiEdit3,
+  [PhotographyPresetsSubcategory.STOCK_PHOTOS]: FiImage,
+  [PhotographyPresetsSubcategory.CAMERA_RAW_PRESETS]: FiCamera,
+  [PhotographyPresetsSubcategory.MOBILE_PRESETS]: FiSmartphone,
+  [PhotographyPresetsSubcategory.VIDEO_LUTS]: FiVideo,
+  [PhotographyPresetsSubcategory.PHOTOGRAPHY_OVERLAYS]: FiLayers,
+  [PhotographyPresetsSubcategory.PHOTO_FILTERS]: FiEyeOff,
+  
+  // Templates & Printables
+  [TemplatesPrintablesSubcategory.BUSINESS_TEMPLATES]: FiBriefcase,
+  [TemplatesPrintablesSubcategory.SOCIAL_MEDIA_TEMPLATES]: FiGlobe,
+  [TemplatesPrintablesSubcategory.PRESENTATION_TEMPLATES]: FiBarChart,
+  [TemplatesPrintablesSubcategory.WEBSITE_TEMPLATES]: FiGlobe,
+  [TemplatesPrintablesSubcategory.PRINTABLE_PLANNERS]: FiFileText,
+  [TemplatesPrintablesSubcategory.INVITATIONS_CARDS]: FiFileText,
+  [TemplatesPrintablesSubcategory.POSTERS_FLYERS]: FiFileText,
+  [TemplatesPrintablesSubcategory.RESUME_TEMPLATES]: FiFileText,
+  
+  // Courses & Education
+  [CoursesEducationSubcategory.ONLINE_COURSES]: FiMonitor,
+  [CoursesEducationSubcategory.TUTORIALS_LESSONS]: FiBook,
+  [CoursesEducationSubcategory.EDUCATIONAL_VIDEOS]: FiVideo,
+  [CoursesEducationSubcategory.STUDY_MATERIALS]: FiBook,
+  [CoursesEducationSubcategory.WEBINARS]: FiMonitor,
+  [CoursesEducationSubcategory.WORKSHOPS]: FiTool,
+  [CoursesEducationSubcategory.SKILL_DEVELOPMENT]: FiTarget,
+  [CoursesEducationSubcategory.CERTIFICATION_PREP]: FiAward,
+  
+  // Fonts & Typography
+  [FontsTypographySubcategory.SERIF_FONTS]: FiType,
+  [FontsTypographySubcategory.SANS_SERIF_FONTS]: FiType,
+  [FontsTypographySubcategory.SCRIPT_FONTS]: FiEdit3,
+  [FontsTypographySubcategory.DISPLAY_FONTS]: FiType,
+  [FontsTypographySubcategory.HANDWRITTEN_FONTS]: FiEdit3,
+  [FontsTypographySubcategory.VINTAGE_FONTS]: FiType,
+  [FontsTypographySubcategory.MODERN_FONTS]: FiType,
+  [FontsTypographySubcategory.FONT_BUNDLES]: FiPackage,
+  
+  // Digital Craft Supplies
+  [DigitalCraftSuppliesSubcategory.DIGITAL_PAPERS]: FiFileText,
+  [DigitalCraftSuppliesSubcategory.DIGITAL_STICKERS]: FiStar,
+  [DigitalCraftSuppliesSubcategory.DIGITAL_STAMPS]: FiTag,
+  [DigitalCraftSuppliesSubcategory.CRAFTING_TEMPLATES]: FiEdit3,
+  [DigitalCraftSuppliesSubcategory.CUTTING_FILES]: FiScissors,
+  [DigitalCraftSuppliesSubcategory.EMBROIDERY_PATTERNS]: FiPackage,
+  [DigitalCraftSuppliesSubcategory.KNITTING_PATTERNS]: FiPackage,
+  [DigitalCraftSuppliesSubcategory.CROCHET_PATTERNS]: FiPackage
 };

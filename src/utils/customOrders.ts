@@ -14,6 +14,7 @@ import {
   Timestamp
 } from "firebase/firestore";
 import { createCustomOrderNotification } from "./notifications";
+import { ItemType } from "./categories";
 
 export interface CustomOrderItem {
   id: string;
@@ -22,6 +23,7 @@ export interface CustomOrderItem {
   quantity: number;
   unitPrice: number;
   imageUrl?: string;
+  itemType?: ItemType;
 }
 
 export interface CustomOrder {
@@ -41,6 +43,7 @@ export interface CustomOrder {
   validUntil: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  itemType?: ItemType; // Digital or Physical
   // Order processing details
   buyerAddress?: string;
   buyerPhone?: string;
@@ -54,6 +57,7 @@ export interface SellerListing {
   imageUrl?: string;
   quantity: number;
   shopName: string;
+  itemType?: ItemType;
 }
 
 // Create a custom order
@@ -66,6 +70,7 @@ export async function createCustomOrder(
   items: CustomOrderItem[],
   shippingCost: number,
   paymentMethod: 'COD' | 'BANK_TRANSFER',
+  itemType: ItemType, // New parameter to specify if this is for digital or physical items
   notes?: string
 ): Promise<string> {
   const totalAmount = items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
@@ -87,6 +92,7 @@ export async function createCustomOrder(
     grandTotal,
     paymentMethod,
     status: 'PENDING',
+    itemType, // Store the item type
     validUntil: Timestamp.fromDate(validUntil),
     createdAt: serverTimestamp() as Timestamp,
     updatedAt: serverTimestamp() as Timestamp,
@@ -208,10 +214,10 @@ export async function getSellerActiveListingsCount(sellerId: string): Promise<nu
 }
 
 // Get seller's active listings for reference in custom order modal
-export async function getSellerActiveListings(sellerId: string): Promise<SellerListing[]> {
+export async function getSellerActiveListings(sellerId: string, itemType?: ItemType): Promise<SellerListing[]> {
   try {
     const listingsRef = collection(db, "listings");
-    const q = query(
+    let q = query(
       listingsRef,
       where("owner", "==", sellerId),
       orderBy("createdAt", "desc")
@@ -235,7 +241,7 @@ export async function getSellerActiveListings(sellerId: string): Promise<SellerL
       }, {} as Record<string, string>);
     }
     
-    return snapshot.docs.map(doc => {
+    let listings = snapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -243,9 +249,17 @@ export async function getSellerActiveListings(sellerId: string): Promise<SellerL
         price: data.price,
         imageUrl: data.images?.[0],
         quantity: data.quantity || 0,
-        shopName: shopNames[data.shopId] || 'Unknown Shop'
+        shopName: shopNames[data.shopId] || 'Unknown Shop',
+        itemType: data.itemType || ItemType.PHYSICAL
       };
     });
+
+    // Filter by itemType if specified
+    if (itemType) {
+      listings = listings.filter(listing => listing.itemType === itemType);
+    }
+    
+    return listings;
   } catch (error) {
     console.error("Error getting seller listings:", error);
     return [];

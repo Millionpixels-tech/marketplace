@@ -2,6 +2,7 @@ import { db } from "./firebase";
 import { collection, addDoc, Timestamp, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { PaymentMethod, PaymentStatus, OrderStatus } from "../types/enums";
 import type { OrderStatus as OrderStatusType } from "../types/enums";
+import { ItemType } from "./categories";
 import { sendOrderConfirmationEmails } from "./emailService";
 import { reduceListingStock, restoreListingStock } from "./stockManagement";
 import { createOrderNotification } from "./notifications";
@@ -20,6 +21,7 @@ export interface Order {
     itemId?: string;
     itemName: string;
     itemImage: string;
+    itemType?: ItemType;
     buyerId: string | null;
     buyerEmail: string | null;
     buyerInfo?: BuyerInfo;

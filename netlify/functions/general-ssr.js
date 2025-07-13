@@ -219,15 +219,12 @@ exports.handler = async (event, context) => {
     const userAgent = event.headers['user-agent'] || '';
     const requestPath = event.path;
     
-    console.log(`[General SSR] Request: ${requestPath} - User-Agent: ${userAgent}`);
-    
     // Extract the actual page path from the function path
     const pathMatch = requestPath.match(/\/general-ssr(.*)$/);
     const pagePath = pathMatch ? pathMatch[1] || '/' : '/';
     
     // Verify this is a bot request (security measure)
     if (!isBot(userAgent)) {
-      console.log(`[General SSR] Non-bot request detected, redirecting to SPA`);
       return {
         statusCode: 302,
         headers: {

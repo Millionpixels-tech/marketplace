@@ -50,8 +50,8 @@ export default function Footer() {
               </Link>
             </div>
             <p className={`text-gray-300 leading-relaxed ${isMobile ? 'text-xs mb-4' : 'text-sm mb-6'}`}>
-              Your marketplace for buying and selling in Sri Lanka. Connecting buyers and sellers across the island.
-              Discover unique products and support local businesses.
+              Your platform for selling products, services, and digital content in Sri Lanka. Connecting entrepreneurs with customers across the island.
+              Discover everything from traditional crafts to modern services.
             </p>
           </div>
 

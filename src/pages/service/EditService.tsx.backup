@@ -1,0 +1,1044 @@
+import React, { useState, useEffect, useRef } from "react";
+import { db, storage } from "../../utils/firebase";
+import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
+import { collection, getDocs, query, where, doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { useNavigate, useParams } from "react-router-dom";
+import { 
+  ServiceCategory, 
+  serviceCategoryIcons,
+  getServiceSubcategories
+} from "../../utils/serviceCategories";
+import { sriLankanProvinces, getAllDistricts } from "../../utils/sriLankanDistricts";
+import ServicePackages from "../../components/service/ServicePackages";
+import type { ServicePackage, Service } from "../../types/service";
+import { createDefaultPackage } from "../../types/service";
+import { Button } from "../../components/UI";
+import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
+import Footer from "../../components/UI/Footer";
+import ErrorBoundary from "../../components/common/ErrorBoundary";
+
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+const steps = [
+  { label: "Shop" },
+  { label: "Category" },
+  { label: "Subcategory" },
+  { label: "Service Details" },
+  { label: "Packages" },
+  { label: "Images" },
+  { label: "Availability" },
+  { label: "Settings" }
+];
+
+const EditService = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Multi-step form state
+  const [step, setStep] = useState<Step>(1);
+  
+  // Original service data
+  const [originalService, setOriginalService] = useState<Service | null>(null);
+
+  // Form data
+  const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [shops, setShops] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  
+  // Service details
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [deliveryType, setDeliveryType] = useState<'onsite' | 'online' | 'both'>('onsite');
+  const [serviceAreas, setServiceAreas] = useState<string[]>([]);
+  const [requirements, setRequirements] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState('');
+  
+  // Packages
+  const [packages, setPackages] = useState<ServicePackage[]>([createDefaultPackage()]);
+  
+  // Images
+  const [images, setImages] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  
+  // Availability
+  const [availability, setAvailability] = useState({
+    monday: { available: true, hours: '9:00 AM - 5:00 PM' },
+    tuesday: { available: true, hours: '9:00 AM - 5:00 PM' },
+    wednesday: { available: true, hours: '9:00 AM - 5:00 PM' },
+    thursday: { available: true, hours: '9:00 AM - 5:00 PM' },
+    friday: { available: true, hours: '9:00 AM - 5:00 PM' },
+    saturday: { available: false, hours: '' },
+    sunday: { available: false, hours: '' }
+  });
+  
+  // Settings
+  const [acceptsInstantBooking, setAcceptsInstantBooking] = useState(false);
+  const [requiresConsultation, setRequiresConsultation] = useState(true);
+  const [responseTime, setResponseTime] = useState('Within 24 hours');
+  const [isActive, setIsActive] = useState(true);
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState('');
+
+  // Load existing service data
+  useEffect(() => {
+    const fetchService = async () => {
+      if (!id || !user) return;
+
+      try {
+        const serviceDoc = await getDoc(doc(db, 'services', id));
+        
+        if (!serviceDoc.exists()) {
+          showToast('error', 'Service not found');
+          navigate('/dashboard');
+          return;
+        }
+
+        const serviceData = serviceDoc.data() as Service;
+        
+        // Check if user owns this service
+        if (serviceData.owner !== user.uid) {
+          showToast('error', 'You can only edit your own services');
+          navigate('/dashboard');
+          return;
+        }
+
+        // Store original service
+        const service = { id: serviceDoc.id, ...serviceData };
+        setOriginalService(service);
+
+        // Load service data into form
+        setTitle(service.title);
+        setDescription(service.description);
+        setSelectedCategory(service.category);
+        setSelectedSubcategory(service.subcategory);
+        setDeliveryType(service.deliveryType.toLowerCase() as 'onsite' | 'online' | 'both');
+        setServiceAreas(service.serviceArea || []);
+        setRequirements(service.requirements || '');
+        setAdditionalInfo(service.additionalInfo || '');
+        setPackages(service.packages);
+        setImages(service.images || []);
+        // Ensure availability has proper string values
+        const normalizedAvailability = Object.entries(service.availability).reduce((acc, [day, data]) => {
+          acc[day as keyof typeof acc] = {
+            available: data.available,
+            hours: data.hours || ''
+          };
+          return acc;
+        }, {} as typeof availability);
+        setAvailability(normalizedAvailability);
+        setAcceptsInstantBooking(service.acceptsInstantBooking);
+        setRequiresConsultation(service.requiresConsultation);
+        setResponseTime(service.responseTime);
+        setIsActive(service.isActive);
+        setKeywords(service.keywords || []);
+
+        // Load shops
+        const shopsQuery = query(
+          collection(db, 'shops'),
+          where('owner', '==', user.uid)
+        );
+        const shopsSnapshot = await getDocs(shopsQuery);
+        const shopsData = shopsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setShops(shopsData);
+        
+        // Set selected shop
+        const shop = shopsData.find(shop => shop.id === service.shopId);
+        setSelectedShop(shop);
+
+      } catch (error) {
+        console.error('Error fetching service:', error);
+        showToast('error', 'Failed to load service');
+        navigate('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchService();
+  }, [id, user, navigate, showToast]);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = Array.from(event.target.files || []);
+      const totalImages = images.length + newImageFiles.length + files.length;
+      
+      if (totalImages > 5) {
+        showToast('error', 'Maximum 5 images allowed');
+        return;
+      }
+
+      // Validate file types
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+      
+      if (invalidFiles.length > 0) {
+        showToast('error', 'Please upload only JPEG, PNG, or WebP images');
+        return;
+      }
+
+      // Validate file sizes (max 5MB per image)
+      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+      
+      if (oversizedFiles.length > 0) {
+        showToast('error', 'Each image must be smaller than 5MB');
+        return;
+      }
+
+      setNewImageFiles(prev => [...prev, ...files]);
+    } catch (error) {
+      console.error('Error handling image upload:', error);
+      showToast('error', 'Failed to process images');
+    }
+  };
+
+  const removeExistingImage = (index: number) => {
+    const imageToRemove = images[index];
+    setImagesToDelete(prev => [...prev, imageToRemove]);
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addKeyword = () => {
+    if (newKeyword.trim() && keywords.length < 10 && !keywords.includes(newKeyword.trim())) {
+      setKeywords([...keywords, newKeyword.trim()]);
+      setNewKeyword('');
+    }
+  };
+
+  const removeKeyword = (index: number) => {
+    setKeywords(keywords.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateService = async () => {
+    if (!originalService || !selectedShop) {
+      showToast('error', 'Missing required data');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Upload new images
+      let newImageUrls: string[] = [];
+      if (newImageFiles.length > 0) {
+        try {
+          const uploadPromises = newImageFiles.map(async (file) => {
+            const imageRef = ref(storage, `services/${originalService.id}/${Date.now()}_${file.name}`);
+            await uploadBytes(imageRef, file);
+            return getDownloadURL(imageRef);
+          });
+          newImageUrls = await Promise.all(uploadPromises);
+        } catch (uploadError) {
+          console.error('Error uploading images:', uploadError);
+          showToast('error', 'Failed to upload images');
+          return;
+        }
+      }
+
+      // Delete removed images from storage
+      if (imagesToDelete.length > 0) {
+        const deletePromises = imagesToDelete.map(async (imageUrl) => {
+          try {
+            const imageRef = ref(storage, imageUrl);
+            await deleteObject(imageRef);
+          } catch (error) {
+            console.warn('Failed to delete image:', error);
+            // Don't fail the entire update if image deletion fails
+          }
+        });
+        await Promise.allSettled(deletePromises);
+      }
+
+      // Combine existing and new images
+      const allImages = [...images, ...newImageUrls];
+
+      // Validate required fields
+      if (!title.trim() || !description.trim() || allImages.length === 0) {
+        showToast('error', 'Please fill in all required fields');
+        return;
+      }
+
+      // Update service document
+      const serviceData = {
+        title: title.trim(),
+        description: description.trim(),
+        category: selectedCategory,
+        subcategory: selectedSubcategory,
+        deliveryType,
+        serviceArea: deliveryType === 'online' ? [] : serviceAreas,
+        requirements: requirements.trim(),
+        additionalInfo: additionalInfo.trim(),
+        packages,
+        images: allImages,
+        availability,
+        acceptsInstantBooking,
+        requiresConsultation,
+        responseTime,
+        isActive,
+        keywords: keywords.filter(k => k.trim()),
+        updatedAt: Timestamp.now()
+      };
+
+      await updateDoc(doc(db, 'services', originalService.id!), serviceData);
+
+      showToast('success', 'Service updated successfully!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error updating service:', error);
+      showToast('error', 'Failed to update service. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Rest of the component logic matches AddService exactly...
+  // (I'll include the step navigation, validation, and render logic)
+
+  const canProceed = () => {
+    switch (step) {
+      case 1:
+        return selectedShop !== null;
+      case 2:
+        return selectedCategory !== null;
+      case 3:
+        return selectedSubcategory !== '';
+      case 4:
+        return title.trim() !== '' && description.trim() !== '' && 
+               (deliveryType === 'online' || serviceAreas.length > 0);
+      case 5:
+        return packages.every(pkg => 
+          pkg.name.trim() !== '' && 
+          pkg.description.trim() !== '' && 
+          pkg.price > 0 && 
+          pkg.duration.trim() !== ''
+        );
+      case 6:
+        return images.length + newImageFiles.length > 0;
+      case 7:
+        return Object.values(availability).some(day => day.available);
+      case 8:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const nextStep = () => {
+    if (step < 8) {
+      setStep((step + 1) as Step);
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep((step - 1) as Step);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#72b01d] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading service...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="bg-white min-h-screen">
+        <ResponsiveHeader />
+        
+        <div className="max-w-4xl mx-auto p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Service</h1>
+            <p className="text-gray-600">Update your service information</p>
+          </div>
+
+          {/* Progress Stepper */}
+          <div className="w-full max-w-4xl mx-auto mb-4 md:mb-12 px-4">
+            <div className="hidden md:block">
+              <div className="flex items-center justify-between relative">
+                <div className="absolute top-6 left-0 w-full h-0.5 bg-gray-200 z-0">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#72b01d] to-[#3f7d20] transition-all duration-500 ease-out"
+                    style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                  ></div>
+                </div>
+                
+                {steps.map((s, idx) => (
+                  <div key={s.label} className="flex flex-col items-center relative z-10">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                        idx + 1 <= step
+                          ? "bg-gradient-to-br from-[#72b01d] to-[#3f7d20] text-white shadow-lg"
+                          : "bg-white border-2 border-gray-300 text-gray-400"
+                      }`}
+                    >
+                      {idx + 1}
+                    </div>
+                    <span
+                      className={`mt-2 text-xs font-medium text-center ${
+                        idx + 1 <= step ? "text-[#72b01d]" : "text-gray-400"
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <div className="w-full max-w-4xl mx-auto bg-white rounded-xl md:rounded-3xl border border-[#e5e7eb] p-4 md:p-8 lg:p-12">
+            {step === 1 && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Select Shop</h2>
+              <div className="grid gap-4">
+                {shops.map((shop) => (
+                  <div
+                    key={shop.id}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                      selectedShop?.id === shop.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedShop(shop)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {shop.logo ? (
+                        <img
+                          src={shop.logo}
+                          alt={shop.name}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-500 text-xl">🏪</span>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-medium text-gray-900">{shop.name}</h3>
+                        <p className="text-sm text-gray-500">{shop.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  disabled={step === 1}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Category Selection Step */}
+          {step === 2 && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Category</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(Object.keys(serviceCategoryIcons) as ServiceCategory[]).map((category) => {
+                  const IconComponent = serviceCategoryIcons[category];
+                  return (
+                    <div
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`p-6 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                        selectedCategory === category
+                          ? 'border-[#72b01d] bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <ErrorBoundary fallback={
+                        <div className="w-12 h-12 mx-auto mb-3 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-500 text-xs">Icon</span>
+                        </div>
+                      }>
+                        {IconComponent && React.createElement(IconComponent, { 
+                          className: "w-12 h-12 mx-auto mb-3 text-[#72b01d]",
+                          'aria-label': category 
+                        })}
+                      </ErrorBoundary>
+                      <h3 className="font-semibold text-gray-900 capitalize">
+                        {category.replace(/([A-Z])/g, ' $1').trim()}
+                      </h3>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Subcategory Selection Step */}
+          {step === 3 && selectedCategory && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Subcategory</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {getServiceSubcategories(selectedCategory).map((subcategory) => (
+                  <div
+                    key={subcategory}
+                    onClick={() => setSelectedSubcategory(subcategory)}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      selectedSubcategory === subcategory
+                        ? 'border-[#72b01d] bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <h3 className="font-medium text-gray-900">{subcategory}</h3>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Service Details Step */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">Service Details</h2>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Title *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter a clear, descriptive title for your service"
+                  className="w-full px-4 py-3 border border-[#e5e7eb] rounded-xl focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                  placeholder="Describe your service in detail"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Type *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(['onsite', 'online', 'both'] as const).map((type) => (
+                    <div
+                      key={type}
+                      onClick={() => setDeliveryType(type)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                        deliveryType === type
+                          ? 'border-[#72b01d] bg-green-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <h3 className="font-medium text-gray-900 capitalize">{type}</h3>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {(deliveryType === 'onsite' || deliveryType === 'both') && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Primary Location *
+                    </label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                      placeholder="Enter your primary service location"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Areas *
+                    </label>
+                    <select
+                      multiple
+                      value={serviceArea}
+                      onChange={(e) => setServiceArea(Array.from(e.target.selectedOptions, option => option.value))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                      size={6}
+                    >
+                      {getAllDistricts().map((district) => (
+                        <option key={String(district)} value={String(district)}>
+                          {String(district)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Hold Ctrl/Cmd to select multiple areas
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Requirements
+                </label>
+                <textarea
+                  value={requirements}
+                  onChange={(e) => setRequirements(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                  placeholder="What do you need from the client?"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Additional Information
+                </label>
+                <textarea
+                  value={additionalInfo}
+                  onChange={(e) => setAdditionalInfo(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                  placeholder="Any additional details about your service"
+                />
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Packages Step */}
+          {step === 5 && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Service Packages</h2>
+              <ServicePackages
+                packages={packages}
+                onChange={setPackages}
+              />
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Images Step */}
+          {step === 6 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">Service Images</h2>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Images (Maximum 5)
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                />
+              </div>
+
+              {/* Existing Images */}
+              {images.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Current Images</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {images.map((image, index) => (
+                      <ErrorBoundary 
+                        key={index}
+                        fallback={
+                          <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Image unavailable</span>
+                          </div>
+                        }
+                      >
+                        <div className="relative group">
+                          <img
+                            src={image}
+                            alt={`Service ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.nextElementSibling) {
+                                (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                              }
+                            }}
+                          />
+                          <div className="hidden w-full h-32 bg-gray-200 rounded-lg items-center justify-center absolute top-0 left-0">
+                            <span className="text-gray-500 text-sm">Image unavailable</span>
+                          </div>
+                          <button
+                            onClick={() => removeExistingImage(index)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label="Remove image"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </ErrorBoundary>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Images Preview */}
+              {newImageFiles.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">New Images</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {newImageFiles.map((file, index) => (
+                      <ErrorBoundary 
+                        key={index}
+                        fallback={
+                          <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Preview unavailable</span>
+                          </div>
+                        }
+                      >
+                        <div className="relative group">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`New ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.nextElementSibling) {
+                                (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                              }
+                            }}
+                          />
+                          <div className="hidden w-full h-32 bg-gray-200 rounded-lg items-center justify-center absolute top-0 left-0">
+                            <span className="text-gray-500 text-sm">Preview unavailable</span>
+                          </div>
+                          <button
+                            onClick={() => removeNewImage(index)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-label="Remove image"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </ErrorBoundary>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Availability Step */}
+          {step === 7 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">Availability Settings</h2>
+
+              <div className="space-y-4">
+                {Object.entries(availability).map(([day, { available, hours }]) => (
+                  <div key={day} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                    <div className="w-24">
+                      <span className="font-medium capitalize">{day}</span>
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={available}
+                        onChange={(e) => setAvailability(prev => ({
+                          ...prev,
+                          [day]: { ...prev[day as keyof typeof prev], available: e.target.checked }
+                        }))}
+                        className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d]"
+                      />
+                      <span>Available</span>
+                    </label>
+                    {available && (
+                      <input
+                        type="text"
+                        value={hours}
+                        onChange={(e) => setAvailability(prev => ({
+                          ...prev,
+                          [day]: { ...prev[day as keyof typeof prev], hours: e.target.value }
+                        }))}
+                        placeholder="e.g., 9:00 AM - 5:00 PM"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Response Time
+                  </label>
+                  <select
+                    value={responseTime}
+                    onChange={(e) => setResponseTime(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                  >
+                    <option value="Within 1 hour">Within 1 hour</option>
+                    <option value="Within 4 hours">Within 4 hours</option>
+                    <option value="Within 24 hours">Within 24 hours</option>
+                    <option value="Within 3 days">Within 3 days</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={acceptsInstantBooking}
+                    onChange={(e) => setAcceptsInstantBooking(e.target.checked)}
+                    className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d]"
+                  />
+                  <span className="font-medium">Accept Instant Booking</span>
+                </label>
+
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={requiresConsultation}
+                    onChange={(e) => setRequiresConsultation(e.target.checked)}
+                    className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d]"
+                  />
+                  <span className="font-medium">Requires Consultation</span>
+                </label>
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  disabled={!canProceed()}
+                  onClick={nextStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  Next →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Step */}
+          {step === 8 && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">Service Settings</h2>
+
+              <div>
+                <label className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    className="w-4 h-4 text-[#72b01d] border-gray-300 rounded focus:ring-[#72b01d]"
+                  />
+                  <span className="font-medium">Service is Active</span>
+                </label>
+                <p className="text-sm text-gray-500 mt-1">
+                  Inactive services won't be visible to customers
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Keywords (up to 10)
+                </label>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
+                    placeholder="Add a keyword"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#72b01d] focus:border-transparent"
+                  />
+                  <Button
+                    onClick={addKeyword}
+                    disabled={!newKeyword.trim() || keywords.length >= 10}
+                    className="px-4 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#3f7d20] disabled:opacity-50"
+                  >
+                    Add
+                  </Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                    >
+                      {keyword}
+                      <button
+                        onClick={() => removeKeyword(index)}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 mt-6 md:mt-8">
+                <Button
+                  variant="secondary"
+                  onClick={prevStep}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleUpdateService}
+                  disabled={!canProceed() || submitting}
+                  className="w-full md:w-auto px-6 md:px-7 py-3 rounded-xl md:rounded-2xl uppercase tracking-wide shadow-sm"
+                >
+                  {submitting ? 'Updating...' : 'Update Service'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      </div>
+      <Footer />
+    </ErrorBoundary>
+  );
+};
+
+export default EditService;

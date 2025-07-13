@@ -63,7 +63,7 @@ export default function AboutUs() {
           <div className="text-center">
             <h1 className={`${isMobile ? 'text-3xl' : 'text-5xl md:text-6xl'} font-bold ${isMobile ? 'mb-4' : 'mb-6'}`}>About Sina.lk</h1>
             <p className={`${isMobile ? 'text-base' : 'text-xl md:text-2xl'} ${isMobile ? 'mb-6' : 'mb-8'} text-green-100 ${isMobile ? 'max-w-sm' : 'max-w-3xl'} mx-auto`}>
-              Empowering small businesses across Sri Lanka through our online marketplace platform.
+              Empowering entrepreneurs across Sri Lanka through our comprehensive online platform.
             </p>
           </div>
         </div>
@@ -78,13 +78,13 @@ export default function AboutUs() {
               <h2 className="text-4xl font-bold mb-6 text-[#0d0a0b]">Our Story</h2>
               <div className="space-y-4 text-lg text-gray-600 leading-relaxed">
                 <p>
-                  Sina.lk is a marketplace designed to support small businesses and entrepreneurs across Sri Lanka. We provide a platform where sellers can reach customers directly, showcase their products, and grow their businesses online.
+                  Sina.lk is a comprehensive platform designed to support all types of entrepreneurs across Sri Lanka. Whether you're selling physical products, offering professional services, creating digital content, or providing onsite services, we provide the tools you need to succeed online.
                 </p>
                 <p>
-                  Our platform features custom order capabilities, secure payment processing through bank transfers and cash on delivery, direct buyer-seller communication, and tools to help businesses manage their online presence effectively.
+                  Our platform accommodates diverse business models including traditional product sales, service bookings, digital downloads, and custom order capabilities. With secure payment processing through bank transfers and cash on delivery, plus direct buyer-seller communication, we serve the complete entrepreneurial ecosystem.
                 </p>
                 <p>
-                  We believe in empowering local businesses by providing them with the digital tools they need to succeed in today's marketplace, while offering customers a convenient way to discover and purchase from a variety of sellers across the island.
+                  We believe in empowering all Sri Lankan entrepreneurs by providing them with professional-grade digital tools - from the village craftsperson to the city consultant, from the digital artist to the service provider. Everyone deserves equal opportunity to build and grow their business online.
                 </p>
               </div>
             </div>
@@ -193,12 +193,12 @@ export default function AboutUs() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-8 text-[#0d0a0b]">Our Mission</h2>
           <p className="text-2xl text-gray-600 leading-relaxed mb-8">
-            To provide small businesses across Sri Lanka with a reliable online marketplace platform, enabling them to reach customers, process secure payments, and grow their businesses in the digital economy.
+            To provide entrepreneurs across Sri Lanka with a comprehensive platform for selling products, services, and digital content, enabling them to reach customers, process secure payments, and grow their businesses in the digital economy.
           </p>
           <div className="bg-gradient-to-r from-[#72b01d] to-[#5a8f17] text-white p-8 rounded-lg">
-            <h3 className="text-2xl font-bold mb-4">Join Our Marketplace</h3>
+            <h3 className="text-2xl font-bold mb-4">Join Our Platform</h3>
             <p className="text-lg mb-6">
-              Whether you're a business owner looking to sell online or a customer seeking quality products, Sina.lk is here for you.
+              Whether you're a business owner looking to sell online or a customer seeking quality products and services, Sina.lk is here for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
