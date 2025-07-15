@@ -58,7 +58,7 @@ export default function ShopOwnerName({ ownerId, username, showUsername = true, 
     }
 
     return (
-        <div className="flex flex-wrap items-center gap-1 text-sm text-gray-500 mb-2">
+        <div className="flex flex-wrap justify-center md:justify-start items-center gap-1 text-sm text-gray-500 mb-2">
             {showUsername && <span>@{username}</span>}
             {ownerName && (
                 <span className="flex items-center gap-1">
