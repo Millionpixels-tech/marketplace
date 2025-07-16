@@ -13,7 +13,7 @@ import Footer from "../../components/UI/Footer";
 import { Input } from "../../components/UI";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useToast } from "../../context/ToastContext";
-import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiAlertCircle, FiArrowLeft, FiShoppingBag, FiLock } from "react-icons/fi";
+import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiArrowLeft, FiShoppingBag, FiLock } from "react-icons/fi";
 import type { CustomOrder } from "../../utils/customOrders";
 
 export default function CustomOrderPage() {
