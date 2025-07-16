@@ -13,7 +13,7 @@ import Footer from "../../components/UI/Footer";
 import { Input } from "../../components/UI";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useToast } from "../../context/ToastContext";
-import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiAlertCircle, FiArrowLeft, FiShoppingBag, FiLock } from "react-icons/fi";
+import { FiPackage, FiClock, FiUser, FiCreditCard, FiTruck, FiArrowLeft, FiShoppingBag, FiLock } from "react-icons/fi";
 import type { CustomOrder } from "../../utils/customOrders";
 
 export default function CustomOrderPage() {
@@ -320,21 +320,54 @@ export default function CustomOrderPage() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white flex flex-col">
         <ResponsiveHeader />
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <FiAlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Order Not Found</h2>
-            <p className="text-gray-600 mb-4">{error || "The custom order you're looking for doesn't exist or has been removed."}</p>
-            <button
-              onClick={() => navigate('/')}
-              className="px-6 py-2 bg-[#72b01d] text-white rounded-lg hover:bg-[#5a8c17] transition-colors"
-            >
-              Go Home
-            </button>
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <div className="max-w-lg w-full text-center">
+            {/* 404 Illustration */}
+            <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+              <div className="relative">
+                <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                  404
+                </h1>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <FiPackage className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-6">
+              <div>
+                <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                  Order Not Found
+                </h2>
+                <p className="text-gray-600 leading-relaxed">
+                  {error || "The custom order you're looking for doesn't exist or has been removed."}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                <button
+                  onClick={() => navigate('/')}
+                  className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <FiShoppingBag className="w-5 h-5" />
+                  Browse Marketplace
+                </button>
+                
+                <button
+                  onClick={() => window.history.back()}
+                  className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                >
+                  <FiArrowLeft className="w-5 h-5" />
+                  Go Back
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     );

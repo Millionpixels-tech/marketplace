@@ -871,18 +871,64 @@ export default function CheckoutPage() {
 
   if (!item) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
-        <div className="text-center" style={{ color: '#454955' }}>
-          <div className="text-2xl font-bold mb-2">Item Not Found</div>
-          <button
-            onClick={() => navigate('/')}
-            className="mt-4 px-6 py-2 rounded-lg font-medium transition"
-            style={{ backgroundColor: '#72b01d', color: '#ffffff' }}
-          >
-            Go Home
-          </button>
+      <>
+        <SEOHead
+          title="Item Not Found - Checkout - Sina.lk"
+          description="The item you're trying to checkout doesn't exist. Browse our marketplace for amazing products from local sellers."
+          noIndex={true}
+        />
+        <ResponsiveHeader />
+        <div className="min-h-screen bg-white flex flex-col">
+          <main className="flex-1 flex items-center justify-center py-12 px-4">
+            <div className="max-w-lg w-full text-center">
+              {/* 404 Illustration */}
+              <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+                <div className="relative">
+                  <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                    404
+                  </h1>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <FiShoppingBag className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-6">
+                <div>
+                  <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                    Item Not Found
+                  </h2>
+                  <p className="text-gray-600 leading-relaxed">
+                    The item you're trying to checkout doesn't exist or has been removed. 
+                    Please browse our marketplace for other amazing products!
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <FiShoppingBag className="w-5 h-5" />
+                    Browse Products
+                  </button>
+                  
+                  <button
+                    onClick={() => window.history.back()}
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                  >
+                    <FiArrowLeft className="w-5 h-5" />
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 

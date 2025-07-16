@@ -62,15 +62,7 @@ export default function ShopReviews({ shopId }: { shopId: string }) {
         );
 
     if (reviews.length === 0)
-        return (
-            <div className="w-full">
-                <div className={`max-w-5xl mx-auto ${isMobile ? 'px-4' : 'px-2'}`}>
-                    <div className={`${isMobile ? 'text-sm' : 'text-base'} text-left`} style={{ color: '#454955', opacity: 0.7 }}>
-                        No reviews yet.
-                    </div>
-                </div>
-            </div>
-        );
+        return null;
 
     return (
         <section className={`w-full ${isMobile ? 'py-1' : 'py-2'}`} style={{ backgroundColor: '#ffffff' }}>

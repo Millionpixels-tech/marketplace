@@ -214,3 +214,32 @@ input[type="number"]::-webkit-inner-spin-button {
     max-width: calc(100vw - 1rem);
   }
 }
+
+/* Mobile responsiveness for shop page */
+@media (max-width: 640px) {
+  /* Center shop header content on mobile */
+  .shop-header-mobile {
+    text-align: center;
+    align-items: center;
+  }
+  
+  /* Ensure shop owner name centers properly */
+  .shop-owner-name-mobile {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  /* Mobile-friendly shop ratings */
+  .shop-rating-mobile {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  /* Mobile contact button */
+  .shop-contact-mobile {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+}

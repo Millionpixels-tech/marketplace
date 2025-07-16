@@ -5,9 +5,13 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
 import ContactSellerButton from "../../components/UI/ContactSellerButton";
+import { SEOHead } from "../../components/SEO/SEOHead";
+import { FiUser, FiShoppingBag } from "react-icons/fi";
+import { useResponsive } from "../../hooks/useResponsive";
 
 export default function PublicProfile() {
     const { id } = useParams();
+    const { isMobile } = useResponsive();
     const [loading, setLoading] = useState(true);
     const [userProfile, setUserProfile] = useState<any>(null);
     const [shops, setShops] = useState<any[]>([]);
@@ -45,7 +49,65 @@ export default function PublicProfile() {
     if (loading)
         return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955', backgroundColor: '#ffffff' }}>Loading...</div>;
     if (!userProfile)
-        return <div className="min-h-screen flex items-center justify-center" style={{ color: '#454955', backgroundColor: '#ffffff' }}>User not found.</div>;
+        return (
+            <>
+                <SEOHead
+                    title="User Not Found - Sina.lk"
+                    description="The user profile you're looking for doesn't exist. Browse our marketplace for amazing products from local sellers."
+                    noIndex={true}
+                />
+                <ResponsiveHeader />
+                <div className="min-h-screen bg-white flex flex-col">
+                    <main className="flex-1 flex items-center justify-center py-12 px-4">
+                        <div className="max-w-lg w-full text-center">
+                            {/* 404 Illustration */}
+                            <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+                                <div className="relative">
+                                    <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                                        404
+                                    </h1>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <FiUser className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                                        User Not Found
+                                    </h2>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        The user profile you're looking for doesn't exist or has been removed. 
+                                        Explore our marketplace for amazing products and sellers!
+                                    </p>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                                    <Link
+                                        to="/"
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    >
+                                        <FiShoppingBag className="w-5 h-5" />
+                                        Browse Marketplace
+                                    </Link>
+                                    
+                                    <button
+                                        onClick={() => window.history.back()}
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                                    >
+                                        ← Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+                <Footer />
+            </>
+        );
 
     return (
         <div className="min-h-screen w-full" style={{ backgroundColor: '#ffffff' }}>

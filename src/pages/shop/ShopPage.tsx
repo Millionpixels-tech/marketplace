@@ -71,6 +71,7 @@ export default function ShopPage() {
     // Reviews state for rating calculation
     const [shopRating, setShopRating] = useState<number | null>(null);
     const [shopRatingCount, setShopRatingCount] = useState<number>(0);
+    const [hasReviews, setHasReviews] = useState<boolean>(false);
 
     // 1. Fetch user IP and shop info
     useEffect(() => {
@@ -137,10 +138,13 @@ export default function ShopPage() {
                 const ratingData = await calculateShopRating(shop!.id);
                 setShopRating(ratingData.rating);
                 setShopRatingCount(ratingData.count);
+                // Set hasReviews based on whether there are any reviews
+                setHasReviews(ratingData.count > 0);
             } catch (error) {
                 console.error("Error fetching shop reviews:", error);
                 setShopRating(null);
                 setShopRatingCount(0);
+                setHasReviews(false);
             }
         }
         
@@ -299,12 +303,71 @@ export default function ShopPage() {
 
     if (!shop) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
-                <div className="text-center" style={{ color: '#454955' }}>
-                    <div className="text-2xl font-bold mb-2">Shop Not Found</div>
-                    <div>This shop does not exist.</div>
+            <>
+                <SEOHead
+                    title="Shop Not Found - Sina.lk"
+                    description="The shop you're looking for doesn't exist. Browse our marketplace for amazing products from local sellers."
+                    noIndex={true}
+                />
+                <ResponsiveHeader />
+                <div className="min-h-screen bg-white flex flex-col">
+                    <main className="flex-1 flex items-center justify-center py-12 px-4">
+                        <div className="max-w-lg w-full text-center">
+                            {/* 404 Illustration */}
+                            <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+                                <div className="relative">
+                                    <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                                        404
+                                    </h1>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <FiBox className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                                        Shop Not Found
+                                    </h2>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        The shop you're looking for doesn't exist or has been moved. 
+                                        Explore other amazing shops and products on our marketplace!
+                                    </p>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                                    <Link
+                                        to="/"
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    >
+                                        <FiBox className="w-5 h-5" />
+                                        Browse Shops
+                                    </Link>
+                                    
+                                    <Link
+                                        to="/search"
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-white text-[#72b01d] font-semibold rounded-xl border-2 border-[#72b01d] hover:bg-[#72b01d] hover:text-white transition-all duration-200"
+                                    >
+                                        <FiPlus className="w-5 h-5" />
+                                        Find Products
+                                    </Link>
+                                    
+                                    <button
+                                        onClick={() => window.history.back()}
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                                    >
+                                        ← Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
                 </div>
-            </div>
+                <Footer />
+            </>
         );
     }
 
@@ -333,7 +396,7 @@ export default function ShopPage() {
                 description,
                 url: getCanonicalUrl(`/shop/${username}`),
                 logo: shop.logo,
-                image: shop.cover || shop.logo,
+                image: shop.logo,
                 ...(rating > 0 && ratingCount > 0 && {
                     aggregateRating: {
                         '@type': 'AggregateRating',
@@ -352,27 +415,29 @@ export default function ShopPage() {
         if (totalPages <= 1) return null;
 
         return (
-            <div className={`mt-12 flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+            <div className={`mt-8 flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
                 {/* Previous button */}
                 <button
                     onClick={() => page > 1 && handlePageChange(page - 1)}
                     disabled={page === 1}
-                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-sm`}
                     style={{
-                        backgroundColor: '#ffffff',
-                        color: '#454955',
-                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                        backgroundColor: page === 1 ? '#f1f5f9' : '#ffffff',
+                        color: page === 1 ? '#94a3b8' : '#374151',
+                        border: '1px solid #e2e8f0'
                     }}
                     onMouseEnter={(e) => {
                         if (page !== 1) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
                             e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.borderColor = '#72b01d';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (page !== 1) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.color = '#374151';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
                         }
                     }}
                     aria-label="Previous page"
@@ -381,31 +446,33 @@ export default function ShopPage() {
                 </button>
 
                 {/* Page numbers */}
-                <div className={`flex items-center ${isMobile ? 'gap-0.5' : 'gap-1'}`}>
+                <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
                     {/* First page */}
                     {page > 3 && !isMobile && (
                         <>
                             <button
                                 onClick={() => handlePageChange(1)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: '#ffffff',
-                                    color: '#454955',
-                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                    color: '#374151',
+                                    border: '1px solid #e2e8f0'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
                                     e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.borderColor = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = '#ffffff';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#374151';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
                                 }}
                             >
                                 1
                             </button>
                             {page > 4 && (
-                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                                <span className="px-2" style={{ color: '#94a3b8' }}>...</span>
                             )}
                         </>
                     )}
@@ -433,22 +500,24 @@ export default function ShopPage() {
                             <button
                                 key={pageNum}
                                 onClick={() => handlePageChange(pageNum)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
-                                    color: isCurrentPage ? '#ffffff' : '#454955',
-                                    border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
+                                    color: isCurrentPage ? '#ffffff' : '#374151',
+                                    border: `1px solid ${isCurrentPage ? '#72b01d' : '#e2e8f0'}`
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!isCurrentPage) {
                                         e.currentTarget.style.backgroundColor = '#72b01d';
                                         e.currentTarget.style.color = '#ffffff';
+                                        e.currentTarget.style.borderColor = '#72b01d';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!isCurrentPage) {
                                         e.currentTarget.style.backgroundColor = '#ffffff';
-                                        e.currentTarget.style.color = '#454955';
+                                        e.currentTarget.style.color = '#374151';
+                                        e.currentTarget.style.borderColor = '#e2e8f0';
                                     }
                                 }}
                             >
@@ -461,23 +530,25 @@ export default function ShopPage() {
                     {page < totalPages - 2 && !isMobile && (
                         <>
                             {page < totalPages - 3 && (
-                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                                <span className="px-2" style={{ color: '#94a3b8' }}>...</span>
                             )}
                             <button
                                 onClick={() => handlePageChange(totalPages)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: '#ffffff',
-                                    color: '#454955',
-                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                    color: '#374151',
+                                    border: '1px solid #e2e8f0'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
                                     e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.borderColor = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = '#ffffff';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#374151';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
                                 }}
                             >
                                 {totalPages}
@@ -490,22 +561,24 @@ export default function ShopPage() {
                 <button
                     onClick={() => page < totalPages && handlePageChange(page + 1)}
                     disabled={page === totalPages}
-                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-sm`}
                     style={{
-                        backgroundColor: '#ffffff',
-                        color: '#454955',
-                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                        backgroundColor: page === totalPages ? '#f1f5f9' : '#ffffff',
+                        color: page === totalPages ? '#94a3b8' : '#374151',
+                        border: '1px solid #e2e8f0'
                     }}
                     onMouseEnter={(e) => {
                         if (page !== totalPages) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
                             e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.borderColor = '#72b01d';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (page !== totalPages) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.color = '#374151';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
                         }
                     }}
                     aria-label="Next page"
@@ -521,27 +594,29 @@ export default function ShopPage() {
         if (servicesTotalPages <= 1) return null;
 
         return (
-            <div className={`mt-12 flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+            <div className={`mt-8 flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
                 {/* Previous button */}
                 <button
                     onClick={() => servicesPage > 1 && handleServicesPageChange(servicesPage - 1)}
                     disabled={servicesPage === 1}
-                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-sm`}
                     style={{
-                        backgroundColor: '#ffffff',
-                        color: '#454955',
-                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                        backgroundColor: servicesPage === 1 ? '#f1f5f9' : '#ffffff',
+                        color: servicesPage === 1 ? '#94a3b8' : '#374151',
+                        border: '1px solid #e2e8f0'
                     }}
                     onMouseEnter={(e) => {
                         if (servicesPage !== 1) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
                             e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.borderColor = '#72b01d';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (servicesPage !== 1) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.color = '#374151';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
                         }
                     }}
                     aria-label="Previous page"
@@ -550,31 +625,33 @@ export default function ShopPage() {
                 </button>
 
                 {/* Page numbers */}
-                <div className={`flex items-center ${isMobile ? 'gap-0.5' : 'gap-1'}`}>
+                <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
                     {/* First page */}
                     {servicesPage > 3 && !isMobile && (
                         <>
                             <button
                                 onClick={() => handleServicesPageChange(1)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: '#ffffff',
-                                    color: '#454955',
-                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                    color: '#374151',
+                                    border: '1px solid #e2e8f0'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
                                     e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.borderColor = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = '#ffffff';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#374151';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
                                 }}
                             >
                                 1
                             </button>
                             {servicesPage > 4 && (
-                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                                <span className="px-2" style={{ color: '#94a3b8' }}>...</span>
                             )}
                         </>
                     )}
@@ -602,22 +679,24 @@ export default function ShopPage() {
                             <button
                                 key={pageNum}
                                 onClick={() => handleServicesPageChange(pageNum)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: isCurrentPage ? '#72b01d' : '#ffffff',
-                                    color: isCurrentPage ? '#ffffff' : '#454955',
-                                    border: `1px solid ${isCurrentPage ? '#72b01d' : 'rgba(114, 176, 29, 0.3)'}`
+                                    color: isCurrentPage ? '#ffffff' : '#374151',
+                                    border: `1px solid ${isCurrentPage ? '#72b01d' : '#e2e8f0'}`
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!isCurrentPage) {
                                         e.currentTarget.style.backgroundColor = '#72b01d';
                                         e.currentTarget.style.color = '#ffffff';
+                                        e.currentTarget.style.borderColor = '#72b01d';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!isCurrentPage) {
                                         e.currentTarget.style.backgroundColor = '#ffffff';
-                                        e.currentTarget.style.color = '#454955';
+                                        e.currentTarget.style.color = '#374151';
+                                        e.currentTarget.style.borderColor = '#e2e8f0';
                                     }
                                 }}
                             >
@@ -630,23 +709,25 @@ export default function ShopPage() {
                     {servicesPage < servicesTotalPages - 2 && !isMobile && (
                         <>
                             {servicesPage < servicesTotalPages - 3 && (
-                                <span className="px-2" style={{ color: '#454955' }}>...</span>
+                                <span className="px-2" style={{ color: '#94a3b8' }}>...</span>
                             )}
                             <button
                                 onClick={() => handleServicesPageChange(servicesTotalPages)}
-                                className={`${isMobile ? 'w-8 h-8 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition`}
+                                className={`${isMobile ? 'w-9 h-9 text-sm' : 'w-10 h-10'} rounded-lg font-medium transition-all duration-200 hover:shadow-sm`}
                                 style={{
                                     backgroundColor: '#ffffff',
-                                    color: '#454955',
-                                    border: '1px solid rgba(114, 176, 29, 0.3)'
+                                    color: '#374151',
+                                    border: '1px solid #e2e8f0'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.backgroundColor = '#72b01d';
                                     e.currentTarget.style.color = '#ffffff';
+                                    e.currentTarget.style.borderColor = '#72b01d';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = '#ffffff';
-                                    e.currentTarget.style.color = '#454955';
+                                    e.currentTarget.style.color = '#374151';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
                                 }}
                             >
                                 {servicesTotalPages}
@@ -659,22 +740,24 @@ export default function ShopPage() {
                 <button
                     onClick={() => servicesPage < servicesTotalPages && handleServicesPageChange(servicesPage + 1)}
                     disabled={servicesPage === servicesTotalPages}
-                    className={`${isMobile ? 'px-2 py-1.5 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`${isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2'} rounded-lg font-medium transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-sm`}
                     style={{
-                        backgroundColor: '#ffffff',
-                        color: '#454955',
-                        border: '1px solid rgba(114, 176, 29, 0.3)'
+                        backgroundColor: servicesPage === servicesTotalPages ? '#f1f5f9' : '#ffffff',
+                        color: servicesPage === servicesTotalPages ? '#94a3b8' : '#374151',
+                        border: '1px solid #e2e8f0'
                     }}
                     onMouseEnter={(e) => {
                         if (servicesPage !== servicesTotalPages) {
                             e.currentTarget.style.backgroundColor = '#72b01d';
                             e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.borderColor = '#72b01d';
                         }
                     }}
                     onMouseLeave={(e) => {
                         if (servicesPage !== servicesTotalPages) {
                             e.currentTarget.style.backgroundColor = '#ffffff';
-                            e.currentTarget.style.color = '#454955';
+                            e.currentTarget.style.color = '#374151';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
                         }
                     }}
                     aria-label="Next page"
@@ -693,90 +776,96 @@ export default function ShopPage() {
                 description={seoData.description}
                 keywords={seoData.keywords}
                 canonicalUrl={getCanonicalUrl(`/shop/${username}`)}
-                ogImage={shop.cover || shop.logo || '/default-shop.jpg'}
+                ogImage={shop.logo || '/default-shop.jpg'}
                 structuredData={seoData.structuredData}
             />
             <ResponsiveHeader />
-            <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
-                {/* Cover + Logo */}
-                <div className={`relative w-full ${isMobile ? 'h-32' : 'h-44 md:h-60'} flex items-center justify-center`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                    {shop.cover ? (
-                        <img src={shop.cover} alt="Shop Cover" className="object-cover w-full h-full" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
-                            <FiBox className={`${isMobile ? 'text-3xl' : 'text-5xl'}`} style={{ color: '#72b01d' }} />
-                        </div>
-                    )}
-                    <div className={`absolute left-1/2 ${isMobile ? 'bottom-[-32px]' : 'bottom-[-48px]'} -translate-x-1/2 ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} rounded-full border-4 shadow-md flex items-center justify-center`} style={{ borderColor: 'rgba(114, 176, 29, 0.6)', backgroundColor: '#ffffff' }}>
-                        {shop.logo ? (
-                            <img src={shop.logo} alt="Shop Logo" className="object-cover w-full h-full rounded-full" />
-                        ) : (
-                            <FiBox className={`${isMobile ? 'text-lg' : 'text-3xl'}`} style={{ color: '#72b01d' }} />
-                        )}
-                    </div>
-                </div>
-
-                {/* Main Info */}
-                <div className={`w-full flex flex-col items-center ${isMobile ? 'mt-10 px-4' : 'mt-16 px-4'}`}>
-                    <div className="max-w-3xl w-full flex flex-col items-center text-center">
-                        <h1 className={`${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'} font-black mb-1`} style={{ color: '#0d0a0b' }}>{shop.name}</h1>
-                        <ShopOwnerName ownerId={shop.owner} username={shop.username} />
-                        {/* Shop Rating from Reviews Collection */}
-                        {shopRating !== null && shopRatingCount > 0 && (
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-extrabold`} style={{ color: '#0d0a0b' }}>{shopRating.toFixed(1)}</span>
-                                <div className="flex items-center gap-0.5">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <svg
-                                            key={i}
-                                            className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${shopRating && shopRating >= i - 0.25 ? "text-yellow-400" : ""}`}
-                                            style={{ color: shopRating && shopRating >= i - 0.25 ? "#fbbf24" : "#454955" }}
-                                            fill="currentColor"
-                                            viewBox="0 0 20 20"
-                                        >
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
-                                        </svg>
-                                    ))}
-                                </div>
-                                <button
-                                    className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium ml-2 underline focus:outline-none transition`}
-                                    style={{ color: '#454955' }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.color = '#72b01d';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.color = '#454955';
-                                    }}
-                                    onClick={() => {
-                                        const el = document.getElementById('shop-reviews-section');
-                                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                    }}
-                                    type="button"
-                                >
-                                    {shopRatingCount} {shopRatingCount === 1 ? "review" : "reviews"}
-                                </button>
+            <div className="min-h-screen" style={{ backgroundColor: '#f8f9fa' }}>
+                {/* Minimal Shop Header */}
+                <div className={`${isMobile ? 'pt-6 pb-8' : 'pt-10 pb-12'} border-b`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.1)' }}>
+                    <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4' : 'px-6'}`}>
+                        <div className={`flex ${isMobile ? 'flex-col items-center text-center shop-header-mobile' : 'items-start gap-6'}`}>
+                            {/* Shop Logo */}
+                            <div className={`${isMobile ? 'mb-4' : 'flex-shrink-0'} ${isMobile ? 'w-20 h-20' : 'w-24 h-24'} rounded-2xl shadow-sm border-2 flex items-center justify-center`} style={{ borderColor: 'rgba(114, 176, 29, 0.2)', backgroundColor: '#ffffff' }}>
+                                {shop.logo ? (
+                                    <img src={shop.logo} alt="Shop Logo" className="object-cover w-full h-full rounded-2xl" />
+                                ) : (
+                                    <FiBox className={`${isMobile ? 'text-2xl' : 'text-3xl'}`} style={{ color: '#72b01d' }} />
+                                )}
                             </div>
-                        )}
-                    </div>
-                    <div className="max-w-3xl w-full mb-10 flex flex-col items-center">
-                        <div className={`${isMobile ? 'text-sm' : 'text-base md:text-lg'} whitespace-pre-line min-h-[64px] rounded-xl ${isMobile ? 'p-4' : 'p-6'} text-center`} style={{ color: '#454955' }}>
-                            {shop.description}
-                        </div>
-                        
-                        {/* Contact Seller Button */}
-                        <div className="mt-4">
-                            <ContactSellerButton
-                                sellerId={shop.owner}
-                                sellerName={shop.name}
-                                context={{
-                                    type: 'shop',
-                                    id: shop.username,
-                                    title: shop.name
-                                }}
-                                buttonText="Contact Shop"
-                                buttonStyle="primary"
-                                size="md"
-                            />
+
+                            {/* Shop Info */}
+                            <div className={`flex-1 ${isMobile ? 'text-center' : 'text-left'}`}>
+                                {/* Shop Name */}
+                                <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-2`} style={{ color: '#0d0a0b' }}>
+                                    {shop.name}
+                                </h1>
+
+                                {/* Owner Name */}
+                                <div className={`mb-3 ${isMobile ? 'shop-owner-name-mobile' : ''}`}>
+                                    <ShopOwnerName ownerId={shop.owner} username={shop.username} />
+                                </div>
+
+                                {/* Shop Rating */}
+                                {shopRating !== null && shopRatingCount > 0 && (
+                                    <div className={`flex items-center ${isMobile ? 'justify-center shop-rating-mobile' : 'justify-start'} gap-3 mb-4`}>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-lg font-semibold" style={{ color: '#0d0a0b' }}>
+                                                {shopRating.toFixed(1)}
+                                            </span>
+                                            <div className="flex items-center gap-0.5">
+                                                {[1, 2, 3, 4, 5].map(i => (
+                                                    <svg
+                                                        key={i}
+                                                        className="h-4 w-4"
+                                                        style={{ color: shopRating && shopRating >= i - 0.25 ? "#fbbf24" : "#e5e7eb" }}
+                                                        fill="currentColor"
+                                                        viewBox="0 0 20 20"
+                                                    >
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" />
+                                                    </svg>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <button
+                                            className="text-sm font-medium hover:underline focus:outline-none transition-colors"
+                                            style={{ color: '#72b01d' }}
+                                            onClick={() => {
+                                                if (hasReviews) {
+                                                    const el = document.getElementById('shop-reviews-section');
+                                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                                }
+                                            }}
+                                            type="button"
+                                        >
+                                            {shopRatingCount} {shopRatingCount === 1 ? "review" : "reviews"}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Shop Description */}
+                                {shop.description && (
+                                    <p className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed mb-4 max-w-2xl`} style={{ color: '#6b7280' }}>
+                                        {shop.description}
+                                    </p>
+                                )}
+
+                                {/* Contact Button */}
+                                <div className={`${isMobile ? 'shop-contact-mobile' : ''}`}>
+                                    <ContactSellerButton
+                                        sellerId={shop.owner}
+                                        sellerName={shop.name}
+                                        context={{
+                                            type: 'shop',
+                                            id: shop.username,
+                                            title: shop.name
+                                        }}
+                                        buttonText="Contact Shop"
+                                        buttonStyle="primary"
+                                        size="md"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -791,74 +880,75 @@ export default function ShopPage() {
                     // If no content exists
                     if (!hasAnyContent) {
                         return (
-                            <section className={`w-full ${isMobile ? 'py-8' : 'py-12'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'} text-center`}>
-                                    <div className={`${isMobile ? 'py-8' : 'py-12'}`} style={{ color: '#454955' }}>
-                                        <div className="flex justify-center gap-4 mb-6">
-                                            <FiBox className="w-16 h-16 opacity-30" />
-                                            <FiTool className="w-16 h-16 opacity-30" />
-                                        </div>
-                                        {isOwner ? (
-                                            <>
-                                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold mb-4`} style={{ color: '#0d0a0b' }}>
-                                                    You don't have any products or services
-                                                </h2>
-                                                <p className={`${isMobile ? 'text-sm' : 'text-base'} mb-8 opacity-70`}>
-                                                    Get started by creating your first listing or service to showcase what you offer
-                                                </p>
-                                                <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-4'} justify-center items-center`}>
-                                                    <Link
-                                                        to="/add-listing"
-                                                        className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full justify-center' : 'px-8 py-3'} rounded-full font-semibold uppercase tracking-wide transition`}
-                                                        style={{
-                                                            backgroundColor: '#72b01d',
-                                                            color: '#ffffff'
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                                        }}
-                                                    >
-                                                        <FiPlus className="w-4 h-4" />
-                                                        Create Product
-                                                    </Link>
-                                                    <Link
-                                                        to="/add-service"
-                                                        className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full justify-center' : 'px-8 py-3'} rounded-full font-semibold uppercase tracking-wide transition`}
-                                                        style={{
-                                                            backgroundColor: '#ffffff',
-                                                            color: '#72b01d',
-                                                            border: '2px solid #72b01d'
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#72b01d';
-                                                            e.currentTarget.style.color = '#ffffff';
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.currentTarget.style.backgroundColor = '#ffffff';
-                                                            e.currentTarget.style.color = '#72b01d';
-                                                        }}
-                                                    >
-                                                        <FiTool className="w-4 h-4" />
-                                                        Create Service
-                                                    </Link>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold mb-4`} style={{ color: '#0d0a0b' }}>
-                                                    Shop not listed any product or service yet
-                                                </h2>
-                                                <p className={`${isMobile ? 'text-sm' : 'text-base'} opacity-70`}>
-                                                    This shop hasn't added any products or services yet. Check back later!
-                                                </p>
-                                            </>
-                                        )}
+                            <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-12' : 'px-6 py-16'}`}>
+                                <div className="text-center">
+                                    <div className={`inline-flex items-center justify-center ${isMobile ? 'w-16 h-16 mb-6' : 'w-20 h-20 mb-8'} rounded-2xl`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                        <FiBox className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} style={{ color: '#72b01d' }} />
                                     </div>
+                                    {isOwner ? (
+                                        <>
+                                            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-3`} style={{ color: '#0d0a0b' }}>
+                                                Welcome to your shop!
+                                            </h2>
+                                            <p className={`${isMobile ? 'text-sm' : 'text-base'} mb-8 max-w-md mx-auto`} style={{ color: '#6b7280' }}>
+                                                Start by adding your first product or service to showcase what you offer. You can edit your shop details from your dashboard at any time.
+                                            </p>
+                                            <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-4'} justify-center items-center`}>
+                                                <Link
+                                                    to="/add-listing"
+                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full max-w-xs justify-center' : 'px-8 py-3'} rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md`}
+                                                    style={{
+                                                        backgroundColor: '#72b01d',
+                                                        color: '#ffffff'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#5a8f17';
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                    }}
+                                                >
+                                                    <FiPlus className="w-4 h-4" />
+                                                    Add Product
+                                                </Link>
+                                                <Link
+                                                    to="/add-service"
+                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-6 py-3 text-sm w-full max-w-xs justify-center' : 'px-8 py-3'} rounded-xl font-medium transition-all duration-200 border-2 hover:shadow-md`}
+                                                    style={{
+                                                        backgroundColor: '#ffffff',
+                                                        color: '#72b01d',
+                                                        borderColor: '#72b01d'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#72b01d';
+                                                        e.currentTarget.style.color = '#ffffff';
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                        e.currentTarget.style.color = '#72b01d';
+                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                    }}
+                                                >
+                                                    <FiTool className="w-4 h-4" />
+                                                    Add Service
+                                                </Link>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold mb-3`} style={{ color: '#0d0a0b' }}>
+                                                Nothing here yet
+                                            </h2>
+                                            <p className={`${isMobile ? 'text-sm' : 'text-base'} max-w-md mx-auto`} style={{ color: '#6b7280' }}>
+                                                This shop hasn't added any products or services yet. Check back later!
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
-                            </section>
+                            </div>
                         );
                     }
 
@@ -867,145 +957,167 @@ export default function ShopPage() {
                         <>
                             {/* Listings Section - Only show if has listings OR (is owner and has no services) */}
                             {(hasListings || (isOwner && !hasServices)) && (
-                                <section className={`w-full ${isMobile ? 'py-4' : 'py-8'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'}`}>
-                                        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'} gap-4`}>
-                                            <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold uppercase tracking-wide`} style={{ color: '#0d0a0b' }}>
-                                                <FiBox className="inline mr-2" />
-                                                Shop Products
+                                <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
+                                    <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'} ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                        <div>
+                                            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`} style={{ color: '#0d0a0b' }}>
+                                                Products
                                             </h2>
-                                            {isOwner && (
-                                                <Link
-                                                    to="/add-listing"
-                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold uppercase tracking-wide transition`}
-                                                    style={{
-                                                        backgroundColor: '#72b01d',
-                                                        color: '#ffffff'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#72b01d';
-                                                    }}
-                                                >
-                                                    <FiPlus className="w-4 h-4" />
-                                                    Create New Product
-                                                </Link>
-                                            )}
+                                            <p className={`${isMobile ? 'text-sm' : 'text-base'} mt-1`} style={{ color: '#6b7280' }}>
+                                                {totalCount} {totalCount === 1 ? 'product' : 'products'} available
+                                            </p>
                                         </div>
-                                        {listings.length === 0 ? (
-                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>
-                                                <FiBox className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                                                <p className="text-lg font-medium mb-2">No products yet</p>
-                                                {isOwner && (
-                                                    <p className="text-sm">Create your first product to start selling!</p>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <WithReviewStats listings={listings}>
-                                                {(listingsWithStats) => (
-                                                    <>
-                                                        {isMobile ? (
-                                                            <div className="w-full overflow-x-auto pb-2">
-                                                                <div className="flex gap-4 min-w-max">
-                                                                    {listingsWithStats.map((item) => (
-                                                                        <div key={item.id} className="w-48 flex-shrink-0">
-                                                                            <ResponsiveListingTile 
-                                                                                listing={item}
-                                                                                onRefresh={refreshListings}
-                                                                            />
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-7">
-                                                                {listingsWithStats.map((item) => (
-                                                                    <ResponsiveListingTile 
-                                                                        key={item.id}
-                                                                        listing={item}
-                                                                        onRefresh={refreshListings}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        <Pagination />
-                                                    </>
-                                                )}
-                                            </WithReviewStats>
+                                        {isOwner && (
+                                            <Link
+                                                to="/add-listing"
+                                                className={`inline-flex items-center gap-2 ${isMobile ? 'px-5 py-2.5 text-sm w-full justify-center' : 'px-6 py-3'} rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md`}
+                                                style={{
+                                                    backgroundColor: '#72b01d',
+                                                    color: '#ffffff'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#5a8f17';
+                                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                }}
+                                            >
+                                                <FiPlus className="w-4 h-4" />
+                                                Add Product
+                                            </Link>
                                         )}
                                     </div>
-                                </section>
+                                    {listings.length === 0 ? (
+                                        <div className={`${isMobile ? 'py-12' : 'py-16'} text-center`}>
+                                            <div className={`inline-flex items-center justify-center ${isMobile ? 'w-16 h-16 mb-4' : 'w-20 h-20 mb-6'} rounded-2xl`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                                <FiBox className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} style={{ color: '#72b01d' }} />
+                                            </div>
+                                            <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium mb-2`} style={{ color: '#0d0a0b' }}>
+                                                No products yet
+                                            </h3>
+                                            {isOwner && (
+                                                <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#6b7280' }}>
+                                                    Create your first product to start selling!
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <WithReviewStats listings={listings}>
+                                            {(listingsWithStats) => (
+                                                <>
+                                                    {isMobile ? (
+                                                        <div className="w-full overflow-x-auto pb-2">
+                                                            <div className="flex gap-4 min-w-max">
+                                                                {listingsWithStats.map((item) => (
+                                                                    <div key={item.id} className="w-48 flex-shrink-0">
+                                                                        <ResponsiveListingTile 
+                                                                            listing={item}
+                                                                            onRefresh={refreshListings}
+                                                                        />
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                                            {listingsWithStats.map((item) => (
+                                                                <ResponsiveListingTile 
+                                                                    key={item.id}
+                                                                    listing={item}
+                                                                    onRefresh={refreshListings}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <Pagination />
+                                                </>
+                                            )}
+                                        </WithReviewStats>
+                                    )}
+                                </div>
                             )}
 
                             {/* Services Section - Only show if has services OR (is owner and has no listings) */}
                             {(hasServices || (isOwner && !hasListings)) && (
-                                <section className={`w-full ${isMobile ? 'py-4' : 'py-8'} border-t`} style={{ backgroundColor: '#ffffff', borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                                    <div className={`w-full ${isMobile ? 'px-4' : 'px-2 sm:px-6'}`}>
-                                        <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} items-center justify-between ${isMobile ? 'mb-4' : 'mb-8'} gap-4`}>
-                                            <h2 className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold uppercase tracking-wide`} style={{ color: '#0d0a0b' }}>
-                                                <FiTool className="inline mr-2" />
-                                                Shop Services
+                                <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'} ${hasListings ? 'border-t pt-12' : ''}`} style={hasListings ? { borderColor: 'rgba(114, 176, 29, 0.1)' } : {}}>
+                                    <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'} ${isMobile ? 'mb-6' : 'mb-8'}`}>
+                                        <div>
+                                            <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`} style={{ color: '#0d0a0b' }}>
+                                                Services
                                             </h2>
-                                            {isOwner && (
-                                                <Link
-                                                    to="/add-service"
-                                                    className={`inline-flex items-center gap-2 ${isMobile ? 'px-4 py-2 text-sm' : 'px-6 py-2'} rounded-full font-semibold uppercase tracking-wide transition`}
-                                                    style={{
-                                                        backgroundColor: '#72b01d',
-                                                        color: '#ffffff'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#3f7d20';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.backgroundColor = '#72b01d';
-                                                    }}
-                                                >
-                                                    <FiPlus className="w-4 h-4" />
-                                                    Create New Service
-                                                </Link>
-                                            )}
+                                            <p className={`${isMobile ? 'text-sm' : 'text-base'} mt-1`} style={{ color: '#6b7280' }}>
+                                                {servicesTotalCount} {servicesTotalCount === 1 ? 'service' : 'services'} available
+                                            </p>
                                         </div>
-                                        {servicesLoading ? (
-                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`}>
-                                                <LoadingSpinner size="md" />
-                                            </div>
-                                        ) : services.length === 0 ? (
-                                            <div className={`${isMobile ? 'py-6' : 'py-8'} text-center`} style={{ color: '#454955', opacity: 0.7 }}>
-                                                <FiTool className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                                                <p className="text-lg font-medium mb-2">No services yet</p>
-                                                {isOwner && (
-                                                    <p className="text-sm">Create your first service to showcase your expertise!</p>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <ResponsiveServiceTiles 
-                                                    services={services} 
-                                                    onRefresh={refreshServices}
-                                                    isLoading={servicesLoading}
-                                                />
-                                                <ServicesPagination />
-                                            </>
+                                        {isOwner && (
+                                            <Link
+                                                to="/add-service"
+                                                className={`inline-flex items-center gap-2 ${isMobile ? 'px-5 py-2.5 text-sm w-full justify-center' : 'px-6 py-3'} rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md`}
+                                                style={{
+                                                    backgroundColor: '#72b01d',
+                                                    color: '#ffffff'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#5a8f17';
+                                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#72b01d';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                }}
+                                            >
+                                                <FiPlus className="w-4 h-4" />
+                                                Add Service
+                                            </Link>
                                         )}
                                     </div>
-                                </section>
+                                    {servicesLoading ? (
+                                        <div className={`${isMobile ? 'py-12' : 'py-16'} text-center`}>
+                                            <LoadingSpinner size="md" />
+                                        </div>
+                                    ) : services.length === 0 ? (
+                                        <div className={`${isMobile ? 'py-12' : 'py-16'} text-center`}>
+                                            <div className={`inline-flex items-center justify-center ${isMobile ? 'w-16 h-16 mb-4' : 'w-20 h-20 mb-6'} rounded-2xl`} style={{ backgroundColor: 'rgba(114, 176, 29, 0.1)' }}>
+                                                <FiTool className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'}`} style={{ color: '#72b01d' }} />
+                                            </div>
+                                            <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium mb-2`} style={{ color: '#0d0a0b' }}>
+                                                No services yet
+                                            </h3>
+                                            {isOwner && (
+                                                <p className={`${isMobile ? 'text-sm' : 'text-base'}`} style={{ color: '#6b7280' }}>
+                                                    Create your first service to showcase your expertise!
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <ResponsiveServiceTiles 
+                                                services={services} 
+                                                onRefresh={refreshServices}
+                                                isLoading={servicesLoading}
+                                            />
+                                            <ServicesPagination />
+                                        </>
+                                    )}
+                                </div>
                             )}
                         </>
                     );
                 })()}
             </div>
 
-            {/* Shop Reviews Section */}
-            <div className="w-full" id="shop-reviews-section" style={{ backgroundColor: '#ffffff' }}>
-                {shop.id && (
-                    <div className={`${isMobile ? 'mt-6 pt-6 px-4' : 'mt-12 pt-10 px-0'} border-t`} style={{ borderColor: 'rgba(114, 176, 29, 0.3)' }}>
-                        <ShopReviews shopId={shop.id} />
-                    </div>
-                )}
-            </div>
+            {/* Shop Reviews Section - Only show if there are reviews */}
+            {hasReviews && (
+                <div className="w-full border-t" id="shop-reviews-section" style={{ backgroundColor: '#f8f9fa', borderColor: 'rgba(114, 176, 29, 0.1)' }}>
+                    {shop.id && (
+                        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
+                            <ShopReviews shopId={shop.id} />
+                        </div>
+                    )}
+                </div>
+            )}
             <Footer />
         </>
     );
