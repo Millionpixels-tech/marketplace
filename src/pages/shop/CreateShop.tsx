@@ -3,7 +3,7 @@ import { db, auth, storage } from "../../utils/firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
-import { FiCamera, FiUpload, FiCheck, FiLoader } from "react-icons/fi";
+import { FiCamera, FiCheck, FiLoader } from "react-icons/fi";
 import { Button, Card, Input } from "../../components/UI";
 import ResponsiveHeader from "../../components/UI/ResponsiveHeader";
 import Footer from "../../components/UI/Footer";
@@ -20,16 +20,13 @@ export default function CreateShop() {
   const [mobile, setMobile] = useState("");
   const [address, setAddress] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
-  const [cover, setCover] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   const navigate = useNavigate();
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
   const usernameTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Username uniqueness check with debouncing
@@ -105,24 +102,9 @@ export default function CreateShop() {
       }
     }
   };
-  
-  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      try {
-        const compressedCover = await compressImage(e.target.files[0], 1200, 600, 0.8);
-        setCover(compressedCover);
-        setCoverPreview(URL.createObjectURL(compressedCover));
-      } catch (error) {
-        console.error('Cover compression error:', error);
-        // Fallback to original file
-        setCover(e.target.files[0]);
-        setCoverPreview(URL.createObjectURL(e.target.files[0]));
-      }
-    }
-  };
 
   // Upload file to Firebase Storage with SEO filename
-  async function uploadImage(file: File, type: 'logo' | 'cover', shopUsername: string) {
+  async function uploadImage(file: File, type: 'logo', shopUsername: string) {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -152,9 +134,7 @@ export default function CreateShop() {
         uploadedAt: now.toISOString(),
         originalSize: file.size.toString(),
         seoFilename: filename,
-        altText: type === 'logo' 
-          ? `${shopName} - Sri Lankan Shop Logo` 
-          : `${shopName} - Sri Lankan Shop Cover Image`
+        altText: `${shopName} - Sri Lankan Shop Logo`
       }
     });
     
@@ -190,14 +170,10 @@ export default function CreateShop() {
       }
 
       let logoUrl = "";
-      let coverUrl = "";
 
-      // 1. Upload images if present
+      // 1. Upload logo if present
       if (logo) {
         logoUrl = await uploadImage(logo, 'logo', shopUser.toLowerCase());
-      }
-      if (cover) {
-        coverUrl = await uploadImage(cover, 'cover', shopUser.toLowerCase());
       }
 
       // 2. Save shop data
@@ -209,7 +185,6 @@ export default function CreateShop() {
         address,
         description: desc,
         logo: logoUrl,
-        cover: coverUrl,
         createdAt: new Date(),
       });
       
@@ -256,34 +231,11 @@ export default function CreateShop() {
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-black mb-2 text-[#0d0a0b]">Create Your Shop</h1>
             <p className="text-[#454955] text-base md:text-lg">Set up your shop profile, add a logo, and tell customers what makes your shop unique.</p>
           </div>
-          {/* --- Cover + Logo Section --- */}
+          {/* --- Logo Section --- */}
           <div className="w-full relative flex flex-col items-center mb-8 md:mb-12">
-            {/* Cover image */}
-            <div
-              className="w-full h-32 md:h-40 lg:h-64 rounded-xl md:rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group transition-all duration-300 hover:shadow-lg border-2 border-dashed border-gray-300 hover:border-[#72b01d]"
-              onClick={() => coverInputRef.current?.click()}
-              tabIndex={0}
-              title="Click to upload cover image"
-            >
-              {coverPreview ? (
-                <img src={coverPreview} alt="Cover" className="object-cover w-full h-full" />
-              ) : (
-                <div className="flex flex-col items-center justify-start pt-4 md:pt-8 text-[#6b7280] group-hover:text-[#72b01d] transition-colors h-full">
-                  <FiUpload className="text-2xl md:text-3xl mb-1 md:mb-2" />
-                  <span className="font-medium text-xs md:text-sm">Click to add cover image</span>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                ref={coverInputRef}
-                className="hidden"
-                onChange={handleCoverChange}
-              />
-            </div>
             {/* Logo */}
             <div
-              className="absolute left-1/2 bottom-0 translate-y-1/2 -translate-x-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105"
+              className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-gray-200 bg-white flex items-center justify-center shadow-lg cursor-pointer group transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border-[#72b01d]"
               onClick={() => logoInputRef.current?.click()}
               title="Click to upload logo"
               tabIndex={0}
@@ -292,8 +244,8 @@ export default function CreateShop() {
                 <img src={logoPreview} alt="Logo" className="object-cover w-full h-full rounded-full" />
               ) : (
                 <span className="flex flex-col items-center text-[#6b7280] group-hover:text-[#72b01d] transition-colors">
-                  <FiCamera className="text-2xl md:text-4xl mb-1" />
-                  <span className="font-medium text-xs">Add Logo</span>
+                  <FiCamera className="text-3xl md:text-4xl mb-2" />
+                  <span className="font-medium text-sm">Add Logo</span>
                 </span>
               )}
               <input
@@ -307,7 +259,7 @@ export default function CreateShop() {
           </div>
 
           {/* --- Shop Main Info --- */}
-          <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10 mt-12 md:mt-20 lg:mt-16">
+          <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10">
             <div className="flex-1 space-y-6 md:space-y-8">
               {/* Shop Name */}
               <div className="group">
@@ -460,9 +412,8 @@ export default function CreateShop() {
           <div className="w-full flex justify-center md:justify-end mt-8 md:mt-16">
             <Button
               variant="primary"
-              size="lg"
-              disabled={
-                !shopName || 
+              size="lg"              disabled={
+                !shopName ||
                 !shopUser || 
                 userExists || 
                 checkingUsername || 
@@ -471,7 +422,6 @@ export default function CreateShop() {
                 !address ||
                 !desc || 
                 !logo || 
-                !cover || 
                 loading || 
                 desc.length > 200
               }

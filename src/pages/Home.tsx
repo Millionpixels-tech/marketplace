@@ -1360,7 +1360,7 @@ const Home = () => {
                     Professional Shop Profile
                   </h3>
                   <p className={`${isMobile ? 'text-sm' : 'text-sm'} leading-relaxed`} style={{ color: '#454955' }}>
-                    Add logo and cover image to create a professional shop profile. Receive verified entrepreneur badges.
+                    Add a professional logo to create your unique shop profile. Receive verified entrepreneur badges.
                   </p>
                 </div>
 

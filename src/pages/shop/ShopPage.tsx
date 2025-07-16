@@ -396,7 +396,7 @@ export default function ShopPage() {
                 description,
                 url: getCanonicalUrl(`/shop/${username}`),
                 logo: shop.logo,
-                image: shop.cover || shop.logo,
+                image: shop.logo,
                 ...(rating > 0 && ratingCount > 0 && {
                     aggregateRating: {
                         '@type': 'AggregateRating',
@@ -776,7 +776,7 @@ export default function ShopPage() {
                 description={seoData.description}
                 keywords={seoData.keywords}
                 canonicalUrl={getCanonicalUrl(`/shop/${username}`)}
-                ogImage={shop.cover || shop.logo || '/default-shop.jpg'}
+                ogImage={shop.logo || '/default-shop.jpg'}
                 structuredData={seoData.structuredData}
             />
             <ResponsiveHeader />
@@ -891,7 +891,7 @@ export default function ShopPage() {
                                                 Welcome to your shop!
                                             </h2>
                                             <p className={`${isMobile ? 'text-sm' : 'text-base'} mb-8 max-w-md mx-auto`} style={{ color: '#6b7280' }}>
-                                                Start by adding your first product or service to showcase what you offer.
+                                                Start by adding your first product or service to showcase what you offer. You can edit your shop details from your dashboard at any time.
                                             </p>
                                             <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-row gap-4'} justify-center items-center`}>
                                                 <Link

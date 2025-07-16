@@ -40,7 +40,6 @@ export default function SellerGuide() {
         "Pick a memorable shop name that reflects your business",
         "Write a compelling shop description - tell your story and what makes you special",
         "Upload a professional shop logo (square image, at least 400x400px works best)",
-        "Add an attractive cover image that showcases your products or brand",
         "Enter your complete business address for accurate delivery calculations",
         "Provide your mobile number for direct customer communication"
       ],
