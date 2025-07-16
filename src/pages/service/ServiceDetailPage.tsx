@@ -132,17 +132,67 @@ export default function ServiceDetailPage() {
   if (!service) {
     return (
       <>
+        <SEOHead
+          title="Service Not Found - Sina.lk"
+          description="The service you're looking for doesn't exist. Browse our marketplace for amazing services from local providers."
+          noIndex={true}
+        />
         <ResponsiveHeader />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Service not found</h2>
-            <button
-              onClick={() => navigate('/services')}
-              className="bg-[#72b01d] text-white px-6 py-3 rounded-lg hover:bg-[#3f7d20] transition-colors"
-            >
-              Back to Services
-            </button>
-          </div>
+        <div className="min-h-screen bg-white flex flex-col">
+          <main className="flex-1 flex items-center justify-center py-12 px-4">
+            <div className="max-w-lg w-full text-center">
+              {/* 404 Illustration */}
+              <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+                <div className="relative">
+                  <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                    404
+                  </h1>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <FiShoppingBag className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-6">
+                <div>
+                  <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                    Service Not Found
+                  </h2>
+                  <p className="text-gray-600 leading-relaxed">
+                    The service you're looking for doesn't exist or has been removed. 
+                    Explore other amazing services available on our marketplace!
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                  <Link
+                    to="/services"
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <FiShoppingBag className="w-5 h-5" />
+                    Browse Services
+                  </Link>
+                  
+                  <Link
+                    to="/"
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-white text-[#72b01d] font-semibold rounded-xl border-2 border-[#72b01d] hover:bg-[#72b01d] hover:text-white transition-all duration-200"
+                  >
+                    <FiCheck className="w-5 h-5" />
+                    Go to Homepage
+                  </Link>
+                  
+                  <button
+                    onClick={() => window.history.back()}
+                    className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                  >
+                    ← Go Back
+                  </button>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
         <Footer />
       </>

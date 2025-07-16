@@ -71,6 +71,7 @@ export default function ShopPage() {
     // Reviews state for rating calculation
     const [shopRating, setShopRating] = useState<number | null>(null);
     const [shopRatingCount, setShopRatingCount] = useState<number>(0);
+    const [hasReviews, setHasReviews] = useState<boolean>(false);
 
     // 1. Fetch user IP and shop info
     useEffect(() => {
@@ -137,10 +138,13 @@ export default function ShopPage() {
                 const ratingData = await calculateShopRating(shop!.id);
                 setShopRating(ratingData.rating);
                 setShopRatingCount(ratingData.count);
+                // Set hasReviews based on whether there are any reviews
+                setHasReviews(ratingData.count > 0);
             } catch (error) {
                 console.error("Error fetching shop reviews:", error);
                 setShopRating(null);
                 setShopRatingCount(0);
+                setHasReviews(false);
             }
         }
         
@@ -299,12 +303,71 @@ export default function ShopPage() {
 
     if (!shop) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
-                <div className="text-center" style={{ color: '#454955' }}>
-                    <div className="text-2xl font-bold mb-2">Shop Not Found</div>
-                    <div>This shop does not exist.</div>
+            <>
+                <SEOHead
+                    title="Shop Not Found - Sina.lk"
+                    description="The shop you're looking for doesn't exist. Browse our marketplace for amazing products from local sellers."
+                    noIndex={true}
+                />
+                <ResponsiveHeader />
+                <div className="min-h-screen bg-white flex flex-col">
+                    <main className="flex-1 flex items-center justify-center py-12 px-4">
+                        <div className="max-w-lg w-full text-center">
+                            {/* 404 Illustration */}
+                            <div className={`${isMobile ? 'mb-8' : 'mb-12'}`}>
+                                <div className="relative">
+                                    <h1 className={`${isMobile ? 'text-8xl' : 'text-9xl'} font-bold text-gray-100 select-none`}>
+                                        404
+                                    </h1>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <FiBox className={`${isMobile ? 'w-16 h-16' : 'w-20 h-20'} text-[#72b01d]`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-4`}>
+                                        Shop Not Found
+                                    </h2>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        The shop you're looking for doesn't exist or has been moved. 
+                                        Explore other amazing shops and products on our marketplace!
+                                    </p>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-4'} mt-8`}>
+                                    <Link
+                                        to="/"
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-[#72b01d] text-white font-semibold rounded-xl hover:bg-[#5a8c17] transition-all duration-200 shadow-lg hover:shadow-xl"
+                                    >
+                                        <FiBox className="w-5 h-5" />
+                                        Browse Shops
+                                    </Link>
+                                    
+                                    <Link
+                                        to="/search"
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 bg-white text-[#72b01d] font-semibold rounded-xl border-2 border-[#72b01d] hover:bg-[#72b01d] hover:text-white transition-all duration-200"
+                                    >
+                                        <FiPlus className="w-5 h-5" />
+                                        Find Products
+                                    </Link>
+                                    
+                                    <button
+                                        onClick={() => window.history.back()}
+                                        className="inline-flex items-center justify-center gap-3 px-6 py-3 text-gray-600 font-medium hover:text-gray-800 transition-colors"
+                                    >
+                                        ← Go Back
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
                 </div>
-            </div>
+                <Footer />
+            </>
         );
     }
 
@@ -768,8 +831,10 @@ export default function ShopPage() {
                                             className="text-sm font-medium hover:underline focus:outline-none transition-colors"
                                             style={{ color: '#72b01d' }}
                                             onClick={() => {
-                                                const el = document.getElementById('shop-reviews-section');
-                                                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                                if (hasReviews) {
+                                                    const el = document.getElementById('shop-reviews-section');
+                                                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                                }
                                             }}
                                             type="button"
                                         >
@@ -1043,14 +1108,16 @@ export default function ShopPage() {
                 })()}
             </div>
 
-            {/* Shop Reviews Section */}
-            <div className="w-full border-t" id="shop-reviews-section" style={{ backgroundColor: '#f8f9fa', borderColor: 'rgba(114, 176, 29, 0.1)' }}>
-                {shop.id && (
-                    <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
-                        <ShopReviews shopId={shop.id} />
-                    </div>
-                )}
-            </div>
+            {/* Shop Reviews Section - Only show if there are reviews */}
+            {hasReviews && (
+                <div className="w-full border-t" id="shop-reviews-section" style={{ backgroundColor: '#f8f9fa', borderColor: 'rgba(114, 176, 29, 0.1)' }}>
+                    {shop.id && (
+                        <div className={`max-w-6xl mx-auto ${isMobile ? 'px-4 py-8' : 'px-6 py-12'}`}>
+                            <ShopReviews shopId={shop.id} />
+                        </div>
+                    )}
+                </div>
+            )}
             <Footer />
         </>
     );
